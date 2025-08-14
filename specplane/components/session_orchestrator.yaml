@@ -1,0 +1,177 @@
+meta:
+  id: "session_orchestrator"
+  name: "Session Orchestrator"
+  version: "0.1.0"
+  type: "component"
+  level: "component"
+  purpose: "Manages interview flow and state transitions throughout the design session"
+  status: "prototype"
+
+contracts:
+  interfaces:
+    - name: "start_session"
+      input: "SessionConfig"
+      output: "SessionState"
+      logic: "initialize_session + load_context + set_initial_state"
+      
+    - name: "advance_session"
+      input: "SessionState + UserAction"
+      output: "UpdatedSessionState"
+      logic: "state_transition + progress_tracking + validation"
+      
+    - name: "pause_session"
+      input: "SessionState"
+      output: "PersistentSessionState"
+      logic: "save_current_state + preserve_context"
+      
+    - name: "resume_session"
+      input: "SessionId"
+      output: "RestoredSessionState"
+      logic: "load_saved_state + validate_integrity + restore_context"
+
+  state_machine:
+    states:
+      - "session_init"
+      - "collecting_context"
+      - "questioning_active"
+      - "validating_answers"
+      - "calculating_coverage"
+      - "generating_artifacts"
+      - "session_complete"
+      - "session_paused"
+      - "session_error"
+      
+    transitions:
+      - from: "session_init"
+        to: "collecting_context"
+        trigger: "user_provides_component_description"
+        
+      - from: "collecting_context"
+        to: "questioning_active"
+        trigger: "context_analysis_complete"
+        
+      - from: "questioning_active"
+        to: "validating_answers"
+        trigger: "user_submits_answer"
+        
+      - from: "validating_answers"
+        to: "questioning_active"
+        trigger: "more_questions_needed"
+        
+      - from: "validating_answers"
+        to: "calculating_coverage"
+        trigger: "interview_complete"
+        
+      - from: "calculating_coverage"
+        to: "generating_artifacts"
+        trigger: "coverage_acceptable"
+        
+      - from: "generating_artifacts"
+        to: "session_complete"
+        trigger: "artifacts_generated"
+
+  session_management:
+    session_config:
+      - "component_name: string"
+      - "component_type: enum[widget, component, service, agent]"
+      - "user_experience: enum[beginner, intermediate, expert]"
+      - "mode: enum[quick, standard, comprehensive]"
+      - "time_budget: duration"
+      
+    session_state:
+      - "session_id: string"
+      - "current_state: enum"
+      - "progress_percentage: float"
+      - "answers_collected: object"
+      - "questions_remaining: array"
+      - "coverage_score: float"
+      - "started_at: datetime"
+      - "last_activity: datetime"
+
+prototype_modes:
+  p0_simple:
+    state_management: "simple_linear_progression"
+    persistence: "basic_json_files"
+    validation: "minimal_checks"
+    
+  p1_smart:
+    state_management: "full_state_machine"
+    persistence: "atomic_file_operations"
+    validation: "comprehensive_checks"
+    
+  p2_dynamic:
+    state_management: "adaptive_flow_control"
+    persistence: "distributed_state_management"
+    validation: "intelligent_validation"
+
+data_flows:
+  - name: "complete_session_flow"
+    sequence: |
+      sequenceDiagram
+        participant U as User
+        participant SO as Session_Orchestrator
+        participant QG as Question_Generator
+        participant IE as Interview_Engine
+        participant CA as Coverage_Assessor
+        participant AG as Artifact_Generator
+        
+        U->>SO: start_session(config)
+        SO->>SO: initialize_state
+        SO->>QG: generate_questions(context)
+        
+        loop Interview Loop
+          SO->>IE: conduct_interview()
+          IE->>U: ask_question()
+          U->>IE: submit_answer()
+          IE->>SO: update_session(answer)
+          SO->>CA: check_coverage()
+        end
+        
+        SO->>AG: generate_artifacts(final_state)
+        AG-->>SO: artifacts_ready
+        SO-->>U: session_complete
+
+dependencies:
+  internal:
+    - "Question_Generator"  # For question sequencing
+    - "Interview_Engine"    # For user interaction
+    - "Coverage_Assessor"   # For progress tracking
+    - "Artifact_Generator"  # For final output
+    - "File_Storage"        # For state persistence
+  external: []
+
+constraints:
+  performance:
+    state_transition_time: "<100ms"
+    session_persistence_time: "<500ms"
+    
+  reliability:
+    session_recovery_rate: ">99%"
+    state_consistency: "atomic_updates"
+    
+  usability:
+    max_session_duration: "30_minutes"
+    auto_save_frequency: "every_answer"
+
+error_handling:
+  invalid_state_transition:
+    action: "log_error + reset_to_known_state"
+    
+  session_corruption:
+    action: "attempt_recovery + fallback_to_backup"
+    
+  component_failure:
+    action: "graceful_degradation + user_notification"
+
+observability:
+  metrics:
+    - "sessions_started_per_day"
+    - "session_completion_rate"
+    - "average_session_duration"
+    - "state_transition_errors"
+    
+  events:
+    - "session.started"
+    - "session.state_changed"
+    - "session.completed"
+    - "session.error"

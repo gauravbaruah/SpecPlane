@@ -95,7 +95,7 @@ app/               # Implementation
 
 
 
-## Directory Structure for SpecPlane Framework
+## (ROUGH) Directory Structure for SpecPlane Framework
 ```
 specplane/
   context.yaml                    # ✅ System overview
