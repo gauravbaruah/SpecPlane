@@ -146,3 +146,22 @@ observability:
     - "interview.question.answered"
     - "interview.session.completed"
     - "interview.session.abandoned"
+
+tests:
+  acceptance:
+    - "Command 'conduct_interview(session_config)' loads questions from config/questions.yaml"
+    - "Required questions marked with required:true cannot be skipped"
+    - "User input 'skip' advances to next question for optional questions only"
+    - "Session state saved to .specplane/sessions/{session_id}.json after each answer"
+    - "Progress percentage calculated as (answered / total_questions) * 100"
+    - "Question flow stops when all required questions answered"
+    - "Invalid session_id returns clear error message"
+
+error_handling:
+  invalid_answer:
+    test: "Submit empty string to required question"
+    expected: "Show clarification prompt + retry (max 3 attempts)"
+    
+  session_timeout:
+    test: "Leave session idle for 30 minutes"
+    expected: "Auto-save state + show resume instructions"

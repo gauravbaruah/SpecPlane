@@ -218,3 +218,56 @@ example_outputs:
     - processing: Show spinner "Processing audio..."
     
     Generate React Native component with proper state management...
+
+tests:
+  acceptance:
+    - "Input with component_name:'VoiceRecorder' outputs file 'voice_recorder.yaml'"
+    - "Generated YAML contains all answered questions mapped to correct sections"
+    - "Template rendering failure returns clear error + partial output"
+    - "Output directory created automatically if missing"
+    - "Generated Cursor prompt includes purpose statement + critical requirements"
+    - "Jinja2 template errors logged with line number and variable name"
+
+file_validation:
+  yaml_structure:
+    test: "Generate spec from minimal answers (purpose + 1 interface)"
+    expected_sections: ["meta", "purpose", "contracts"]
+    expected_validation: "passes JSON schema validation"
+    
+  cursor_prompt:
+    test: "Generate prompt from storage component spec"
+    expected_content: ["Purpose statement", "Error handling requirements", "Implementation guidance"]
+    expected_format: "Valid markdown with proper headers"
+
+
+dependencies:
+  external:
+    - name: "Jinja2"
+      purpose: "Template rendering engine"
+      version: ">=3.1.0"
+
+template_system:
+  jinja2_templates:
+    - path: "templates/component.yaml.j2"
+      purpose: "Generate SpecPlane YAML specs"
+      
+    - path: "templates/cursor_prompt.md.j2"  
+      purpose: "Generate AI-ready implementation prompts"
+      
+    - path: "templates/coverage_report.md.j2"
+      purpose: "Generate coverage assessment reports"
+      
+    - path: "templates/openapi_stub.yaml.j2"
+      purpose: "Generate API contract stubs (optional)"
+
+tests:
+  acceptance:
+    - "Template 'component.yaml.j2' renders valid YAML from answer data"
+    - "Template variables {{purpose}} and {{interfaces}} populated correctly"
+    - "Missing template variables logged with clear error message"
+    - "Template syntax errors caught and reported with line numbers"
+    
+  jinja2_specific:
+    - "Undefined variables in templates raise clear errors"
+    - "Template inheritance works for shared headers/footers"
+    - "Custom filters (snake_case, title_case) function correctly"

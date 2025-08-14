@@ -146,3 +146,20 @@ observability:
     - "pattern_matching_accuracy"
     - "question_generation_success_rate"
     - "template_expansion_errors"
+
+tests:
+  acceptance:
+    - "Input 'file storage component' matches pattern 'storage_systems' with confidence >0.8"
+    - "Input 'login screen' matches pattern 'user_interfaces' with confidence >0.8"
+    - "Input 'chatbot agent' matches pattern 'ai_agents' with confidence >0.8"
+    - "Unknown component type 'quantum processor' falls back to generic questions"
+    - "Pattern matching completes in <100ms for typical component descriptions"
+    
+  human_validation:
+    - "Review 10 random pattern matches: Are they contextually appropriate?"
+    - "Rate question relevance 1-5: Do generated questions fit the component type?"
+    
+  automated_metrics:
+    - "pattern_match_confidence_p95 > 0.7"
+    - "pattern_matching_latency_p95 < 100ms"
+    - "fallback_rate < 10%"

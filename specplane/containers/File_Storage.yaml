@@ -218,3 +218,83 @@ path_templates:
   report: "out/reports/{component_name}_coverage.md"
   log: ".specplane/logs/events_{date}.jsonl"
   backup: ".specplane/backups/{original_name}.{timestamp}.bak"
+
+
+tests:
+  acceptance:
+    - "Config files loaded from config/ directory on startup"
+    - "Session state persisted to .specplane/sessions/ after each answer"
+    - "Generated files written to out/specs/ and out/prompts/"
+    - "Disk full scenario triggers cleanup + user warning"
+    - "Corrupted session file recovered from backup automatically"
+    - "File operations complete in <500ms for typical files"
+    
+  human_validation:
+    - "File organization assessment: Is output structure clear and logical?"
+    
+  automated_metrics:
+    - "file_operation_latency_p95 < 200ms"
+    - "file_corruption_recovery_rate > 95%"
+    - "disk_space_monitoring_accuracy"
+
+
+contracts:
+  configuration_files:
+    - path: "config/specplane.yaml"
+      schema: "SpecPlaneConfig"
+      purpose: "Main configuration file"
+      
+    - path: "config/integrations.yaml"
+      schema: "IntegrationsConfig"  
+      purpose: "API keys and external service configs"
+      
+    - path: "config/observability.yaml"
+      schema: "ObservabilityConfig"
+      purpose: "Metrics and logging configuration"
+
+example_configs:
+  specplane_config:
+    content: |
+      meta:
+        version: "0.1.0"
+        mode: "development"
+        
+      defaults:
+        question_timeout: "30m"
+        auto_save_interval: "30s"
+        output_directory: "out"
+        
+      features:
+        ai_enhanced_questions: false  # P1 feature
+        pattern_learning: false       # P2 feature
+        
+  integrations_config:
+    content: |
+      # Optional external integrations
+      ai_services:
+        openai:
+          api_key: "${OPENAI_API_KEY}"
+          model: "gpt-4"
+          enabled: false
+          
+      observability:
+        mixpanel:
+          token: "${MIXPANEL_TOKEN}"
+          enabled: false
+          
+        datadog:
+          api_key: "${DATADOG_API_KEY}"
+          enabled: false
+          
+      # Always available - local only
+      local_logging:
+        events_file: ".specplane/logs/events.jsonl"
+        metrics_file: ".specplane/logs/metrics.json"
+        enabled: true
+
+tests:
+  acceptance:
+    - "Missing config files use sensible defaults without crashing"
+    - "Invalid API keys logged with clear warning (don't block usage)"
+    - "Environment variables ${VAR} expanded correctly in config"
+    - "Config validation errors show line number and field name"

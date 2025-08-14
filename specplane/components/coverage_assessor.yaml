@@ -180,3 +180,63 @@ example_outputs:
       - "Add rate limiting to prevent brute force attacks"
       - "Define password complexity requirements"
       - "Implement comprehensive error response codes"
+
+
+tests:
+  acceptance:
+    - "Empty answers object returns coverage_score: 0"
+    - "All required questions answered returns coverage_score >= 70"
+    - "Missing storage backup_strategy triggers critical gap warning"
+    - "UI component without states triggers important gap warning"
+    - "Gap recommendations include specific actionable text"
+    - "Assessment completes in <2s for typical component (15 questions)"
+
+validation_scenarios:
+  storage_component:
+    input: {component_type: "storage", backup_strategy: null}
+    expected_gaps: ["critical: missing_backup_strategy"]
+    expected_recommendation: "Add backup and recovery procedures with testing plan"
+    
+  complete_component:
+    input: {all_required_sections: present}
+    expected_score: ">= 85"
+    expected_gaps: []
+
+
+observability:
+  automated_metrics:
+    - name: "coverage_score_distribution"
+      measurement: "histogram of all assessment scores"
+      
+    - name: "gap_detection_accuracy"  
+      measurement: "automated validation against known test cases"
+      
+    - name: "assessment_completion_time"
+      measurement: "time from input to output"
+      
+  human_metrics:
+    - name: "recommendation_usefulness"
+      measurement: "human rating 1-5 scale"
+      collection: "post-session survey"
+      frequency: "10% of sessions"
+      
+    - name: "question_clarity"
+      measurement: "human rating 1-5 scale"  
+      collection: "embedded in interview flow"
+      question: "Was this question clear and actionable?"
+      
+    - name: "generated_spec_quality"
+      measurement: "human assessment of output quality"
+      collection: "follow-up email after 1 week"
+      frequency: "5% of sessions"
+      
+  metric_collection:
+    automated_pipeline:
+      - "Events logged to .specplane/logs/events.jsonl"
+      - "Metrics aggregated to .specplane/logs/metrics.json daily"
+      - "Dashboard generated from metrics.json weekly"
+      
+    human_feedback:
+      - "Rating prompts embedded in CLI at natural breakpoints"
+      - "Optional feedback survey at session completion"
+      - "Follow-up quality assessment via email (if provided)"

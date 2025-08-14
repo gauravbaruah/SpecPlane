@@ -175,3 +175,20 @@ observability:
     - "session.state_changed"
     - "session.completed"
     - "session.error"
+
+tests:
+  acceptance:
+    - "Session state transitions: init → questioning → generating → complete"
+    - "Pause/resume cycle preserves all answers and progress"
+    - "Session timeout (30min) auto-saves and provides resume instructions"
+    - "Invalid state transition logged with clear error message"
+    - "Component failure triggers graceful degradation + user notification"
+    
+  human_validation:
+    - "Rate session flow smoothness 1-5: Does progression feel natural?"
+    - "Error recovery assessment: Are error messages helpful and actionable?"
+    
+  automated_metrics:
+    - "session_completion_rate > 80%"
+    - "state_transition_latency_p95 < 100ms"
+    - "session_recovery_success_rate > 99%"

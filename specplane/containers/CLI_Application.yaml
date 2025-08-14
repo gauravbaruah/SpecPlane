@@ -57,11 +57,7 @@ components:
   - name: "Session_Orchestrator"
     description: "Manages interview flow and state transitions"
     references: "components/session_orchestrator.yaml"
-    
-  - name: "Interview_Engine" 
-    description: "Conducts guided questioning using question bank"
-    references: "components/interview_engine.yaml"
-    
+      
   - name: "Coverage_Assessor"
     description: "Evaluates completeness and identifies design gaps"
     references: "components/coverage_assessor.yaml"
@@ -159,3 +155,19 @@ dependencies:
     - "templates/*.j2"
     - "schemas/*.json"
 
+tests:
+  acceptance:
+    - "Command 'specplane guide ComponentName --type widget' starts interview"
+    - "Command 'specplane validate spec.yaml' returns clear pass/fail results"
+    - "Command 'specplane resume session123' restores previous state"
+    - "Invalid command shows help text with examples"
+    - "Ctrl+C during session saves state and shows resume instructions"
+    
+  human_validation:
+    - "Rate CLI UX 1-5: Is the interface intuitive for new users?"
+    - "Error message quality: Are CLI errors helpful and actionable?"
+    
+  automated_metrics:
+    - "cli_response_latency_p95 < 500ms"
+    - "command_success_rate > 95%"
+    - "help_text_access_rate" # How often users need help

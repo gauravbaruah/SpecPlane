@@ -162,3 +162,22 @@ observability:
     - "questions.pattern.matched" 
     - "questions.context.analyzed"
     - "questions.sequence.completed"
+
+
+tests:
+  acceptance:
+    - "Storage component generates backup/corruption questions automatically"
+    - "UI component generates state management questions automatically"
+    - "AI component generates safety/cost questions automatically"
+    - "Question sequence follows dependency order (purpose → failure modes → data)"
+    - "Context-aware follow-ups: offline mentioned → sync conflict questions added"
+    
+  human_validation:
+    - "Rate question clarity 1-5: Can developer understand without explanation?"
+    - "Rate question relevance 1-5: Does this question improve component design?"
+    - "Completeness check: Do generated questions cover critical design aspects?"
+    
+  automated_metrics:
+    - "questions_generated_per_session_avg between 10-25"
+    - "question_generation_time_p95 < 1s"
+    - "context_adaptation_trigger_rate > 30%"
