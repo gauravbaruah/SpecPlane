@@ -1,16 +1,18 @@
 meta:
   id: "pattern_library"
   name: "Pattern Library"
+  version: "0.1.0"
   type: "component"
   level: "component" 
   purpose: "Provides intelligent pattern matching and question generation based on domain expertise"
+  status: "prototype"
 
 contracts:
   interfaces:
     - name: "match_patterns"
       input: "ComponentDescription"
       output: "ApplicablePattern[]"
-      logic: "fuzzy_matching + keyword_detection + context_analysis"
+      logic: "keyword_matching + context_analysis + confidence_scoring"
       
     - name: "get_reasoning_chains"
       input: "Pattern + ComponentContext"
@@ -20,17 +22,51 @@ contracts:
     - name: "generate_questions"
       input: "ReasoningChain + SessionState"
       output: "ContextualQuestion[]"
-      logic: "template_expansion + dependency_ordering"
+      logic: "template_expansion + dependency_ordering + difficulty_adjustment"
+
+prototype_modes:
+  p0_simple:
+    pattern_matching: "simple_keyword_lookup"
+    question_generation: "static_template_expansion"
+    reasoning_chains: "disabled"
+    patterns_file: "config/basic_patterns.yaml"
+    
+  p1_smart:
+    pattern_matching: "fuzzy_matching + confidence_scoring"
+    question_generation: "conditional_templates"
+    reasoning_chains: "basic_chains"
+    patterns_file: "config/full_patterns.yaml"
+    
+  p2_dynamic:
+    pattern_matching: "ml_based_similarity + context_analysis"
+    question_generation: "dynamic_reasoning_chains"
+    reasoning_chains: "full_cot_react"
+    patterns_file: "config/advanced_patterns.yaml"
 
 data:
   patterns:
     source: "config/patterns.yaml"
     schema: "PatternDefinition"
     examples:
-      - storage_systems
-      - user_interfaces  
-      - ai_agents
-      - api_services
+      storage_systems:
+        keywords: ["storage", "file", "database", "persistence", "cache"]
+        question_categories: ["reliability", "backup", "corruption", "performance"]
+        reasoning_chains: ["storage_failure_chain", "data_integrity_chain"]
+        
+      user_interfaces:
+        keywords: ["screen", "widget", "component", "ui", "interface"]
+        question_categories: ["states", "accessibility", "user_flow", "error_handling"]
+        reasoning_chains: ["ui_state_chain", "user_experience_chain"]
+        
+      api_services:
+        keywords: ["api", "service", "endpoint", "rest", "graphql"]
+        question_categories: ["error_codes", "rate_limiting", "versioning", "security"]
+        reasoning_chains: ["api_reliability_chain", "service_integration_chain"]
+        
+      ai_agents:
+        keywords: ["ai", "agent", "llm", "model", "inference"]
+        question_categories: ["safety", "cost", "fallbacks", "monitoring"]
+        reasoning_chains: ["ai_safety_chain", "cost_optimization_chain"]
       
   reasoning_templates:
     source: "config/reasoning_chains.yaml" 
@@ -40,15 +76,40 @@ data:
     source: "config/question_templates.yaml"
     schema: "QuestionTemplate"
 
+pattern_matching_logic:
+  simple_mode:
+    method: "exact_keyword_match"
+    threshold: "1_keyword_match"
+    
+  smart_mode:
+    method: "weighted_keyword_scoring + context_hints"
+    threshold: "confidence > 0.6"
+    
+  dynamic_mode:
+    method: "semantic_similarity + context_analysis"
+    threshold: "confidence > 0.8"
+
 dependencies:
   internal:
     - "File_Storage" # For loading pattern data
   external:
-    - "NLP_matcher" # For fuzzy text matching
+    - "NLP_matcher" # For fuzzy text matching (P1+ only)
 
 data_flows:
-  - name: "generate_questions"
-    trigger: "generate_questions_for_component"
+  - name: "simple_pattern_matching"
+    mode: "p0_simple"
+    sequence: |
+      sequenceDiagram
+        participant PL as Pattern_Library
+        participant FS as File_Storage
+        
+        PL->>FS: load("basic_patterns.yaml")
+        FS-->>PL: pattern_definitions
+        PL->>PL: keyword_lookup("file storage")
+        PL-->>PL: [storage_patterns]
+        
+  - name: "smart_pattern_matching"
+    mode: "p1_smart"
     sequence: |
       sequenceDiagram
         participant PL as Pattern_Library
@@ -59,3 +120,29 @@ data_flows:
         Matcher-->>PL: keyword_matches + confidence_scores
         PL->>Templates: expand_templates(matched_patterns)
         Templates-->>PL: generated_questions
+
+constraints:
+  performance:
+    pattern_matching_time: "<100ms"
+    question_generation_time: "<500ms"
+    
+  quality:
+    pattern_match_accuracy: ">85%"
+    question_relevance_score: ">4.0/5.0"
+
+error_handling:
+  no_patterns_matched:
+    action: "fallback_to_generic_questions"
+    
+  invalid_pattern_file:
+    action: "log_error + use_cached_patterns"
+    
+  template_expansion_error:
+    action: "use_basic_questions + log_issue"
+
+observability:
+  metrics:
+    - "patterns_matched_per_request"
+    - "pattern_matching_accuracy"
+    - "question_generation_success_rate"
+    - "template_expansion_errors"

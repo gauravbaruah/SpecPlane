@@ -1,0 +1,123 @@
+meta:
+  id: "coverage_assessor"
+  name: "Coverage Assessor"
+  version: "0.1.0"
+  type: "component"
+  level: "component"
+  purpose: "Evaluates design completeness and identifies critical gaps before implementation"
+  status: "prototype"
+
+contracts:
+  interfaces:
+    - name: "assess_coverage"
+      input: "ComponentSpec + AnsweredQuestions"
+      output: "CoverageReport"
+      logic: "systematic_completeness_check + gap_identification"
+      
+    - name: "calculate_score"
+      input: "AnsweredQuestions + RequiredSections"
+      output: "CoverageScore"
+      logic: "weighted_scoring + critical_section_validation"
+      
+    - name: "identify_gaps"
+      input: "ComponentSpec + ComponentType"
+      output: "Gap[]"
+      logic: "pattern_matching + requirement_validation"
+
+  assessment_framework:
+    required_sections:
+      all_components: ["purpose", "interfaces", "dependencies"]
+      storage_components: ["error_handling", "backup_strategy", "observability"]
+      ui_components: ["states", "events", "accessibility"]
+      api_components: ["error_codes", "idempotency", "rate_limits"]
+      ai_components: ["safety_guardrails", "fallbacks", "cost_constraints"]
+      
+    scoring_weights:
+      purpose_clarity: 25%
+      failure_mode_coverage: 20%
+      interface_completeness: 15%
+      dependency_mapping: 10%
+      constraint_definition: 10%
+      observability: 10%
+      implementation_readiness: 10%
+
+    gap_categories:
+      critical: "blocks_implementation"
+      important: "reduces_quality"
+      nice_to_have: "improves_maintainability"
+
+data:
+  assessment_templates:
+    source: "config/assessment_templates.yaml"
+    schema: "AssessmentTemplate"
+    
+  scoring_rules:
+    source: "config/scoring_rules.yaml"
+    schema: "ScoringRule"
+    
+  gap_patterns:
+    source: "config/gap_patterns.yaml"
+    schema: "GapPattern"
+
+assessment_logic:
+  completeness_check:
+    method: "section_presence + content_quality"
+    critical_sections: ["purpose", "interfaces", "error_handling"]
+    
+  gap_identification:
+    pattern_based:
+      - pattern: "storage_system"
+        required_gaps: ["backup_strategy", "corruption_handling", "disk_full_scenario"]
+      - pattern: "ui_component"
+        required_gaps: ["loading_states", "error_states", "accessibility"]
+      - pattern: "api_service"
+        required_gaps: ["rate_limiting", "error_taxonomy", "idempotency"]
+        
+  prototype_assessment:
+    p0_requirements:
+      minimum_sections: ["purpose", "basic_interfaces", "simple_error_handling"]
+      implementation_clarity: "can_build_in_1_day"
+      
+    p1_requirements:
+      additional_sections: ["observability", "advanced_error_handling"]
+      implementation_clarity: "production_ready"
+
+interfaces:
+  events_out:
+    - name: "coverage.assessment.completed"
+      when: "coverage_analysis_finished"
+      properties: ["component_name", "coverage_score", "gap_count", "assessment_time"]
+      pii: false
+      
+    - name: "coverage.gap.identified"
+      when: "critical_gap_found"
+      properties: ["gap_type", "severity", "recommendation"]
+      pii: false
+
+constraints:
+  performance:
+    assessment_time: "<2s"
+    gap_detection_accuracy: ">90%"
+    
+  quality:
+    false_positive_rate: "<5%"
+    critical_gap_detection: ">95%"
+
+dependencies:
+  internal:
+    - "Pattern_Library"  # For pattern-based gap detection
+    - "File_Storage"     # For assessment templates
+  external: []
+
+# Example assessment output
+example_output:
+  component_name: "file_storage"
+  coverage_score: 85%
+  gaps:
+    critical: []
+    important: ["missing_chaos_testing", "incomplete_monitoring"]
+    nice_to_have: ["performance_optimization_notes"]
+  recommendations:
+    - "Add disk space monitoring with alerting"
+    - "Define backup testing procedures"
+  implementation_readiness: "production_ready"
