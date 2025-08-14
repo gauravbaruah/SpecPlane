@@ -1,0 +1,68 @@
+# Build {{ component_name }} (Step {{ step_number }} of {{ total_steps }})
+
+## Build Context
+{% if previous_components %}
+**✅ Completed**: {{ previous_components | join(', ') }}  
+{% endif %}
+**🔄 Current**: {{ component_name }}  
+{% if next_components %}
+**⏳ Next**: {{ next_components[0] }}{{ ', ...' if next_components | length > 1 else '' }}
+{% endif %}
+
+## What You're Building
+{{ purpose_statement }}
+
+{% if tech_stack %}
+## Tech Stack
+**Language**: {{ tech_stack.language }} | **Framework**: {{ tech_stack.framework }}
+{% endif %}
+
+## Key Requirements
+
+### Core Functionality
+{% for interface in interfaces %}
+- **{{ interface.name | title }}**: {{ interface.description | default(interface.input + ' → ' + interface.output) }}
+{% endfor %}
+
+{% if integration_notes %}
+### Integration with Previous Components
+{% for note in integration_notes %}
+- **{{ note.component }}**: {{ note.interaction }}
+{% endfor %}
+{% endif %}
+
+{% if failure_modes %}
+### Critical Error Handling
+{% for mode in failure_modes %}
+- **{{ mode.type | title }}**: {{ mode.impact }}
+{% endfor %}
+{% endif %}
+
+## Success Criteria
+- Component works independently
+- Integrates cleanly with {{ previous_components[-1] if previous_components else 'system foundation' }}
+- All tests pass
+- Ready for {{ next_components[0] if next_components else 'final integration' }}
+
+## Implementation Notes
+
+{% if dependencies %}
+### Dependencies
+{% for dep in dependencies %}
+- **{{ dep }}**: {{ 'Already built' if dep in previous_components else 'Will be built later' }}
+{% endfor %}
+{% endif %}
+
+{% if step_specific_guidance %}
+### Step-Specific Guidance
+{{ step_specific_guidance }}
+{% endif %}
+
+---
+
+**📋 Full Spec**: See attached `{{ component_name | lower | replace(' ', '_') }}.yaml`  
+**🎯 Focus**: Build this component, test it thoroughly, then we'll integrate it with the next component.
+
+{% if next_component_preview %}
+**👀 Coming Next**: {{ next_component_preview }}
+{% endif %}
