@@ -1,0 +1,111 @@
+meta:
+  id: "specplane_guide_system"
+  name: "SpecPlane Guide Agent System"
+  version: "0.1.0"
+  owner: "SpecPlane"
+  type: "context"
+  level: "context"
+  purpose: "Interactive system that guides developers through systematic software design and generates SpecPlane specifications"
+  status: "prototype"
+
+external_actors:
+  - name: "Developer/Architect"
+    type: "person"
+    description: "Software developer seeking design guidance"
+    interactions: ["starts_session", "answers_questions", "receives_specs"]
+    
+  - name: "Cursor_IDE"
+    type: "system"
+    description: "AI-powered code editor/generator"
+    interactions: ["receives_prompts", "generates_code"]
+
+system_boundary:
+  name: "SpecPlane"
+  purpose: "Transform vague component ideas into detailed, validated specifications for human review and AI-assisted development"
+  
+containers:
+  - name: "CLI_Interface"
+    description: "Command-line interface for user interaction"
+    technology: "Python Typer"
+    
+  - name: "Session_Orchestrator" 
+    description: "Manages interview flow and state"
+    technology: ["Python Pydantic", "Langgraph"]
+    
+  - name: "YAML_Spec_Generator"
+    description: "Generates YAML specs"
+    technology: ["Python Pydantic", "Langgraph", "Jinja2"]
+
+  - name: "API_Spec_Generator"
+    description: "Generates API specs"
+    technology: ["Python Pydantic", "Langgraph", "Jinja2"]
+    
+  - name: "Cursor_Prompt_Generator"
+    description: "Generates Cursor prompts"
+    technology: ["Python Jinja2", "Langgraph"]
+    
+  - name: "Local_Storage"
+    description: "Persists sessions and generated artifacts"
+    technology: "File System + JSON"
+    comments: "We really want the system to use text files (.md, .yaml, .json, .mmd, .csv, .txt, etc.) for all context, generated artifacts, and state."
+
+  - name: "Question_Bank"
+    description: "Question bank for guided design session"
+    technology: ["JSON", "Markdown"]
+    
+  - name: "Coverage_Scorer"
+    description: "Scorer for design completeness"
+    technology: ["Python Pydantic", "Langgraph"]
+    
+key_flows:
+  - name: "guided_design_session"
+    steps:
+      - "Developer describes component via CLI"
+      - "Orchestrator loads question bank"
+      - "Interview engine asks guided questions"
+      - "Coverage scorer validates completeness given answers to questions"
+      - "Generator produces specs + prompts"
+      - "Storage persists all artifacts"
+
+success_criteria:
+  - "80% of sessions complete with >70% coverage"
+  - "Generated Cursor prompts produce working code"
+  - "Critical design gaps identified before implementation"
+
+kpis:
+  - name: "coverage_score_p95"
+    target: ">=0.85"
+    window: "7d"
+  - name: "spec_gen_time_p95"
+    target: "<=3m"
+    window: "7d"
+  - name: "spec_valid_rate"
+    target: ">=99%"
+    window: "7d"
+
+interfaces:
+  events_out:
+    - name: "sp.session.start"
+      properties: ["mode"]
+    - name: "sp.section.completed"
+      properties: ["section_id","coverage"]
+    - name: "sp.spec.generated"
+      properties: ["targets","files","coverage"]
+
+constraints:
+  slos:
+    - name: "CLI response latency"
+      target: "<=200ms"
+      window: "7d"
+
+security_privacy:
+  auth: ["local dev only (P0)"]
+  pii: []
+  retention: "local files in /out/, user-controlled"
+
+observability:
+  metrics: ["coverage_score","unanswered_required","gen_errors"]
+
+links: {}
+
+# TODO: Add more details to the context.yaml file

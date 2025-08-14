@@ -1,0 +1,59 @@
+meta:
+  id: "session_orchestrator"
+  name: "Session Orchestrator"
+  type: "container"
+  level: "container"
+  purpose: "Manages interview flow, state transitions, and component coordination"
+
+contracts:
+  apis:
+    - endpoint: "start_session"
+      method: "POST"
+      request: "SessionConfig"
+      response: "SessionState"
+      
+    - endpoint: "next_question"
+      method: "GET" 
+      params: ["session_id"]
+      response: "Question | Complete"
+      
+    - endpoint: "submit_answer"
+      method: "POST"
+      request: "AnswerSubmission"
+      response: "ValidationResult"
+
+  events:
+    - name: "session.started"
+      props: ["session_id", "component_type", "user_experience"]
+      
+    - name: "session.completed"
+      props: ["session_id", "coverage_score", "risk_count"]
+
+dependencies:
+  components:
+    - "interview_engine"
+    - "coverage_scorer" 
+    - "spec_generator"
+  external:
+    - "Local_Storage"
+
+interfaces:
+  apis:
+    - { method: POST, path: "/v1/session", request: "SessionConfig", response: "SessionState" }
+    - { method: GET,  path: "/v1/questions/next", params: ["session_id"], response: "Question | Complete"  }
+    - { method: POST, path: "/v1/answers", request: "AnswerSubmission", response: "ValidationResult" }
+    - { method: POST, path: "/v1/generate", request: "SpecGenerationRequest", response: "SpecGenerationResponse" }
+
+
+observability:
+  metrics: ["questions_asked","answers_recorded","coverage", "session_duration"]
+
+state_machine: |
+  stateDiagram-v2
+    [*] --> Initializing
+    Initializing --> Questioning : session_created
+    Questioning --> Validating : answer_submitted
+    Validating --> Questioning : more_questions
+    Validating --> Generating : interview_complete
+    Generating --> Complete : specs_generated
+    Complete --> [*]
