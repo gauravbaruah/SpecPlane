@@ -28,10 +28,12 @@ containers:
     description: "Interactive command-line application containing all business logic"
     technology: ["Python", "Typer", "Pydantic", "Jinja2"]
     responsibilities: ["user_interaction", "session_orchestration", "spec_generation"]
+    references: "containers/CLI_Application.yaml"
     
   - name: "File_Storage"
     description: "Local filesystem for configuration, sessions, and generated artifacts"
     technology: "File System"
     responsibilities: ["config_persistence", "session_state", "artifact_storage"]
-
+    references: "containers/File_Storage.yaml"
+    
 # TODO: add high level system design diagram here
