@@ -44,18 +44,51 @@ contracts:
       - "risk_assessment.md" # Identified risks and mitigations
       - "next_steps.md"      # Recommended follow-up actions
 
-  template_system:
-    template_selection:
-      component: "templates/component.yaml.j2"
-      widget: "templates/widget.yaml.j2"
-      service: "templates/service.yaml.j2"
-      agent: "templates/agent.yaml.j2"
+# CONSOLIDATED: Combined both template_system sections
+template_system:
+  template_selection:
+    component: "templates/component.yaml.j2"
+    widget: "templates/widget.yaml.j2"
+    service: "templates/service.yaml.j2"
+    agent: "templates/agent.yaml.j2"
+    
+  prompt_templates:
+    cursor_react: "templates/cursor_react.md.j2"
+    cursor_flutter: "templates/cursor_flutter.md.j2"
+    cursor_python: "templates/cursor_python.md.j2"
+    cursor_generic: "templates/cursor_generic.md.j2"
+    
+  jinja2_templates:
+    - path: "templates/component.yaml.j2"
+      purpose: "Generate SpecPlane YAML specs"
       
-    prompt_templates:
-      cursor_react: "templates/cursor_react.md.j2"
-      cursor_flutter: "templates/cursor_flutter.md.j2"
-      cursor_python: "templates/cursor_python.md.j2"
-      cursor_generic: "templates/cursor_generic.md.j2"
+    - path: "templates/cursor_prompt.md.j2"  
+      purpose: "Generate AI-ready implementation prompts"
+      
+    - path: "templates/coverage_report.md.j2"
+      purpose: "Generate coverage assessment reports"
+      
+    - path: "templates/openapi_stub.yaml.j2"
+      purpose: "Generate API contract stubs (optional)"
+
+  template_structure:
+    component_template:
+      sections:
+        - "meta"              # Always required
+        - "contracts"         # Always required
+        - "dependencies"      # Always required
+        - "constraints"       # Conditional
+        - "observability"     # Conditional
+        - "prototype_modes"   # Optional
+        
+    cursor_prompt_template:
+      sections:
+        - "purpose_statement"     # Clear problem definition
+        - "technical_requirements" # Specific implementation needs
+        - "constraints_and_limits" # Performance, security, etc.
+        - "implementation_guidance" # Step-by-step suggestions
+        - "validation_criteria"    # How to know it works
+        - "example_code_snippets"  # Optional code examples
 
 prototype_modes:
   p0_simple:
@@ -124,13 +157,18 @@ data_flows:
         
         AG->>FS: save_all_artifacts(bundle)
 
+# CONSOLIDATED: Combined both dependencies sections
 dependencies:
   internal:
     - "File_Storage"       # For templates and output
     - "Coverage_Assessor"  # For report data
+    
   external:
-    - "Jinja2"            # Template engine
-    - "PyYAML"            # YAML processing
+    - name: "Jinja2"
+      purpose: "Template rendering engine"
+      version: ">=3.1.0"
+    - name: "PyYAML"
+      purpose: "YAML processing"
 
 constraints:
   performance:
@@ -147,25 +185,6 @@ constraints:
     atomic_file_writes: true
     backup_on_generation: true
     rollback_on_failure: true
-
-template_structure:
-  component_template:
-    sections:
-      - "meta"              # Always required
-      - "contracts"         # Always required
-      - "dependencies"      # Always required
-      - "constraints"       # Conditional
-      - "observability"     # Conditional
-      - "prototype_modes"   # Optional
-      
-  cursor_prompt_template:
-    sections:
-      - "purpose_statement"     # Clear problem definition
-      - "technical_requirements" # Specific implementation needs
-      - "constraints_and_limits" # Performance, security, etc.
-      - "implementation_guidance" # Step-by-step suggestions
-      - "validation_criteria"    # How to know it works
-      - "example_code_snippets"  # Optional code examples
 
 error_handling:
   template_not_found:
@@ -194,6 +213,36 @@ observability:
     - "artifacts.report.generated"
     - "artifacts.bundle.completed"
 
+# CONSOLIDATED: Combined multiple test sections
+tests:
+  acceptance:
+    - "Input with component_name:'VoiceRecorder' outputs file 'voice_recorder.yaml'"
+    - "Generated YAML contains all answered questions mapped to correct sections"
+    - "Template rendering failure returns clear error + partial output"
+    - "Output directory created automatically if missing"
+    - "Generated Cursor prompt includes purpose statement + critical requirements"
+    - "Jinja2 template errors logged with line number and variable name"
+    - "Template 'component.yaml.j2' renders valid YAML from answer data"
+    - "Template variables {{purpose}} and {{interfaces}} populated correctly"
+    - "Missing template variables logged with clear error message"
+    - "Template syntax errors caught and reported with line numbers"
+    
+  validation_tests:
+    yaml_structure:
+      test: "Generate spec from minimal answers (purpose + 1 interface)"
+      expected_sections: ["meta", "purpose", "contracts"]
+      expected_validation: "passes JSON schema validation"
+      
+    cursor_prompt:
+      test: "Generate prompt from storage component spec"
+      expected_content: ["Purpose statement", "Error handling requirements", "Implementation guidance"]
+      expected_format: "Valid markdown with proper headers"
+      
+    jinja2_specific:
+      - "Undefined variables in templates raise clear errors"
+      - "Template inheritance works for shared headers/footers"
+      - "Custom filters (snake_case, title_case) function correctly"
+
 # Example outputs
 example_outputs:
   file_structure:
@@ -218,56 +267,3 @@ example_outputs:
     - processing: Show spinner "Processing audio..."
     
     Generate React Native component with proper state management...
-
-tests:
-  acceptance:
-    - "Input with component_name:'VoiceRecorder' outputs file 'voice_recorder.yaml'"
-    - "Generated YAML contains all answered questions mapped to correct sections"
-    - "Template rendering failure returns clear error + partial output"
-    - "Output directory created automatically if missing"
-    - "Generated Cursor prompt includes purpose statement + critical requirements"
-    - "Jinja2 template errors logged with line number and variable name"
-
-file_validation:
-  yaml_structure:
-    test: "Generate spec from minimal answers (purpose + 1 interface)"
-    expected_sections: ["meta", "purpose", "contracts"]
-    expected_validation: "passes JSON schema validation"
-    
-  cursor_prompt:
-    test: "Generate prompt from storage component spec"
-    expected_content: ["Purpose statement", "Error handling requirements", "Implementation guidance"]
-    expected_format: "Valid markdown with proper headers"
-
-
-dependencies:
-  external:
-    - name: "Jinja2"
-      purpose: "Template rendering engine"
-      version: ">=3.1.0"
-
-template_system:
-  jinja2_templates:
-    - path: "templates/component.yaml.j2"
-      purpose: "Generate SpecPlane YAML specs"
-      
-    - path: "templates/cursor_prompt.md.j2"  
-      purpose: "Generate AI-ready implementation prompts"
-      
-    - path: "templates/coverage_report.md.j2"
-      purpose: "Generate coverage assessment reports"
-      
-    - path: "templates/openapi_stub.yaml.j2"
-      purpose: "Generate API contract stubs (optional)"
-
-tests:
-  acceptance:
-    - "Template 'component.yaml.j2' renders valid YAML from answer data"
-    - "Template variables {{purpose}} and {{interfaces}} populated correctly"
-    - "Missing template variables logged with clear error message"
-    - "Template syntax errors caught and reported with line numbers"
-    
-  jinja2_specific:
-    - "Undefined variables in templates raise clear errors"
-    - "Template inheritance works for shared headers/footers"
-    - "Custom filters (snake_case, title_case) function correctly"
