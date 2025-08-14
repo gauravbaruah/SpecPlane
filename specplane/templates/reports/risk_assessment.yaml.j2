@@ -1,0 +1,344 @@
+# Risk Assessment Report: {{ component_name }}
+
+**Generated on:** {{ timestamp }}  
+**Component Type:** {{ component_type }}  
+**Risk Assessment Level:** {{ risk_level }}
+
+---
+
+## 🚨 Executive Summary
+
+| **Overall Risk Level** | **{{ overall_risk_level }}** |
+|------------------------|------------------------------|
+| **Critical Risks** | {{ critical_risks | length }} |
+| **High Risks** | {{ high_risks | length }} |
+| **Medium Risks** | {{ medium_risks | length }} |
+| **Risk Score** | {{ risk_score }}/100 |
+
+### Key Risk Areas
+{% for area in top_risk_areas %}
+- **{{ area.category }}**: {{ area.description }} ({{ area.severity }} severity)
+{% endfor %}
+
+---
+
+## 🔥 Critical Risks (Immediate Action Required)
+
+{% for risk in critical_risks %}
+### {{ risk.title }}
+**Severity:** 🚨 CRITICAL  
+**Probability:** {{ risk.probability }}  
+**Impact:** {{ risk.impact }}
+
+**Description:**  
+{{ risk.description }}
+
+**Potential Consequences:**
+{% for consequence in risk.consequences %}
+- {{ consequence }}
+{% endfor %}
+
+**Mitigation Strategy:**
+{% for mitigation in risk.mitigations %}
+- [ ] {{ mitigation.action }} ({{ mitigation.timeline }})
+{% endfor %}
+
+**Risk Owner:** {{ risk.owner | default('Development Team') }}  
+**Target Resolution:** {{ risk.target_date | default('Before implementation') }}
+
+---
+{% endfor %}
+
+## ⚠️ High Risks (Address Before Production)
+
+{% for risk in high_risks %}
+### {{ risk.title }}
+**Severity:** ⚠️ HIGH  
+**Probability:** {{ risk.probability }}  
+**Impact:** {{ risk.impact }}
+
+**Description:**  
+{{ risk.description }}
+
+**Mitigation Strategy:**
+{% for mitigation in risk.mitigations %}
+- [ ] {{ mitigation.action }}
+{% endfor %}
+
+**Monitoring:**  
+{{ risk.monitoring | default('Regular review during development') }}
+
+---
+{% endfor %}
+
+## ⚡ Medium Risks (Monitor and Plan)
+
+{% for risk in medium_risks %}
+### {{ risk.title }}
+**Severity:** ⚡ MEDIUM  
+**Probability:** {{ risk.probability }}  
+**Impact:** {{ risk.impact }}
+
+**Description:**  
+{{ risk.description }}
+
+**Mitigation Options:**
+{% for mitigation in risk.mitigations %}
+- {{ mitigation.action }}
+{% endfor %}
+
+---
+{% endfor %}
+
+## 📊 Risk Analysis by Category
+
+### Technical Risks
+{% for risk in technical_risks %}
+- **{{ risk.title }}** ({{ risk.severity }})
+  - Impact: {{ risk.impact }}
+  - Mitigation: {{ risk.primary_mitigation }}
+{% endfor %}
+
+### Operational Risks
+{% for risk in operational_risks %}
+- **{{ risk.title }}** ({{ risk.severity }})
+  - Impact: {{ risk.impact }}
+  - Mitigation: {{ risk.primary_mitigation }}
+{% endfor %}
+
+### Security Risks
+{% for risk in security_risks %}
+- **{{ risk.title }}** ({{ risk.severity }})
+  - Impact: {{ risk.impact }}
+  - Mitigation: {{ risk.primary_mitigation }}
+{% endfor %}
+
+### Business Risks
+{% for risk in business_risks %}
+- **{{ risk.title }}** ({{ risk.severity }})
+  - Impact: {{ risk.impact }}
+  - Mitigation: {{ risk.primary_mitigation }}
+{% endfor %}
+
+---
+
+## 🎯 Risk Mitigation Roadmap
+
+### Phase 1: Immediate (Week 1)
+{% for item in immediate_actions %}
+- [ ] **{{ item.action }}** - {{ item.description }}
+  - Addresses: {{ item.risks | join(', ') }}
+  - Owner: {{ item.owner }}
+  - Success criteria: {{ item.success_criteria }}
+{% endfor %}
+
+### Phase 2: Short Term (Month 1)
+{% for item in short_term_actions %}
+- [ ] **{{ item.action }}** - {{ item.description }}
+  - Addresses: {{ item.risks | join(', ') }}
+  - Dependencies: {{ item.dependencies | join(', ') }}
+{% endfor %}
+
+### Phase 3: Medium Term (Quarter 1)
+{% for item in medium_term_actions %}
+- [ ] **{{ item.action }}** - {{ item.description }}
+  - Addresses: {{ item.risks | join(', ') }}
+  - Investment required: {{ item.investment }}
+{% endfor %}
+
+---
+
+## 📈 Risk Monitoring Plan
+
+### Key Risk Indicators (KRIs)
+{% for kri in key_risk_indicators %}
+| **{{ kri.name }}** | {{ kri.threshold }} | {{ kri.frequency }} | {{ kri.owner }} |
+{% endfor %}
+
+### Monitoring Schedule
+- **Daily:** {{ daily_monitoring | join(', ') }}
+- **Weekly:** {{ weekly_monitoring | join(', ') }}
+- **Monthly:** {{ monthly_monitoring | join(', ') }}
+
+### Escalation Triggers
+{% for trigger in escalation_triggers %}
+- **{{ trigger.condition }}**: {{ trigger.action }}
+  - Escalate to: {{ trigger.escalate_to }}
+  - Timeline: {{ trigger.timeline }}
+{% endfor %}
+
+---
+
+## 🔍 Component-Specific Risk Analysis
+
+{% if component_type == 'storage' %}
+### Storage Component Risks
+
+**Data Loss Risks:**
+{% for risk in data_loss_risks %}
+- {{ risk.scenario }}: {{ risk.probability }} probability, {{ risk.impact }} impact
+{% endfor %}
+
+**Performance Risks:**
+{% for risk in performance_risks %}
+- {{ risk.scenario }}: {{ risk.mitigation }}
+{% endfor %}
+
+**Compliance Risks:**
+{% for risk in compliance_risks %}
+- {{ risk.requirement }}: {{ risk.status }}
+{% endfor %}
+
+{% elif component_type == 'ui' %}
+### UI Component Risks
+
+**Usability Risks:**
+{% for risk in usability_risks %}
+- {{ risk.scenario }}: {{ risk.impact }}
+{% endfor %}
+
+**Accessibility Risks:**
+{% for risk in accessibility_risks %}
+- {{ risk.barrier }}: {{ risk.affected_users }}
+{% endfor %}
+
+**Performance Risks:**
+{% for risk in performance_risks %}
+- {{ risk.scenario }}: {{ risk.user_impact }}
+{% endfor %}
+
+{% elif component_type == 'api' %}
+### API Component Risks
+
+**Security Risks:**
+{% for risk in security_risks %}
+- {{ risk.vulnerability }}: {{ risk.severity }}
+{% endfor %}
+
+**Availability Risks:**
+{% for risk in availability_risks %}
+- {{ risk.failure_mode }}: {{ risk.business_impact }}
+{% endfor %}
+
+**Integration Risks:**
+{% for risk in integration_risks %}
+- {{ risk.dependency }}: {{ risk.failure_impact }}
+{% endfor %}
+
+{% elif component_type == 'ai' %}
+### AI Component Risks
+
+**Model Risks:**
+{% for risk in model_risks %}
+- {{ risk.failure_mode }}: {{ risk.consequences }}
+{% endfor %}
+
+**Ethical Risks:**
+{% for risk in ethical_risks %}
+- {{ risk.concern }}: {{ risk.mitigation }}
+{% endfor %}
+
+**Cost Risks:**
+{% for risk in cost_risks %}
+- {{ risk.scenario }}: {{ risk.financial_impact }}
+{% endfor %}
+{% endif %}
+
+---
+
+## 📚 Risk Management Best Practices
+
+### Implemented Safeguards
+{% for safeguard in implemented_safeguards %}
+- **{{ safeguard.type }}**: {{ safeguard.description }}
+  - Effectiveness: {{ safeguard.effectiveness }}
+  - Coverage: {{ safeguard.coverage }}
+{% endfor %}
+
+### Recommended Additional Controls
+{% for control in recommended_controls %}
+- **{{ control.type }}**: {{ control.description }}
+  - Benefit: {{ control.benefit }}
+  - Implementation effort: {{ control.effort }}
+  - Priority: {{ control.priority }}
+{% endfor %}
+
+### Industry Benchmarks
+{% for benchmark in industry_benchmarks %}
+- **{{ benchmark.metric }}**: Your component {{ benchmark.comparison }} industry average
+  - Industry standard: {{ benchmark.standard }}
+  - Your current level: {{ benchmark.current }}
+  - Improvement opportunity: {{ benchmark.opportunity }}
+{% endfor %}
+
+---
+
+## 🎮 Scenario Planning
+
+### Best Case Scenario
+{{ best_case_scenario.description }}
+
+**Probability:** {{ best_case_scenario.probability }}  
+**Key Success Factors:**
+{% for factor in best_case_scenario.success_factors %}
+- {{ factor }}
+{% endfor %}
+
+### Most Likely Scenario
+{{ most_likely_scenario.description }}
+
+**Probability:** {{ most_likely_scenario.probability }}  
+**Key Assumptions:**
+{% for assumption in most_likely_scenario.assumptions %}
+- {{ assumption }}
+{% endfor %}
+
+### Worst Case Scenario
+{{ worst_case_scenario.description }}
+
+**Probability:** {{ worst_case_scenario.probability }}  
+**Contingency Plans:**
+{% for plan in worst_case_scenario.contingency_plans %}
+- {{ plan.trigger }}: {{ plan.action }}
+{% endfor %}
+
+---
+
+## 📋 Action Items Summary
+
+### Critical Actions (This Week)
+{% for action in critical_actions %}
+- [ ] {{ action.description }}
+  - **Owner:** {{ action.owner }}
+  - **Due:** {{ action.due_date }}
+  - **Success Metric:** {{ action.success_metric }}
+{% endfor %}
+
+### Important Actions (This Month)
+{% for action in important_actions %}
+- [ ] {{ action.description }}
+  - **Owner:** {{ action.owner }}
+  - **Estimated Effort:** {{ action.effort }}
+{% endfor %}
+
+### Review and Update Schedule
+- **Next Risk Review:** {{ next_review_date }}
+- **Review Frequency:** {{ review_frequency }}
+- **Risk Owner:** {{ risk_owner }}
+
+---
+
+## 📞 Emergency Contacts
+
+| Role | Name | Contact | Availability |
+|------|------|---------|--------------|
+{% for contact in emergency_contacts %}
+| {{ contact.role }} | {{ contact.name }} | {{ contact.contact }} | {{ contact.availability }} |
+{% endfor %}
+
+---
+
+*Risk assessment generated by SpecPlane Risk Analyzer v{{ analyzer_version }}*  
+*This report should be reviewed and updated regularly as the component evolves*
+
+**Disclaimer:** This automated risk assessment is based on the design information provided. It should be supplemented with domain-specific expertise and organizational risk policies.

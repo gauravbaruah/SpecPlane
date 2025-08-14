@@ -1,0 +1,241 @@
+meta:
+  id: "{{ component_name | lower | replace(' ', '_') }}"
+  name: "{{ component_name }}"
+  version: "0.1.0"
+  type: "ai_agent"
+  level: "component"
+  purpose: "{{ purpose_statement }}"
+  status: "prototype"
+
+contracts:
+  capabilities:
+    {% for capability in agent_capabilities %}
+    - name: "{{ capability.name }}"
+      input: "{{ capability.input }}"
+      output: "{{ capability.output }}"
+      {% if capability.confidence_threshold %}
+      confidence_threshold: {{ capability.confidence_threshold }}
+      {% endif %}
+    {% endfor %}
+
+{% if safety_guardrails %}
+safety_measures:
+  content_filtering:
+    {% for filter in safety_guardrails.content_filters %}
+    - type: "{{ filter.type }}"
+      action: "{{ filter.action }}"
+    {% endfor %}
+  
+  {% if safety_guardrails.pii_protection %}
+  pii_protection:
+    detection: "{{ safety_guardrails.pii_protection.detection }}"
+    handling: "{{ safety_guardrails.pii_protection.handling }}"
+  {% endif %}
+  
+  {% if safety_guardrails.harmful_content %}
+  harmful_content_prevention:
+    {% for prevention in safety_guardrails.harmful_content %}
+    - category: "{{ prevention.category }}"
+      response: "{{ prevention.response }}"
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+{% if fallback_strategies %}
+fallback_behavior:
+  {% for fallback in fallback_strategies %}
+  {{ fallback.trigger }}:
+    action: "{{ fallback.action }}"
+    {% if fallback.message %}
+    user_message: "{{ fallback.message }}"
+    {% endif %}
+    {% if fallback.escalation %}
+    escalation: "{{ fallback.escalation }}"
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if cost_constraints %}
+cost_management:
+  {% if cost_constraints.budget %}
+  monthly_budget: "{{ cost_constraints.budget }}"
+  {% endif %}
+  {% if cost_constraints.per_request %}
+  max_cost_per_request: "{{ cost_constraints.per_request }}"
+  {% endif %}
+  {% if cost_constraints.monitoring %}
+  cost_monitoring: "{{ cost_constraints.monitoring }}"
+  {% endif %}
+  {% if cost_constraints.limits %}
+  usage_limits:
+    {% for limit in cost_constraints.limits %}
+    {{ limit.metric }}: "{{ limit.value }}"
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+{% if model_configuration %}
+model_configuration:
+  {% if model_configuration.provider %}
+  provider: "{{ model_configuration.provider }}"
+  {% endif %}
+  {% if model_configuration.model %}
+  model: "{{ model_configuration.model }}"
+  {% endif %}
+  {% if model_configuration.temperature %}
+  temperature: {{ model_configuration.temperature }}
+  {% endif %}
+  {% if model_configuration.max_tokens %}
+  max_tokens: {{ model_configuration.max_tokens }}
+  {% endif %}
+  {% if model_configuration.system_prompt %}
+  system_prompt: "{{ model_configuration.system_prompt }}"
+  {% endif %}
+{% endif %}
+
+{% if data_handling %}
+data_handling:
+  {% if data_handling.retention %}
+  conversation_retention: "{{ data_handling.retention }}"
+  {% endif %}
+  {% if data_handling.logging %}
+  interaction_logging: "{{ data_handling.logging }}"
+  {% endif %}
+  {% if data_handling.privacy %}
+  privacy_measures: "{{ data_handling.privacy }}"
+  {% endif %}
+{% endif %}
+
+{% if failure_modes %}
+error_scenarios:
+  {% for mode in failure_modes %}
+  {{ mode.type }}:
+    detection: "{{ mode.detection | default('Response quality monitoring') }}"
+    response: "{{ mode.response | default('Graceful fallback message') }}"
+    {% if mode.recovery %}
+    recovery: "{{ mode.recovery }}"
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if api_dependencies or internal_dependencies %}
+dependencies:
+  {% if api_dependencies %}
+  external_services:
+    {% for dep in api_dependencies %}
+    - service: "{{ dep.name }}"
+      purpose: "{{ dep.purpose }}"
+      {% if dep.api_key_required %}
+      authentication: "{{ dep.api_key_required }}"
+      {% endif %}
+      {% if dep.fallback %}
+      fallback: "{{ dep.fallback }}"
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% if internal_dependencies %}
+  internal:
+    {% for dep in internal_dependencies %}
+    - "{{ dep }}"
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+constraints:
+  performance:
+    response_time_target: "{{ performance.response_time | default('<3s') }}"
+    {% if performance.concurrent_requests %}
+    max_concurrent_requests: {{ performance.concurrent_requests }}
+    {% endif %}
+    {% if performance.context_window %}
+    context_window_limit: "{{ performance.context_window }}"
+    {% endif %}
+  
+  quality:
+    {% if quality.accuracy_target %}
+    accuracy_target: "{{ quality.accuracy_target }}"
+    {% endif %}
+    {% if quality.relevance_threshold %}
+    relevance_threshold: {{ quality.relevance_threshold }}
+    {% endif %}
+    {% if quality.coherence_score %}
+    min_coherence_score: {{ quality.coherence_score }}
+    {% endif %}
+  
+  safety:
+    harmful_content_block_rate: "{{ safety.block_rate | default('>99%') }}"
+    {% if safety.human_oversight %}
+    human_oversight_triggers: "{{ safety.human_oversight }}"
+    {% endif %}
+
+observability:
+  metrics:
+    - "request_count_by_capability"
+    - "response_time_percentiles"
+    - "confidence_score_distribution"
+    - "safety_filter_activations"
+    {% if cost_constraints %}
+    - "cost_per_request"
+    - "monthly_spend_tracking"
+    {% endif %}
+  
+  quality_monitoring:
+    - "response_relevance_scores"
+    - "user_satisfaction_ratings"
+    - "escalation_to_human_rate"
+    {% if safety_guardrails %}
+    - "safety_violation_attempts"
+    {% endif %}
+  
+  alerts:
+    - condition: "response_time > 5s"
+      action: "investigate_performance_degradation"
+    {% if cost_constraints %}
+    - condition: "daily_cost > budget_threshold"
+      action: "rate_limit_requests"
+    {% endif %}
+    {% if safety_guardrails %}
+    - condition: "safety_violations > threshold"
+      action: "review_safety_measures"
+    {% endif %}
+
+{% if success_criteria %}
+success_criteria:
+  {% for criterion in success_criteria %}
+  - metric: "{{ criterion.metric }}"
+    target: "{{ criterion.target }}"
+  {% endfor %}
+{% endif %}
+
+tests:
+  capability_validation:
+    {% for capability in agent_capabilities %}
+    - "{{ capability.name }} produces relevant output for valid input"
+    {% endfor %}
+  
+  safety_compliance:
+    {% if safety_guardrails %}
+    - "Blocks inappropriate content requests"
+    - "Redacts PII from responses"
+    - "Refuses to generate harmful content"
+    {% endif %}
+  
+  fallback_behavior:
+    {% if fallback_strategies %}
+    {% for fallback in fallback_strategies %}
+    - "{{ fallback.trigger }} triggers appropriate fallback response"
+    {% endfor %}
+    {% endif %}
+  
+  cost_control:
+    {% if cost_constraints %}
+    - "Request costs stay within defined limits"
+    - "Usage monitoring accurately tracks spend"
+    {% endif %}
+  
+  {% if failure_modes %}
+  error_handling:
+    {% for mode in failure_modes %}
+    - "{{ mode.type }} handled gracefully with user-friendly message"
+    {% endfor %}
+  {% endif %}

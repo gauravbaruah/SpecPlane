@@ -1,0 +1,879 @@
+# Flutter Implementation for {{ component_name }}
+
+## Purpose
+{{ purpose_statement }}
+
+## Widget Overview
+Create a Flutter widget that handles {{ component_states | length if component_states else 'multiple' }} states and provides {{ interfaces | length if interfaces else 'core' }} main interactions.
+
+## Widget Structure
+
+### Widget Class Definition
+```dart
+{% if component_states %}
+enum {{ component_name.replaceAll(' ', '') }}State {
+  {% for state in component_states %}
+  {{ state | camelCase }},
+  {% endfor %}
+}
+{% endif %}
+
+{% if data_captured or data_displayed %}
+class {{ component_name.replaceAll(' ', '') }}Data {
+  {% if data_displayed %}
+  final Map<String, dynamic> displayData;
+  {% endif %}
+  {% if data_captured %}
+  final Map<String, dynamic> capturedData;
+  {% endif %}
+  
+  const {{ component_name.replaceAll(' ', '') }}Data({
+    {% if data_displayed %}
+    required this.displayData,
+    {% endif %}
+    {% if data_captured %}
+    this.capturedData = const {},
+    {% endif %}
+  });
+}
+{% endif %}
+
+class {{ component_name.replaceAll(' ', '') }} extends StatefulWidget {
+  {% if data_displayed %}
+  final {{ component_name.replaceAll(' ', '') }}Data? data;
+  {% endif %}
+  {% if data_captured %}
+  final ValueChanged<{{ component_name.replaceAll(' ', '') }}Data>? onDataChanged;
+  {% endif %}
+  {% for interface in interfaces %}
+  final Future<{{ interface.output | default('dynamic') }}> Function({{ interface.input | default('dynamic') }})? {{ interface.name | camelCase }};
+  {% endfor %}
+  final bool enabled;
+  final EdgeInsets? padding;
+  
+  const {{ component_name.replaceAll(' ', '') }}({
+    Key? key,
+    {% if data_displayed %}
+    this.data,
+    {% endif %}
+    {% if data_captured %}
+    this.onDataChanged,
+    {% endif %}
+    {% for interface in interfaces %}
+    this.{{ interface.name | camelCase }},
+    {% endfor %}
+    this.enabled = true,
+    this.padding,
+  }) : super(key: key);
+
+  @override
+  State<{{ component_name.replaceAll(' ', '') }}> createState() => _{{ component_name.replaceAll(' ', '') }}State();
+}
+```
+
+### State Class Implementation
+```dart
+class _{{ component_name.replaceAll(' ', '') }}State extends State<{{ component_name.replaceAll(' ', '') }}> {
+  {% if component_states %}
+  {{ component_name.replaceAll(' ', '') }}State _currentState = {{ component_name.replaceAll(' ', '') }}State.{{ component_states[0] | camelCase }};
+  {% endif %}
+  {% if data_captured %}
+  late {{ component_name.replaceAll(' ', '') }}Data _data;
+  {% endif %}
+  {% if failure_modes %}
+  String? _errorMessage;
+  bool _isLoading = false;
+  {% endif %}
+  
+  {% if api_dependencies %}
+  late final Dio _dio;
+  {% endif %}
+
+  @override
+  void initState() {
+    super.initState();
+    {% if data_captured %}
+    _data = widget.data ?? {{ component_name.replaceAll(' ', '') }}Data(
+      {% if data_displayed %}displayData: {},{% endif %}
+    );
+    {% endif %}
+    {% if api_dependencies %}
+    _dio = Dio();
+    {% endif %}
+  }
+
+  @override
+  void dispose() {
+    {% if api_dependencies %}
+    _dio.close();
+    {% endif %}
+    super.dispose();
+  }
+```
+
+## Core Interface Implementation
+
+{% for interface in interfaces %}
+### {{ interface.name | title }} Method
+```dart
+Future<void> _handle{{ interface.name | pascalCase }}({{ interface.input | default('dynamic') }} input) async {
+  {% if failure_modes %}
+  setState(() {
+    _isLoading = true;
+    _errorMessage = null;
+  });
+  {% endif %}
+  
+  {% if component_states %}
+  setState(() {
+    _currentState = {{ component_name.replaceAll(' ', '') }}State.processing;
+  });
+  {% endif %}
+
+  try {
+    {% if interface.name | camelCase %}
+    final result = await widget.{{ interface.name | camelCase }}?.call(input);
+    {% endif %}
+    
+    {% if component_states %}
+    setState(() {
+      _currentState = {{ component_name.replaceAll(' ', '') }}State.success;
+    });
+    {% endif %}
+    
+    {% if data_captured %}
+    // Update captured data if needed
+    final updatedData = {{ component_name.replaceAll(' ', '') }}Data(
+      {% if data_displayed %}displayData: _data.displayData,{% endif %}
+      capturedData: {
+        ..._data.capturedData,
+        '{{ interface.name }}': result,
+      },
+    );
+    
+    setState(() {
+      _data = updatedData;
+    });
+    
+    widget.onDataChanged?.call(updatedData);
+    {% endif %}
+    
+  } catch (error) {
+    {% if failure_modes %}
+    _handleError(error);
+    {% endif %}
+    {% if component_states %}
+    setState(() {
+      _currentState = {{ component_name.replaceAll(' ', '') }}State.error;
+    });
+    {% endif %}
+  } finally {
+    {% if failure_modes %}
+    setState(() {
+      _isLoading = false;
+    });
+    {% endif %}
+  }
+}
+{% endfor %}
+
+## Error Handling
+
+{% if failure_modes %}
+```dart
+void _handleError(dynamic error) {
+  setState(() {
+    _errorMessage = _getErrorMessage(error);
+  });
+  
+  // Log error for debugging
+  debugPrint('{{ component_name }} error: $error');
+  
+  {% for mode in failure_modes %}
+  {% if mode.recovery %}
+  // Handle {{ mode.type }}: {{ mode.recovery }}
+  if (error is {{ mode.type | pascalCase }}Exception) {
+    _recover{{ mode.type | pascalCase }}();
+  }
+  {% endif %}
+  {% endfor %}
+}
+
+String _getErrorMessage(dynamic error) {
+  {% for mode in failure_modes %}
+  if (error is {{ mode.type | pascalCase }}Exception) {
+    return "{{ mode.user_message | default('An error occurred. Please try again.') }}";
+  }
+  {% endfor %}
+  
+  return "Unexpected error occurred. Please try again.";
+}
+
+{% for mode in failure_modes %}
+{% if mode.recovery %}
+void _recover{{ mode.type | pascalCase }}() {
+  // {{ mode.recovery }}
+  // Implementation here
+}
+{% endif %}
+{% endfor %}
+```
+{% endif %}
+
+## Widget Build Method
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Padding(
+    padding: widget.padding ?? const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        {% if failure_modes %}
+        // Error message display
+        if (_errorMessage != null)
+          _buildErrorWidget(),
+        {% endif %}
+        
+        {% if component_states %}
+        // State-based content
+        {% for state in component_states %}
+        if (_currentState == {{ component_name.replaceAll(' ', '') }}State.{{ state | camelCase }})
+          _build{{ state | pascalCase }}Widget(),
+        {% endfor %}
+        {% else %}
+        // Main content
+        _buildMainContent(),
+        {% endif %}
+      ],
+    ),
+  );
+}
+```
+
+## State-Specific Widgets
+
+{% for state in component_states %}
+### {{ state | title }} State Widget
+```dart
+Widget _build{{ state | pascalCase }}Widget() {
+  return Container(
+    decoration: BoxDecoration(
+      color: _getStateColor({{ component_name.replaceAll(' ', '') }}State.{{ state | camelCase }}),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: Colors.grey.shade300),
+    ),
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      children: [
+        // {{ states[state].display if states and states[state] and states[state].display else 'Content for ' + state + ' state' }}
+        {% if states and states[state] and states[state].actions %}
+        // Actions for {{ state }} state
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            {% for action in states[state].actions %}
+            ElevatedButton(
+              onPressed: widget.enabled ? () => _handle{{ action | pascalCase }}() : null,
+              child: Text('{{ action | title }}'),
+            ),
+            {% endfor %}
+          ],
+        ),
+        {% endif %}
+      ],
+    ),
+  );
+}
+{% endfor %}
+
+## Supporting Widgets
+
+{% if failure_modes %}
+```dart
+Widget _buildErrorWidget() {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.red.shade50,
+      border: Border.all(color: Colors.red.shade200),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.error_outline, color: Colors.red.shade700),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            _errorMessage!,
+            style: TextStyle(color: Colors.red.shade700),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => setState(() => _errorMessage = null),
+        ),
+      ],
+    ),
+  );
+}
+```
+{% endif %}
+
+```dart
+{% if component_states %}
+Color _getStateColor({{ component_name.replaceAll(' ', '') }}State state) {
+  switch (state) {
+    {% for state in component_states %}
+    case {{ component_name.replaceAll(' ', '') }}State.{{ state | camelCase }}:
+      return {{ 'Colors.orange.shade50' if state == 'loading' else 'Colors.red.shade50' if state == 'error' else 'Colors.green.shade50' if state == 'success' else 'Colors.blue.shade50' }};
+    {% endfor %}
+  }
+}
+{% endif %}
+
+{% if data_captured %}
+Widget _buildFormFields() {
+  return Column(
+    children: [
+      // Form fields based on {{ data_captured }}
+      // Implementation depends on specific data structure
+      TextFormField(
+        decoration: const InputDecoration(
+          labelText: 'Input Field',
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (value) {
+          // Update captured data
+        },
+      ),
+    ],
+  );
+}
+{% endif %}
+```
+
+## External Dependencies Integration
+
+{% if api_dependencies %}
+```dart
+{% for dep in api_dependencies %}
+Future<{{ dep.output | default('dynamic') }}> _call{{ dep.name | pascalCase }}({{ dep.input | default('dynamic') }} data) async {
+  try {
+    final response = await _dio.post(
+      '{{ dep.endpoint | default('/api/endpoint') }}',
+      data: data,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          {% if dep.auth_required %}
+          'Authorization': 'Bearer ${await _getAuthToken()}',
+          {% endif %}
+        },
+        sendTimeout: const Duration(seconds: {{ dep.timeout | default('30') }}),
+        receiveTimeout: const Duration(seconds: {{ dep.timeout | default('30') }}),
+      ),
+    );
+    
+    return response.data;
+    
+  } on DioException catch (e) {
+    {% if dep.fallback %}
+    debugPrint('{{ dep.name }} failed, using fallback: ${e.message}');
+    return _{{ dep.fallback | camelCase }}Fallback(data);
+    {% else %}
+    throw {{ dep.name | pascalCase }}Exception('Failed to call {{ dep.name }}: ${e.message}');
+    {% endif %}
+  }
+}
+
+{% if dep.fallback %}
+{{ dep.output | default('dynamic') }} _{{ dep.fallback | camelCase }}Fallback({{ dep.input | default('dynamic') }} data) {
+  // {{ dep.fallback }} implementation
+  // Return fallback data
+}
+{% endif %}
+
+{% if dep.auth_required %}
+Future<String> _getAuthToken() async {
+  // Implement token retrieval logic
+  return '';
+}
+{% endif %}
+{% endfor %}
+```
+{% endif %}
+
+## Accessibility Implementation
+
+```dart
+Widget _buildAccessibleWidget() {
+  return Semantics(
+    label: '{{ component_name }}',
+    {% if component_states %}
+    value: _currentState.name,
+    {% endif %}
+    {% if failure_modes %}
+    liveRegion: _isLoading,
+    {% endif %}
+    child: ExcludeSemantics(
+      excluding: !widget.enabled,
+      child: _buildMainContent(),
+    ),
+  );
+}
+
+{% if accessibility_notes %}
+// Accessibility notes: {{ accessibility_notes }}
+{% endif %}
+```
+
+## Performance Optimizations
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return RepaintBoundary(
+    child: AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _buildContent(),
+    ),
+  );
+}
+
+{% if data_displayed %}
+// Memoize expensive data processing
+late final Map<String, dynamic> _processedData = useMemoized(
+  () => _processDisplayData(widget.data?.displayData),
+  [widget.data?.displayData],
+);
+{% endif %}
+```
+
+## Testing Support
+
+```dart
+// test/{{ component_name | snake_case }}_test.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+
+void main() {
+  group('{{ component_name }} Tests', () {
+    {% for interface in interfaces %}
+    testWidgets('should handle {{ interface.name }} correctly', (tester) async {
+      // Arrange
+      final mockCallback = Mock{{ interface.name | pascalCase }}();
+      
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: {{ component_name.replaceAll(' ', '') }}(
+              {{ interface.name | camelCase }}: mockCallback.call,
+            ),
+          ),
+        ),
+      );
+      
+      // Act & Assert
+      // Test implementation
+    });
+    {% endfor %}
+
+    {% for state in component_states %}
+    testWidgets('should display {{ state }} state correctly', (tester) async {
+      // Test {{ state }} state rendering
+    });
+    {% endfor %}
+
+    {% for mode in failure_modes %}
+    testWidgets('should handle {{ mode.type }} gracefully', (tester) async {
+      // Test {{ mode.type }} error handling
+    });
+    {% endfor %}
+
+    {% if accessibility_notes %}
+    testWidgets('should be accessible', (tester) async {
+      // Test accessibility requirements
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: {{ component_name.replaceAll(' ', '') }}(),
+          ),
+        ),
+      );
+
+      // Verify semantic labels
+      expect(find.bySemanticsLabel('{{ component_name }}'), findsOneWidget);
+      
+      // Test keyboard navigation
+      // Test screen reader compatibility
+    });
+    {% endif %}
+  });
+}
+
+// Mock classes
+{% for interface in interfaces %}
+class Mock{{ interface.name | pascalCase }} extends Mock {
+  Future<{{ interface.output | default('dynamic') }}> call({{ interface.input | default('dynamic') }} input);
+}
+{% endfor %}
+```
+
+## Custom Exceptions
+
+```dart
+{% for mode in failure_modes %}
+class {{ mode.type | pascalCase }}Exception implements Exception {
+  final String message;
+  final dynamic originalError;
+  
+  const {{ mode.type | pascalCase }}Exception(this.message, [this.originalError]);
+  
+  @override
+  String toString() => '{{ mode.type | pascalCase }}Exception: $message';
+}
+{% endfor %}
+```
+
+## State Management Integration
+
+### Provider Integration (Optional)
+```dart
+// If using Provider for state management
+class {{ component_name.replaceAll(' ', '') }}Provider extends ChangeNotifier {
+  {% if component_states %}
+  {{ component_name.replaceAll(' ', '') }}State _state = {{ component_name.replaceAll(' ', '') }}State.{{ component_states[0] | camelCase }};
+  {{ component_name.replaceAll(' ', '') }}State get state => _state;
+  {% endif %}
+  
+  {% if data_captured %}
+  {{ component_name.replaceAll(' ', '') }}Data? _data;
+  {{ component_name.replaceAll(' ', '') }}Data? get data => _data;
+  {% endif %}
+  
+  {% if failure_modes %}
+  String? _error;
+  String? get error => _error;
+  
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+  {% endif %}
+
+  {% for interface in interfaces %}
+  Future<void> {{ interface.name | camelCase }}({{ interface.input | default('dynamic') }} input) async {
+    {% if failure_modes %}
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    {% endif %}
+    
+    try {
+      // Implementation
+      {% if component_states %}
+      _state = {{ component_name.replaceAll(' ', '') }}State.success;
+      {% endif %}
+    } catch (e) {
+      {% if failure_modes %}
+      _error = e.toString();
+      {% endif %}
+      {% if component_states %}
+      _state = {{ component_name.replaceAll(' ', '') }}State.error;
+      {% endif %}
+    } finally {
+      {% if failure_modes %}
+      _isLoading = false;
+      {% endif %}
+      notifyListeners();
+    }
+  }
+  {% endfor %}
+}
+
+// Widget using Provider
+class {{ component_name.replaceAll(' ', '') }}WithProvider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => {{ component_name.replaceAll(' ', '') }}Provider(),
+      child: Consumer<{{ component_name.replaceAll(' ', '') }}Provider>(
+        builder: (context, provider, child) {
+          return {{ component_name.replaceAll(' ', '') }}(
+            {% for interface in interfaces %}
+            {{ interface.name | camelCase }}: provider.{{ interface.name | camelCase }},
+            {% endfor %}
+          );
+        },
+      ),
+    );
+  }
+}
+```
+
+## Responsive Design
+
+```dart
+Widget _buildResponsiveLayout(BuildContext context) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final isTablet = screenWidth >= 768;
+  final isDesktop = screenWidth >= 1024;
+  
+  {% if responsive_behavior %}
+  // {{ responsive_behavior }}
+  {% endif %}
+  
+  if (isDesktop) {
+    return _buildDesktopLayout();
+  } else if (isTablet) {
+    return _buildTabletLayout();
+  } else {
+    return _buildMobileLayout();
+  }
+}
+
+Widget _buildMobileLayout() {
+  return Column(
+    children: [
+      // Mobile-specific layout
+      // Stack widgets vertically
+    ],
+  );
+}
+
+Widget _buildTabletLayout() {
+  return Row(
+    children: [
+      // Tablet layout with sidebar
+      Expanded(flex: 1, child: _buildSidebar()),
+      Expanded(flex: 2, child: _buildMainContent()),
+    ],
+  );
+}
+
+Widget _buildDesktopLayout() {
+  return Row(
+    children: [
+      // Desktop layout with multiple columns
+      Expanded(flex: 1, child: _buildSidebar()),
+      Expanded(flex: 3, child: _buildMainContent()),
+      Expanded(flex: 1, child: _buildRightPanel()),
+    ],
+  );
+}
+```
+
+## Animation and Transitions
+
+```dart
+class _{{ component_name.replaceAll(' ', '') }}State extends State<{{ component_name.replaceAll(' ', '') }}> 
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+    
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedContent() {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: _buildMainContent(),
+      ),
+    );
+  }
+}
+```
+
+## Platform-Specific Implementations
+
+```dart
+Widget _buildPlatformSpecificWidget() {
+  return Platform.isIOS
+      ? _buildIOSWidget()
+      : Platform.isAndroid
+          ? _buildAndroidWidget()
+          : _buildWebWidget();
+}
+
+Widget _buildIOSWidget() {
+  return CupertinoPageScaffold(
+    navigationBar: const CupertinoNavigationBar(
+      middle: Text('{{ component_name }}'),
+    ),
+    child: _buildContent(),
+  );
+}
+
+Widget _buildAndroidWidget() {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('{{ component_name }}'),
+      elevation: 0,
+    ),
+    body: _buildContent(),
+  );
+}
+
+Widget _buildWebWidget() {
+  return Scaffold(
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: _buildContent(),
+      ),
+    ),
+  );
+}
+```
+
+## Implementation Checklist
+
+### Core Functionality
+- [ ] Widget renders without errors
+{% for interface in interfaces %}
+- [ ] {{ interface.name }} implemented and working
+{% endfor %}
+{% for state in component_states %}
+- [ ] {{ state }} state handled correctly
+{% endfor %}
+- [ ] Input validation implemented
+- [ ] State management working properly
+
+### Error Handling
+{% for mode in failure_modes %}
+- [ ] {{ mode.type }} handled gracefully
+{% endfor %}
+- [ ] User-friendly error messages
+- [ ] Error recovery mechanisms
+
+### UI/UX
+- [ ] Responsive design implemented
+- [ ] Smooth animations and transitions
+- [ ] Platform-appropriate styling
+- [ ] Loading states provide feedback
+{% if accessibility_notes %}
+- [ ] Accessibility requirements met
+{% endif %}
+
+### Performance
+- [ ] No unnecessary rebuilds
+- [ ] Animations are smooth (60fps)
+- [ ] Memory leaks prevented
+{% if performance_requirements %}
+{% for req in performance_requirements %}
+- [ ] {{ req.metric }} meets {{ req.target }}
+{% endfor %}
+{% endif %}
+
+### Testing
+- [ ] Unit tests for all methods
+- [ ] Widget tests for UI behavior
+- [ ] Integration tests for user flows
+- [ ] Performance tests
+- [ ] Accessibility tests
+
+### Production Readiness
+- [ ] Error logging implemented
+- [ ] Analytics events added
+- [ ] Performance monitoring
+- [ ] Crash reporting setup
+
+---
+
+## Dependencies to Add
+
+```yaml
+# pubspec.yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  {% if api_dependencies %}
+  dio: ^5.3.2              # HTTP client
+  {% endif %}
+  {% if data_captured %}
+  provider: ^6.0.5         # State management (optional)
+  {% endif %}
+  {% if responsive_behavior %}
+  flutter_screenutil: ^5.9.0  # Responsive utilities
+  {% endif %}
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.2
+  build_runner: ^2.4.7
+  {% if accessibility_notes %}
+  flutter_accessibility_service: ^0.2.0
+  {% endif %}
+```
+
+## Usage Example
+
+```dart
+// Example usage in a screen
+class ExampleScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Example')),
+      body: {{ component_name.replaceAll(' ', '') }}(
+        {% if data_displayed %}
+        data: {{ component_name.replaceAll(' ', '') }}Data(
+          displayData: {'key': 'value'},
+        ),
+        {% endif %}
+        {% if data_captured %}
+        onDataChanged: (data) {
+          print('Data changed: ${data.capturedData}');
+        },
+        {% endif %}
+        {% for interface in interfaces %}
+        {{ interface.name | camelCase }}: (input) async {
+          // Implementation
+          return result;
+        },
+        {% endfor %}
+        padding: const EdgeInsets.all(16),
+      ),
+    );
+  }
+}
+```
+
+---
+*Flutter implementation guide generated by SpecPlane*

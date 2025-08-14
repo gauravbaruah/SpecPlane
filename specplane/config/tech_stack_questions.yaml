@@ -1,0 +1,337 @@
+meta:
+  version: "0.1.0"
+  purpose: "Questions for capturing target application tech stack"
+  question_flow: "tech_stack_onboarding"
+
+# Tech stack discovery questions
+tech_stack_questions:
+  application_basics:
+    - id: "application_name"
+      prompt: "What's the name of your application?"
+      type: "text"
+      required: true
+      example: "SpecPlane Guide Agent"
+      
+    - id: "application_type"
+      prompt: "What type of application are you building?"
+      type: "select"
+      required: true
+      options:
+        - value: "cli_tool"
+          label: "CLI Tool / Command Line Application"
+        - value: "web_app"
+          label: "Web Application"
+        - value: "mobile_app"
+          label: "Mobile Application"
+        - value: "api_service"
+          label: "API Service / Backend"
+        - value: "desktop_app"
+          label: "Desktop Application"
+        - value: "library"
+          label: "Library / Package"
+      
+    - id: "application_description"
+      prompt: "Briefly describe what your application does"
+      type: "text"
+      required: true
+      example: "Interactive design guidance system for developers"
+
+  primary_technology:
+    - id: "primary_language"
+      prompt: "What's your primary programming language?"
+      type: "select"
+      required: true
+      options:
+        - value: "python"
+          label: "Python"
+        - value: "typescript"
+          label: "TypeScript"
+        - value: "javascript"
+          label: "JavaScript"
+        - value: "dart"
+          label: "Dart"
+        - value: "rust"
+          label: "Rust"
+        - value: "go"
+          label: "Go"
+        - value: "java"
+          label: "Java"
+        - value: "csharp"
+          label: "C#"
+        - value: "swift"
+          label: "Swift"
+        - value: "kotlin"
+          label: "Kotlin"
+        - value: "other"
+          label: "Other (specify in next question)"
+      
+    - id: "framework"
+      prompt: "What framework do you want to use?"
+      type: "conditional_select"
+      required: true
+      depends_on: "primary_language"
+      options:
+        python:
+          - value: "fastapi"
+            label: "FastAPI (Web API)"
+          - value: "django"
+            label: "Django (Full-stack web)"
+          - value: "flask"
+            label: "Flask (Lightweight web)"
+          - value: "typer"
+            label: "Typer (CLI)"
+          - value: "none"
+            label: "No framework"
+        typescript:
+          - value: "react"
+            label: "React"
+          - value: "nextjs"
+            label: "Next.js"
+          - value: "vue"
+            label: "Vue.js"
+          - value: "angular"
+            label: "Angular"
+          - value: "express"
+            label: "Express.js (Backend)"
+          - value: "nestjs"
+            label: "NestJS (Backend)"
+        dart:
+          - value: "flutter"
+            label: "Flutter"
+          - value: "dart_frog"
+            label: "Dart Frog (Backend)"
+        rust:
+          - value: "axum"
+            label: "Axum (Web)"
+          - value: "actix"
+            label: "Actix (Web)"
+          - value: "tauri"
+            label: "Tauri (Desktop)"
+          - value: "clap"
+            label: "Clap (CLI)"
+
+  data_and_storage:
+    - id: "needs_database"
+      prompt: "Does your application need a database?"
+      type: "yes_no"
+      required: true
+      
+    - id: "database_type"
+      prompt: "What type of database do you prefer?"
+      type: "select"
+      required: false
+      depends_on: "needs_database == true"
+      options:
+        - value: "postgresql"
+          label: "PostgreSQL"
+        - value: "mysql"
+          label: "MySQL"
+        - value: "sqlite"
+          label: "SQLite"
+        - value: "mongodb"
+          label: "MongoDB"
+        - value: "redis"
+          label: "Redis"
+        - value: "file_based"
+          label: "File-based storage (JSON/YAML)"
+        - value: "other"
+          label: "Other"
+          
+    - id: "orm_preference"
+      prompt: "Do you want to use an ORM/database library?"
+      type: "conditional_select"
+      depends_on: "needs_database == true"
+      options:
+        python:
+          - value: "sqlalchemy"
+            label: "SQLAlchemy"
+          - value: "django_orm"
+            label: "Django ORM"
+          - value: "peewee"
+            label: "Peewee"
+          - value: "none"
+            label: "Raw SQL"
+        typescript:
+          - value: "prisma"
+            label: "Prisma"
+          - value: "typeorm"
+            label: "TypeORM"
+          - value: "sequelize"
+            label: "Sequelize"
+
+  external_integrations:
+    - id: "needs_ai_integration"
+      prompt: "Will you integrate with AI services (OpenAI, Anthropic, etc.)?"
+      type: "yes_no"
+      required: false
+      
+    - id: "ai_providers"
+      prompt: "Which AI providers will you use?"
+      type: "multiselect"
+      depends_on: "needs_ai_integration == true"
+      options:
+        - value: "openai"
+          label: "OpenAI (GPT-4, ChatGPT)"
+        - value: "anthropic"
+          label: "Anthropic (Claude)"
+        - value: "google"
+          label: "Google (Gemini)"
+        - value: "local_model"
+          label: "Local models (Ollama, etc.)"
+          
+    - id: "other_apis"
+      prompt: "Will you integrate with other external APIs? (GitHub, payment processors, etc.)"
+      type: "text"
+      required: false
+      example: "GitHub API, Stripe payments, email service"
+
+  development_preferences:
+    - id: "testing_approach"
+      prompt: "How comprehensive should your testing setup be?"
+      type: "select"
+      required: true
+      options:
+        - value: "minimal"
+          label: "Minimal - Basic unit tests only"
+        - value: "standard"
+          label: "Standard - Unit + integration tests"
+        - value: "comprehensive"
+          label: "Comprehensive - Unit + integration + E2E tests"
+        - value: "none"
+          label: "No automated testing"
+          
+    - id: "code_quality_tools"
+      prompt: "Do you want code formatting and linting set up?"
+      type: "yes_no"
+      required: true
+      default: true
+      
+    - id: "documentation_level"
+      prompt: "How much documentation generation do you want?"
+      type: "select"
+      required: true
+      options:
+        - value: "basic"
+          label: "Basic - README and code comments"
+        - value: "standard"
+          label: "Standard - README + API docs"
+        - value: "comprehensive"
+          label: "Comprehensive - Full documentation site"
+
+  deployment_and_environment:
+    - id: "deployment_target"
+      prompt: "Where will you deploy this application?"
+      type: "select"
+      required: true
+      options:
+        - value: "local_only"
+          label: "Local development only"
+        - value: "cloud_provider"
+          label: "Cloud provider (AWS, GCP, Azure)"
+        - value: "self_hosted"
+          label: "Self-hosted server"
+        - value: "package_distribution"
+          label: "Package distribution (PyPI, npm, etc.)"
+        - value: "app_store"
+          label: "App store (mobile apps)"
+        - value: "github_releases"
+          label: "GitHub releases"
+          
+    - id: "containerization"
+      prompt: "Do you want Docker/containerization support?"
+      type: "yes_no"
+      required: false
+      depends_on: "deployment_target != 'local_only'"
+      
+    - id: "ci_cd_preference"
+      prompt: "Do you want CI/CD pipeline setup?"
+      type: "select"
+      required: false
+      depends_on: "deployment_target != 'local_only'"
+      options:
+        - value: "none"
+          label: "No CI/CD"
+        - value: "github_actions"
+          label: "GitHub Actions"
+        - value: "gitlab_ci"
+          label: "GitLab CI"
+        - value: "other"
+          label: "Other platform"
+
+  performance_and_monitoring:
+    - id: "performance_critical"
+      prompt: "Is performance critical for your application?"
+      type: "select"
+      required: true
+      options:
+        - value: "not_critical"
+          label: "Not critical - Standard performance is fine"
+        - value: "important"
+          label: "Important - Users expect responsive experience"
+        - value: "critical"
+          label: "Critical - High-performance requirements"
+          
+    - id: "monitoring_needs"
+      prompt: "What level of monitoring do you need?"
+      type: "select"
+      required: true
+      options:
+        - value: "basic"
+          label: "Basic - Simple logging"
+        - value: "standard"
+          label: "Standard - Logging + basic metrics"
+        - value: "advanced"
+          label: "Advanced - Full observability stack"
+        - value: "none"
+          label: "No monitoring needed"
+
+# Question flow logic
+question_flows:
+  tech_stack_onboarding:
+    sections: 
+      - "application_basics"
+      - "primary_technology"
+      - "data_and_storage"
+      - "external_integrations"
+      - "development_preferences"
+      - "deployment_and_environment"
+      - "performance_and_monitoring"
+    estimated_time: "5-8 minutes"
+    
+  quick_setup:
+    sections:
+      - "application_basics"
+      - "primary_technology"
+      - "data_and_storage"
+    estimated_time: "2-3 minutes"
+
+# Default configurations by application type
+default_configurations:
+  cli_tool:
+    framework_suggestions:
+      python: "typer"
+      typescript: "commander"
+      rust: "clap"
+      go: "cobra"
+    database_default: "file_based"
+    testing_default: "standard"
+    deployment_default: "package_distribution"
+    
+  web_app:
+    framework_suggestions:
+      python: "fastapi"
+      typescript: "nextjs"
+      dart: "flutter"
+    database_default: "postgresql"
+    testing_default: "comprehensive"
+    deployment_default: "cloud_provider"
+    
+  mobile_app:
+    framework_suggestions:
+      dart: "flutter"
+      typescript: "react_native"
+      swift: "swiftui"
+      kotlin: "compose"
+    database_default: "sqlite"
+    testing_default: "standard"
+    deployment_default: "app_store"

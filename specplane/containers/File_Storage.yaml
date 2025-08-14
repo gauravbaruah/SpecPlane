@@ -8,6 +8,7 @@ meta:
   purpose: "Provides local file-based storage for configuration, sessions, and generated artifacts"
   status: "prototype"
 
+# CONSOLIDATED: Combined both contracts sections
 contracts:
   file_operations:
     - operation: "read_config"
@@ -108,6 +109,19 @@ contracts:
       description: "AI-ready implementation prompt"
       format: "Markdown"
       sections: ["purpose", "requirements", "constraints", "implementation_guide"]
+
+  configuration_files:
+    - path: "config/specplane.yaml"
+      schema: "SpecPlaneConfig"
+      purpose: "Main configuration file"
+      
+    - path: "config/integrations.yaml"
+      schema: "IntegrationsConfig"  
+      purpose: "API keys and external service configs"
+      
+    - path: "config/observability.yaml"
+      schema: "ObservabilityConfig"
+      purpose: "Metrics and logging configuration"
 
 interfaces:
   events_out:
@@ -219,39 +233,6 @@ path_templates:
   log: ".specplane/logs/events_{date}.jsonl"
   backup: ".specplane/backups/{original_name}.{timestamp}.bak"
 
-
-tests:
-  acceptance:
-    - "Config files loaded from config/ directory on startup"
-    - "Session state persisted to .specplane/sessions/ after each answer"
-    - "Generated files written to out/specs/ and out/prompts/"
-    - "Disk full scenario triggers cleanup + user warning"
-    - "Corrupted session file recovered from backup automatically"
-    - "File operations complete in <500ms for typical files"
-    
-  human_validation:
-    - "File organization assessment: Is output structure clear and logical?"
-    
-  automated_metrics:
-    - "file_operation_latency_p95 < 200ms"
-    - "file_corruption_recovery_rate > 95%"
-    - "disk_space_monitoring_accuracy"
-
-
-contracts:
-  configuration_files:
-    - path: "config/specplane.yaml"
-      schema: "SpecPlaneConfig"
-      purpose: "Main configuration file"
-      
-    - path: "config/integrations.yaml"
-      schema: "IntegrationsConfig"  
-      purpose: "API keys and external service configs"
-      
-    - path: "config/observability.yaml"
-      schema: "ObservabilityConfig"
-      purpose: "Metrics and logging configuration"
-
 example_configs:
   specplane_config:
     content: |
@@ -292,9 +273,25 @@ example_configs:
         metrics_file: ".specplane/logs/metrics.json"
         enabled: true
 
+# CONSOLIDATED: Combined both tests sections
 tests:
   acceptance:
+    - "Config files loaded from config/ directory on startup"
+    - "Session state persisted to .specplane/sessions/ after each answer"
+    - "Generated files written to out/specs/ and out/prompts/"
+    - "Disk full scenario triggers cleanup + user warning"
+    - "Corrupted session file recovered from backup automatically"
+    - "File operations complete in <500ms for typical files"
     - "Missing config files use sensible defaults without crashing"
     - "Invalid API keys logged with clear warning (don't block usage)"
     - "Environment variables ${VAR} expanded correctly in config"
     - "Config validation errors show line number and field name"
+    
+  validation_tests:
+    human_validation:
+      - "File organization assessment: Is output structure clear and logical?"
+      
+    automated_metrics:
+      - "file_operation_latency_p95 < 200ms"
+      - "file_corruption_recovery_rate > 95%"
+      - "disk_space_monitoring_accuracy"
