@@ -10,27 +10,32 @@ meta:
 contracts:
   interfaces:
     - name: "assess_coverage"
-      input: "ComponentSpec + AnsweredQuestions"
+      input: "AnsweredQuestions + ComponentType"
       output: "CoverageReport"
-      logic: "systematic_completeness_check + gap_identification"
+      logic: "systematic_completeness_check + gap_identification + scoring"
       
     - name: "calculate_score"
-      input: "AnsweredQuestions + RequiredSections"
+      input: "AnsweredQuestions + WeightingRules"
       output: "CoverageScore"
       logic: "weighted_scoring + critical_section_validation"
       
     - name: "identify_gaps"
-      input: "ComponentSpec + ComponentType"
+      input: "ComponentSpec + RequiredSections"
       output: "Gap[]"
-      logic: "pattern_matching + requirement_validation"
+      logic: "pattern_matching + requirement_validation + priority_ranking"
+      
+    - name: "suggest_improvements"
+      input: "CoverageReport + ComponentType"
+      output: "Recommendation[]"
+      logic: "gap_analysis + best_practice_matching + actionable_suggestions"
 
   assessment_framework:
     required_sections:
-      all_components: ["purpose", "interfaces", "dependencies"]
-      storage_components: ["error_handling", "backup_strategy", "observability"]
-      ui_components: ["states", "events", "accessibility"]
-      api_components: ["error_codes", "idempotency", "rate_limits"]
-      ai_components: ["safety_guardrails", "fallbacks", "cost_constraints"]
+      all_components: ["purpose", "basic_interfaces", "dependencies"]
+      storage_components: ["error_handling", "backup_strategy", "data_integrity"]
+      ui_components: ["states", "user_interactions", "accessibility_notes"]
+      api_components: ["error_codes", "authentication", "rate_limits"]
+      ai_components: ["safety_guardrails", "fallback_strategies", "cost_constraints"]
       
     scoring_weights:
       purpose_clarity: 25%
@@ -38,86 +43,140 @@ contracts:
       interface_completeness: 15%
       dependency_mapping: 10%
       constraint_definition: 10%
-      observability: 10%
+      observability_planning: 10%
       implementation_readiness: 10%
 
-    gap_categories:
+    gap_severity:
       critical: "blocks_implementation"
-      important: "reduces_quality"
-      nice_to_have: "improves_maintainability"
+      important: "reduces_quality_significantly" 
+      moderate: "impacts_maintainability"
+      minor: "nice_to_have_improvement"
+
+prototype_modes:
+  p0_simple:
+    assessment_method: "basic_section_completion"
+    scoring_algorithm: "simple_percentage"
+    gap_detection: "missing_required_only"
+    total_possible_score: 100
+    
+  p1_smart:
+    assessment_method: "weighted_section_analysis"
+    scoring_algorithm: "weighted_percentage + penalties"
+    gap_detection: "pattern_based + missing_sections"
+    contextual_adjustments: true
+    
+  p2_dynamic:
+    assessment_method: "intelligent_quality_analysis"
+    scoring_algorithm: "ml_based_scoring + human_feedback"
+    gap_detection: "semantic_analysis + predictive_gaps"
+    continuous_learning: true
 
 data:
-  assessment_templates:
-    source: "config/assessment_templates.yaml"
-    schema: "AssessmentTemplate"
-    
-  scoring_rules:
-    source: "config/scoring_rules.yaml"
-    schema: "ScoringRule"
+  assessment_rules:
+    source: "config/assessment_rules.yaml"
+    schema: "AssessmentRule"
     
   gap_patterns:
-    source: "config/gap_patterns.yaml"
+    source: "config/gap_patterns.yaml" 
     schema: "GapPattern"
-
-assessment_logic:
-  completeness_check:
-    method: "section_presence + content_quality"
-    critical_sections: ["purpose", "interfaces", "error_handling"]
-    
-  gap_identification:
-    pattern_based:
-      - pattern: "storage_system"
-        required_gaps: ["backup_strategy", "corruption_handling", "disk_full_scenario"]
-      - pattern: "ui_component"
-        required_gaps: ["loading_states", "error_states", "accessibility"]
-      - pattern: "api_service"
-        required_gaps: ["rate_limiting", "error_taxonomy", "idempotency"]
+    examples:
+      storage_without_backup:
+        pattern: "storage_component && !backup_strategy"
+        severity: "critical"
+        recommendation: "Add backup and recovery procedures"
         
-  prototype_assessment:
-    p0_requirements:
-      minimum_sections: ["purpose", "basic_interfaces", "simple_error_handling"]
-      implementation_clarity: "can_build_in_1_day"
-      
-    p1_requirements:
-      additional_sections: ["observability", "advanced_error_handling"]
-      implementation_clarity: "production_ready"
+      ui_missing_states:
+        pattern: "ui_component && states.length < 3"
+        severity: "important"
+        recommendation: "Define loading, error, and empty states"
+        
+      api_no_auth:
+        pattern: "api_component && !authentication"
+        severity: "critical"
+        recommendation: "Specify authentication mechanism"
 
-interfaces:
-  events_out:
-    - name: "coverage.assessment.completed"
-      when: "coverage_analysis_finished"
-      properties: ["component_name", "coverage_score", "gap_count", "assessment_time"]
-      pii: false
+coverage_calculation:
+  basic_scoring:
+    method: |
+      score = (answered_questions / total_questions) * 100
       
-    - name: "coverage.gap.identified"
-      when: "critical_gap_found"
-      properties: ["gap_type", "severity", "recommendation"]
-      pii: false
+  weighted_scoring:
+    method: |
+      score = sum(section_weight * section_completeness) 
+      penalties = critical_gaps * 10 + important_gaps * 5
+      final_score = max(0, score - penalties)
 
-constraints:
-  performance:
-    assessment_time: "<2s"
-    gap_detection_accuracy: ">90%"
-    
-  quality:
-    false_positive_rate: "<5%"
-    critical_gap_detection: ">95%"
+data_flows:
+  - name: "complete_coverage_assessment"
+    sequence: |
+      sequenceDiagram
+        participant CA as Coverage_Assessor
+        participant FS as File_Storage
+        participant PL as Pattern_Library
+        
+        CA->>FS: load("assessment_rules.yaml")
+        CA->>FS: load("gap_patterns.yaml")
+        CA->>CA: analyze_completeness(answers)
+        CA->>PL: check_component_patterns(type)
+        CA->>CA: calculate_weighted_score()
+        CA->>CA: identify_critical_gaps()
+        CA-->>CA: generate_recommendations()
 
 dependencies:
   internal:
     - "Pattern_Library"  # For pattern-based gap detection
-    - "File_Storage"     # For assessment templates
+    - "File_Storage"     # For assessment rules and templates
   external: []
 
+constraints:
+  performance:
+    assessment_time: "<2s"
+    gap_detection_time: "<1s"
+    
+  quality:
+    gap_detection_accuracy: ">90%"
+    false_positive_rate: "<5%"
+    recommendation_relevance: ">85%"
+
+error_handling:
+  missing_assessment_rules:
+    action: "use_default_rules + log_warning"
+    
+  invalid_component_type:
+    action: "fallback_to_generic_assessment"
+    
+  scoring_calculation_error:
+    action: "manual_scoring_fallback + error_report"
+
+observability:
+  metrics:
+    - "assessments_completed_per_day"
+    - "average_coverage_score"
+    - "gap_detection_accuracy"
+    - "recommendation_acceptance_rate"
+    
+  events:
+    - "coverage.assessment.started"
+    - "coverage.score.calculated"
+    - "coverage.gaps.identified"
+    - "coverage.recommendations.generated"
+
 # Example assessment output
-example_output:
-  component_name: "file_storage"
-  coverage_score: 85%
-  gaps:
-    critical: []
-    important: ["missing_chaos_testing", "incomplete_monitoring"]
-    nice_to_have: ["performance_optimization_notes"]
-  recommendations:
-    - "Add disk space monitoring with alerting"
-    - "Define backup testing procedures"
-  implementation_readiness: "production_ready"
+example_outputs:
+  basic_assessment:
+    component_name: "file_storage"
+    coverage_score: 85
+    sections_completed: ["purpose", "interfaces", "error_handling"]
+    sections_missing: ["observability", "performance_constraints"]
+    
+  detailed_assessment:
+    component_name: "user_authentication"
+    coverage_score: 72
+    gaps:
+      critical: ["missing_rate_limiting", "no_password_policy"]
+      important: ["incomplete_error_handling", "missing_audit_logs"]
+      moderate: ["basic_monitoring_only"]
+    recommendations:
+      - "Add rate limiting to prevent brute force attacks"
+      - "Define password complexity requirements"
+      - "Implement comprehensive error response codes"
