@@ -121,13 +121,18 @@ constraints:
     session_recovery_rate: ">99%"
     state_consistency: "atomic_updates"
 
+# CONSOLIDATED: Combined both error_handling sections
 error_handling:
   invalid_answer:
     action: "show_clarification + retry"
     max_retries: 3
+    test: "Submit empty string to required question"
+    expected: "Show clarification prompt + retry (max 3 attempts)"
     
   session_timeout:
     action: "save_state + allow_resume"
+    test: "Leave session idle for 30 minutes"
+    expected: "Auto-save state + show resume instructions"
     
   storage_failure:
     action: "warn_user + continue_in_memory"
@@ -156,12 +161,3 @@ tests:
     - "Progress percentage calculated as (answered / total_questions) * 100"
     - "Question flow stops when all required questions answered"
     - "Invalid session_id returns clear error message"
-
-error_handling:
-  invalid_answer:
-    test: "Submit empty string to required question"
-    expected: "Show clarification prompt + retry (max 3 attempts)"
-    
-  session_timeout:
-    test: "Leave session idle for 30 minutes"
-    expected: "Auto-save state + show resume instructions"
