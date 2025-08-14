@@ -1,0 +1,148 @@
+meta:
+  id: "cli_application"
+  name: "CLI Application"
+  version: "0.1.0"
+  owner: "SpecPlane"
+  type: "container"
+  level: "container"
+  purpose: "Provides a command-line interface for SpecPlane guided design sessions" 
+  status: "prototype"
+
+contracts:
+  commands:
+    - name: "guide"
+      description: "Start guided design session"
+      args: ["component_name"]
+      flags: ["--type", "--mode", "--experience"]
+      output: "Interactive_questioning_session"
+      exit_codes: [0, 1, 2]  # success, user_abort, error
+      
+    - name: "validate"
+      description: "Validate existing SpecPlane specification"
+      args: ["spec_file"]
+      output: "Validation_report"
+      
+    - name: "resume"
+      description: "Resume interrupted session"
+      args: ["session_id"]
+      output: "Interactive_questioning_session"
+
+  file_contracts:
+    inputs:
+      - path: "config/questions.yaml"
+        schema: "QuestionBank"
+        required: true
+      - path: "templates/*.j2"
+        schema: "Jinja2Template"
+        required: true
+        
+    outputs:
+      - path: "out/specs/{component_name}.yaml"
+        schema: "SpecPlaneSpec"
+        description: "Generated component specification"
+      - path: "out/prompts/{component_name}_cursor.md"
+        schema: "CursorPrompt"
+        description: "AI-ready implementation prompt"
+      - path: "out/reports/{component_name}_coverage.md"
+        schema: "CoverageReport"
+        description: "Design completeness assessment"
+        
+    sessions:
+      - path: ".specplane/sessions/{session_id}.json"
+        schema: "SessionState"
+        description: "Resumable session state"
+
+# Components live inside this container
+components:
+  - name: "Session_Orchestrator"
+    description: "Manages interview flow and state transitions"
+    references: "components/session_orchestrator.yaml"
+    
+  - name: "Interview_Engine" 
+    description: "Conducts guided questioning using question bank"
+    references: "components/interview_engine.yaml"
+    
+  - name: "Coverage_Assessor"
+    description: "Evaluates completeness and identifies design gaps"
+    references: "components/coverage_assessor.yaml"
+    
+  - name: "Artifact_Generator"
+    description: "Generates all output artifacts (YAML, prompts, reports)"
+    references: "components/artifact_generator.yaml"
+
+key_flows:
+  - name: "guided_design_session"
+    trigger: "specplane guide {component_name}"
+    outcome: "Generated specifications ready for AI implementation"
+    involves: ["all_components"]
+
+interfaces:
+  events_out:
+    - name: "specplane.session.started"
+      when: "user_initiates_design_session"
+      emitted_by: "Session_Orchestrator"
+      properties: ["component_type", "mode", "user_experience_level"]
+      pii: false
+      destination: ".specplane/logs/events.jsonl"
+      
+    - name: "specplane.question.answered"
+      when: "user_provides_answer_to_design_question"
+      emitted_by: "Interview_Engine"
+      properties: ["question_id", "section", "answer_type", "session_progress"]
+      pii: false
+      destination: ".specplane/logs/events.jsonl"
+      
+    - name: "specplane.spec.generated"
+      when: "complete_specification_produced"
+      emitted_by: "Artifact_Generator"
+      properties: ["coverage_score", "risk_count", "artifact_types", "generation_time"]
+      pii: false
+      destination: ".specplane/logs/events.jsonl"
+
+constraints:
+  slos:
+    - name: "session_completion_rate"
+      target: ">=80%"
+      window: "30d"
+      
+    - name: "cli_response_latency_p95" 
+      target: "<=500ms"
+      window: "7d"
+      
+    - name: "spec_generation_time_p95"
+      target: "<=30s" 
+      window: "7d"
+
+  quality_gates:
+    - name: "minimum_coverage_threshold"
+      value: "70%"
+      description: "Sessions below this trigger gap warnings"
+      
+    - name: "critical_sections_required"
+      value: ["purpose", "failure_modes", "data_states"]
+      description: "These sections must be completed"
+
+security_privacy:
+  auth: ["none_required_local_tool"]
+  data_handling: "all_local_files_user_controlled"
+  pii: "none_collected"
+  retention: "indefinite_local_storage_user_managed"
+
+observability:
+  metrics: 
+    - "session_completion_rate"
+    - "average_coverage_score"
+    - "question_abandonment_points"
+    - "generation_success_rate"
+    
+  alerts:
+    - name: "high_abandonment_rate"
+      condition: "session_completion_rate < 60%"
+      action: "review_question_difficulty"
+
+dependencies:
+  external: []  # Pure local tool, no external dependencies
+  internal: 
+    - "question_bank.yaml"
+    - "templates/*.j2"
+    - "schemas/*.json"
