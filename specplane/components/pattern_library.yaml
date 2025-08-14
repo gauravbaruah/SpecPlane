@@ -1,0 +1,61 @@
+meta:
+  id: "pattern_library"
+  name: "Pattern Library"
+  type: "component"
+  level: "component" 
+  purpose: "Provides intelligent pattern matching and question generation based on domain expertise"
+
+contracts:
+  interfaces:
+    - name: "match_patterns"
+      input: "ComponentDescription"
+      output: "ApplicablePattern[]"
+      logic: "fuzzy_matching + keyword_detection + context_analysis"
+      
+    - name: "get_reasoning_chains"
+      input: "Pattern + ComponentContext"
+      output: "ReasoningChain[]"
+      logic: "conditional_chain_selection + context_adaptation"
+      
+    - name: "generate_questions"
+      input: "ReasoningChain + SessionState"
+      output: "ContextualQuestion[]"
+      logic: "template_expansion + dependency_ordering"
+
+data:
+  patterns:
+    source: "config/patterns.yaml"
+    schema: "PatternDefinition"
+    examples:
+      - storage_systems
+      - user_interfaces  
+      - ai_agents
+      - api_services
+      
+  reasoning_templates:
+    source: "config/reasoning_chains.yaml" 
+    schema: "ReasoningChain"
+    
+  question_templates:
+    source: "config/question_templates.yaml"
+    schema: "QuestionTemplate"
+
+dependencies:
+  internal:
+    - "File_Storage" # For loading pattern data
+  external:
+    - "NLP_matcher" # For fuzzy text matching
+
+data_flows:
+  - name: "generate_questions"
+    trigger: "generate_questions_for_component"
+    sequence: |
+      sequenceDiagram
+        participant PL as Pattern_Library
+        participant Matcher as Fuzzy_Matcher
+        participant Templates as Question_Templates
+        
+        PL->>Matcher: analyze("file storage")
+        Matcher-->>PL: keyword_matches + confidence_scores
+        PL->>Templates: expand_templates(matched_patterns)
+        Templates-->>PL: generated_questions

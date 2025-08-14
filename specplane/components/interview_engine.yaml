@@ -1,0 +1,16 @@
+meta:
+  id: "interview_engine"
+  name: "Interview Engine"
+  purpose: "Conducts the interactive session using generated questions"
+  type: "component"
+  level: "component"
+
+contracts:
+  interfaces:
+    - name: "conduct_interview"
+      input: "SessionConfig"
+      output: "CompletedAnswers"
+
+dependencies:
+  - "Question_Generator"  # Gets questions dynamically
+  - "Session_Storage"     # Persists state

@@ -1,0 +1,59 @@
+meta:
+  id: "question_generator"
+  name: "Question Generator"
+  purpose: "Dynamically generates contextual questions using pattern matching and reasoning chains"
+  type: "component"
+
+contracts:
+  interfaces:
+    - name: "generate_questions"
+      input: "ComponentContext"
+      output: "QuestionSequence"
+      
+    - name: "next_question"
+      input: "SessionState + PreviousAnswers"
+      output: "Question | Complete"
+
+components:
+  - name: "Pattern_Matcher"
+    description: "Identifies applicable domain patterns from component description"
+    
+  - name: "Reasoning_Chain_Builder" 
+    description: "Builds CoT sequences for complex design decisions"
+    
+  - name: "Context_Analyzer"
+    description: "Analyzes previous answers to determine next question"
+    
+  - name: "Coverage_Tracker"
+    description: "Ensures all required aspects are covered"
+
+data_flows:
+  - name: "pattern_based_question_generation"
+    trigger: "generate_questions_for_component"
+    sequence: |
+      sequenceDiagram
+        participant QG as Question_Generator
+        participant PL as Pattern_Library
+        participant FS as File_Storage
+        
+        QG->>PL: match_patterns("file storage")
+        PL->>FS: load("patterns.yaml")
+        FS-->>PL: pattern_definitions
+        PL->>PL: fuzzy_match + analyze_context
+        PL-->>QG: [storage_patterns, reliability_patterns]
+        QG->>PL: generate_questions(patterns, context)
+        PL-->>QG: contextual_question_sequence
+
+  - name: "file_storage_integration"
+    trigger: "load_patterns"
+    sequence: |
+      sequenceDiagram
+      participant Client as Any_Component
+      participant FS as File_Storage
+      participant FileSystem as OS_FileSystem
+      
+      Client->>FS: load("patterns.yaml")
+      FS->>FileSystem: read_file("config/patterns.yaml")
+      FileSystem-->>FS: file_content
+      FS->>FS: parse_yaml + validate_schema
+      FS-->>Client: structured_data

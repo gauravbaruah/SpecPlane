@@ -70,6 +70,18 @@ components:
     description: "Generates all output artifacts (YAML, prompts, reports)"
     references: "components/artifact_generator.yaml"
 
+  - name: "Question_Generator"
+    dependencies: ["Pattern_Library", "Context_Analyzer"]
+    references: "components/question_generator.yaml"
+    
+  - name: "Pattern_Library" 
+    dependencies: ["File_Storage"]
+    references: "components/pattern_library.yaml"
+
+  - name: "Interview_Engine"
+    dependencies: ["Question_Generator", "Session_Orchestrator"]
+    references: "components/interview_engine.yaml"
+
 key_flows:
   - name: "guided_design_session"
     trigger: "specplane guide {component_name}"
@@ -146,3 +158,4 @@ dependencies:
     - "question_bank.yaml"
     - "templates/*.j2"
     - "schemas/*.json"
+
