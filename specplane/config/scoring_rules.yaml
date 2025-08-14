@@ -83,11 +83,11 @@ penalties:
    missing_critical_dependencies: -6
    impossible_constraints: -10
    
- completeness_issues:
-   extremely_vague_purpose: -10
-   no_success_criteria: -5
-   missing_error_handling: -8
-   undefined_interfaces: -12
+  completeness_issues:
+    extremely_vague_purpose: -10
+    no_success_criteria: -5
+    missing_error_handling: -8
+    undefined_interfaces: -12
 
 # Bonus system
 bonuses:
