@@ -1,0 +1,220 @@
+meta:
+  id: "artifact_generator"
+  name: "Artifact Generator"
+  version: "0.1.0"
+  type: "component"
+  level: "component"
+  purpose: "Generates all output artifacts (YAML specs, Cursor prompts, coverage reports) from session data"
+  status: "prototype"
+
+contracts:
+  interfaces:
+    - name: "generate_spec"
+      input: "SessionAnswers + ComponentType"
+      output: "SpecPlaneYAML"
+      logic: "template_selection + data_mapping + yaml_generation"
+      
+    - name: "generate_cursor_prompt"
+      input: "SpecPlaneYAML + PromptTemplate"
+      output: "CursorPrompt"
+      logic: "spec_analysis + prompt_construction + implementation_guidance"
+      
+    - name: "generate_coverage_report"
+      input: "CoverageAssessment + SessionAnswers"
+      output: "CoverageReport"
+      logic: "report_formatting + gap_highlighting + improvement_suggestions"
+      
+    - name: "generate_all_artifacts"
+      input: "CompleteSessionData"
+      output: "ArtifactBundle"
+      logic: "orchestrate_all_generators + validate_consistency + package_outputs"
+
+  artifact_types:
+    spec_files:
+      - "component.yaml"     # Main SpecPlane specification
+      - "openapi_stub.yaml"  # API contract stub (if applicable)
+      - "events.csv"         # Analytics events (if applicable)
+      
+    prompt_files:
+      - "cursor_prompt.md"   # AI-ready implementation prompt
+      - "implementation_guide.md" # Detailed guidance
+      
+    report_files:
+      - "coverage_report.md" # Design completeness assessment
+      - "risk_assessment.md" # Identified risks and mitigations
+      - "next_steps.md"      # Recommended follow-up actions
+
+  template_system:
+    template_selection:
+      component: "templates/component.yaml.j2"
+      widget: "templates/widget.yaml.j2"
+      service: "templates/service.yaml.j2"
+      agent: "templates/agent.yaml.j2"
+      
+    prompt_templates:
+      cursor_react: "templates/cursor_react.md.j2"
+      cursor_flutter: "templates/cursor_flutter.md.j2"
+      cursor_python: "templates/cursor_python.md.j2"
+      cursor_generic: "templates/cursor_generic.md.j2"
+
+prototype_modes:
+  p0_simple:
+    template_engine: "basic_jinja2"
+    validation: "yaml_syntax_only"
+    customization: "minimal_placeholders"
+    output_formats: ["yaml", "markdown"]
+    
+  p1_smart:
+    template_engine: "advanced_jinja2 + conditionals"
+    validation: "schema_validation + consistency_checks"
+    customization: "context_aware_templates"
+    output_formats: ["yaml", "markdown", "json"]
+    
+  p2_dynamic:
+    template_engine: "dynamic_template_generation"
+    validation: "semantic_validation + cross_reference_checks"
+    customization: "ai_enhanced_personalization"
+    output_formats: ["yaml", "markdown", "json", "pdf"]
+
+generation_logic:
+  spec_generation:
+    process: |
+      1. Select template based on component_type
+      2. Map session answers to template variables
+      3. Apply conditional logic for optional sections
+      4. Generate YAML with proper formatting
+      5. Validate against SpecPlane schema
+      
+  prompt_generation:
+    process: |
+      1. Extract key requirements from spec
+      2. Identify implementation technology hints
+      3. Structure prompt for AI comprehension
+      4. Add specific constraints and examples
+      5. Include validation criteria
+      
+  report_generation:
+    process: |
+      1. Format coverage assessment results
+      2. Highlight critical gaps and risks
+      3. Generate actionable recommendations
+      4. Add context and explanations
+      5. Create executive summary
+
+data_flows:
+  - name: "complete_artifact_generation"
+    sequence: |
+      sequenceDiagram
+        participant AG as Artifact_Generator
+        participant FS as File_Storage
+        participant TE as Template_Engine
+        participant VA as Validator
+        
+        AG->>FS: load_templates(component_type)
+        AG->>TE: render_spec_template(answers)
+        TE-->>AG: generated_yaml
+        AG->>VA: validate_spec(yaml)
+        VA-->>AG: validation_result
+        
+        AG->>TE: render_prompt_template(spec)
+        TE-->>AG: cursor_prompt
+        
+        AG->>TE: render_report_template(coverage)
+        TE-->>AG: coverage_report
+        
+        AG->>FS: save_all_artifacts(bundle)
+
+dependencies:
+  internal:
+    - "File_Storage"       # For templates and output
+    - "Coverage_Assessor"  # For report data
+  external:
+    - "Jinja2"            # Template engine
+    - "PyYAML"            # YAML processing
+
+constraints:
+  performance:
+    generation_time_p95: "<5s"
+    template_rendering_time: "<1s"
+    file_write_time: "<500ms"
+    
+  quality:
+    yaml_validity_rate: ">99%"
+    template_rendering_success: ">99.5%"
+    prompt_actionability_score: ">4.0/5.0"
+    
+  reliability:
+    atomic_file_writes: true
+    backup_on_generation: true
+    rollback_on_failure: true
+
+template_structure:
+  component_template:
+    sections:
+      - "meta"              # Always required
+      - "contracts"         # Always required
+      - "dependencies"      # Always required
+      - "constraints"       # Conditional
+      - "observability"     # Conditional
+      - "prototype_modes"   # Optional
+      
+  cursor_prompt_template:
+    sections:
+      - "purpose_statement"     # Clear problem definition
+      - "technical_requirements" # Specific implementation needs
+      - "constraints_and_limits" # Performance, security, etc.
+      - "implementation_guidance" # Step-by-step suggestions
+      - "validation_criteria"    # How to know it works
+      - "example_code_snippets"  # Optional code examples
+
+error_handling:
+  template_not_found:
+    action: "fallback_to_generic_template + log_warning"
+    
+  template_rendering_error:
+    action: "retry_with_simplified_data + error_report"
+    
+  file_write_failure:
+    action: "retry_write + fallback_location"
+    
+  validation_failure:
+    action: "generate_with_warnings + highlight_issues"
+
+observability:
+  metrics:
+    - "artifacts_generated_per_day"
+    - "generation_success_rate"
+    - "template_rendering_time_p95"
+    - "file_size_distribution"
+    
+  events:
+    - "artifacts.generation.started"
+    - "artifacts.spec.generated"
+    - "artifacts.prompt.generated"
+    - "artifacts.report.generated"
+    - "artifacts.bundle.completed"
+
+# Example outputs
+example_outputs:
+  file_structure:
+    out/specs/voice_recorder_widget.yaml
+    out/prompts/voice_recorder_widget_cursor.md
+    out/reports/voice_recorder_widget_coverage.md
+    
+  generated_prompt_excerpt: |
+    # Implementation Requirements for VoiceRecorderWidget
+    
+    ## Purpose
+    Enable quick voice note capture without typing friction
+    
+    ## Critical Requirements
+    - Handle microphone permission denial → show settings deep-link
+    - Storage full scenario → check space first, suggest cleanup
+    - Background interruption → resume recording on return
+    
+    ## States to Implement
+    - idle: Show record button, disabled if no permission
+    - recording: Show stop button + duration timer + waveform
+    - processing: Show spinner "Processing audio..."
+    
+    Generate React Native component with proper state management...

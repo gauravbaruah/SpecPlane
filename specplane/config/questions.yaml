@@ -1,0 +1,173 @@
+meta:
+  version: "0.1.0"
+  description: "Core question bank for SpecPlane guided design sessions"
+  total_questions: 24
+  estimated_time: "10-15 minutes"
+
+# Prototype mode questions - always asked regardless of component type
+core_questions:
+  purpose:
+    - id: "purpose_statement"
+      prompt: "What specific user problem does this component solve? (One clear sentence)"
+      type: "text"
+      required: true
+      weight: 25
+      example_good: "Allows users to quickly capture voice observations without typing"
+      example_bad: "Voice recording feature"
+      teaching: "Clear problem definition prevents scope creep and guides all design decisions"
+      
+    - id: "success_criteria"
+      prompt: "How will you know this component is working well? (Metrics, user behavior)"
+      type: "text" 
+      required: true
+      weight: 15
+      example: "Users complete voice logging in <3 seconds, 90% first-attempt success rate"
+
+  failure_modes:
+    - id: "failure_impact"
+      prompt: "What happens if this component fails, is slow, or unavailable?"
+      type: "text"
+      required: true
+      weight: 20
+      teaching: "Understanding failure impact drives error handling and fallback design"
+      
+    - id: "edge_cases"
+      prompt: "What edge cases might break this? (Check all that apply)"
+      type: "multiselect"
+      required: true
+      weight: 15
+      options:
+        - value: "no_permission"
+          label: "Missing permissions (camera, microphone, location)"
+        - value: "network_offline"
+          label: "Network unavailable or slow"
+        - value: "storage_full"
+          label: "Device storage full"
+        - value: "invalid_input"
+          label: "Invalid or malformed user input"
+        - value: "service_timeout"
+          label: "Backend service timeout or error"
+        - value: "concurrent_access"
+          label: "Multiple users or processes accessing simultaneously"
+
+  data_flow:
+    - id: "data_displayed"
+      prompt: "What data does this component display or show to users?"
+      type: "text"
+      required: true
+      weight: 10
+      example: "List of available flows, current recording status, upload progress"
+      
+    - id: "data_captured"
+      prompt: "What data does this component capture or create?"
+      type: "text"
+      required: true
+      weight: 10
+      example: "Audio file, transcription text, metadata (duration, timestamp)"
+      
+    - id: "component_states"
+      prompt: "List all possible states this component can be in"
+      type: "text"
+      required: true
+      weight: 10
+      example: "idle, recording, paused, processing, complete, error"
+      hint: "Think about loading, empty, error, success, offline states"
+
+  integration:
+    - id: "api_dependencies"
+      prompt: "What APIs or services does this component call?"
+      type: "text"
+      required: false
+      weight: 5
+      example: "POST /v1/observations, GET /v1/flows, WebRTC for real-time audio"
+      
+    - id: "internal_dependencies"
+      prompt: "What other components or modules does this depend on?"
+      type: "text"
+      required: false
+      weight: 5
+      example: "MediaPicker, PermissionManager, OfflineQueue"
+
+# Component-type specific questions (added based on pattern matching)
+component_specific:
+  storage:
+    - id: "backup_strategy"
+      prompt: "How will you backup and recover this data if something goes wrong?"
+      type: "text"
+      weight: 10
+      
+    - id: "data_integrity"
+      prompt: "How will you detect and handle data corruption?"
+      type: "text"
+      weight: 10
+
+  ui:
+    - id: "accessibility_notes"
+      prompt: "How will this work for users with disabilities? (Screen readers, keyboard nav, etc.)"
+      type: "text"
+      weight: 10
+      
+    - id: "responsive_behavior"
+      prompt: "How should this behave on different screen sizes or orientations?"
+      type: "text"
+      weight: 5
+
+  api:
+    - id: "authentication"
+      prompt: "How do you authenticate and authorize access to this API?"
+      type: "text"
+      weight: 15
+      
+    - id: "rate_limiting"
+      prompt: "What rate limits or quotas should be applied?"
+      type: "text"
+      weight: 10
+      
+    - id: "error_codes"
+      prompt: "What specific error codes and messages should this return?"
+      type: "text"
+      weight: 10
+
+  ai:
+    - id: "safety_guardrails"
+      prompt: "What safety measures prevent harmful or inappropriate AI outputs?"
+      type: "text"
+      weight: 20
+      
+    - id: "cost_constraints"
+      prompt: "What's your budget per request or monthly AI costs?"
+      type: "text"
+      weight: 10
+      
+    - id: "fallback_strategy"
+      prompt: "What happens when the AI model is down or returns an error?"
+      type: "text"
+      weight: 15
+
+# Question flow logic
+question_sequences:
+  prototype_flow:
+    sections: ["purpose", "failure_modes", "data_flow", "integration"]
+    total_questions: 10
+    estimated_time: "8 minutes"
+    
+  standard_flow:
+    sections: ["purpose", "failure_modes", "data_flow", "integration", "component_specific"]
+    total_questions: 15
+    estimated_time: "12 minutes"
+    
+  comprehensive_flow:
+    sections: ["purpose", "failure_modes", "data_flow", "integration", "component_specific", "advanced"]
+    total_questions: 25
+    estimated_time: "20 minutes"
+
+# Teaching moments and explanations
+teaching_content:
+  failure_first_thinking:
+    message: "We ask about failures first because handling edge cases well is what separates good software from great software."
+    
+  state_completeness:
+    message: "Missing states (like loading or error) are the #1 cause of poor user experience. Think through every possible state your component can be in."
+    
+  dependency_clarity:
+    message: "Clear dependencies help other developers understand your component and prevent integration surprises."

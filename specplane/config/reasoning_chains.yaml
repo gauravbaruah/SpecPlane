@@ -1,0 +1,145 @@
+meta:
+  version: "0.1.0"
+  description: "Chain-of-thought reasoning templates for complex design decisions"
+
+# Reasoning chain templates
+reasoning_chains:
+  storage_failure_chain:
+    name: "Storage Failure Reasoning"
+    description: "Systematic thinking about storage system failures"
+    steps:
+      - thought: "Storage systems can fail in multiple ways"
+        leads_to: "Need to identify all failure modes"
+        
+      - thought: "Failures can be hardware (disk crash) or software (corruption)"
+        leads_to: "Need different strategies for each type"
+        
+      - thought: "Data loss is usually catastrophic for users"
+        leads_to: "Must have backup and recovery strategy"
+        
+      - thought: "Recovery time affects user experience"
+        leads_to: "Need to define RTO (Recovery Time Objective)"
+        
+    generated_questions:
+      - "What happens if the disk fills up completely?"
+      - "How will you detect data corruption before users notice?"
+      - "What's your backup strategy and how often do you test recovery?"
+      - "What's the maximum acceptable downtime for data recovery?"
+      
+  ui_state_completeness_chain:
+    name: "UI State Completeness"
+    description: "Ensuring all UI states are considered"
+    steps:
+      - thought: "UI components exist in different states over time"
+        leads_to: "Need to enumerate all possible states"
+        
+      - thought: "Users get frustrated by unclear or missing feedback"
+        leads_to: "Every state needs appropriate visual feedback"
+        
+      - thought: "Network operations take time and can fail"
+        leads_to: "Must have loading and error states"
+        
+      - thought: "Empty states (no data) are common but often forgotten"
+        leads_to: "Need to design empty state experience"
+        
+    generated_questions:
+      - "What does the user see while data is loading?"
+      - "How do you handle and display error messages?"
+      - "What happens when there's no data to show (empty state)?"
+      - "How do users recover from error states?"
+      
+  api_security_chain:
+    name: "API Security Reasoning"
+    description: "Systematic security considerations for APIs"
+    steps:
+      - thought: "APIs are exposed to the internet and can be attacked"
+        leads_to: "Need authentication and authorization"
+        
+      - thought: "Attackers can overwhelm services with requests"
+        leads_to: "Need rate limiting and abuse protection"
+        
+      - thought: "User data must be protected in transit and at rest"
+        leads_to: "Need encryption and secure transmission"
+        
+      - thought: "Logs and monitoring help detect and respond to attacks"
+        leads_to: "Need security monitoring and alerting"
+        
+    generated_questions:
+      - "How do you authenticate API requests?"
+      - "What rate limits prevent abuse of your endpoints?"
+      - "How is sensitive data encrypted in transit and at rest?"
+      - "How will you detect and respond to security incidents?"
+      
+  ai_safety_chain:
+    name: "AI Safety Reasoning"
+    description: "Safety considerations for AI components"
+    steps:
+      - thought: "AI models can generate harmful or inappropriate content"
+        leads_to: "Need content filtering and safety guardrails"
+        
+      - thought: "AI can leak training data or personal information"
+        leads_to: "Need PII detection and redaction"
+        
+      - thought: "AI models can be unreliable or hallucinate"
+        leads_to: "Need confidence scoring and human oversight"
+        
+      - thought: "AI costs can spiral out of control"
+        leads_to: "Need usage monitoring and spending limits"
+        
+    generated_questions:
+      - "What safety filters prevent harmful AI outputs?"
+      - "How do you prevent AI from leaking personal information?"
+      - "What happens when AI confidence is low or model fails?"
+      - "How do you control and monitor AI usage costs?"
+      
+  cost_optimization_chain:
+    name: "Cost Optimization Reasoning"
+    description: "Thinking through cost implications"
+    steps:
+      - thought: "Every system component has operational costs"
+        leads_to: "Need to understand cost drivers"
+        
+      - thought: "Costs can scale unexpectedly with usage"
+        leads_to: "Need monitoring and alerts"
+        
+      - thought: "Some costs are fixed, others variable"
+        leads_to: "Need different optimization strategies"
+        
+      - thought: "Cost optimization often involves trade-offs"
+        leads_to: "Need to balance cost vs performance vs features"
+        
+    generated_questions:
+      - "What are the main cost drivers for this component?"
+      - "How do costs change as usage scales up?"
+      - "What spending limits and alerts do you need?"
+      - "What's the acceptable cost per user or transaction?"
+
+# Chain application rules
+application_rules:
+  component_type_mapping:
+    storage: ["storage_failure_chain"]
+    ui: ["ui_state_completeness_chain"]
+    api: ["api_security_chain"]
+    ai: ["ai_safety_chain", "cost_optimization_chain"]
+    
+  context_triggers:
+    high_cost_mentioned: ["cost_optimization_chain"]
+    security_sensitive: ["api_security_chain"]
+    user_facing: ["ui_state_completeness_chain"]
+    data_handling: ["storage_failure_chain"]
+    
+  chain_sequencing:
+    primary_chain: "execute_first"
+    secondary_chains: "execute_if_context_matches"
+    max_chains_per_session: 2
+
+# Teaching integration
+teaching_moments:
+  before_chain_execution:
+    message: "Let's think through this systematically. I'm going to walk you through some important considerations for {component_type} components."
+    
+  during_chain_execution:
+    message: "This question comes from thinking about: {current_reasoning_step}"
+    
+  after_chain_execution:
+    message: "These questions help ensure you've thought through the most common failure modes and edge cases for {component_type} components."

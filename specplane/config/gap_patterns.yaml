@@ -1,0 +1,162 @@
+meta:
+  version: "0.1.0"
+  description: "Common gap patterns and detection rules"
+
+# Gap detection patterns #TODO: Add more gaps here
+gap_patterns:
+  # Storage component gaps
+  storage_without_backup:
+    pattern: "component_type == 'storage' && !backup_strategy"
+    severity: "critical"
+    description: "Storage component missing backup strategy"
+    recommendation: "Add backup and recovery procedures with testing plan"
+    impact: "Data loss risk in case of corruption or system failure"
+    
+  storage_no_corruption_detection:
+    pattern: "component_type == 'storage' && !data_integrity"
+    severity: "important"
+    description: "No data corruption detection mechanism"
+    recommendation: "Implement checksums or validation for data integrity"
+    impact: "Silent data corruption could go undetected"
+    
+  # UI component gaps
+  ui_missing_loading_states:
+    pattern: "component_type == 'ui' && states && !states.includes('loading')"
+    severity: "important"
+    description: "UI component missing loading state"
+    recommendation: "Define loading state with appropriate user feedback"
+    impact: "Poor user experience during data fetching or processing"
+    
+  ui_missing_error_states:
+    pattern: "component_type == 'ui' && states && !states.includes('error')"
+    severity: "critical"
+    description: "UI component missing error state"
+    recommendation: "Define error state with recovery options"
+    impact: "Users stuck when errors occur with no recovery path"
+    
+  ui_no_accessibility:
+    pattern: "component_type == 'ui' && !accessibility_notes"
+    severity: "moderate"
+    description: "No accessibility considerations documented"
+    recommendation: "Add screen reader, keyboard navigation, and contrast requirements"
+    impact: "Excludes users with disabilities"
+    
+  # API component gaps
+  api_no_authentication:
+    pattern: "component_type == 'api' && !authentication"
+    severity: "critical"
+    description: "API endpoint without authentication mechanism"
+    recommendation: "Specify authentication method (JWT, OAuth, API keys)"
+    impact: "Security vulnerability - unauthorized access possible"
+    
+  api_no_rate_limiting:
+    pattern: "component_type == 'api' && !rate_limiting"
+    severity: "important"
+    description: "API without rate limiting protection"
+    recommendation: "Define rate limits per user/IP to prevent abuse"
+    impact: "Vulnerable to DDoS attacks and resource exhaustion"
+    
+  api_poor_error_responses:
+    pattern: "component_type == 'api' && !error_codes"
+    severity: "important"
+    description: "API without defined error response codes"
+    recommendation: "Document specific HTTP status codes and error messages"
+    impact: "Difficult debugging and poor client integration experience"
+    
+  # AI component gaps
+  ai_no_safety_guardrails:
+    pattern: "component_type == 'ai' && !safety_guardrails"
+    severity: "critical"
+    description: "AI component without safety measures"
+    recommendation: "Implement content filtering, PII detection, and output validation"
+    impact: "Risk of harmful, biased, or inappropriate AI outputs"
+    
+  ai_no_fallback:
+    pattern: "component_type == 'ai' && !fallback_strategy"
+    severity: "critical"
+    description: "AI component without fallback strategy"
+    recommendation: "Define what happens when AI service is unavailable"
+    impact: "System failure when AI service is down"
+    
+  ai_uncontrolled_costs:
+    pattern: "component_type == 'ai' && !cost_constraints"
+    severity: "important"
+    description: "AI component without cost controls"
+    recommendation: "Set spending limits and monitoring for AI API usage"
+    impact: "Unexpected high costs from AI service usage"
+    
+  # Mobile component gaps
+  mobile_no_offline:
+    pattern: "component_type == 'mobile' && !offline_behavior"
+    severity: "important"
+    description: "Mobile component without offline behavior defined"
+    recommendation: "Specify offline functionality and sync strategy"
+    impact: "Poor user experience when network is unavailable"
+    
+  mobile_no_permissions:
+    pattern: "component_type == 'mobile' && !permission_handling"
+    severity: "important"
+    description: "Mobile component without permission handling"
+    recommendation: "Define permission requests and denial scenarios"
+    impact: "App crashes or poor UX when permissions denied"
+    
+  # General gaps
+  vague_purpose:
+    pattern: "purpose && purpose.length < 20"
+    severity: "moderate"
+    description: "Purpose statement too vague or short"
+    recommendation: "Provide specific, measurable problem statement"
+    impact: "Unclear requirements lead to implementation drift"
+    
+  missing_success_criteria:
+    pattern: "!success_criteria"
+    severity: "moderate"
+    description: "No success criteria or metrics defined"
+    recommendation: "Define how you'll measure if component works well"
+    impact: "No way to validate if implementation meets needs"
+    
+  undefined_dependencies:
+    pattern: "!dependencies || dependencies.length == 0"
+    severity: "moderate"
+    description: "Component dependencies not identified"
+    recommendation: "List internal and external dependencies"
+    impact: "Integration surprises and deployment issues"
+
+# Gap severity definitions
+severity_levels:
+  critical:
+    description: "Blocks safe production deployment"
+    color: "red"
+    action_required: "Must fix before implementation"
+    
+  important:
+    description: "Significantly impacts quality or user experience"
+    color: "orange"
+    action_required: "Should fix before production"
+    
+  moderate:
+    description: "Impacts maintainability or future development"
+    color: "yellow"
+    action_required: "Consider fixing in next iteration"
+    
+  minor:
+    description: "Nice-to-have improvement"
+    color: "blue"
+    action_required: "Optional enhancement"
+
+# Pattern matching logic
+detection_logic:
+  component_type_detection:
+    storage: ["storage", "database", "file", "cache", "persistence"]
+    ui: ["screen", "widget", "component", "interface", "form"]
+    api: ["api", "service", "endpoint", "rest", "graphql"]
+    ai: ["ai", "agent", "llm", "model", "prompt"]
+    mobile: ["mobile", "ios", "android", "flutter", "react native"]
+    
+  field_presence_checks:
+    backup_strategy: ["backup", "recovery", "restore"]
+    data_integrity: ["integrity", "corruption", "validation", "checksum"]
+    accessibility_notes: ["accessibility", "a11y", "screen reader", "keyboard"]
+    authentication: ["auth", "login", "jwt", "oauth", "token"]
+    rate_limiting: ["rate limit", "throttle", "quota", "abuse"]
+    safety_guardrails: ["safety", "filter", "moderation", "guardrail"]
