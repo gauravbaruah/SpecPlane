@@ -1,6 +1,6 @@
 meta:
   version: "0.1.0"
-  description: "Rules for assessing design completeness and quality"
+  purpose: "Rules help to assess design completeness and quality of generated specs"
 
 # Core assessment framework
 assessment_framework:

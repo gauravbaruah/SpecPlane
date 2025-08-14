@@ -1,6 +1,6 @@
 meta:
   version: "0.1.0"
-  description: "Chain-of-thought reasoning templates for complex design decisions"
+  purpose: "Chain-of-thought reasoning templates for complex design decisions"
 
 # Reasoning chain templates
 reasoning_chains:

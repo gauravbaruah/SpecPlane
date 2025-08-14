@@ -1,6 +1,6 @@
 meta:
   version: "0.1.0"
-  description: "Core question bank for SpecPlane guided design sessions"
+  purpose: "Core question bank for SpecPlane guided design sessions"
   total_questions: 24
   estimated_time: "10-15 minutes"
 

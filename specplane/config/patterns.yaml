@@ -1,12 +1,14 @@
 meta:
   version: "0.1.0"
-  description: "Domain patterns for intelligent question generation"
+  purpose: "Domain patterns for intelligent question generation"
 
 patterns:
   storage_systems:
     keywords: ["storage", "file", "database", "persistence", "cache", "store", "save"]
     aliases: ["db", "filesystem", "s3", "redis", "memory"]
     confidence_boost: 1.2
+    cache_ttl: "1h"  # Pattern matching can be expensive
+    precompute: ["critical_concerns", "reasoning_chains"]
     
     critical_concerns:
       - "data_corruption"

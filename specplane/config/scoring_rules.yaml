@@ -1,6 +1,6 @@
 meta:
   version: "0.1.0"
-  description: "Scoring rules and weights for coverage assessment"
+  purpose: "Scoring rules and weights for coverage assessment of generated specs"
 
 # Base scoring weights
 base_weights:

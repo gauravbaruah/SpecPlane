@@ -1,6 +1,6 @@
 meta:
   version: "0.1.0"
-  description: "Common gap patterns and detection rules"
+  purpose: "Common gap patterns and detection rules to help assess the quality of generated specs"
 
 # Gap detection patterns #TODO: Add more gaps here
 gap_patterns:
