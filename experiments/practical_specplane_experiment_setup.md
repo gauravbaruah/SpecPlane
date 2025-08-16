@@ -40,26 +40,29 @@ Based on your current setup, let's organize it properly:
 │   │   ├── exp3_output/              # And so on...
 │   │   ├── exp4_output/
 │   │   ├── exp5_output/
-│   │   └── comparison_analysis.md    # Final comparison
+│   │   └── comparison_analysis.md
 │   │
 │   ├── building_mermaid_charts/      # Future experiment series
 │   │   ├── prompts/
 │   │   └── exp1_output/
 │   │
-│   └── building_reading_list_app/    # Future experiment series
-│       ├── prompts/
-│       └── exp1_output/
+│   ├── building_reading_list_app/    # Future experiment series
+│   │    ├── prompts/
+│   │    └── exp1_output/
+│   │
+│   └── tools_and_templates/
+│       ├── simple_tracker.py       # Simple experiment tracking
+│       ├── quality_checker.py      # Basic quality validation
+│       ├── experiment_log_template.md # Template for experiment logs
+│       └── results_template.json    # Template for results
 │
-├── specplane/                        # Your spec files (keep as-is)
+├── specplane/                        #  spec files for specplane(keep as-is)
 │   ├── components/
 │   ├── config/
 │   ├── containers/
 │   ├── context.yaml
 │   └── templates/
 │
-├── tools/                           # Helper scripts (simplified)
-│   ├── simple_tracker.py           # Basic experiment tracking
-│   └── quality_checker.py          # Basic quality validation
 │
 ├── LICENSE
 └── README.md
