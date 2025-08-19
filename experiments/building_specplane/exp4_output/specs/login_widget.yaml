@@ -50,6 +50,15 @@ refs:
     tags: ["onboarding", "user-experience"]
     notes: "Specification to be created for the onboarding flow that triggers after successful OAuth"
 
+  figma_login_screen:
+    type: "figma"
+    title: "Login Screen"
+    url: "https://www.figma.com/design/M5CF9jRe3xRx6Olf4WLgGP/PFIO-Designs?node-id=1340-3012&t=dAu3ujg0RFOqkakj-1"
+    owner: "Katherine"
+    status: "draft"
+    tags: ["login", "screen"]
+    notes: "Figma screen for the login widget"
+
 contracts:
   interfaces:
     - "onGoogleSignIn() -> Promise<AuthResult>"
@@ -184,6 +193,7 @@ diagrams:
             participant O as Onboarding Screen
             
             U->>L: Click Google/Apple Sign In
+            click L "{{refs.figma_login_screen.url}}" "Open Figma Login"
             L->>F: Initialize OAuth provider
             F->>G: Redirect to OAuth provider
             G-->>F: OAuth callback with code
