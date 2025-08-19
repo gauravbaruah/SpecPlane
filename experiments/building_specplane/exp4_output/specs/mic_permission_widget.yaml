@@ -1,0 +1,349 @@
+meta:
+  purpose: "Reusable microphone permission widget that handles permission requests, tracks permission state, and provides intelligent re-requesting logic for voice input features throughout the app"
+  type: "widget"
+  level: "component"
+  domain: "frontend"
+  status: "draft"
+  last_updated: "2025-01-15"
+  version: "1.0.0"
+
+refs:
+  onboarding_screen_spec:
+    type: "doc"
+    title: "Onboarding Screen Specification"
+    path: "./onboarding_screen.yaml"
+    owner: "Product Team"
+    status: "active"
+    tags: ["onboarding", "mic-permissions"]
+    
+  voice_dictation_feature:
+    type: "doc"
+    title: "Voice Dictation Feature Specification"
+    url: "TBD"
+    owner: "Product Team"
+    status: "draft"
+    tags: ["voice", "dictation", "accessibility"]
+    
+  figma_mic_permission:
+    type: "figma"
+    title: "Microphone Permission UI Design"
+    url: "TBD"
+    owner: "Design Team"
+    status: "draft"
+    tags: ["mic-permission", "ui-design"]
+    
+  web_audio_api_docs:
+    type: "doc"
+    title: "Web Audio API Documentation"
+    url: "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API"
+    owner: "Mozilla"
+    access: "public"
+    tags: ["web-audio", "microphone", "api"]
+    
+  permissions_api_docs:
+    type: "doc"
+    title: "Permissions API Documentation"
+    url: "https://developer.mozilla.org/en-US/docs/Web/API/Permissions_API"
+    owner: "Mozilla"
+    access: "public"
+    tags: ["permissions", "api", "browser"]
+
+contracts:
+  interfaces:
+    - "requestMicPermission() -> Promise<PermissionResult>"
+    - "checkMicPermission() -> Promise<PermissionState>"
+    - "onPermissionGranted() -> void"
+    - "onPermissionDenied() -> void"
+    - "onPermissionPermanentlyDenied() -> void"
+    - "showPermissionRequest() -> void"
+    - "hidePermissionRequest() -> void"
+    - "onFallbackToManualInput() -> void"
+    - "onRetryPermission() -> Promise<PermissionResult>"
+    
+  apis:
+    - "Permissions API: navigator.permissions.query({name: 'microphone'}) -> PermissionStatus"
+    - "Web Audio API: navigator.mediaDevices.getUserMedia({audio: true}) -> MediaStream | PermissionDeniedError"
+    - "Firestore: doc('users/{uid}/permissions/microphone').set(permissionData) -> Promise<void>"
+    - "Firestore: doc('users/{uid}/permissions/microphone').get() -> DocumentSnapshot"
+    
+  data_models:
+    PermissionResult:
+      granted: "boolean - Whether permission was granted"
+      state: "string - 'granted' | 'denied' | 'prompt'"
+      canAskAgain: "boolean - Whether permission can be requested again"
+      reason: "string - Reason for denial if applicable"
+      timestamp: "timestamp - When permission was requested"
+      
+    PermissionState:
+      state: "string - 'granted' | 'denied' | 'prompt'"
+      canAskAgain: "boolean - Whether permission can be requested again"
+      lastRequested: "timestamp - Last time permission was requested"
+      denialCount: "number - How many times permission was denied"
+      permanentlyDenied: "boolean - Whether permission is permanently denied"
+      
+    MicPermissionData:
+      userId: "string - User's Firebase UID"
+      permissionState: "PermissionState - Current permission status"
+      grantedAt: "timestamp - When permission was granted (if applicable)"
+      deniedAt: "timestamp - When permission was denied (if applicable)"
+      lastUsed: "timestamp - Last time microphone was used"
+      featureUsage: "string[] - List of features that requested permission"
+      
+  events:
+    - "mic_permission_requested: {user_id, feature, timestamp}"
+    - "mic_permission_granted: {user_id, feature, timestamp}"
+    - "mic_permission_denied: {user_id, feature, timestamp, can_ask_again}"
+    - "mic_permission_permanently_denied: {user_id, feature, timestamp}"
+    - "mic_permission_retry: {user_id, feature, timestamp, attempt_number}"
+    - "fallback_to_manual_input: {user_id, feature, timestamp}"
+    - "mic_permission_usage: {user_id, feature, timestamp}"
+    
+  states:
+    - "hidden -> visible -> requesting -> granted|denied|permanently_denied"
+    - "denied -> retry_available -> requesting -> granted|denied|permanently_denied"
+    - "permanently_denied -> fallback_only"
+    - "granted -> in_use -> available"
+
+dependencies:
+  internal:
+    - "user_context"        # User authentication and profile state
+    - "permission_service"  # Centralized permission management
+    - "voice_input_handler" # Voice processing when permission granted
+    - "fallback_input"      # Manual input alternatives
+    - "notification_system" # User feedback and alerts
+    
+  external:
+    - "firebase/firestore"  # Permission state persistence
+    - "web-audio-api"       # Microphone access
+    - "permissions-api"     # Permission state checking
+
+constraints:
+  performance:
+    permission_check: "<100ms for permission state check"
+    permission_request: "<2s for permission request completion"
+    ui_rendering: "<50ms for permission request display"
+    
+  security_privacy:
+    authentication: "User must be authenticated to request permissions"
+    data_protection: "Permission state stored securely in Firestore"
+    user_consent: "Clear explanation of why microphone access is needed"
+    minimal_access: "Only request audio permission, not video"
+    
+  technical:
+    compatibility: "Chrome 90+, Safari 14+, Firefox 88+, Edge 90+"
+    accessibility: "WCAG 2.1 AA compliance, screen reader support"
+    responsive: "Mobile-first design, touch-friendly interactions"
+    offline_support: "Graceful handling when Firestore unavailable"
+    browser_support: "Fallback for browsers without Permissions API"
+
+observability:
+  monitoring:
+    metrics:
+      - "mic_permission_grant_rate by feature"
+      - "mic_permission_denial_rate by feature"
+      - "permission_retry_success_rate"
+      - "fallback_usage_rate by feature"
+      - "permission_request_duration by browser"
+      
+    logs:
+      - "Permission request attempts and results"
+      - "Permission state changes"
+      - "Fallback usage patterns"
+      - "Browser compatibility issues"
+      
+    traces:
+      - "Permission request flow"
+      - "Firestore permission updates"
+      - "Feature permission checks"
+      
+  alerting:
+    critical:
+      - "Mic permission grant rate drops below 40%"
+      - "High permanent denial rate (>30%)"
+      
+    warning:
+      - "Permission retry success rate below 60%"
+      - "High fallback usage rate (>50%)"
+
+validation:
+  acceptance_criteria:
+    - "Widget can check current microphone permission state"
+    - "Widget can request microphone permission with clear explanation"
+    - "Permission state is accurately tracked and persisted"
+    - "Widget handles all permission states (granted, denied, permanently denied)"
+    - "Retry logic works when permission can be requested again"
+    - "Fallback options are provided when permission is permanently denied"
+    - "Permission state is synchronized across app instances"
+    - "Widget provides clear feedback for all permission states"
+    
+  edge_cases:
+    - "Browser doesn't support Permissions API -> Fallback to getUserMedia only"
+    - "Permission request times out -> Show timeout message, offer retry"
+    - "User denies permission multiple times -> Track denial count, limit retries"
+    - "Permission granted but microphone unavailable -> Detect hardware issues"
+    - "Multiple permission requests simultaneously -> Prevent duplicate requests"
+    - "User revokes permission in browser settings -> Detect and update state"
+    - "Network issues during Firestore update -> Queue updates, retry later"
+    - "Browser storage quota exceeded -> Fallback to session storage"
+    
+  assumptions:
+    - "User is authenticated when requesting permissions"
+    - "Browser supports required Web APIs"
+    - "Firestore is available for permission state persistence"
+    - "User has microphone hardware available"
+    - "Permission requests are triggered by user interaction"
+
+evidence:
+  user_research: "Users prefer clear explanations of why permissions are needed"
+  technical_analysis: "Permission state persistence improves user experience across sessions"
+  design_artifacts: "TBD - Design mockups for permission request UI"
+
+diagrams:
+  sequence:
+    - title: "Microphone Permission Request Flow"
+      description: "Complete permission request sequence with fallback handling"
+      mermaid: |
+        sequenceDiagram
+            participant F as Feature
+            participant W as Mic Permission Widget
+            participant P as Permissions API
+            participant A as Web Audio API
+            participant S as Firestore
+            participant U as User
+            
+            F->>W: Request microphone permission
+            W->>P: Check current permission state
+            P-->>W: Permission status
+            
+            alt Permission Already Granted
+                W-->>F: Permission available
+                F->>W: Use microphone
+                W->>S: Update last used timestamp
+            else Permission Not Granted
+                W->>U: Show permission request with explanation
+                U->>W: Grant/Deny permission
+                
+                alt Permission Granted
+                    W->>A: Request microphone access
+                    A-->>W: MediaStream granted
+                    W->>S: Update permission state
+                    W-->>F: Permission available
+                else Permission Denied
+                    W->>S: Update denial state
+                    
+                    alt Can Ask Again
+                        W->>U: Show retry option
+                        U->>W: Retry permission request
+                        W->>A: Request microphone access
+                        A-->>W: MediaStream granted/denied
+                    else Permanently Denied
+                        W->>U: Show fallback options
+                        W-->>F: Fallback to manual input
+                    end
+                end
+            end
+
+  state:
+    - title: "Mic Permission Widget State Management"
+      description: "Component states and transitions for permission handling"
+      mermaid: |
+        stateDiagram-v2
+            [*] --> Hidden
+            
+            Hidden --> Visible : Permission needed
+            Visible --> Requesting : User initiates request
+            
+            Requesting --> Granted : Permission granted
+            Requesting --> Denied : Permission denied
+            Requesting --> PermanentlyDenied : Permission permanently denied
+            
+            Denied --> RetryAvailable : Can ask again
+            RetryAvailable --> Requesting : User retries
+            
+            Granted --> InUse : Microphone active
+            InUse --> Available : Microphone released
+            
+            PermanentlyDenied --> FallbackOnly : No more requests possible
+            FallbackOnly --> Hidden : Widget hidden
+            
+            Granted --> Hidden : Widget hidden
+            Denied --> Hidden : Widget hidden
+
+  flowchart:
+    - title: "Permission State Decision Logic"
+      description: "Intelligent decision making for permission requests and fallbacks"
+      mermaid: |
+        flowchart TD
+            A[Feature needs microphone] --> B{Check permission state}
+            
+            B -->|Granted| C[Use microphone immediately]
+            B -->|Denied| D{Can ask again?}
+            B -->|Prompt| E[Request permission]
+            
+            D -->|Yes| F{Denial count < 3?}
+            D -->|No| G[Show fallback options]
+            
+            F -->|Yes| H[Show retry option]
+            F -->|No| I[Show fallback options]
+            
+            E --> J{User response?}
+            J -->|Grant| K[Update state, use microphone]
+            J -->|Deny| L[Update denial state]
+            
+            H --> M{User retries?}
+            M -->|Yes| E
+            M -->|No| G
+            
+            K --> N[Feature continues with voice]
+            L --> D
+            G --> O[Feature uses manual input]
+            
+            C --> P[Feature continues with voice]
+            O --> Q[Feature continues with text]
+
+  user_journey:
+    - title: "Microphone Permission User Experience"
+      description: "User journey through permission request and usage"
+      mermaid: |
+        journey
+            title Microphone Permission Experience
+            section Discovery
+              Feature requests mic access: 4: User
+              See permission explanation: 5: User
+            section Decision
+              Understand why needed: 4: User
+              Grant or deny permission: 3: User
+            section Usage
+              Use voice features: 5: User
+              Or use manual alternatives: 4: User
+
+  flowchart:
+    - title: "Feature Integration Flow"
+      description: "How features integrate with the mic permission widget"
+      mermaid: |
+        flowchart TD
+            A[Feature needs voice input] --> B{Import mic permission widget}
+            B --> C[Check permission state]
+            
+            C -->|Granted| D[Enable voice input]
+            C -->|Denied| E{Can request again?}
+            C -->|Prompt| F[Request permission]
+            
+            E -->|Yes| G[Show permission request]
+            E -->|No| H[Show fallback message]
+            
+            F --> I{User grants?}
+            I -->|Yes| D
+            I -->|No| J[Update denial state]
+            
+            G --> K{User grants?}
+            K -->|Yes| D
+            K -->|No| J
+            
+            D --> L[Feature with voice input]
+            H --> M[Feature with manual input]
+            J --> N[Feature with manual input]
+            
+            L --> O[Voice processing]
+            M --> P[Text input processing]
+            N --> P

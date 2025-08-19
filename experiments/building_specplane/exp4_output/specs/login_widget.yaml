@@ -44,11 +44,11 @@ refs:
   onboarding_spec:
     type: "doc"
     title: "Onboarding Screen Specification"
-    url: "TBD"
+    path: "./onboarding_screen.yaml"
     owner: "Product Team"
-    status: "draft"
+    status: "active"
     tags: ["onboarding", "user-experience"]
-    notes: "Specification to be created for the onboarding flow that triggers after successful OAuth"
+    notes: "Complete onboarding flow specification with first name collection and mic permissions"
 
   figma_login_screen:
     type: "figma"
@@ -239,10 +239,10 @@ validation:
     - "Browser supports required Web APIs for OAuth flows"
     - "User has stable internet connection for OAuth provider communication"
 
-evidence:
-  user_research: "OAuth preferred over email/password for mobile-first users"
-  technical_analysis: "Firebase provides robust OAuth integration with minimal setup"
-  design_artifacts: "TBD - Design mockups for login widget and onboarding flow"
+  evidence:
+    user_research: "OAuth preferred over email/password for mobile-first users"
+    technical_analysis: "Firebase provides robust OAuth integration with minimal setup"
+    design_artifacts: "Figma designs available for login widget and onboarding flow"
 
 diagrams:
   sequence:

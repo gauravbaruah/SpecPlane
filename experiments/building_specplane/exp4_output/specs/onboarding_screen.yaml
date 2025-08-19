@@ -1,0 +1,327 @@
+meta:
+  purpose: "Onboarding screen that collects user's first name and mic permissions after successful OAuth authentication, with one-time completion tracking and dashboard navigation"
+  type: "widget"
+  level: "component"
+  domain: "frontend"
+  status: "draft"
+  last_updated: "2025-01-15"
+  version: "1.0.0"
+
+refs:
+  login_widget_spec:
+    type: "doc"
+    title: "Login Widget Specification"
+    path: "./login_widget.yaml"
+    owner: "Product Team"
+    status: "active"
+    tags: ["login", "oauth", "onboarding"]
+    
+  dashboard_spec:
+    type: "doc"
+    title: "Dashboard Screen Specification"
+    url: "TBD"
+    owner: "Product Team"
+    status: "draft"
+    tags: ["dashboard", "main-interface"]
+    
+  mic_permission_widget:
+    type: "doc"
+    title: "Microphone Permission Widget Specification"
+    path: "./mic_permission_widget.yaml"
+    owner: "Product Team"
+    status: "active"
+    tags: ["mic-permissions", "voice-input", "accessibility"]
+    
+  figma_onboarding:
+    type: "figma"
+    title: "Onboarding Screen Design"
+    url: "TBD"
+    owner: "Design Team"
+    status: "draft"
+    tags: ["onboarding", "ui-design"]
+    
+  voice_dictation_docs:
+    type: "doc"
+    title: "Voice Dictation Feature Documentation"
+    url: "TBD"
+    owner: "Product Team"
+    status: "draft"
+    tags: ["voice", "dictation", "accessibility"]
+
+contracts:
+  interfaces:
+    - "onFirstNameSubmit(firstName: string) -> Promise<boolean>"
+    - "onMicPermissionRequest() -> Promise<PermissionState>"
+    - "onMicPermissionGranted() -> void"
+    - "onMicPermissionDenied() -> void"
+    - "onOnboardingComplete() -> void"
+    - "onSkipMicPermission() -> void"
+    - "onNavigateToDashboard() -> void"
+    - "onOnboardingSkip() -> void"
+    
+  apis:
+    - "Firestore: doc('users/{uid}').update({firstName, onboardingCompleted}) -> Promise<void>"
+    - "Firestore: doc('users/{uid}').update({micPermissionGranted, micPermissionDeniedAt}) -> Promise<void>"
+    - "Web Audio API: navigator.mediaDevices.getUserMedia({audio: true}) -> MediaStream | PermissionDeniedError"
+    - "Permissions API: navigator.permissions.query({name: 'microphone'}) -> PermissionStatus"
+    
+  data_models:
+    OnboardingData:
+      firstName: "string - User's first name (required)"
+      micPermissionGranted: "boolean - Whether mic permission was granted"
+      micPermissionDeniedAt: "timestamp - When mic permission was denied (if applicable)"
+      onboardingCompleted: "boolean - Whether onboarding is complete"
+      completedAt: "timestamp - When onboarding was completed"
+      
+    PermissionState:
+      state: "string - 'granted' | 'denied' | 'prompt'"
+      canAskAgain: "boolean - Whether permission can be requested again"
+      
+    OnboardingStep:
+      step: "string - 'welcome' | 'name_input' | 'mic_permission' | 'completion'"
+      isCompleted: "boolean - Whether this step is finished"
+      isRequired: "boolean - Whether this step is mandatory"
+      
+  events:
+    - "onboarding_started: {user_id, timestamp}"
+    - "first_name_submitted: {user_id, first_name, timestamp}"
+    - "mic_permission_requested: {user_id, timestamp}"
+    - "mic_permission_granted: {user_id, timestamp}"
+    - "mic_permission_denied: {user_id, timestamp, can_ask_again}"
+    - "onboarding_completed: {user_id, timestamp, steps_completed}"
+    - "onboarding_skipped: {user_id, timestamp, steps_skipped}"
+    - "dashboard_navigation: {user_id, timestamp}"
+    
+  states:
+    - "welcome -> name_input -> mic_permission -> completion -> dashboard"
+    - "welcome -> name_input -> completion -> dashboard (mic skipped)"
+    - "name_input -> validation_error -> name_input"
+    - "mic_permission -> permission_granted -> completion"
+    - "mic_permission -> permission_denied -> completion"
+    - "completion -> dashboard_navigation"
+
+dependencies:
+  internal:
+    - "login_widget"        # For user authentication state
+    - "dashboard_screen"    # Destination after onboarding
+    - "mic_permission_widget" # Reusable mic permission component
+    - "user_context"        # User state management
+    - "form_validation"     # Input validation utilities
+    - "navigation_service"  # App navigation handling
+    
+  external:
+    - "firebase/firestore"  # User profile updates
+    - "web-audio-api"       # Microphone access
+    - "permissions-api"     # Permission state checking
+
+constraints:
+  performance:
+    response_time: "<500ms for form submission"
+    validation_time: "<100ms for input validation"
+    navigation_time: "<200ms to dashboard"
+    
+  security_privacy:
+    authentication: "User must be authenticated to access onboarding"
+    data_protection: "First name stored securely in Firestore"
+    permission_handling: "Mic permission state tracked but not forced"
+    user_consent: "Clear explanation of why mic permission is needed"
+    
+  technical:
+    compatibility: "Chrome 90+, Safari 14+, Firefox 88+, Edge 90+"
+    accessibility: "WCAG 2.1 AA compliance, keyboard navigation support"
+    responsive: "Mobile-first design, touch-friendly interactions"
+    offline_support: "Graceful handling when Firestore unavailable"
+    storage: "Onboarding completion status stored in Firestore and local storage"
+
+observability:
+  monitoring:
+    metrics:
+      - "onboarding_completion_rate"
+      - "onboarding_abandonment_rate"
+      - "first_name_validation_errors"
+      - "mic_permission_grant_rate"
+      - "mic_permission_denial_rate"
+      - "onboarding_duration by user_type"
+      
+    logs:
+      - "Onboarding step completions"
+      - "Permission request attempts and results"
+      - "Form validation errors"
+      - "Navigation events to dashboard"
+      
+    traces:
+      - "Onboarding flow progression"
+      - "Firestore update operations"
+      - "Permission API calls"
+      
+  alerting:
+    critical:
+      - "Onboarding completion rate drops below 80%"
+      - "High abandonment rate at specific steps"
+      
+    warning:
+      - "Mic permission denial rate exceeds 60%"
+      - "Onboarding duration exceeds 5 minutes P95"
+
+validation:
+  acceptance_criteria:
+    - "User must enter first name to proceed (mandatory)"
+    - "First name validation prevents empty or invalid input"
+    - "Mic permission request includes clear explanation of voice features"
+    - "User can skip mic permission and complete onboarding"
+    - "Onboarding completion status is tracked in user profile"
+    - "Completed users bypass onboarding and go directly to dashboard"
+    - "Form validation provides immediate feedback"
+    - "Navigation to dashboard occurs after successful completion"
+    
+  edge_cases:
+    - "User enters invalid first name -> Show validation error, prevent progression"
+    - "User denies mic permission -> Allow completion, track for future requests"
+    - "Firestore update fails -> Retry mechanism, show offline message"
+    - "User navigates away during onboarding -> Save progress, resume on return"
+    - "Browser doesn't support mic permissions -> Skip mic step, show info message"
+    - "User already completed onboarding -> Redirect to dashboard immediately"
+    - "Network connectivity issues -> Queue updates, show offline indicator"
+    - "User refreshes page during onboarding -> Restore progress from storage"
+    
+  assumptions:
+    - "User is authenticated when onboarding starts"
+    - "Dashboard screen exists and is accessible"
+    - "Firestore is available for user profile updates"
+    - "Browser supports required Web APIs"
+    - "User has stable internet connection"
+
+evidence:
+  user_research: "Users prefer quick onboarding with clear value proposition"
+  technical_analysis: "Voice input significantly improves accessibility and user experience"
+  design_artifacts: "TBD - Design mockups for onboarding flow"
+
+diagrams:
+  sequence:
+    - title: "Onboarding Flow Sequence"
+      description: "Complete onboarding sequence from login completion to dashboard navigation"
+      mermaid: |
+        sequenceDiagram
+            participant L as Login Widget
+            participant O as Onboarding Screen
+            participant U as User
+            participant F as Firestore
+            participant D as Dashboard
+            
+            L->>O: Trigger onboarding (user authenticated)
+            O->>U: Display welcome message
+            O->>U: Ask for first name
+            
+            U->>O: Enter first name
+            O->>F: Update user profile with firstName
+            F-->>O: Profile updated successfully
+            
+            O->>U: Request mic permission with explanation
+            Note over O,U: "We support dictation of your notes<br/>and instructions using your voice"
+            
+            alt Mic Permission Granted
+                U->>O: Grant mic permission
+                O->>F: Update micPermissionGranted: true
+                F-->>O: Profile updated
+            else Mic Permission Denied
+                U->>O: Deny mic permission
+                O->>F: Update micPermissionDeniedAt: timestamp
+                F-->>O: Profile updated
+            end
+            
+            O->>U: Show completion message
+            O->>F: Update onboardingCompleted: true
+            F-->>O: Profile updated
+            
+            O->>D: Navigate to dashboard
+            D-->>U: Display dashboard
+
+  state:
+    - title: "Onboarding Screen State Management"
+      description: "Component states and transitions during onboarding flow"
+      mermaid: |
+        stateDiagram-v2
+            [*] --> Welcome
+            
+            Welcome --> NameInput : User clicks continue
+            NameInput --> NameValidation : User submits name
+            
+            NameValidation --> NameInput : Validation failed
+            NameValidation --> MicPermission : Validation passed
+            
+            MicPermission --> PermissionResult : User responds to mic request
+            
+            PermissionResult --> Completion : Permission granted/denied
+            MicPermission --> Completion : User skips mic permission
+            
+            Completion --> Dashboard : Onboarding complete
+            Completion --> Welcome : User wants to restart
+            
+            Welcome --> Dashboard : User already completed onboarding
+
+  flowchart:
+    - title: "First Name Validation Flow"
+      description: "Input validation and error handling for first name"
+      mermaid: |
+        flowchart TD
+            A[User submits first name] --> B{Name empty?}
+            B -->|Yes| C[Show error: "First name is required"]
+            B -->|No| D{Name too short?}
+            
+            D -->|Yes| E[Show error: "Name must be at least 2 characters"]
+            D -->|No| F{Name contains invalid chars?}
+            
+            F -->|Yes| G[Show error: "Name contains invalid characters"]
+            F -->|No| H{Name too long?}
+            
+            H -->|Yes| I[Show error: "Name must be less than 50 characters"]
+            H -->|No| J[Validation passed]
+            
+            J --> K[Update user profile]
+            K --> L[Proceed to next step]
+            
+            C --> M[Return to name input]
+            E --> M
+            G --> M
+            I --> M
+
+  user_journey:
+    - title: "Onboarding User Experience Journey"
+      description: "End-to-end user experience through onboarding flow"
+      mermaid: |
+        journey
+            title Onboarding Experience
+            section Welcome
+              See welcome message     : 5: User
+              Understand app purpose  : 4: User
+            section Name Collection
+              Enter first name        : 5: User
+              Get validation feedback: 4: User
+            section Mic Permission
+              Read permission explanation: 4: User
+              Grant or deny permission: 3: User
+            section Completion
+              See success message     : 5: User
+              Navigate to dashboard   : 5: User
+
+  flowchart:
+    - title: "Mic Permission Re-request Logic"
+      description: "When and how to ask for mic permissions again after initial denial"
+      mermaid: |
+        flowchart TD
+            A[User interacts with voice control] --> B{Mic permission granted?}
+            B -->|Yes| C[Allow voice input]
+            B -->|No| D{Can ask for permission again?}
+            
+            D -->|Yes| E[Show mic permission request]
+            D -->|No| F[Show manual input options]
+            
+            E --> G{User grants permission?}
+            G -->|Yes| H[Update permission status]
+            G -->|No| I[Track denial, show alternatives]
+            
+            H --> C
+            I --> F
+            
+            C --> J[Process voice input]
+            F --> K[Show keyboard/text input]
