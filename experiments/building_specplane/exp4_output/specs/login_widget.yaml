@@ -58,6 +58,22 @@ refs:
     status: "draft"
     tags: ["login", "screen"]
     notes: "Figma screen for the login widget"
+    
+  firebase_config_docs:
+    type: "doc"
+    title: "Firebase Project Configuration Guide"
+    url: "https://firebase.google.com/docs/projects/learn-more"
+    owner: "Google Firebase"
+    access: "public"
+    tags: ["firebase", "setup", "configuration"]
+    
+  oauth_consent_guidelines:
+    type: "doc"
+    title: "OAuth Consent Message Guidelines"
+    url: "TBD"
+    owner: "Legal Team"
+    status: "draft"
+    tags: ["oauth", "consent", "legal", "privacy"]
 
 contracts:
   interfaces:
@@ -66,11 +82,39 @@ contracts:
     - "onAuthSuccess(user: User) -> void"
     - "onAuthError(error: AuthError) -> void"
     - "onOnboardingTrigger(user: User) -> void"
+    - "onConsentMessageDisplay() -> void"
+    - "onTokenRefresh() -> Promise<boolean>"
+    - "onSessionExpired() -> void"
     
   apis:
-    - "POST /api/auth/google -> 200 OK | 400 Bad Request | 500 Internal Server Error"
-    - "POST /api/auth/apple -> 200 OK | 400 Bad Request | 500 Internal Server Error"
-    - "GET /api/auth/user/{uid} -> 200 OK | 404 Not Found"
+    - "Firebase Auth: signInWithPopup(GoogleAuthProvider) -> UserCredential | AuthError"
+    - "Firebase Auth: signInWithPopup(AppleAuthProvider) -> UserCredential | AuthError"
+    - "Firebase Auth: signOut() -> Promise<void>"
+    - "Firestore: doc('users/{uid}').set(userData) -> Promise<void>"
+    - "Firestore: doc('users/{uid}').get() -> DocumentSnapshot | Error"
+    
+  data_models:
+    User:
+      uid: "string - Firebase Auth UID"
+      email: "string - User's email address"
+      displayName: "string - User's display name"
+      photoURL: "string - Profile picture URL"
+      provider: "string - 'google' | 'apple'"
+      createdAt: "timestamp - Account creation time"
+      lastLoginAt: "timestamp - Last login time"
+      onboardingCompleted: "boolean - Onboarding status"
+      
+    AuthResult:
+      success: "boolean - Authentication result"
+      user: "User | null - User data if successful"
+      error: "AuthError | null - Error details if failed"
+      provider: "string - OAuth provider used"
+      
+    AuthError:
+      code: "string - Firebase error code"
+      message: "string - Human-readable error message"
+      email: "string - Email associated with error (if applicable)"
+      credential: "AuthCredential | null - Credential if available"
     
   events:
     - "oauth_initiated: {provider, timestamp, session_id}"
@@ -85,6 +129,10 @@ contracts:
     - "idle -> oauth_flow -> processing -> success|error"
     - "success -> onboarding_modal"
     - "error -> error_display -> idle"
+    - "idle -> offline -> online -> idle"
+    - "success -> session_expired -> idle"
+    - "oauth_flow -> user_cancelled -> idle"
+    - "processing -> user_exists -> onboarding_modal"
 
 dependencies:
   internal:
@@ -110,12 +158,20 @@ constraints:
     authorization: "User consent required for profile data access"
     data_protection: "Only access email and profile picture from OAuth providers"
     compliance: "GDPR compliant data handling, clear consent messaging"
+    consent_display: "OAuth consent message must be prominently displayed before authentication"
+    data_retention: "User data retained until account deletion or 7 years of inactivity"
+    audit_trail: "All authentication attempts logged with timestamp, IP, and user agent"
+    permission_revocation: "Handle OAuth permission revocation gracefully with re-authentication flow"
     
   technical:
     compatibility: "Chrome 90+, Safari 14+, Firefox 88+, Edge 90+"
     accessibility: "WCAG 2.1 AA compliance, screen reader support"
     internationalization: "Support for multiple languages and locales"
     responsive: "Mobile-first design, touch-friendly interactions"
+    firebase_config: "Firebase project must be configured with Google and Apple OAuth providers"
+    environment_support: "Support for dev, staging, and production environments"
+    offline_capability: "Graceful degradation when Firebase services unavailable"
+    session_persistence: "Maintain user session across browser tabs and page refreshes"
 
 observability:
   monitoring:
@@ -166,6 +222,11 @@ validation:
     - "User already exists -> Skip user creation, proceed to onboarding"
     - "OAuth token expired -> Refresh token or re-authenticate"
     - "User cancels OAuth flow -> Return to idle state without error"
+    - "OAuth permissions revoked -> Detect and prompt for re-authentication"
+    - "Multiple tabs with different auth states -> Synchronize authentication state"
+    - "Browser storage quota exceeded -> Fallback to session storage or memory"
+    - "Firebase project configuration changes -> Detect and show configuration error"
+    - "User switches between OAuth providers -> Clear previous provider state"
     
   assumptions:
     - "Firebase project is properly configured with OAuth providers"
@@ -173,6 +234,10 @@ validation:
     - "Firestore security rules allow authenticated user creation"
     - "Onboarding screen component exists and can be triggered"
     - "User context provider handles authentication state management"
+    - "Legal team has approved OAuth consent message content"
+    - "Firebase project supports all required environments (dev/staging/prod)"
+    - "Browser supports required Web APIs for OAuth flows"
+    - "User has stable internet connection for OAuth provider communication"
 
 evidence:
   user_research: "OAuth preferred over email/password for mobile-first users"
@@ -289,4 +354,31 @@ diagrams:
             section Onboarding
               See welcome message     : 5: User
               Complete profile setup  : 4: User
-              Start using app         : 5: User  
+              Start using app         : 5: User
+
+  flowchart:
+    - title: "Consent Message Display Flow"
+      description: "How and when OAuth consent message is displayed to users"
+      mermaid: |
+        flowchart TD
+            A[User arrives at login] --> B{First time user?}
+            B -->|Yes| C[Display full consent message]
+            B -->|No| D[Display abbreviated consent]
+            
+            C --> E[Show detailed privacy notice]
+            D --> F[Show brief reminder]
+            
+            E --> G[User reads consent]
+            F --> H[User acknowledges]
+            
+            G --> I{User accepts?}
+            H --> I
+            
+            I -->|Yes| J[Enable OAuth buttons]
+            I -->|No| K[Show alternative options]
+            
+            J --> L[Proceed with OAuth]
+            K --> M[Offer email/password or contact support]
+            
+            L --> N[OAuth flow initiated]
+            M --> O[User chooses alternative path]  
