@@ -12,6 +12,34 @@ Every component specification should capture:
 
 **Core Principle**: SpecPlane focuses on **WHAT** the component should do and **HOW WELL** it should do it, not **HOW** it should be implemented. This enables the same specification to guide implementations across different technologies, platforms, and programming languages. Developers can, if they want, add implementation hints to the spec to guide the implementation, e.g. function signatures, module names, etc.
 
+## Directory Structure (Optional Best Practice)
+
+SpecPlane specifications can be organized in a consistent directory layout for clarity and scaling across teams:
+
+```
+specplane/
+├── specs/
+│ ├── system/ # Level: "system" - high-level system context
+│ ├── container/ # Level: "container" - deployment units, services
+│ ├── component/ # Level: "component" - widgets, modules, libraries
+│ ├── code/ # Level: "code" - functions, classes, detailed implementation
+│ └── assets/ # Supporting files, images, datasets referenced by specs
+├── plugins/ # (future) SpecPlane extensions
+└── dashboard/ # (future) SpecPlane visualization tools
+```
+
+**Default behavior:** auto-suggest directory based on `meta.level` (you can override). This structure eases discoverability and collaboration; it’s guidance, not a constraint.
+
+### File Naming Conventions
+
+- Use `snake_case` for filenames  
+- Include the component type in the filename:
+  - `login_widget.yaml`, `auth_service.yaml`
+- For system/container levels:
+  - `user_management_system.yaml`, `api_gateway_container.yaml`
+- Place files under the appropriate `specplane/specs/` subdirectory based on `meta.level`
+
+
 ## Core Schema Structure
 
 ```yaml
@@ -124,6 +152,12 @@ observability:
     audit: []              # Audit trail requirements
     # - "user_consent_changed{uid, ts, source}"
 
+  business_metrics:        # Optional section
+    engagement: []         # DAU, MAU, session metrics
+    conversion: []         # Funnel conversion rates
+    retention: []          # Cohort and churn metrics
+    revenue: []            # Business value metrics
+    satisfaction: []       # NPS, rating, feedback metrics
     
 validation:
   acceptance_criteria: [] # Clear success/failure conditions
@@ -172,8 +206,39 @@ validation_rules:      # Schema validation guidance
     wiring:
       component_level: "use dependencies.internal/external"
       system_container_level: "use relationships.depends_on/used_by/integrates_with/contains"
+    placement:
+      directory_matches_level: true   # e.g., meta.level: "component" → specs/component/
+    naming:
+      snake_case: true
+      includes_type_hint: true        # e.g., *_widget.yaml, *_service.yaml
 
 ```
+
+## Best Practices for SpecPlane Creation
+
+These principles ensure specs remain consistent, usable, and future-proof:
+
+1. **Start with Purpose and Constraints**  
+   Clearly define why the component exists and the limits it must operate within before detailing behavior.
+
+2. **Design Contracts Before Implementation**  
+   Focus on behavioral interfaces that transcend specific technologies.
+
+3. **Consider Failure Modes Early**  
+   Think through edge cases, error scenarios, and recovery strategies before implementation.
+
+4. **Make Observability Concrete**  
+   Define SLIs/SLOs or measurable indicators rather than vague monitoring requirements.
+
+5. **Security by Design**  
+   Include threat modeling and mitigation strategies from the beginning.
+
+6. **Use References Liberally**  
+   Link to designs, tickets, and related components to create coherent documentation.
+
+7. **Validate Iteratively**  
+   Use the `validation` section to define acceptance criteria and test scenarios, updating as the system evolves.
+
 
 ## Component Type Patterns
 
