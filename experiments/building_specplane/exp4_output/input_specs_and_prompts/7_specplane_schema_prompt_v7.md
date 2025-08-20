@@ -153,11 +153,11 @@ observability:
     # - "user_consent_changed{uid, ts, source}"
 
   business_metrics:        # Optional section
-    engagement: []         # DAU, MAU, session metrics
-    conversion: []         # Funnel conversion rates
-    retention: []          # Cohort and churn metrics
-    revenue: []            # Business value metrics
-    satisfaction: []       # NPS, rating, feedback metrics
+    engagement: []         # DAU, MAU, stickiness, session metrics
+    conversion: []         # Funnel conversion rates, signup → activation, funnel stages
+    retention: []          # Cohort, returning users, and churn metrics
+    revenue: []            # Business value metrics: ARPU, MRR, churned revenue
+    satisfaction: []       # NPS, rating, feedback metrics, survey ratings, app store ratings
     
 validation:
   acceptance_criteria: [] # Clear success/failure conditions
@@ -230,13 +230,16 @@ These principles ensure specs remain consistent, usable, and future-proof:
 4. **Make Observability Concrete**  
    Define SLIs/SLOs or measurable indicators rather than vague monitoring requirements.
 
-5. **Security by Design**  
+5. **Align Business Metrics with Product Goals**
+   Define DAU, MAU, retention, and revenue metrics as derived observability metrics. Group them in business_metrics to ensure technical telemetry directly supports business KPIs.
+
+6. **Security by Design**  
    Include threat modeling and mitigation strategies from the beginning.
 
-6. **Use References Liberally**  
+7. **Use References Liberally**  
    Link to designs, tickets, and related components to create coherent documentation.
 
-7. **Validate Iteratively**  
+8. **Validate Iteratively**  
    Use the `validation` section to define acceptance criteria and test scenarios, updating as the system evolves.
 
 
@@ -348,6 +351,63 @@ constraints:
       credentials: "never stored client-side"
       session_tokens: "cleared on logout or 24h expiry"
 
+observability:
+  monitoring:
+    metrics:
+      # Authentication health
+      - name: "login_success_rate"
+        category: "technical"
+        type: "derived"
+        window: "1h"
+        source: "login_succeeded / login_attempted"
+        events_required: ["login_attempted", "login_succeeded"]
+        owner: "Authentication Team"
+        
+      # User engagement  
+      - name: "daily_active_users"
+        category: "engagement"
+        type: "derived"
+        window: "1d"
+        source: "distinct user_id FROM login_succeeded WHERE date = today"
+        events_required: ["login_succeeded"]
+        owner: "Product Analytics"
+        definition_ref: "{{refs.dau_definition.url}}"
+        
+      # Conversion optimization
+      - name: "new_user_activation_rate"
+        category: "conversion"
+        type: "derived"
+        window: "7d"
+        source: "users_completing_first_action / users_first_login"
+        events_required: ["login_succeeded", "first_valuable_action"]
+        owner: "Growth Team"
+
+    slis:
+      - name: "auth_reliability"
+        measure: "login_success_rate"
+        formula: "login_success_rate"
+        
+      - name: "user_stickiness"
+        measure: "DAU/MAU ratio"
+        formula: "daily_active_users / monthly_active_users"
+
+    slos:
+      - "auth_reliability >= 99.5% over 24h"
+      - "user_stickiness >= 0.20 over 30d"
+
+    business_metrics:
+      product_health:
+        - "daily_active_users"
+        - "user_stickiness"
+        - "new_user_activation_rate"
+      
+      reliability:
+        - "login_success_rate"
+        - "auth_reliability"
+      
+      growth:
+        - "new_user_activation_rate"
+        - "daily_active_users"
 ```
 
 ### Backend Service Components
@@ -1542,4 +1602,8 @@ validation_rules:
     wiring:
       component_level: "use dependencies.internal/external"
       system_container_level: "use relationships.depends_on/used_by/integrates_with/contains"
+    metrics:
+      business_groups_reference_defined_metrics: true
+      require_category_and_window: true
+
 ```
