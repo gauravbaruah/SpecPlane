@@ -92,7 +92,7 @@ refs:                # Central registry of external resources
     related_refs: []  # IDs of connected resources
 
 contracts:
-  interfaces: []     # Behavioral interactions (language-agnostic)
+  capabilities: []     # Behavioral interactions (language-agnostic)
   apis: []          # Service endpoints and data exchanges
   events: []        # Analytics events, system events, state changes
   states: []        # Component state transitions and conditions
@@ -222,7 +222,7 @@ These principles ensure specs remain consistent, usable, and future-proof:
    Clearly define why the component exists and the limits it must operate within before detailing behavior.
 
 2. **Design Contracts Before Implementation**  
-   Focus on behavioral interfaces that transcend specific technologies.
+   Focus on behavioral capabilities that transcend specific technologies.
 
 3. **Consider Failure Modes Early**  
    Think through edge cases, error scenarios, and recovery strategies before implementation.
@@ -303,7 +303,7 @@ meta:
   domain: "frontend"
   
 contracts:
-  interfaces:
+  capabilities:
     - "User clicks button to trigger action"
     - "Component value changes trigger validation and update"
     - "Error states display appropriate feedback to user"
@@ -418,7 +418,7 @@ meta:
   domain: "backend"
   
 contracts:
-  interfaces:
+  capabilities:
     - "Accept user authentication requests"
     - "Validate credentials and return user data or error"
     - "Handle session management and token refresh"
@@ -490,7 +490,7 @@ meta:
   domain: "ai"
   
 contracts:
-  interfaces:
+  capabilities:
     - "Process user input with contextual understanding"
     - "Generate appropriate responses based on training and context"
     - "Update conversation memory with interaction history"
@@ -545,7 +545,7 @@ meta:
   domain: "mobile"
 
 contracts:
-  interfaces:
+  capabilities:
     - "Handle touch gestures and device-specific interactions"
     - "Manage offline state and data synchronization"
     - "Integrate with platform-specific features (camera, GPS, etc.)"
@@ -1408,7 +1408,7 @@ refs:
     status: "active"
 
 contracts:
-  interfaces:
+  capabilities:
     - "onRecordingStart() -> void"
     - "onRecordingStop() -> Promise<AudioBlob>"
     - "onPlayback(audioBlob) -> void"
