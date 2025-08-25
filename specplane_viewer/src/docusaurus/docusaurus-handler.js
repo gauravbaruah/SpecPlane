@@ -108,7 +108,8 @@ class DocusaurusHandler {
         { 
           cwd: this.projectPath,
           stdio: 'pipe',
-          encoding: 'utf8'
+          encoding: 'utf8',
+          env: { ...process.env, PATH: process.env.PATH }
         }
       );
       
@@ -174,29 +175,29 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
 
 ### 1. Setup Docusaurus Project
 \`\`\`bash
-./bin/specplane setup ./.specplane
+./bin/specplane_viewer setup ./.specplane
 \`\`\`
 
 ### 2. Convert Specifications
 \`\`\`bash
 # Convert specs in current directory
-./bin/specplane convert
+./bin/specplane_viewer convert
 
 # Convert specs with custom input/output
-./bin/specplane convert --input ./my_specs --output ./custom_output
+./bin/specplane_viewer convert --input ./my_specs --output ./custom_output
 
 # Convert specific directory
-./bin/specplane convert ./specs
+./bin/specplane_viewer convert ./specs
 \`\`\`
 
 ### 3. Serve with Live Reloading
 \`\`\`bash
 # Start full workflow with file watching
-./bin/specplane convert ./specs
-./bin/specplane start
+./bin/specplane_viewer convert ./specs
+./bin/specplane_viewer start
 
 # Or use the combined command
-./bin/specplane serve ./specs --watch
+./bin/specplane_viewer serve ./specs --watch
 \`\`\`
 
 ## Features

@@ -28,7 +28,7 @@ npm install
 ### Make CLI Executable
 
 ```bash
-chmod +x bin/specplane
+chmod +x bin/specplane_viewer
 ```
 
 ## Usage
@@ -80,7 +80,7 @@ chmod +x bin/specplane
 ```
 specplane_viewer/
 ├── bin/
-│   └── specplane              # CLI executable
+│   └── specplane_viewer       # CLI executable
 ├── src/
 │   ├── cli/
 │   │   └── cli-interface.js   # Main CLI orchestration
@@ -244,10 +244,10 @@ npx docusaurus --version
 #### File Permissions
 ```bash
 # Make CLI executable
-chmod +x bin/specplane
+chmod +x bin/specplane_viewer
 
 # Check file permissions
-ls -la bin/specplane
+ls -la bin/specplane_viewer
 ```
 
 #### Docusaurus Build Issues
@@ -275,7 +275,7 @@ rm specplane-viewer.log
 
 ### Adding New Features
 
-1. **New Commands**: Add to `bin/specplane` and `src/cli/cli-interface.js`
+1. **New Commands**: Add to `bin/specplane_viewer` and `src/cli/cli-interface.js`
 2. **New Components**: Create in appropriate container directory
 3. **New Validations**: Extend `src/converter/yaml-parser.js`
 4. **New Markdown Sections**: Extend `src/converter/markdown-generator.js`
@@ -290,7 +290,7 @@ npm run dev
 node src/converter/yaml-parser.js
 
 # Test CLI
-./bin/specplane --help
+./bin/specplane_viewer --help
 ```
 
 ## Contributing

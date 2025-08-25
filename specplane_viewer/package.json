@@ -1,0 +1,45 @@
+{
+  "name": "specplane-viewer",
+  "version": "0.1.0",
+  "description": "Convert SpecPlane YAML specifications to Markdown and serve via Docusaurus",
+  "main": "src/index.js",
+  "bin": {
+    "specplane": "./bin/specplane_viewer"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "build": "echo 'Build process not yet implemented'",
+    "test": "echo 'Tests not yet implemented'"
+  },
+  "keywords": [
+    "specplane",
+    "yaml",
+    "markdown",
+    "docusaurus",
+    "documentation",
+    "specifications"
+  ],
+  "author": "SpecPlane Development Team",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "commander": "^11.1.0",
+    "docusaurus-lunr-search": "^3.6.0",
+    "fs-extra": "^11.1.1",
+    "js-yaml": "^4.1.0",
+    "marked": "^9.1.0",
+    "path": "^0.12.7",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/specplane/specplane-viewer.git"
+  }
+}
