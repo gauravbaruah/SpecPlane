@@ -15,7 +15,7 @@ contracts:
     - "Detect YAML file modifications, additions, and deletions"
     - "Filter file changes to only process relevant YAML files"
     - "Trigger markdown conversion for changed files"
-    - "Handle multiple concurrent file changes efficiently"
+    - "Handle multiple concurrent file changes efficiently with 2-second debouncing"
     - "Provide real-time feedback on file watching status"
     - "Support configurable watch patterns and exclusions"
     - "Gracefully handle file system errors and permission issues"
@@ -59,7 +59,7 @@ constraints:
     response_time: "<500ms for detecting file changes"
     memory_usage: "<20MB heap size during watching"
     file_handling: "Support watching 1000+ files simultaneously"
-    change_detection: "Detect changes within 500ms of file system events"
+    change_detection: "Detect changes within 500ms of file system events with 2-second debouncing for stability"
   
   security_privacy:
     authentication: "No authentication required"

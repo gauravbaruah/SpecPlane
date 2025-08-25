@@ -23,6 +23,9 @@ class MarkdownGenerator {
     try {
       this.logger.debug('Generating markdown for specification');
       
+      // Generate frontmatter for Docusaurus routing
+      const frontmatter = this.generateFrontmatter(specData.meta);
+      
       const sections = [];
       
       // 1. Meta section (first)
@@ -64,17 +67,42 @@ class MarkdownGenerator {
       // Combine all sections
       const markdown = sections.join('\n\n');
       
+      // Add frontmatter at the beginning
+      const finalMarkdown = frontmatter + '\n\n' + markdown;
+      
       this.stats.filesGenerated++;
       this.stats.sectionsGenerated += sections.length;
       
       this.logger.debug(`Markdown generated with ${sections.length} sections`);
       
-      return markdown;
+      return finalMarkdown;
       
     } catch (error) {
       this.logger.error('Failed to generate markdown:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate frontmatter for Docusaurus routing
+   */
+  generateFrontmatter(meta) {
+    if (!meta) return '';
+    
+    const frontmatter = {
+      id: meta.id || 'untitled',
+      title: meta.purpose || 'Specification',
+      sidebar_label: meta.id || meta.purpose || 'Specification',
+      description: meta.purpose || 'SpecPlane specification',
+      keywords: [...new Set([meta.type, meta.level, meta.domain].filter(Boolean))],
+      hide_table_of_contents: false,
+      toc_min_heading_level: 2,
+      toc_max_heading_level: 3
+    };
+    
+    // Convert to YAML frontmatter
+    const yaml = require('js-yaml');
+    return '---\n' + yaml.dump(frontmatter) + '---';
   }
 
   /**

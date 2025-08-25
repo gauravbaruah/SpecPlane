@@ -189,9 +189,13 @@ class DocusaurusSetup {
           sidebarPath: require.resolve('./sidebars.js'),
           routeBasePath: '/',
           editUrl: 'https://github.com/specplane/specplane-docs/edit/main/',
-          path: './markdown', // Point to the markdown directory
+          path: './docs', // Use standard Docusaurus docs folder
         },
         blog: false,
+        pages: {
+          path: './src/pages',
+          routeBasePath: '/',
+        },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
@@ -247,7 +251,7 @@ class DocusaurusSetup {
           items: [
             {
               label: 'Getting Started',
-              to: '/',
+              to: '/test.component',
             },
           ],
         },

@@ -12,6 +12,7 @@ meta:
 contracts:
   capabilities:
     - "Generate structured Markdown with proper heading hierarchy"
+    - "Create Docusaurus-compatible frontmatter with proper document IDs and routing"
     - "Create meta section as the first section with key information"
     - "Generate relationship diagrams showing component dependencies"
     - "Format diagrams section with Mermaid code blocks"
@@ -24,6 +25,7 @@ contracts:
   
   apis:
     - "generateMarkdown(specData: SpecPlaneData) -> string"
+    - "generateFrontmatter(meta: MetaData) -> string"
     - "generateMetaSection(meta: MetaData) -> string"
     - "generateRelationshipDiagram(relationships: Relationships) -> string"
     - "generateDiagramsSection(diagrams: Diagram[]) -> string"

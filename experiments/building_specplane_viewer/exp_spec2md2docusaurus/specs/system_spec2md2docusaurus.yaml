@@ -48,17 +48,20 @@ relationships:
     - "CI/CD Systems - For automated documentation updates"
   
   contains:
-    - "spec2md_converter - Component for converting YAML to Markdown"
-    - "docusaurus_serving - Component for serving markdown via Docusaurus"
+    - "spec2md_converter - Container for converting YAML to Markdown"
+    - "cli_interface - Container for orchestrating the workflow"
+    - "docusaurus_runner - Container for managing Docusaurus execution"
 
 contracts:
   capabilities:
-    - "Convert SpecPlane YAML specifications to well-formatted Markdown"
-    - "Generate Docusaurus-compatible markdown with proper frontmatter"
-    - "Serve specifications as a searchable, navigable web documentation site"
+    - "Convert SpecPlane YAML specifications to well-formatted Markdown with proper frontmatter"
+    - "Generate Docusaurus-compatible markdown with correct document IDs and routing"
+    - "Serve specifications as a searchable, navigable web documentation site with Lunr search"
     - "Maintain specification structure and relationships in markdown format"
-    - "Support versioning and change tracking of specifications"
+    - "Support real-time file watching with automatic conversion and rebuild"
     - "Provide responsive web interface for specification consumption"
+    - "Automatically install and configure docusaurus-lunr-search plugin"
+    - "Handle dependency checking and user guidance for missing tools"
   
   apis:
     - "YAML Input: Accept SpecPlane YAML files for processing"
@@ -80,8 +83,9 @@ contracts:
 
 dependencies:
   internal:
-    - "spec2md_converter - YAML to Markdown conversion component"
-    - "docusaurus_serving - Docusaurus hosting and serving component"
+    - "spec2md_converter - YAML to Markdown conversion container"
+    - "cli_interface - CLI orchestration and file watching container"
+    - "docusaurus_runner - Docusaurus execution and dependency management container"
   
   external:
     - "Node.js Runtime - For running conversion scripts and Docusaurus"

@@ -11,14 +11,16 @@ meta:
 
 contracts:
   capabilities:
-    - "Generate Docusaurus configuration files (docusaurus.config.js)"
-    - "Set up project structure for Docusaurus documentation"
-    - "Configure markdown source directory to point to generated files"
-    - "Set up navigation and sidebar configuration"
-    - "Configure themes and styling for documentation site"
-    - "Handle Docusaurus project initialization and dependencies"
+    - "Generate Docusaurus configuration files (docusaurus.config.js) with proper routing"
+    - "Set up project structure for Docusaurus documentation with correct paths"
+    - "Configure markdown source directory to point to generated files with proper routing"
+    - "Set up navigation and sidebar configuration with correct document IDs"
+    - "Configure themes and styling for documentation site with SpecPlane branding"
+    - "Handle Docusaurus project initialization and dependencies including lunr search"
     - "Validate Docusaurus configuration and project structure"
     - "Support custom configuration overrides and extensions"
+    - "Configure proper routing with /docs base path and home page redirects"
+    - "Set up docusaurus-lunr-search plugin with optimized search configuration"
   
   apis:
     - "setupProject(basePath, options) -> SetupResult"

@@ -39,14 +39,16 @@ relationships:
 
 contracts:
   capabilities:
-    - "Process command-line arguments and options"
-    - "Watch specified directories for YAML file changes"
+    - "Process command-line arguments and options (serve, convert, setup)"
+    - "Watch specified directories for YAML file changes with 2-second debouncing"
     - "Trigger YAML to Markdown conversion on file changes"
-    - "Set up Docusaurus configuration for markdown serving"
-    - "Run Docusaurus build and serve commands"
-    - "Provide real-time feedback on conversion progress"
-    - "Handle errors gracefully with helpful user messages"
+    - "Set up Docusaurus configuration for markdown serving with proper routing"
+    - "Run Docusaurus build and serve commands from correct working directory"
+    - "Provide real-time feedback on conversion progress with comprehensive logging"
+    - "Handle errors gracefully with helpful user messages and dependency guidance"
     - "Support both single-file and batch processing modes"
+    - "Automatically handle file naming conflicts and routing issues"
+    - "Provide comprehensive JSONL logging for all operations"
   
   apis:
     - "serve(directory, options) -> Promise<void>"

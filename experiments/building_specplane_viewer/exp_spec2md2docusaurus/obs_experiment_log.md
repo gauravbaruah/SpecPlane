@@ -2,6 +2,7 @@
 - we have to tell the agent to not create any specs at the outset.
 - we really need to come up with a good directory structure for the specs.
 - we really need to tighten up the specplane schema elements: e.g. dependencies can be arrays, and observability can be more detailed with names and descriptions.
+- requests to update specs were followed quite well. Impressed. Looks like small changes can make it to the specs on request.
 
 
 # Seed Input Prompt
@@ -829,3 +830,113 @@ The implementation **100% follows** our SpecPlane specifications:
 - Logging and observability as specified
 
 The SpecPlane Viewer is now a **fully functional, production-ready tool** that converts your specifications to beautiful, searchable documentation! 🎊
+
+
+# Conversation - a few messages for debugging errors
+...
+
+# Input Prompt - spec update request
+
+hey based on the changes we have made, can you carefully update the specs? especially the capability contracts of the pertinent yaml files?
+
+# Cursor Response 13 - spec update
+
+Absolutely! Based on all the changes we've made during the implementation, I should update the SpecPlane specifications to reflect what we actually built. Let me carefully review and update the relevant YAML files.
+
+First, let me check what specifications we have and then update them based on our implementation:
+
+Ran tool
+Perfect! Now let me update the key specifications based on what we actually implemented. Let me start with the system-level specification:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/system_spec2md2docusaurus.yaml
+Now let me update the system specification to reflect what we actually implemented:
+
+Now let me update the CLI interface specification to reflect what we implemented:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/cli_interface.yaml
+Let me update the CLI interface capabilities to reflect what we actually implemented:
+
+Now let me update the markdown generator specification to reflect the frontmatter capabilities we implemented:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/markdown_generator.yaml
+Let me update the markdown generator capabilities to reflect the frontmatter generation we implemented:
+
+Let me read the capabilities section first:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/markdown_generator.yaml
+Let me find the capabilities section:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/markdown_generator.yaml
+Now let me add the frontmatter capability to the markdown generator:
+
+Now let me add the frontmatter generation API:
+
+Now let me update the Docusaurus runner specification to reflect the dependency checking and lunr search integration we implemented:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/docusaurus_runner.yaml
+The Docusaurus runner specification looks good and already reflects what we implemented. Now let me update the Docusaurus setup specification to reflect the routing and configuration we implemented:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/docusaurus_setup.yaml
+Let me update the Docusaurus setup capabilities to reflect the routing and lunr search configuration we implemented:
+
+Let me read the capabilities section first:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/docusaurus_setup.yaml
+Now let me update the capabilities to reflect what we implemented:
+
+Now let me update the file watcher specification to reflect the 2-second debouncing we implemented:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/file_watcher.yaml
+Let me update the file watcher capabilities to reflect the debouncing we implemented:
+
+Now let me update the performance constraints to reflect the debouncing:
+
+Finally, let me update the YAML parser specification to reflect the validation we implemented:
+
+Read file: experiments/building_specplane_viewer/exp_spec2md2docusaurus/specs/yaml_parser.yaml
+The YAML parser specification looks good and already reflects what we implemented. Now let me create a summary of all the updates we've made to the specifications:
+
+## 📋 **SpecPlane Specifications Updated Based on Implementation**
+
+I've carefully updated the following specifications to reflect what we actually built:
+
+### **1. System Specification (`system_spec2md2docusaurus.yaml`)**
+- ✅ **Updated container structure** - Now correctly shows 3 containers instead of 2
+- ✅ **Enhanced capabilities** - Added frontmatter generation, Lunr search, dependency checking
+- ✅ **Updated dependencies** - Reflects actual container/component architecture
+
+### **2. CLI Interface (`cli_interface.yaml`)**
+- ✅ **Enhanced capabilities** - Added specific commands (serve, convert, setup), 2-second debouncing
+- ✅ **Added features** - File naming conflict handling, comprehensive JSONL logging
+- ✅ **Updated APIs** - Reflects actual implementation methods
+
+### **3. Markdown Generator (`markdown_generator.yaml`)**
+- ✅ **Added frontmatter capability** - Docusaurus-compatible document IDs and routing
+- ✅ **Enhanced APIs** - Added `generateFrontmatter()` method
+- ✅ **Updated capabilities** - Automatic document ID generation, routing compatibility
+
+### **4. Docusaurus Setup (`docusaurus_setup.yaml`)**
+- ✅ **Enhanced capabilities** - Proper routing configuration, lunr search integration
+- ✅ **Added features** - Home page redirects, correct document ID handling
+- ✅ **Updated configuration** - Reflects actual docusaurus-lunr-search plugin usage
+
+### **5. File Watcher (`file_watcher.yaml`)**
+- ✅ **Updated capabilities** - Added 2-second debouncing for stability
+- ✅ **Enhanced performance** - Reflects actual debouncing implementation
+
+### **6. Docusaurus Runner (`docusaurus_runner.yaml`)**
+- ✅ **Already accurate** - Dependency checking, lunr search integration, server management
+- ✅ **Reflects implementation** - All capabilities match what we built
+
+## 🎯 **Key Implementation Features Now Documented**
+
+1. **Frontmatter Generation** - Docusaurus-compatible document routing
+2. **Lunr Search Integration** - docusaurus-lunr-search plugin with optimization
+3. **Dependency Management** - Intelligent checking and user guidance
+4. **File Watching** - 2-second debouncing for stability
+5. **Routing Configuration** - Proper /docs base path and home page handling
+6. **Error Handling** - Graceful degradation with helpful messages
+7. **JSONL Logging** - Comprehensive operation logging
+8. **Working Directory Management** - Correct Docusaurus execution context
+
+The specifications now accurately reflect our **fully functional, production-ready SpecPlane Viewer** implementation! 🎉

@@ -62,7 +62,7 @@ chmod +x bin/specplane
 #### Setup Command (Just Setup Docusaurus)
 ```bash
 # Setup Docusaurus for existing markdown
-./bin/specplane setup ./.specplane/markdown
+./bin/specplane setup ./.specplane/docs
 ```
 
 ### Command Options
@@ -72,7 +72,7 @@ chmod +x bin/specplane
 | `--port <port>` | Port number for Docusaurus server | 3001 |
 | `--watch` | Watch for file changes | false |
 | `--open` | Auto-open browser | false |
-| `--output <path>` | Output directory for markdown | ./.specplane/markdown |
+| `--output <path>` | Output directory for markdown | ./.specplane/docs |
 
 ## Project Structure
 
@@ -119,7 +119,7 @@ The SpecPlane Viewer follows the container/component architecture specified in o
 ## Development Workflow
 
 ### 1. File Watching
-- Monitors `.specplane/markdown/` directory for changes
+- Monitors `.specplane/docs/` directory for changes
 - 2-second debouncing to handle rapid file changes
 - Automatically triggers conversion and rebuild
 
@@ -147,7 +147,7 @@ echo "meta:\n  purpose: 'Test specification'\n  type: 'component'\n  level: 'com
 ./bin/specplane convert test_specs
 
 # Check output
-ls -la .specplane/markdown/
+ls -la .specplane/docs/
 ```
 
 #### Test Full Workflow
@@ -164,7 +164,7 @@ echo "  domain: 'test'" >> test_specs/test.yaml
 #### Test Docusaurus Setup
 ```bash
 # Just setup Docusaurus
-./bin/specplane setup ./.specplane/markdown
+./bin/specplane setup ./.specplane/docs
 
 # Check generated files
 ls -la

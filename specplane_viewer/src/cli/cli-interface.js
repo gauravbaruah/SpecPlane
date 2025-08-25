@@ -34,7 +34,7 @@ class CLIInterface {
       
       // Resolve absolute paths
       const specsPath = path.resolve(specsDirectory);
-      const outputPath = path.join(path.dirname(specsPath), '.specplane', 'markdown');
+      const outputPath = path.join(path.dirname(specsPath), '.specplane', 'docs');
       
       // Check if specs directory exists
       if (!await fs.pathExists(specsPath)) {
@@ -71,7 +71,7 @@ class CLIInterface {
    * Convert command - just convert specs to markdown
    */
   async convert(specsDirectory, options = {}) {
-    const { output = './.specplane/markdown' } = options;
+    const { output = './.specplane/docs' } = options;
     
     try {
       this.logger.info('Converting SpecPlane specs to Markdown...');
