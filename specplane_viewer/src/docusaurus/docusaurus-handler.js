@@ -315,23 +315,153 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
         }
       }
       
-      // Update site metadata
+      // Update site metadata - use more flexible regex
       configContent = configContent.replace(
-        /title:\s*['"]My Site['"]/,
+        /title:\s*['"][^'"]*['"]/,
         "title: 'SpecPlane Viewer'"
       );
       
       configContent = configContent.replace(
-        /tagline:\s*['"]Dinosaurs are cool['"]/,
+        /tagline:\s*['"][^'"]*['"]/,
         "tagline: 'Convert SpecPlane YAML to beautiful documentation'"
       );
       
-      // Add routeBasePath to docs config
-      if (!configContent.includes('routeBasePath')) {
+      // Remove blog configuration completely
+      if (configContent.includes('blog:')) {
+        // Find the blog section and remove it
+        const lines = configContent.split('\n');
+        const newLines = [];
+        let inBlogSection = false;
+        let braceCount = 0;
+        
+        for (const line of lines) {
+          if (line.includes('blog:')) {
+            inBlogSection = true;
+            braceCount = 0;
+            continue;
+          }
+          
+          if (inBlogSection) {
+            if (line.includes('{')) braceCount++;
+            if (line.includes('}')) {
+              braceCount--;
+              if (braceCount === 0) {
+                inBlogSection = false;
+                continue;
+              }
+            }
+            continue;
+          }
+          
+          newLines.push(line);
+        }
+        
+        configContent = newLines.join('\n');
+      }
+      
+      // Update docs configuration
+      if (configContent.includes('docs:')) {
+        // Add routeBasePath if not present
+        if (!configContent.includes('routeBasePath')) {
+          configContent = configContent.replace(
+            /(docs:\s*\{)/,
+            '$1\n          routeBasePath: \'/\', // Make docs the home page'
+          );
+        }
+        
+        // Update editUrl to point to SpecPlane
         configContent = configContent.replace(
-          /(docs:\s*\{)/,
-          '$1\n          routeBasePath: \'/\', // Make docs the home page'
+          /editUrl:\s*['"][^'"]*['"]/,
+          "editUrl: 'https://github.com/gauravbaruah/SpecPlane/tree/main/'"
         );
+      }
+      
+      // Update navbar configuration
+      if (configContent.includes('navbar:')) {
+        // Update title
+        configContent = configContent.replace(
+          /title:\s*['"][^'"]*['"]/,
+          "title: 'SpecPlane Viewer'"
+        );
+        
+        // Update logo alt text
+        configContent = configContent.replace(
+          /alt:\s*['"][^'"]*['"]/,
+          "alt: 'SpecPlane Viewer Logo'"
+        );
+        
+        // Remove blog link from navbar
+        const lines = configContent.split('\n');
+        const newLines = [];
+        let skipNextLine = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.includes('{to: \'/blog\'')) {
+            skipNextLine = true;
+            continue;
+          }
+          if (skipNextLine && line.includes('},')) {
+            skipNextLine = false;
+            continue;
+          }
+          if (!skipNextLine) {
+            newLines.push(line);
+          }
+        }
+        
+        configContent = newLines.join('\n');
+        
+        // Update GitHub link
+        configContent = configContent.replace(
+          /href:\s*['"][^'"]*docusaurus[^'"]*['"]/,
+          "href: 'https://github.com/gauravbaruah/SpecPlane'"
+        );
+        
+        // Update label from Tutorial to Documentation
+        configContent = configContent.replace(
+          /label:\s*['"]Tutorial['"]/,
+          "label: 'Documentation'"
+        );
+      }
+      
+      // Update footer configuration
+      if (configContent.includes('footer:')) {
+        // Update copyright
+        configContent = configContent.replace(
+          /copyright:\s*`[^`]*`/,
+          "copyright: `Copyright © ${new Date().getFullYear()} SpecPlane Project. Made with [Docusaurus](https://github.com/facebook/docusaurus).`"
+        );
+        
+        // Simplify footer links to just Documentation and Project
+        const footerRegex = /(\s+links:\s*\[[\s\S]*?\n\s+\],?\n?)/;
+        const newFooter = `
+      links: [
+        {
+          title: 'Documentation',
+          items: [
+            {
+              label: 'Introduction',
+              to: '/intro',
+            },
+          ],
+        },
+        {
+          title: 'Project',
+          items: [
+            {
+              label: 'GitHub',
+              href: 'https://github.com/gauravbaruah/SpecPlane',
+            },
+            {
+              label: 'Issues',
+              href: 'https://github.com/gauravbaruah/SpecPlane/issues',
+            },
+          ],
+        },
+      ],`;
+        
+        configContent = configContent.replace(footerRegex, newFooter);
       }
       
       // Write updated config

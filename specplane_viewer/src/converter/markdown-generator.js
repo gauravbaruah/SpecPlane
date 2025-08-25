@@ -235,7 +235,15 @@ class MarkdownGenerator {
     if (contracts.events && contracts.events.length > 0) {
       markdown += '## Events\n\n';
       for (const event of contracts.events) {
-        markdown += `- ${event}\n`;
+        // Handle events that might contain curly braces or special formatting
+        let eventText = event;
+        
+        // If event contains curly braces, format it as code
+        if (event.includes('{') && event.includes('}')) {
+          eventText = `\`${event}\``;
+        }
+        
+        markdown += `- ${eventText}\n`;
       }
       markdown += '\n';
     }
