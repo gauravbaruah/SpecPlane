@@ -1,8 +1,12 @@
 # Observations
 - we have to tell the agent to not create any specs at the outset.
 - we really need to come up with a good directory structure for the specs.
+  - how about <system_name>_context.yaml, and <container_name>_container.yaml at root level 
+    - then we create a directory for each container, and create  <component_name>_component.yaml files in each directory. 
+    - # TODO: let's update our specplane schema to support this.
 - we really need to tighten up the specplane schema elements: e.g. dependencies can be arrays, and observability can be more detailed with names and descriptions.
 - requests to update specs were followed quite well. Impressed. Looks like small changes can make it to the specs on request.
+
 
 
 # Seed Input Prompt
@@ -940,3 +944,187 @@ I've carefully updated the following specifications to reflect what we actually 
 8. **Working Directory Management** - Correct Docusaurus execution context
 
 The specifications now accurately reflect our **fully functional, production-ready SpecPlane Viewer** implementation! 🎉
+
+
+# Input prompt 11 - changing specs for docusaurus
+
+OK... we have to change the specifications out for the docusaurus set and runner files. 
+
+There might be an option to combine them, or keep only one of them.
+
+Here is the new behaviour we want for the docusaurus_handler component:
+- within the .specplane directory, run 
+   - `npx create-docusaurus@latest specplane_viewer classic`
+   - `cd specplane_viewer`
+   - `npx docusaurus start`
+- this should set up the docusaurus instance 
+
+- then we need to delete `specplane_viewer/blog/*`, and `specplane_viewer/docs/*`
+
+- we then want to create the yaml to markdown converted documents in the `specplane_viewer/docs/` folder
+
+- this way the docusaurus watch is taken care of
+
+- we'll also need to make corresponding changes in other components to ensure smooth building. 
+
+Please ask me clarifying questions as needed
+
+
+# Cursor Response 11 - docusaurus specs change clarifying questions
+
+Great idea! This approach is much cleaner and leverages Docusaurus's built-in file watching instead of trying to manage it ourselves. Let me ask some clarifying questions to make sure I understand the complete workflow:
+
+## 🔍 **Clarifying Questions**
+
+1. **Component Structure**: Should we combine `docusaurus-setup.js` and `docusaurus-runner.js` into a single `docusaurus-handler.js` component, or keep them separate but update their responsibilities?
+
+2. **Project Creation**: When you say `npx create-docusaurus@latest specplane_viewer classic`, should this:
+   - Always create a fresh project each time (delete existing if present)?
+   - Or check if it exists and only create if missing?
+   - Should we preserve any custom configurations between runs?
+
+3. **File Management**: For the `specplane_viewer/docs/*` deletion:
+   - Should this happen every time we run the command?
+   - Or only during initial setup?
+   - Should we preserve any user-added documentation?
+
+4. **Output Path Changes**: Since we're now outputting to `specplane_viewer/docs/` instead of `.specplane/docs/`, should we:
+   - Update all the CLI output paths to point to `.specplane/specplane_viewer/docs/`?
+   - Update the file watcher to monitor the new location?
+
+5. **Docusaurus Configuration**: Should we:
+   - Use the default `create-docusaurus` configuration?
+   - Or still apply our custom config (Lunr search, routeBasePath, etc.)?
+   - If custom config, when should we apply it - after creation or during?
+
+6. **Process Management**: Since `npx docusaurus start` will run in the background:
+   - Should we track the process ID to stop it later?
+   - How should we handle stopping/restarting the server?
+   - Should we provide a way to stop the server via CLI?
+
+7. **Integration Points**: Which other components need updates:
+   - `cli-interface.js` - update output paths and setup flow?
+   - `file-watcher.js` - monitor the new docs location?
+   - `spec2md-converter.js` - output to new location?
+
+This approach sounds much more robust - leveraging Docusaurus's native capabilities instead of fighting against them! 🎯
+
+# Input prompt 12 - docusaurus specs change clarifications
+
+Answers:
+1. please combine into a single component
+2. please always confirm with the user before deleting existing specs. if they want to save a version, then please rename the exisitng folder with a timestamp and "_bkp" suffix. Then proceed to `npx create...`
+3. this is subsumed by answer 2. we are not supporting user-added document yet
+4. output path changes:
+  - please update all the CLI output paths to point to `.specplane/specplane_viewer/docs`
+  - the file watcher needs to monitor the `specs` folder and then fire off the spec to md converter when a spec.yaml changes
+   - no need to watch the `.specplane/specplane_viewer/docs` directory
+5. when the CLI starts, it'll create the default `docusaurus.config.ts`
+  - we'll need to update the file with our lunr search plugin, no need to change the routeBasePath etc. we may need to adjust the sidebar if needed
+6. process management
+  - great idea, yes, please track the process ID to stop it later.
+  - if the cli process is killed, we need to watch for that event and kill the docusaurus server too
+  - the cli could support a command to start/stop/resume/clean the docusaurus server. 
+
+
+# Cursor Response 12 - docusaurus component changed
+
+Perfect! This gives me a clear picture of the new architecture. Let me implement this step by step.
+
+## 🏗️ **Implementation Plan**
+
+1. **Combine components** into `docusaurus-handler.js`
+2. **Update CLI paths** to use `.specplane/specplane_viewer/docs/`
+3. **Implement user confirmation** for existing projects
+4. **Update file watcher** to monitor specs folder and trigger conversion
+5. **Add process management** with PID tracking and cleanup
+6. **Add CLI commands** for server control
+
+Let me start implementing:
+
+### 1. First, let's create the new combined `docusaurus-handler.js`:
+
+### 2. Now let's update the CLI interface to use the new handler and paths:
+
+Let me check the current structure:
+
+Read file: specplane_viewer/src/cli/cli-interface.js
+Now let me update the constructor and other references:
+
+Now let me update the output paths to use the new structure:
+
+Now let me update the convert command path:
+
+Now let me update the setup command:
+
+I need to fix that incomplete string:
+
+Now let me update the file watching logic to monitor the specs folder and trigger conversion:
+
+Let me check the current file watching method:
+
+Read file: specplane_viewer/src/cli/cli-interface.js
+Now let me update the file watching method:
+
+Now let me update the cleanup method to use the new handler:
+
+### 3. Now let's update the CLI binary to use the new paths:
+
+### 4. Now let's add new CLI commands for server control. Let me add them to the CLI binary:
+
+### 5. Now let's add the corresponding methods to the CLI interface:
+
+### 6. Now let's add process cleanup handling to the CLI binary:
+
+### 7. Now let's update the README to reflect the new structure and commands:
+
+Now let me add the new CLI commands to the README:
+
+Let me add the new commands section:
+
+### 8. Finally, let's remove the old Docusaurus files since we've combined them:
+
+Ran tool
+Ran tool
+## 🎉 **Implementation Complete!**
+
+I've successfully implemented the new architecture with the following key changes:
+
+### �� **What Changed**
+
+1. **Combined Components**: Merged `docusaurus-setup.js` and `docusaurus-runner.js` into a single `docusaurus-handler.js`
+
+2. **New Workflow**: 
+   - Creates Docusaurus project with `npx create-docusaurus@latest specplane_viewer classic`
+   - Cleans up default content (blog/*, docs/*)
+   - Installs Lunr search automatically
+   - Outputs markdown to `.specplane/specplane_viewer/docs/`
+
+3. **Updated Paths**: All CLI commands now use the new structure:
+   - `./.specplane/specplane_viewer/docs/` for markdown output
+   - `./.specplane` for project setup
+
+4. **Enhanced CLI Commands**:
+   - `./bin/specplane start` - Start server
+   - `./bin/specplane stop` - Stop server  
+   - `./bin/specplane status` - Check server status
+   - `./bin/specplane setup` - Setup project
+   - `./bin/specplane serve` - Full workflow
+
+5. **Process Management**: 
+   - Tracks server PID
+   - Handles SIGINT/SIGTERM cleanup
+   - Stops Docusaurus server when CLI exits
+
+6. **File Watching**: Now monitors `specs/` folder and converts to the Docusaurus docs folder, letting Docusaurus handle auto-reload
+
+### 🚀 **Ready to Test!**
+
+The new architecture should work much better because:
+- ✅ **Uses standard Docusaurus structure** (no routing conflicts)
+- ✅ **Leverages Docusaurus built-in file watching** 
+- ✅ **Cleaner separation of concerns**
+- ✅ **Better process management**
+- ✅ **User confirmation for existing projects**
+
+Would you like me to test this new implementation, or do you have any questions about the changes?

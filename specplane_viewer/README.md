@@ -62,7 +62,7 @@ chmod +x bin/specplane
 #### Setup Command (Just Setup Docusaurus)
 ```bash
 # Setup Docusaurus for existing markdown
-./bin/specplane setup ./.specplane/docs
+./bin/specplane setup ./.specplane
 ```
 
 ### Command Options
@@ -72,7 +72,8 @@ chmod +x bin/specplane
 | `--port <port>` | Port number for Docusaurus server | 3001 |
 | `--watch` | Watch for file changes | false |
 | `--open` | Auto-open browser | false |
-| `--output <path>` | Output directory for markdown | ./.specplane/docs |
+| `--input <path>` | Input directory containing YAML specs | ./specs |
+| `--output <path>` | Output directory for markdown | ./.specplane/specs_viewer/docs |
 
 ## Project Structure
 
@@ -88,8 +89,7 @@ specplane_viewer/
 │   │   ├── yaml-parser.js     # YAML parsing and validation
 │   │   └── markdown-generator.js # Markdown generation
 │   ├── docusaurus/
-│   │   ├── docusaurus-setup.js # Project setup and configuration
-│   │   └── docusaurus-runner.js # Server management and dependencies
+│   │   └── docusaurus-handler.js # Combined Docusaurus project management
 │   ├── file-watcher/
 │   │   └── file-watcher.js    # File system monitoring
 │   └── utils/
@@ -107,19 +107,18 @@ The SpecPlane Viewer follows the container/component architecture specified in o
 ### Containers
 - **`cli_interface`**: Orchestrates the entire workflow
 - **`spec2md_converter`**: Handles YAML to Markdown conversion
-- **`docusaurus_runner`**: Manages Docusaurus execution and dependencies
+- **`docusaurus_handler`**: Manages Docusaurus project creation and execution
 
 ### Components
 - **`yaml_parser`**: Parses and validates SpecPlane YAML
 - **`markdown_generator`**: Generates formatted Markdown with proper sections
 - **`file_watcher`**: Monitors directory changes
-- **`docusaurus_setup`**: Configures Docusaurus projects
 - **`dependency_checker`**: Validates required dependencies
 
 ## Development Workflow
 
 ### 1. File Watching
-- Monitors `.specplane/docs/` directory for changes
+- Monitors `specs/` directory for changes
 - 2-second debouncing to handle rapid file changes
 - Automatically triggers conversion and rebuild
 
@@ -146,8 +145,27 @@ echo "meta:\n  purpose: 'Test specification'\n  type: 'component'\n  level: 'com
 # Test conversion
 ./bin/specplane convert test_specs
 
+# Convert with explicit input and output paths
+./bin/specplane convert --input ./my_specs --output ./custom_output
+
+# Convert using only flags (no positional arguments)
+./bin/specplane convert --input ./specs --output ./.specplane/specs_viewer/docs
+
 # Check output
-ls -la .specplane/docs/
+ls -la .specplane/specs_viewer/docs/
+```
+
+### Server Control Commands
+
+```bash
+# Start Docusaurus server
+./bin/specplane start --port 3001
+
+# Stop Docusaurus server
+./bin/specplane stop
+
+# Check server status
+./bin/specplane status
 ```
 
 #### Test Full Workflow
@@ -164,7 +182,7 @@ echo "  domain: 'test'" >> test_specs/test.yaml
 #### Test Docusaurus Setup
 ```bash
 # Just setup Docusaurus
-./bin/specplane setup ./.specplane/docs
+./bin/specplane setup ./.specplane
 
 # Check generated files
 ls -la
