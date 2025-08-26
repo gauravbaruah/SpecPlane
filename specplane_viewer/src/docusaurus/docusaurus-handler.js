@@ -286,186 +286,120 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
     try {
       const configPath = path.join(this.docusaurusPath, 'docusaurus.config.ts');
       
-      // Read existing config
-      let configContent = await fs.readFile(configPath, 'utf8');
-      
-      // Add Lunr search plugin configuration
-      if (!configContent.includes('docusaurus-lunr-search')) {
-        // Check if plugins array exists
-        if (configContent.includes('plugins:')) {
-          // Find the plugins array and add our plugin
-          const pluginRegex = /(plugins:\s*\[)([\s\S]*?)(\])/;
-          const match = configContent.match(pluginRegex);
-          
-          if (match) {
-            const newPlugin = `\n        'docusaurus-lunr-search',`;
-            configContent = configContent.replace(
-              pluginRegex,
-              `$1${newPlugin}$2$3`
-            );
-          }
-        } else {
-          // Add plugins array before presets
-          const presetsRegex = /(presets:\s*\[)/;
-          const match = configContent.match(presetsRegex);
-          
-          if (match) {
-            const pluginsArray = `\n  plugins: [\n    'docusaurus-lunr-search',\n  ],\n\n  `;
-            configContent = configContent.replace(presetsRegex, pluginsArray + '$1');
-          }
-        }
-      }
-      
-      // Update site metadata - use more flexible regex
-      configContent = configContent.replace(
-        /title:\s*['"][^'"]*['"]/,
-        "title: 'SpecPlane Viewer'"
-      );
-      
-      configContent = configContent.replace(
-        /tagline:\s*['"][^'"]*['"]/,
-        "tagline: 'Convert SpecPlane YAML to beautiful documentation'"
-      );
-      
-      // Remove blog configuration completely
-      if (configContent.includes('blog:')) {
-        // Find the blog section and remove it
-        const lines = configContent.split('\n');
-        const newLines = [];
-        let inBlogSection = false;
-        let braceCount = 0;
+      // Create a clean, properly structured config object
+      const config = {
+        title: 'SpecPlane Viewer',
+        tagline: 'Convert SpecPlane YAML to beautiful documentation',
+        favicon: 'img/favicon.ico',
         
-        for (const line of lines) {
-          if (line.includes('blog:')) {
-            inBlogSection = true;
-            braceCount = 0;
-            continue;
-          }
-          
-          if (inBlogSection) {
-            if (line.includes('{')) braceCount++;
-            if (line.includes('}')) {
-              braceCount--;
-              if (braceCount === 0) {
-                inBlogSection = false;
-                continue;
-              }
-            }
-            continue;
-          }
-          
-          newLines.push(line);
-        }
+        // Future flags
+        future: {
+          v4: true, // Improve compatibility with the upcoming Docusaurus v4
+        },
         
-        configContent = newLines.join('\n');
-      }
-      
-      // Update docs configuration
-      if (configContent.includes('docs:')) {
-        // Add routeBasePath if not present
-        if (!configContent.includes('routeBasePath')) {
-          configContent = configContent.replace(
-            /(docs:\s*\{)/,
-            '$1\n          routeBasePath: \'/\', // Make docs the home page'
-          );
-        }
+        // Site configuration
+        url: 'https://your-docusaurus-site.example.com',
+        baseUrl: '/',
         
-        // Update editUrl to point to SpecPlane
-        configContent = configContent.replace(
-          /editUrl:\s*['"][^'"]*['"]/,
-          "editUrl: 'https://github.com/gauravbaruah/SpecPlane/tree/main/'"
-        );
-      }
-      
-      // Update navbar configuration
-      if (configContent.includes('navbar:')) {
-        // Update title
-        configContent = configContent.replace(
-          /title:\s*['"][^'"]*['"]/,
-          "title: 'SpecPlane Viewer'"
-        );
+        // GitHub pages deployment config
+        organizationName: 'gauravbaruah',
+        projectName: 'SpecPlane',
         
-        // Update logo alt text
-        configContent = configContent.replace(
-          /alt:\s*['"][^'"]*['"]/,
-          "alt: 'SpecPlane Viewer Logo'"
-        );
+        // Link handling
+        onBrokenLinks: 'throw',
+        onBrokenMarkdownLinks: 'warn',
         
-        // Remove blog link from navbar
-        const lines = configContent.split('\n');
-        const newLines = [];
-        let skipNextLine = false;
+        // Internationalization
+        i18n: {
+          defaultLocale: 'en',
+          locales: ['en'],
+        },
         
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          if (line.includes('{to: \'/blog\'')) {
-            skipNextLine = true;
-            continue;
-          }
-          if (skipNextLine && line.includes('},')) {
-            skipNextLine = false;
-            continue;
-          }
-          if (!skipNextLine) {
-            newLines.push(line);
-          }
-        }
+        // Plugins
+        plugins: [
+          'docusaurus-lunr-search',
+        ],
         
-        configContent = newLines.join('\n');
-        
-        // Update GitHub link
-        configContent = configContent.replace(
-          /href:\s*['"][^'"]*docusaurus[^'"]*['"]/,
-          "href: 'https://github.com/gauravbaruah/SpecPlane'"
-        );
-        
-        // Update label from Tutorial to Documentation
-        configContent = configContent.replace(
-          /label:\s*['"]Tutorial['"]/,
-          "label: 'Documentation'"
-        );
-      }
-      
-      // Update footer configuration
-      if (configContent.includes('footer:')) {
-        // Update copyright
-        configContent = configContent.replace(
-          /copyright:\s*`[^`]*`/,
-          "copyright: `Copyright © ${new Date().getFullYear()} SpecPlane Project. Made with [Docusaurus](https://github.com/facebook/docusaurus).`"
-        );
-        
-        // Simplify footer links to just Documentation and Project
-        const footerRegex = /(\s+links:\s*\[[\s\S]*?\n\s+\],?\n?)/;
-        const newFooter = `
-      links: [
-        {
-          title: 'Documentation',
-          items: [
+        // Presets
+        presets: [
+          [
+            'classic',
             {
-              label: 'Introduction',
-              to: '/intro',
+              docs: {
+                routeBasePath: '/', // Make docs the home page
+                sidebarPath: './sidebars.ts',
+                editUrl: 'https://github.com/gauravbaruah/SpecPlane/tree/main/',
+              },
+              theme: {
+                customCss: './src/css/custom.css',
+              },
             },
           ],
-        },
-        {
-          title: 'Project',
-          items: [
-            {
-              label: 'GitHub',
-              href: 'https://github.com/gauravbaruah/SpecPlane',
-            },
-            {
-              label: 'Issues',
-              href: 'https://github.com/gauravbaruah/SpecPlane/issues',
-            },
-          ],
-        },
-      ],`;
+        ],
         
-        configContent = configContent.replace(footerRegex, newFooter);
-      }
+        // Theme configuration
+        themeConfig: {
+          image: 'img/docusaurus-social-card.jpg',
+          navbar: {
+            title: 'SpecPlane Viewer',
+            logo: {
+              alt: 'SpecPlane Viewer Logo',
+              src: 'img/logo.svg',
+            },
+            items: [
+              {
+                type: 'docSidebar',
+                sidebarId: 'tutorialSidebar',
+                position: 'left',
+                label: 'Specs',
+              },
+            ],
+          },
+          footer: {
+            style: 'dark',
+            links: [
+              {
+                title: 'Specs',
+                items: [
+                  {
+                    label: 'Introduction',
+                    to: '/intro',
+                  },
+                ],
+              },
+              {
+                title: 'Project',
+                items: [
+                  {
+                    label: 'GitHub',
+                    href: 'https://github.com/gauravbaruah/SpecPlane',
+                  },
+                  {
+                    label: 'Issues',
+                    href: 'https://github.com/gauravbaruah/SpecPlane/issues',
+                  },
+                ],
+              },
+            ],
+            copyright: `Copyright © ${new Date().getFullYear()} SpecPlane Project. Made with [Docusaurus](https://github.com/facebook/docusaurus).`,
+          },
+          // prism: {
+          //   theme: prismThemes.github,
+          //   darkTheme: prismThemes.dracula,
+          // },
+        },
+      };
       
-      // Write updated config
+      // Convert to TypeScript config format
+      const configContent = `import {themes as prismThemes} from 'prism-react-renderer';
+import type {Config} from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+
+const config: Config = ${JSON.stringify(config, null, 2).replace(/"([^"]+)":/g, '$1:')};
+
+export default config;`;
+      
+      // Write the clean config
       await fs.writeFile(configPath, configContent);
       this.logger.info('Configuration updated successfully');
       
