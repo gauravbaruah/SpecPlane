@@ -1,0 +1,143 @@
+#!/usr/bin/env node
+
+/**
+ * SpecPlane Viewer CLI
+ * Convert SpecPlane YAML specifications to Markdown and serve via Docusaurus
+ */
+
+const { program } = require('commander');
+const path = require('path');
+
+// Import our main CLI interface
+const { CLIInterface } = require('../src/cli/cli-interface');
+
+// Set up the CLI program
+program
+  .name('specplane')
+  .description('Convert SpecPlane YAML specifications to Markdown and serve via Docusaurus')
+  .version('0.1.0');
+
+// Serve command - the main functionality (commented out for now)
+/*
+program
+  .command('serve [directory]')
+  .description('Convert YAML specs to Markdown and serve via Docusaurus')
+  .option('-p, --port <port>', 'Port number for Docusaurus server', '3001')
+  .option('-w, --watch', 'Watch for file changes', false)
+  .option('-o, --open', 'Auto-open browser', false)
+  .action(async (directory = './specs', options) => {
+    try {
+      const cli = new CLIInterface();
+      await cli.serve(directory, options);
+    } catch (error) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+*/
+
+// Convert command - just convert without serving
+program
+  .command('convert [directory]')
+  .description('Convert YAML specs to Markdown without serving')
+  .option('-i, --input <input>', 'Input directory containing YAML specs', './specs')
+  .option('-o, --output <output>', 'Output directory for markdown files', './.specplane/specs_viewer/docs')
+  .action(async (directory, options) => {
+    try {
+      const cli = new CLIInterface();
+      // Use input flag if provided, otherwise fall back to positional argument
+      const inputDir = options.input || directory || './specs';
+      await cli.convert(inputDir, options);
+    } catch (error) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Setup command - just setup Docusaurus
+program
+  .command('setup [directory]')
+  .description('Setup Docusaurus project for existing markdown files')
+  .action(async (directory = './.specplane', options) => {
+    try {
+      const cli = new CLIInterface();
+      await cli.setup(directory, options);
+    } catch (error) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Start command - start Docusaurus server
+program
+  .command('start')
+  .description('Start Docusaurus development server')
+  .option('-p, --port <port>', 'Port number for Docusaurus server', '3001')
+  .action(async (options) => {
+    try {
+      const cli = new CLIInterface();
+      await cli.startServer(options);
+    } catch (error) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Stop command - stop Docusaurus server
+program
+  .command('stop')
+  .description('Stop Docusaurus development server')
+  .action(async () => {
+    try {
+      const cli = new CLIInterface();
+      await cli.stopServer();
+    } catch (error) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Status command - check server status
+program
+  .command('status')
+  .description('Check Docusaurus server status')
+  .action(async () => {
+    try {
+      const cli = new CLIInterface();
+      await cli.serverStatus();
+    } catch (error) {
+      console.error('Error:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Parse command line arguments
+program.parse();
+
+// If no command is provided, show help
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}
+
+// Handle process cleanup
+process.on('SIGINT', async () => {
+  console.log('\nReceived SIGINT, cleaning up...');
+  try {
+    const cli = new CLIInterface();
+    await cli.cleanup();
+  } catch (error) {
+    console.error('Cleanup error:', error.message);
+  }
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\nReceived SIGTERM, cleaning up...');
+  try {
+    const cli = new CLIInterface();
+    await cli.cleanup();
+  } catch (error) {
+    console.error('Cleanup error:', error.message);
+  }
+  process.exit(0);
+});
