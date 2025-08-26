@@ -4,7 +4,7 @@
 
 SpecPlane is a flexible design-architecture framework for creating structured, machine-readable software specifications that bridge the gap between design thinking and implementation, transforming vague requirements into detailed, testable specifications that guide both human developers and AI coding assistants.
 
-![SpecPlane Logo: geometric planes aligning to a shared normal](./SpecPlane_Logo.png)
+<img src="./SpecPlane_Logo.png" alt="SpecPlane Logo: geometric planes aligning to a shared normal" width="200">
 
 **SpecPlane helps align design, engineering, and product teams by providing a shared language and framework for capturing requirements, constraints, and success metrics across all aspects of product development.**
 
@@ -45,8 +45,7 @@ The ultimate aim is to guide teams into thinking more deeply about core applicat
 specplane/
 ├── specplane/              # Core SpecPlane schema and examples
 │   ├── core_prompt/        # Master schema definitions and guidance
-│   ├── specs/              # Example specifications
-│   └── templates/          # Component type templates
+│   └── supporting_prompts/   # other prompts that support the core prompt
 ├── specplane_viewer/       # Web-based specification viewer and validator
 ├── experiments/            # Research and validation studies
 ├── README.md              # This file
