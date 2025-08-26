@@ -1,127 +1,156 @@
-# SpecPlane 
+# SpecPlane
 
-> Interactive design thinking agent that transforms vague component ideas into detailed, validated specifications for AI-assisted development.
+**The specification control plane for software teams**
 
-## What It Does
+SpecPlane is a systematic framework for creating structured, machine-readable software specifications that bridge the gap between design thinking and implementation. It transforms vague requirements into detailed, testable specifications that guide both human developers and AI coding assistants.
 
-SpecPlane asks the **right questions** to surface critical design decisions before you start coding:
+## Why SpecPlane Exists
 
-- **"What happens if this component fails?"** → Better error handling
-- **"What are all the possible states?"** → Complete state management  
-- **"What APIs does this call?"** → Robust integration patterns
-- **"How will you know it's working?"** → Clear acceptance criteria
+**The Problem**: Design and implementation live in separate worlds. Figma mockups become stale, API documentation drifts from reality, and system requirements hide in Slack threads. Teams spend 50% of their engineering time on rework, debugging, and asking "why doesn't this work like the design?"
 
-## The Problem
+**The Solution**: SpecPlane creates Git-native YAML specifications that capture:
+- **What** components should do (behavioral contracts)
+- **How well** they should perform (constraints and SLOs)  
+- **What can go wrong** and how to handle it (edge cases and error scenarios)
+- **How success is measured** (acceptance criteria and observability)
 
-AI coding tools are powerful but produce brittle code when given vague requirements:
+The ultimate aim is to guide teams into thinking more deeply about core application behavior, constraints, and metrics when developing products, resulting in predictable and maintainable development processes.
+
+## What SpecPlane Helps With
+
+### For Development Teams
+- **Eliminate design-implementation gaps** - Specifications ensure design decisions map to validated technical architecture
+- **AI-Assisted Development** - Rich specifications prevent codegen drift by providing structured context for AI tools, ensuring generated code follows requirements instead of hallucinating intent
+- **Cross-discipline alignment** - Ties product requirements, design intent, engineering specs, and observability metrics into one source of truth across product, design, engineering, and DevOps teams
+- **Reduce rework cycles** - Comprehensive edge case analysis prevents common production issues
+- **Developer discipline** - SpecPlane prompts help teams update specifications as code evolves, maintaining alignment between intent and implementation
+
+### For Regulated Industries
+- **Built-in compliance** - Automatic audit trails, requirement traceability, and governance documentation
+- **Security by design** - Threat modeling and mitigation strategies embedded in specifications
+- **Risk management** - Systematic analysis of failure modes and recovery strategies
+
+### For Platform Teams
+- **API consistency** - OpenAPI-compatible contracts ensure stable interfaces
+- **Observability alignment** - SLIs and SLOs defined alongside functional requirements
+- **Scalability planning** - Performance constraints and capacity planning built into specs
+
+## Repository Structure
 
 ```
-❌ "Build a voice recording widget"
-→ AI generates basic component missing edge cases
-
-✅ "Build a voice recording widget that handles microphone 
-   permissions, storage limits, background interruption, 
-   network failures, and provides clear user feedback"
-→ AI generates production-ready component
+specplane/
+├── specplane/              # Core SpecPlane schema and examples
+│   ├── core_prompt/        # Master schema definitions and guidance
+│   ├── specs/              # Example specifications
+│   └── templates/          # Component type templates
+├── specplane_viewer/       # Web-based specification viewer and validator
+├── experiments/            # Research and validation studies
+├── README.md              # This file
+└── LICENSE                # Apache 2.0 License
 ```
 
 ## Quick Start
 
-```bash
-# Install
-pip install -e .
+### 1. Learn the Schema
+Start by reviewing the SpecPlane schema in [`specplane/core_prompt/`](./specplane/core_prompt/)
 
-# Design a component
-specplane guide "VoiceRecorderWidget" --type widget
+### 2. Explore Examples
+Browse component specifications in [`specplane_viewer/specs/`](./specplane_viewer/specs/). We built a web-based viewer for specs.yaml files using the SpecPlane schema.
 
-# Follow the guided interview (10-15 minutes)
-# Get generated outputs:
-# → specs/voice_recorder.yaml      (SpecPlane specification)
-# → prompts/voice_recorder.md      (Ready-to-use Cursor prompt)  
-# → reports/coverage.md            (Design completeness score)
+### 3. Try the Viewer
+Use the web-based viewer in [`specplane_viewer/`](./specplane_viewer/) to validate and visualize specifications
+
+### 4. Create Your First Spec
+```yaml
+meta:
+  purpose: "User authentication interface with OAuth support"
+  type: "widget"
+  level: "component"
+  domain: "frontend"
+
+contracts:
+  capabilities:
+    - "Authenticate user with Google/Apple OAuth"
+    - "Handle authentication failures gracefully"
+    - "Navigate to dashboard on success"
+
+constraints:
+  performance:
+    response_time: "<2s for OAuth flow completion"
+  
+  security_privacy:
+    data_protection: "Only access email and profile picture"
+    compliance: "GDPR consent required"
+
+validation:
+  acceptance_criteria:
+    - "Shows loading state during OAuth flow"
+    - "Displays specific error messages for failures"
+    - "Redirects to onboarding for new users"
 ```
 
-## Example Output
+## Core Principles
 
-**Generated Cursor Prompt:**
-```markdown
-Implement VoiceRecorderWidget for React Native.
+**Bridges Design and Architecture**: SpecPlane prevents spec-to-code drift by evolving alongside applications, ensuring design intent stays aligned with technical reality throughout the development lifecycle.
 
-PURPOSE: Enable quick voice note capture without typing friction
+**Implementation-Agnostic**: Specifications focus on *what* and *how well*, not *how*. The same spec can guide web, mobile, and API implementations.
 
-CRITICAL EDGE CASES:
-- Microphone permission denied → Show settings deep-link
-- Storage full → Check space first, suggest cleanup  
-- Background interruption → Resume recording on return
-- Network timeout → Save locally, sync later
+**Git-Native & Developer-Friendly**: Specifications live alongside code, are version-controlled, and integrate with existing development workflows.
 
-STATES: idle, recording, paused, processing, complete, error
+**AI-Ready**: Rich, structured specifications become excellent context for AI coding tools, preventing hallucination and resulting in better generated code.
 
-PERFORMANCE: Max 120s duration, <2MB files, <100ms UI response
+**Compliance-Ready**: Built for regulated industries with automatic audit trails and governance requirements.
 
-Generate component with proper state management, error handling, 
-and accessibility support...
-```
+**Observable**: Every specification includes monitoring, alerting, and success metrics from day one.
 
-## Philosophy
+## Use Cases
 
-**Better upfront thinking → Better AI-generated code → Fewer bugs**
+### Component Specification
+Document widgets, services, and system components with behavioral contracts, error handling, and performance requirements.
 
-SpecPlane doesn't replace coding. It makes coding more intentional by front-loading the hard questions that prevent most production issues.
+### System Architecture
+Use C4 model integration to specify system context, container relationships, and deployment architecture.
 
-## Architecture
+### API Design
+Create OpenAPI-compatible service contracts that stay synchronized with implementation.
 
-```
-specplane/          # System design specs
-├── context.yaml    # System overview
-├── containers/     # Service boundaries  
-├── components/     # Feature specifications
-├── code/           # Module specifications 
-└── linked/         # Shared contracts
+### Compliance Documentation
+Generate audit-ready documentation with requirement traceability and security analysis.
 
-app/               # Implementation
-├── main.py        # CLI interface
-├── interview.py   # Guided questioning
-└── generator.py   # Spec generation
-```
+### AI Development Context
+Transform specifications into rich prompts that help AI tools generate better, more maintainable code.
 
-## Status
+## Contributing
 
-**Prototype 0** - Proving the core hypothesis with minimal viable implementation.
+SpecPlane is open source and community-driven. We welcome contributions to:
+
+- Core schema improvements
+- Example specifications
+- Integration tools
+- Documentation and guides
+
+See individual component READMEs for specific contribution guidelines.
+
+## Research & Validation
+
+The `experiments/` directory contains preliminary experiments validating SpecPlane's effectiveness in reducing development time and improving code quality. Initial findings show that structured specifications significantly improve AI-generated code quality and reduce post-implementation debugging.
+
+## License
+
+Apache 2.0 License - see [LICENSE](LICENSE) file for details.
+
+## Learn More
+
+- [Core Schema Documentation](./specplane/core_prompt/)
+- [Example Specifications](./specplane_viewer/specs/)
+- [Web Viewer](./specplane_viewer/)
+- [Experimental Validation](./experiments/)
 
 ---
 
-*"The best time to think about edge cases is before you write the code."*
+**Ready to align your design and implementation?**  
+Start with the core schema guide and create your first specification.
 
 
+> **🚧 Work in Progress** - This project is actively evolving and we're working to make SpecPlane more featureful and user friendly. We welcome feedback, contributions, and suggestions for improvement! Please share your experiences and help us build better tools for software specification and development.
 
-## (ROUGH) Directory Structure for SpecPlane Framework
-```
-specplane/
-  context.yaml                    # ✅ System overview
-  containers/
-    cli.yaml                     # ✅ CLI interface
-    orchestrator.yaml            # ✅ Session orchestration
-    generator.yaml               # ✅ Spec generation
-    storage.yaml                 # ✅ Data persistence
-  components/
-    interview_engine.yaml        # ✅ Question flow logic
-    coverage_scorer.yaml         # ✅ Coverage calculation
-    spec_generator.yaml          # ✅ YAML generation
-    risk_assessor.yaml          # ➕ Risk identification
-    template_renderer.yaml      # ➕ Jinja2 rendering
-  code/
-  linked/
-    openapi.yaml                # ✅ API contracts
-    events.csv                  # ✅ Event definitions
-    schemas/
-      SpecPlaneSpec.json        # ✅ Output schema
-      QuestionBank.json         # ✅ Question schema
-      Session.json              # ➕ Session state schema
-      CoverageReport.json       # ➕ Coverage schema
-  questions.yaml                # ✅ Question bank
-  dfd.mmd                      # ➕ Data flow diagram
-  state_machines.mmd           # ➕ Session state flows
-  reports/.gitkeep             # ✅ Generated reports
-  out/.gitkeep                 # ✅ Generated specs
-```   
