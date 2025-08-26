@@ -184,47 +184,52 @@ sidebar_label: Introduction
 
 SpecPlane Viewer is a powerful tool that converts SpecPlane YAML specifications to Markdown and serves them via Docusaurus for easy viewing, navigation, and collaboration.
 
-## What is SpecPlane Viewer?
+## What is SpecPlane?
 
-SpecPlane Viewer transforms your software architecture specifications into beautiful, searchable documentation. It automatically converts SpecPlane YAML files to structured Markdown with proper sections, diagrams, and cross-references.
+![SpecPlane Logo](/SpecPlane_Logo.png)
+
+SpecPlane is a comprehensive framework for designing and documenting software architecture specifications. It provides a structured approach to capturing:
+
+- **System Components** - Services, APIs, databases, and their relationships
+- **Architecture Patterns** - Design patterns, deployment strategies, and integration approaches
+- **Technical Requirements** - Performance, security, scalability, and operational needs
+- **Documentation Standards** - Consistent, machine-readable specifications that can be versioned and shared
+
+SpecPlane Viewer transforms these YAML specifications into beautiful, searchable documentation with interactive diagrams, cross-references, and full-text search capabilities.
 
 ## Getting Started
 
+**Important**: Commands must be run in this exact order for the system to work properly.
+
 ### 1. Setup Docusaurus Project
 \`\`\`bash
-./bin/specplane_viewer setup ./.specplane
+./bin/specplane_viewer setup
 \`\`\`
+
+This creates the Docusaurus project structure and installs all necessary dependencies.
 
 ### 2. Convert Specifications
 \`\`\`bash
-# Convert specs in current directory
 ./bin/specplane_viewer convert
-
-# Convert specs with custom input/output
-./bin/specplane_viewer convert --input ./my_specs --output ./custom_output
-
-# Convert specific directory
-./bin/specplane_viewer convert ./specs
 \`\`\`
 
-### 3. Serve with Live Reloading
+This converts your SpecPlane YAML files to Markdown format in the docs directory.
+
+### 3. Start the Server
 \`\`\`bash
-# Start full workflow with file watching
-./bin/specplane_viewer convert ./specs
 ./bin/specplane_viewer start
-
-# Or use the combined command
-./bin/specplane_viewer serve ./specs --watch
 \`\`\`
+
+This builds the project (generating search indexes) and starts the server with your documentation.
 
 ## Features
 
 - **🔄 YAML to Markdown Conversion**: Automatically converts SpecPlane specifications
-- **👀 Live Reloading**: Watches for changes and updates in real-time
-- **🔍 Search**: Integrated Lunr search functionality
-- **🧭 Navigation**: Automatic sidebar generation and cross-references
-- **📊 Diagrams**: Mermaid diagram support for visual relationships
-- **🔗 References**: Clickable cross-references between components
+- **🔍 Full-Text Search**: Integrated Lunr search functionality across all content
+- **🧭 Smart Navigation**: Automatic sidebar generation and cross-references
+- **📊 Interactive Diagrams**: Mermaid diagram support for visual relationships
+- **🔗 Cross-References**: Clickable links between components and specifications
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
 
 ## Project Information
 
