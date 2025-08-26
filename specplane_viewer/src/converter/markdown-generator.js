@@ -31,27 +31,48 @@ class MarkdownGenerator {
       
       const sections = [];
       
-      // Generate sections based on YAML structure
+      // Generate sections in specific order
+      
+      // 1. Meta section (first)
+      if (specData.meta) {
+        sections.push(this.generateMetaSection(specData.meta));
+      }
+      
+      // 2. Diagrams section (including default relationships diagram)
+      if (specData.diagrams && specData.diagrams.length > 0) {
+        sections.push(this.generateDiagramsSection(specData.diagrams));
+      }
+      
+      // Always add a relationships diagram if not present
+      if (!specData.diagrams || specData.diagrams.length === 0) {
+        sections.push(this.generateDefaultRelationshipsDiagram(specData));
+      }
+      
+      // 3. Contracts section
+      if (specData.contracts) {
+        sections.push(this.generateContractsSection(specData.contracts));
+      }
+      
+      // 4. Validation section
+      if (specData.validation) {
+        sections.push(this.generateValidationSection(specData.validation));
+      }
+      
+      // 5. Other sections (relationships, dependencies, constraints, etc.)
       for (const [key, value] of Object.entries(specData)) {
-        if (key === 'meta' && value) {
-          sections.push(this.generateMetaSection(value));
-        } else if (key === 'relationships' || key === 'dependencies') {
-          if (value) {
-            sections.push(this.generateRelationshipSection(key, value, specData.meta?.id));
-          }
-        } else if (key === 'diagrams' && Array.isArray(value) && value.length > 0) {
-          sections.push(this.generateDiagramsSection(value));
-        } else if (key === 'contracts' && value) {
-          sections.push(this.generateContractsSection(value));
-        } else if (key === 'validation' && value) {
-          sections.push(this.generateValidationSection(value));
-        } else if (key === 'refs' && value) {
-          sections.push(this.generateReferencesSection(value));
-        } else if (value && typeof value === 'object' && Object.keys(value).length > 0) {
-          // Handle other top-level sections
+        if (!['meta', 'diagrams', 'contracts', 'validation', 'refs'].includes(key) && 
+            value && typeof value === 'object' && Object.keys(value).length > 0) {
           sections.push(this.generateGenericSection(key, value));
         }
       }
+      
+      // 6. References section
+      if (specData.refs) {
+        sections.push(this.generateReferencesSection(specData.refs));
+      }
+      
+      // 7. Specs YAML section (at the end)
+      sections.push(this.generateSpecsYamlSection(specData));
       
       // Add table of contents
       sections.push(this.generateTableOfContents(sections));
@@ -143,24 +164,37 @@ class MarkdownGenerator {
   }
 
   /**
-   * Generate relationship section
+   * Generate default relationships diagram when none is provided
    */
-  generateRelationshipSection(key, value, componentId) {
-    let markdown = `## ${this.capitalizeFirst(key)}\n\n`;
+  generateDefaultRelationshipsDiagram(specData) {
+    let markdown = '## Relationships\n\n';
     
     // Create a simple graph showing relationships
     const relationships = [];
+    const componentId = specData.meta?.id || 'this';
     
-    if (value.depends_on) {
-      relationships.push(...value.depends_on.map(dep => `  ${componentId || 'this'} --> ${dep}`));
+    if (specData.relationships) {
+      if (specData.relationships.depends_on) {
+        relationships.push(...specData.relationships.depends_on.map(dep => `  ${componentId} --> ${dep}`));
+      }
+      
+      if (specData.relationships.used_by) {
+        relationships.push(...specData.relationships.used_by.map(user => `  ${user} --> ${componentId}`));
+      }
+      
+      if (specData.relationships.integrates_with) {
+        relationships.push(...specData.relationships.integrates_with.map(integration => `  ${componentId} -.-> ${integration}`));
+      }
     }
     
-    if (value.used_by) {
-      relationships.push(...value.used_by.map(user => `  ${user} --> ${componentId || 'this'}`));
-    }
-    
-    if (value.integrates_with) {
-      relationships.push(...value.integrates_with.map(integration => `  ${componentId || 'this'} -.-> ${integration}`));
+    if (specData.dependencies) {
+      if (specData.dependencies.internal) {
+        relationships.push(...specData.dependencies.internal.map(dep => `  ${componentId} --> ${dep}`));
+      }
+      
+      if (specData.dependencies.external) {
+        relationships.push(...specData.dependencies.external.map(dep => `  ${componentId} -.-> ${dep}`));
+      }
     }
     
     if (relationships.length > 0) {
@@ -168,7 +202,7 @@ class MarkdownGenerator {
       markdown += relationships.join('\n');
       markdown += '\n```\n\n';
     } else {
-      markdown += '*No relationships defined*\n\n';
+      markdown += '*No relationships or dependencies defined*\n\n';
     }
     
     return markdown;
@@ -382,6 +416,29 @@ class MarkdownGenerator {
     }
     
     return markdown.trim();
+  }
+
+  /**
+   * Generate specs YAML section
+   */
+  generateSpecsYamlSection(specData) {
+    let markdown = '## Specs YAML\n\n';
+    markdown += '```yaml\n';
+    
+    try {
+      const yaml = require('js-yaml');
+      markdown += yaml.dump(specData, { 
+        indent: 2, 
+        lineWidth: 120,
+        noRefs: true 
+      });
+    } catch (error) {
+      markdown += `# Error serializing YAML: ${error.message}\n`;
+      markdown += JSON.stringify(specData, null, 2);
+    }
+    
+    markdown += '```\n\n';
+    return markdown;
   }
 
   /**
