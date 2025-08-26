@@ -38,20 +38,31 @@ class MarkdownGenerator {
         sections.push(this.generateMetaSection(specData.meta));
       }
       
-      // 2. Diagrams section (including default relationships diagram)
-      if (specData.diagrams && specData.diagrams.flowchart && specData.diagrams.flowchart.length > 0) {
-        sections.push(this.generateDiagramsSection(specData.diagrams.flowchart));
-      } else if (specData.diagrams && Array.isArray(specData.diagrams) && specData.diagrams.length > 0) {
+      // 2. Diagrams section (only if explicitly defined)
+      if (specData.diagrams) {
+        const diagramSections = [];
+        
+        // Dynamically handle any diagram types
+        for (const [diagramType, diagrams] of Object.entries(specData.diagrams)) {
+          if (Array.isArray(diagrams) && diagrams.length > 0) {
+            // Convert diagram type to readable title (e.g., "sequence" -> "Sequence Diagrams")
+            const title = diagramType.charAt(0).toUpperCase() + diagramType.slice(1).replace(/_/g, ' ') + 's';
+            diagramSections.push(this.generateDiagramsSection(diagrams, title));
+          }
+        }
+        
         // Handle case where diagrams is directly an array
-        sections.push(this.generateDiagramsSection(specData.diagrams));
+        if (Array.isArray(specData.diagrams) && specData.diagrams.length > 0) {
+          diagramSections.push(this.generateDiagramsSection(specData.diagrams, 'Diagrams'));
+        }
+        
+        // Add all diagram sections
+        if (diagramSections.length > 0) {
+          sections.push(diagramSections.join('\n\n'));
+        }
       }
       
-      // Always add a relationships diagram if not present
-      if ((!specData.diagrams || (!specData.diagrams.flowchart && !Array.isArray(specData.diagrams))) || 
-          (specData.diagrams.flowchart && specData.diagrams.flowchart.length === 0) ||
-          (Array.isArray(specData.diagrams) && specData.diagrams.length === 0)) {
-        sections.push(this.generateDefaultRelationshipsDiagram(specData));
-      }
+      // Note: No default relationships diagram - only show explicitly defined diagrams
       
       // 3. Contracts section
       if (specData.contracts) {
@@ -233,8 +244,8 @@ class MarkdownGenerator {
   /**
    * Generate diagrams section
    */
-  generateDiagramsSection(diagrams) {
-    let markdown = '## Diagrams\n\n';
+  generateDiagramsSection(diagrams, title = 'Diagrams') {
+    let markdown = `## ${title}\n\n`;
     
     for (const diagram of diagrams) {
       if (diagram.title) {
