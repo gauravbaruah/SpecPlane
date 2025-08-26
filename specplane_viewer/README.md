@@ -7,9 +7,12 @@ Convert SpecPlane YAML specifications to Markdown and serve them via Docusaurus 
 - **YAML to Markdown Conversion**: Automatically convert SpecPlane YAML files to well-formatted Markdown
 - **Docusaurus Integration**: Serve documentation with a modern, responsive web interface
 - **Lunr Search**: Full-text search across all specifications (using docusaurus-lunr-search)
-- **File Watching**: Real-time conversion when YAML files change
 - **Mermaid Diagrams**: Render diagrams from markdown with proper syntax highlighting
 - **Cross-References**: Handle references and cross-linking between specifications
+- **Professional Branding**: SpecPlane logo and custom intro page
+- **3-Step Workflow**: Simple setup → convert → start process
+- **Server Management**: Start, stop, and status commands for Docusaurus server
+- **Automatic Build**: Production-ready builds with search indexes
 
 ## Installation
 
@@ -33,47 +36,81 @@ chmod +x bin/specplane_viewer
 
 ## Usage
 
+### Quick Start
+
+```bash
+# 1. Setup Docusaurus project
+./bin/specplane_viewer setup
+
+# 2. Convert your specs to markdown
+./bin/specplane_viewer convert
+
+# 3. Start the server
+./bin/specplane_viewer start
+
+# 4. Open http://localhost:3001 in your browser
+```
+
+### Workflow Overview
+
+SpecPlane Viewer uses a **3-step workflow** for optimal performance:
+
+1. **`setup`** - Initialize Docusaurus project
+2. **`convert`** - Convert YAML specs to Markdown
+3. **`start`** - Build and serve documentation
+
 ### Basic Commands
 
-#### Serve Command (Main Functionality)
+#### Setup Command (Step 1)
 ```bash
-# Convert specs and serve via Docusaurus
-./bin/specplane serve ./specs
+# Setup Docusaurus project (creates .specplane/specs_viewer/)
+./bin/specplane_viewer setup
 
-# With custom port
-./bin/specplane serve ./specs --port 3001
-
-# Watch for file changes
-./bin/specplane serve ./specs --watch
-
-# Auto-open browser
-./bin/specplane serve ./specs --open
+# Setup in custom directory
+./bin/specplane_viewer setup ./my_project
 ```
 
-#### Convert Command (Just Convert)
+#### Convert Command (Step 2)
 ```bash
-# Convert specs to markdown without serving
-./bin/specplane convert ./specs
+# Convert specs to markdown (outputs to .specplane/specs_viewer/docs/)
+./bin/specplane_viewer convert
 
-# Custom output directory
-./bin/specplane convert ./specs --output ./docs
+# Convert with custom input directory
+./bin/specplane_viewer convert --input ./my_specs
+
+# Convert with custom input and output
+./bin/specplane_viewer convert --input ./my_specs --output ./custom_docs
 ```
 
-#### Setup Command (Just Setup Docusaurus)
+#### Start Command (Step 3)
 ```bash
-# Setup Docusaurus for existing markdown
-./bin/specplane setup ./.specplane
+# Start Docusaurus server (builds project first for search indexes)
+./bin/specplane_viewer start
+
+# Start on custom port
+./bin/specplane_viewer start --port 3002
+```
+
+#### Server Management Commands
+```bash
+# Check server status
+./bin/specplane_viewer status
+
+# Stop server
+./bin/specplane_viewer stop
+
+# Show help
+./bin/specplane_viewer --help
 ```
 
 ### Command Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--port <port>` | Port number for Docusaurus server | 3001 |
-| `--watch` | Watch for file changes | false |
-| `--open` | Auto-open browser | false |
-| `--input <path>` | Input directory containing YAML specs | ./specs |
-| `--output <path>` | Output directory for markdown | ./.specplane/specs_viewer/docs |
+| Command | Option | Description | Default |
+|---------|--------|-------------|---------|
+| `convert` | `--input <path>` | Input directory containing YAML specs | `./specs` |
+| `convert` | `--output <path>` | Output directory for markdown | `./.specplane/specs_viewer/docs` |
+| `start` | `--port <port>` | Port number for Docusaurus server | `3001` |
+| `setup` | `[directory]` | Project directory for Docusaurus setup | `./.specplane` |
 
 ## Project Structure
 
@@ -146,10 +183,10 @@ echo "meta:\n  purpose: 'Test specification'\n  type: 'component'\n  level: 'com
 ./bin/specplane convert test_specs
 
 # Convert with explicit input and output paths
-./bin/specplane convert --input ./my_specs --output ./custom_output
+./bin/specplane_viewer convert --input ./my_specs --output ./custom_output
 
 # Convert using only flags (no positional arguments)
-./bin/specplane convert --input ./specs --output ./.specplane/specs_viewer/docs
+./bin/specplane_viewer convert --input ./specs --output ./.specplane/specs_viewer/docs
 
 # Check output
 ls -la .specplane/specs_viewer/docs/
@@ -159,34 +196,42 @@ ls -la .specplane/specs_viewer/docs/
 
 ```bash
 # Start Docusaurus server
-./bin/specplane start --port 3001
+./bin/specplane_viewer start --port 3001
 
 # Stop Docusaurus server
-./bin/specplane stop
+./bin/specplane_viewer stop
 
 # Check server status
-./bin/specplane status
+./bin/specplane_viewer status
 ```
 
 #### Test Full Workflow
 ```bash
-# Start the full viewer
-./bin/specplane serve test_specs --watch
+# Setup Docusaurus project
+./bin/specplane_viewer setup
+
+# Convert specs to markdown
+./bin/specplane_viewer convert
+
+# Start server
+./bin/specplane_viewer start
 
 # In another terminal, modify a YAML file
 echo "  domain: 'test'" >> test_specs/test.yaml
 
-# Watch the conversion and rebuild process
+# Convert again and restart server
+./bin/specplane_viewer convert
+./bin/specplane_viewer start
 ```
 
 #### Test Docusaurus Setup
 ```bash
 # Just setup Docusaurus
-./bin/specplane setup ./.specplane
+./bin/specplane_viewer setup
 
 # Check generated files
-ls -la
-cat docusaurus.config.js
+ls -la .specplane/specs_viewer/
+cat .specplane/specs_viewer/docusaurus.config.ts
 ```
 
 ### Expected Behavior
@@ -238,7 +283,7 @@ npx docusaurus --version
 #### Port Conflicts
 ```bash
 # Use different port
-./bin/specplane serve ./specs --port 3002
+./bin/specplane_viewer start --port 3002
 ```
 
 #### File Permissions
