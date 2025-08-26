@@ -9,7 +9,6 @@ Convert SpecPlane YAML specifications to Markdown and serve them via Docusaurus 
 - **Lunr Search**: Full-text search across all specifications (using docusaurus-lunr-search)
 - **Mermaid Diagrams**: Render diagrams from markdown with proper syntax highlighting
 - **Cross-References**: Handle references and cross-linking between specifications
-- **Professional Branding**: SpecPlane logo and custom intro page
 - **3-Step Workflow**: Simple setup → convert → start process
 - **Server Management**: Start, stop, and status commands for Docusaurus server
 - **Automatic Build**: Production-ready builds with search indexes
