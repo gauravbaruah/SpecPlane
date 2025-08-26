@@ -51,6 +51,9 @@ class DocusaurusHandler {
       // Install and configure Lunr search
       await this.installLunrSearch();
       
+      // Install Mermaid theme
+      await this.installMermaidTheme();
+      
       // Update configuration
       await this.updateConfiguration();
 
@@ -317,6 +320,30 @@ export default function Home(): JSX.Element {
   }
 
   /**
+   * Install Mermaid theme
+   */
+  async installMermaidTheme() {
+    this.logger.info('Installing Mermaid theme...');
+    
+    try {
+      const result = execSync(
+        'npm install @docusaurus/theme-mermaid',
+        { 
+          cwd: this.docusaurusPath,
+          stdio: 'pipe',
+          encoding: 'utf8'
+        }
+      );
+      
+      this.logger.info('Mermaid theme installed successfully');
+      return true;
+    } catch (error) {
+      this.logger.error('Failed to install Mermaid theme:', error.message);
+      throw new Error(`Failed to install Mermaid theme: ${error.message}`);
+    }
+  }
+
+  /**
    * Update Docusaurus configuration
    */
   async updateConfiguration() {
@@ -358,6 +385,14 @@ export default function Home(): JSX.Element {
         plugins: [
           'docusaurus-lunr-search',
         ],
+        
+        // Mermaid support
+        themes: ['@docusaurus/theme-mermaid'],
+        
+        // Markdown configuration for Mermaid
+        markdown: {
+          mermaid: true,
+        },
         
         // Presets
         presets: [
@@ -422,6 +457,15 @@ export default function Home(): JSX.Element {
             ],
             copyright: `Copyright © ${new Date().getFullYear()} SpecPlane Project. Made with [Docusaurus](https://github.com/facebook/docusaurus).`,
           },
+          // Mermaid configuration
+          mermaid: {
+            theme: { light: 'default', dark: 'dark' },
+            options: {
+              maxTextSize: 50000,
+              securityLevel: 'loose',
+            },
+          },
+          
           // prism: {
           //   theme: prismThemes.github,
           //   darkTheme: prismThemes.dracula,

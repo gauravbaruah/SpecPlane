@@ -109,7 +109,7 @@ class MarkdownGenerator {
       description: meta.purpose || 'SpecPlane specification',
       keywords: [...new Set([meta.type, meta.level, meta.domain].filter(Boolean))],
       hide_table_of_contents: false,
-      toc_min_heading_level: 1,
+      toc_min_heading_level: 2,
       toc_max_heading_level: 3
     };
     
