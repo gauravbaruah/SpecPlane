@@ -98,8 +98,10 @@ class CLIInterface {
       
       const projectPath = path.resolve(projectDirectory);
       
+      // Create the directory if it doesn't exist
       if (!await fs.pathExists(projectPath)) {
-        throw new Error(`Project directory not found: ${projectPath}`);
+        this.logger.info(`Creating project directory: ${projectPath}`);
+        await fs.ensureDir(projectPath);
       }
       
       await this.docusaurusHandler.setupProject(projectPath, options);
@@ -186,7 +188,7 @@ class CLIInterface {
     try {
       this.logger.info('Stopping Docusaurus server...');
       
-      if (this.docusaurusHandler.isServerRunning()) {
+      if (await this.docusaurusHandler.isServerRunning()) {
         await this.docusaurusHandler.stopDevServer();
         this.logger.info('Server stopped successfully');
       } else {
@@ -204,10 +206,10 @@ class CLIInterface {
    */
   async serverStatus() {
     try {
-      const status = this.docusaurusHandler.getServerStatus();
+      const status = await this.docusaurusHandler.getServerStatus();
       
       if (status.running) {
-        this.logger.info(`Server is running (PID: ${status.pid})`);
+        this.logger.info(`Server is running (PID: ${status.pid}, Port: ${status.port})`);
       } else {
         this.logger.info('Server is not running');
       }
@@ -227,7 +229,7 @@ class CLIInterface {
     await this.stopWatching();
     
     // Stop Docusaurus server if running
-    if (this.docusaurusHandler.isServerRunning()) {
+    if (await this.docusaurusHandler.isServerRunning()) {
       await this.docusaurusHandler.stopDevServer();
     }
     

@@ -479,7 +479,8 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
    * Start Docusaurus development server
    */
   async startDevServer(port = 3001) {
-    if (this.serverProcess) {
+    // Check if server is already running by checking PID file
+    if (await this.isServerRunning()) {
       this.logger.warn('Docusaurus server is already running');
       return false;
     }
@@ -496,6 +497,9 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
 
       // Store the PID
       this.serverPID = this.serverProcess.pid;
+      
+      // Write PID to file for cross-process tracking
+      await this.writePIDFile(this.serverPID, port);
       
       // Collect output for debugging
       let stdout = '';
@@ -514,6 +518,7 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
       // Handle process events
       this.serverProcess.on('error', (error) => {
         this.logger.error('Docusaurus server error:', error.message);
+        this.cleanupPIDFile();
         throw new Error(`Docusaurus server error: ${error.message}`);
       });
 
@@ -524,6 +529,7 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
         this.serverProcess.on('exit', (code, signal) => {
           if (!resolved) {
             resolved = true;
+            this.cleanupPIDFile();
             if (code === 0) {
               this.logger.info(`Docusaurus server exited normally with code ${code}`);
             } else {
@@ -550,6 +556,7 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
     } catch (error) {
       this.logger.error('Failed to start Docusaurus server:', error.message);
       // Clean up on failure
+      this.cleanupPIDFile();
       if (this.serverProcess) {
         this.serverProcess = null;
         this.serverPID = null;
@@ -562,30 +569,75 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
    * Stop Docusaurus development server
    */
   async stopDevServer() {
-    if (!this.serverProcess || !this.serverPID) {
+    // Check if server is running (including cross-process check)
+    if (!(await this.isServerRunning())) {
       this.logger.warn('No Docusaurus server is currently running');
       return false;
     }
 
-    this.logger.info(`Stopping Docusaurus server (PID: ${this.serverPID})...`);
+    // Get PID from file if we don't have local reference
+    let pidToKill = this.serverPID;
+    if (!pidToKill) {
+      const pidData = await this.readPIDFile();
+      if (pidData) {
+        pidToKill = pidData.pid;
+      }
+    }
+
+    // If still no PID, try to detect from running processes
+    if (!pidToKill) {
+      try {
+        const { execSync } = require('child_process');
+        const result = execSync('ps aux | grep "docusaurus start" | grep -v grep', { encoding: 'utf8' });
+        if (result.trim()) {
+          const lines = result.trim().split('\n');
+          for (const line of lines) {
+            const match = line.match(/^\S+\s+(\d+)/);
+            if (match) {
+              const detectedPid = parseInt(match[1]);
+              // Check if this process is actually running
+              try {
+                process.kill(detectedPid, 0);
+                pidToKill = detectedPid;
+                break;
+              } catch (error) {
+                // Process doesn't exist, continue checking
+              }
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.debug('Failed to detect processes via ps command');
+      }
+    }
+
+    if (!pidToKill) {
+      this.logger.warn('No Docusaurus server PID found');
+      return false;
+    }
+
+    this.logger.info(`Stopping Docusaurus server (PID: ${pidToKill})...`);
     
     try {
-      // Kill the process
-      this.serverProcess.kill('SIGTERM');
+      // Kill the process by PID
+      process.kill(pidToKill, 'SIGTERM');
       
-      // Wait for graceful shutdown
-      await new Promise(resolve => {
-        this.serverProcess.on('exit', resolve);
-        setTimeout(resolve, 5000); // Force kill after 5 seconds
-      });
+      // Wait a bit for graceful shutdown
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Force kill if still running
-      if (this.serverProcess.exitCode === null) {
-        this.serverProcess.kill('SIGKILL');
+      // Check if process is still running and force kill if needed
+      try {
+        process.kill(pidToKill, 0); // Check if process exists
+        process.kill(pidToKill, 'SIGKILL'); // Force kill
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        // Process already terminated
       }
       
+      // Clean up
       this.serverProcess = null;
       this.serverPID = null;
+      await this.cleanupPIDFile();
       
       this.logger.info('Docusaurus server stopped successfully');
       return true;
@@ -596,24 +648,174 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
   }
 
   /**
-   * Check if server is running
+   * Get PID file path
    */
-  isServerRunning() {
-    return this.serverProcess !== null && this.serverPID !== null;
+  getPIDFilePath() {
+    return path.join(this.projectPath, '.docusaurus.pid');
+  }
+
+  /**
+   * Write PID to file for cross-process tracking
+   */
+  async writePIDFile(pid, port) {
+    try {
+      const pidData = {
+        pid: pid,
+        port: port,
+        startTime: new Date().toISOString(),
+        projectPath: this.projectPath
+      };
+      await fs.writeFile(this.getPIDFilePath(), JSON.stringify(pidData, null, 2));
+    } catch (error) {
+      this.logger.warn('Failed to write PID file:', error.message);
+    }
+  }
+
+  /**
+   * Read PID from file
+   */
+  async readPIDFile() {
+    try {
+      const pidPath = this.getPIDFilePath();
+      if (await fs.pathExists(pidPath)) {
+        const pidData = JSON.parse(await fs.readFile(pidPath, 'utf8'));
+        return pidData;
+      }
+    } catch (error) {
+      this.logger.debug('Failed to read PID file:', error.message);
+    }
+    return null;
+  }
+
+  /**
+   * Clean up PID file
+   */
+  async cleanupPIDFile() {
+    try {
+      const pidPath = this.getPIDFilePath();
+      if (await fs.pathExists(pidPath)) {
+        await fs.remove(pidPath);
+      }
+    } catch (error) {
+      this.logger.debug('Failed to cleanup PID file:', error.message);
+    }
+  }
+
+  /**
+   * Check if server is running by checking PID file and process
+   */
+  async isServerRunning() {
+    // First check if we have a local process reference
+    if (this.serverProcess !== null && this.serverPID !== null) {
+      return true;
+    }
+    
+    // Check PID file for cross-process detection
+    const pidData = await this.readPIDFile();
+    if (pidData) {
+      // Check if the process is actually running
+      try {
+        // Use a simple process check - if kill(0) succeeds, process exists
+        process.kill(pidData.pid, 0);
+        return true;
+      } catch (error) {
+        // Process doesn't exist, clean up stale PID file
+        await this.cleanupPIDFile();
+        return false;
+      }
+    }
+    
+    // If no PID file, try to detect Docusaurus processes by scanning
+    // This is a fallback for when processes were started manually
+    try {
+      const { execSync } = require('child_process');
+      const result = execSync('ps aux | grep "docusaurus start" | grep -v grep', { encoding: 'utf8' });
+      if (result.trim()) {
+        // Extract PID from ps output
+        const lines = result.trim().split('\n');
+        for (const line of lines) {
+          const match = line.match(/^\S+\s+(\d+)/);
+          if (match) {
+            const pid = parseInt(match[1]);
+            // Check if this process is actually running
+            try {
+              process.kill(pid, 0);
+              // Found a running Docusaurus process
+              this.logger.debug(`Found running Docusaurus process: ${pid}`);
+              return true;
+            } catch (error) {
+              // Process doesn't exist, continue checking
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // ps command failed or no processes found
+      this.logger.debug('No Docusaurus processes found via ps command');
+    }
+    
+    return false;
   }
 
   /**
    * Get server status
    */
-  getServerStatus() {
-    if (!this.serverProcess) {
-      return { running: false, pid: null };
+  async getServerStatus() {
+    // Check if server is running (including cross-process check)
+    const isRunning = await this.isServerRunning();
+    
+    if (!isRunning) {
+      return { running: false, pid: null, port: null };
+    }
+    
+    // Get PID and port from file if we don't have local reference
+    let pid = this.serverPID;
+    let port = null;
+    
+    if (!pid) {
+      const pidData = await this.readPIDFile();
+      if (pidData) {
+        pid = pidData.pid;
+        port = pidData.port;
+      }
+    }
+    
+    // If still no PID, try to detect from running processes
+    if (!pid) {
+      try {
+        const { execSync } = require('child_process');
+        const result = execSync('ps aux | grep "docusaurus start" | grep -v grep', { encoding: 'utf8' });
+        if (result.trim()) {
+          const lines = result.trim().split('\n');
+          for (const line of lines) {
+            const match = line.match(/^\S+\s+(\d+)/);
+            if (match) {
+              const detectedPid = parseInt(match[1]);
+              // Check if this process is actually running
+              try {
+                process.kill(detectedPid, 0);
+                pid = detectedPid;
+                // Try to extract port from the command line
+                const portMatch = line.match(/--port\s+(\d+)/);
+                if (portMatch) {
+                  port = parseInt(portMatch[1]);
+                }
+                break;
+              } catch (error) {
+                // Process doesn't exist, continue checking
+              }
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.debug('Failed to detect processes via ps command');
+      }
     }
     
     return {
       running: true,
-      pid: this.serverPID,
-      exitCode: this.serverProcess.exitCode
+      pid: pid,
+      port: port
     };
   }
 
