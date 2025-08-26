@@ -2,7 +2,11 @@
 
 **The specification control plane for software teams**
 
-SpecPlane is a systematic framework for creating structured, machine-readable software specifications that bridge the gap between design thinking and implementation. It transforms vague requirements into detailed, testable specifications that guide both human developers and AI coding assistants.
+SpecPlane is a flexible design-architecture framework for creating structured, machine-readable software specifications that bridge the gap between design thinking and implementation, transforming vague requirements into detailed, testable specifications that guide both human developers and AI coding assistants.
+
+![SpecPlane Logo: geometric planes aligning to a shared normal](./SpecPlane_Logo.png)
+
+**SpecPlane helps align design, engineering, and product teams by providing a shared language and framework for capturing requirements, constraints, and success metrics across all aspects of product development.**
 
 ## Why SpecPlane Exists
 
@@ -91,7 +95,7 @@ validation:
 
 ## Core Principles
 
-**Bridges Design and Architecture**: SpecPlane prevents spec-to-code drift by evolving alongside applications, ensuring design intent stays aligned with technical reality throughout the development lifecycle.
+**Bridges Design and Architecture**: SpecPlane makes spec-to-code relationships more visible and maintainable, reducing drift by evolving alongside applications and keeping design intent aligned with technical reality.
 
 **Implementation-Agnostic**: Specifications focus on *what* and *how well*, not *how*. The same spec can guide web, mobile, and API implementations.
 
