@@ -42,14 +42,17 @@ class DocusaurusHandler {
     // Clean up default content
     await this.cleanupDefaultContent();
     
-    // Create welcome intro page
-    await this.createIntroPage();
-    
-    // Install and configure Lunr search
-    await this.installLunrSearch();
-    
-    // Update configuration
-    await this.updateConfiguration();
+          // Create welcome intro page
+      await this.createIntroPage();
+      
+      // Create redirect index page
+      await this.createRedirectIndexPage();
+      
+      // Install and configure Lunr search
+      await this.installLunrSearch();
+      
+      // Update configuration
+      await this.updateConfiguration();
 
     this.logger.info('Docusaurus project setup completed successfully!');
     return true;
@@ -141,6 +144,14 @@ class DocusaurusHandler {
         await fs.emptyDir(docsPath);
         this.logger.info('Cleaned docs directory');
       }
+      
+      // Remove default pages content
+      const pagesPath = path.join(this.docusaurusPath, 'src', 'pages');
+      if (await fs.pathExists(pagesPath)) {
+        await fs.emptyDir(pagesPath);
+        this.logger.info('Cleaned pages directory');
+      }
+      
     } catch (error) {
       this.logger.error('Failed to cleanup default content:', error.message);
       throw new Error(`Failed to cleanup default content: ${error.message}`);
@@ -226,6 +237,34 @@ SpecPlane Viewer transforms your software architecture specifications into beaut
     } catch (error) {
       this.logger.error('Failed to create intro page:', error.message);
       throw new Error(`Failed to create intro page: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create redirect index page
+   */
+  async createRedirectIndexPage() {
+    this.logger.info('Creating redirect index page...');
+    
+    try {
+      const pagesPath = path.join(this.docusaurusPath, 'src', 'pages');
+      await fs.ensureDir(pagesPath);
+      
+      const indexPath = path.join(pagesPath, 'index.tsx');
+      
+      const indexContent = `import React from 'react';
+import {Redirect} from '@docusaurus/router';
+
+export default function Home(): JSX.Element {
+  return <Redirect to="/intro" />;
+}`;
+      
+      await fs.writeFile(indexPath, indexContent);
+      this.logger.info('Redirect index page created successfully');
+      
+    } catch (error) {
+      this.logger.error('Failed to create redirect index page:', error.message);
+      throw new Error(`Failed to create redirect index page: ${error.message}`);
     }
   }
 
