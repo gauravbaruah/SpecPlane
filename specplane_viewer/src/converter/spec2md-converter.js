@@ -106,6 +106,27 @@ class Spec2MDConverter {
       const successCount = results.filter(r => r.success).length;
       const failureCount = results.length - successCount;
       
+      // Generate sidebar configuration after conversion
+      if (successCount > 0) {
+        try {
+          // Extract actual document IDs from the converted files
+          const convertedFiles = results
+            .filter(r => r.success)
+            .map(r => {
+              const content = fs.readFileSync(r.outputPath, 'utf8');
+              const idMatch = content.match(/^id:\s*(.+)$/m);
+              return idMatch ? idMatch[1] : path.basename(r.outputPath, '.md');
+            });
+          
+          const sidebarConfig = this.markdownGenerator.generateSidebarConfig(convertedFiles);
+          const sidebarPath = path.join(path.dirname(outputDir), 'sidebars.ts');
+          await fs.writeFile(sidebarPath, sidebarConfig, 'utf8');
+          this.logger.info('Sidebar configuration updated');
+        } catch (error) {
+          this.logger.warn('Failed to update sidebar configuration:', error.message);
+        }
+      }
+      
       this.logger.success(`Directory conversion completed: ${successCount} successful, ${failureCount} failed`);
       
       if (allWarnings.length > 0) {

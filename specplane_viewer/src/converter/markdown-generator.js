@@ -552,6 +552,30 @@ class MarkdownGenerator {
   }
 
   /**
+   * Generate sidebar configuration for Docusaurus
+   */
+  generateSidebarConfig(convertedFiles) {
+    // Filter out intro.md and sort the rest alphabetically
+    const specFiles = convertedFiles
+      .filter(file => file !== 'intro.md')
+      .map(file => file.replace('.md', ''))
+      .sort();
+    
+    // Create sidebar configuration with intro first
+    const sidebarConfig = {
+      tutorialSidebar: ['intro', ...specFiles]
+    };
+    
+    return `import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
+
+// Auto-generated sidebar configuration
+// intro.md is always first, followed by converted spec files
+const sidebars: SidebarsConfig = ${JSON.stringify(sidebarConfig, null, 2)};
+
+export default sidebars;`;
+  }
+
+  /**
    * Get generation statistics
    */
   getStats() {
