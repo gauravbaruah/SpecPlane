@@ -39,7 +39,7 @@ relationships:
 
 contracts:
   capabilities:
-    - "Process command-line arguments and options (serve, convert, setup)"
+    - "Process command-line arguments and options (convert, setup, start, stop, status, help)"
     - "Watch specified directories for YAML file changes with 2-second debouncing"
     - "Trigger YAML to Markdown conversion on file changes"
     - "Set up Docusaurus configuration for markdown serving with proper routing"
@@ -49,9 +49,17 @@ contracts:
     - "Support both single-file and batch processing modes"
     - "Automatically handle file naming conflicts and routing issues"
     - "Provide comprehensive JSONL logging for all operations"
+    - "Manage Docusaurus server lifecycle (start/stop/status)"
+    - "Convert specs to markdown in .specplane/specs_viewer/docs directory"
+    - "Setup Docusaurus project with user confirmation and backup"
   
   apis:
     - "serve(directory, options) -> Promise<void>"
+    - "convert(specsDirectory, options) -> Promise<void>"
+    - "setup(projectDirectory, options) -> Promise<void>"
+    - "startServer(options) -> Promise<void>"
+    - "stopServer() -> Promise<void>"
+    - "getServerStatus() -> ServerStatus"
     - "watchDirectory(path, callback) -> Watcher"
     - "processCommand(args) -> CommandResult"
     - "setupDocusaurus(config) -> SetupResult"
@@ -62,6 +70,8 @@ contracts:
     - "Chokidar - For file system watching"
     - "Node.js child_process - For running Docusaurus commands"
     - "File system APIs - For configuration file management"
+    - "DocusaurusHandler - For Docusaurus project lifecycle management"
+    - "Spec2MDConverter - For YAML to Markdown conversion"
   
   events:
     - "cli_command_received: {command, arguments, options, timestamp}"
@@ -70,6 +80,8 @@ contracts:
     - "conversion_triggered: {file_path, trigger_source, timestamp}"
     - "docusaurus_setup_completed: {config_path, setup_time, timestamp}"
     - "docusaurus_command_executed: {command, exit_code, execution_time, timestamp}"
+    - "server_started: {port, pid, timestamp}"
+    - "server_stopped: {pid, stop_time, timestamp}"
     - "error_occurred: {error_type, error_message, context, timestamp}"
 
 dependencies:
@@ -190,8 +202,8 @@ implementation_hints:
   
   cli:
     interface: ["Commander.js for argument parsing", "ANSI colors for output", "Progress indicators"]
-    commands: ["serve", "watch", "convert", "setup"]
-    options: ["port", "watch", "open", "config"]
+    commands: ["convert", "setup", "start", "stop", "status", "help"]
+    options: ["port", "input", "output"]
 
 evidence:
   user_research: "Feedback on CLI usability and workflow requirements"

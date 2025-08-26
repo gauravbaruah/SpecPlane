@@ -3,7 +3,7 @@ meta:
   type: "component"
   level: "component"
   domain: "documentation"
-  status: "draft"
+  status: "implemented"
   last_updated: "2025-01-15"
   version: "0.2.0"
   id: "component.docusaurus_handler"
@@ -23,6 +23,10 @@ contracts:
     - "Update site metadata (title, tagline) to reflect SpecPlane branding"
     - "Configure proper GitHub links to SpecPlane project repository"
     - "Support both interactive setup and standalone server management"
+    - "Install and configure @docusaurus/theme-mermaid for interactive diagrams"
+    - "Copy SpecPlane logo to static assets during setup"
+    - "Create redirect from root path to /intro page"
+    - "Build project before serving for production-ready search indexes"
   
   apis:
     - "setupProject(projectPath, options) -> SetupResult"
@@ -34,6 +38,11 @@ contracts:
     - "cleanup() -> void"
     - "getDocsPath() -> string"
     - "getProjectPath() -> string"
+    - "buildProject() -> Promise<boolean>"
+    - "copySpecPlaneLogo() -> Promise<void>"
+    - "createIntroPage() -> Promise<void>"
+    - "createRedirectIndexPage() -> Promise<void>"
+    - "installMermaidTheme() -> Promise<void>"
   
   integrations:
     - "Docusaurus CLI - For project initialization and management"
@@ -41,6 +50,7 @@ contracts:
     - "Package managers - For dependency installation (npm/yarn)"
     - "Process management - For server lifecycle and PID tracking"
     - "Configuration templates - For generating default configurations"
+    - "Static asset management - For logo and image handling"
   
   events:
     - "setup_started: {project_path, setup_options, timestamp}"
@@ -49,10 +59,12 @@ contracts:
     - "dependencies_installed: {project_path, package_count, install_time, timestamp}"
     - "intro_page_created: {page_path, content_size, timestamp}"
     - "lunr_plugin_installed: {plugin_version, install_time, timestamp}"
+    - "mermaid_theme_installed: {theme_version, install_time, timestamp}"
     - "config_updated: {config_path, update_type, timestamp}"
     - "setup_completed: {project_path, total_time, status, timestamp}"
     - "server_started: {port, pid, start_time, timestamp}"
     - "server_stopped: {pid, stop_time, duration, timestamp}"
+    - "build_completed: {build_time, status, timestamp}"
     - "setup_error: {project_path, error_type, error_message, timestamp}"
     - "server_error: {error_type, error_message, timestamp}"
 

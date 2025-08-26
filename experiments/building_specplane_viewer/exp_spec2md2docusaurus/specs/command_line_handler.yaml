@@ -13,12 +13,15 @@ contracts:
   capabilities:
     - "Parse command-line arguments and options using Commander.js"
     - "Validate command syntax and required parameters"
-    - "Process different command types (serve, watch, convert, setup)"
-    - "Handle command-line flags and options (port, watch, open, config)"
+    - "Process different command types (convert, setup, start, stop, status, help)"
+    - "Handle command-line flags and options (port, input, output)"
     - "Provide helpful error messages for invalid commands"
     - "Support command aliases and shortcuts"
     - "Generate help text and usage information"
     - "Handle both interactive and non-interactive modes"
+    - "Process convert command with input/output directory options"
+    - "Process setup command for Docusaurus project initialization"
+    - "Process start/stop/status commands for server management"
   
   apis:
     - "parseArguments(argv: string[]) -> ParsedCommand"
@@ -27,12 +30,19 @@ contracts:
     - "showHelp() -> void"
     - "showVersion() -> void"
     - "registerCommand(name, handler, options) -> void"
+    - "processConvertCommand(directory, options) -> Promise<void>"
+    - "processSetupCommand(directory, options) -> Promise<void>"
+    - "processStartCommand(options) -> Promise<void>"
+    - "processStopCommand() -> Promise<void>"
+    - "processStatusCommand() -> Promise<void>"
   
   integrations:
     - "Commander.js - For argument parsing and command registration"
     - "Terminal output - For user feedback and error messages"
     - "Command execution - For orchestrating workflow actions"
     - "Help system - For generating usage documentation"
+    - "CLI interface - For executing actual command logic"
+    - "Logger utility - For command execution logging"
   
   events:
     - "command_parsed: {raw_args, parsed_command, timestamp}"
@@ -157,9 +167,9 @@ implementation_hints:
     error_handling: ["Try-catch blocks", "User-friendly messages", "Graceful degradation"]
   
   cli:
-    commands: ["serve", "watch", "convert", "setup", "help", "version"]
-    options: ["port", "watch", "open", "config", "verbose", "quiet"]
-    aliases: ["s", "w", "c", "h", "v"]
+    commands: ["convert", "setup", "start", "stop", "status", "help", "version"]
+    options: ["port", "input", "output", "verbose", "quiet"]
+    aliases: ["c", "s", "h", "v"]
 
 evidence:
   user_research: "Feedback on CLI usability and command structure preferences"

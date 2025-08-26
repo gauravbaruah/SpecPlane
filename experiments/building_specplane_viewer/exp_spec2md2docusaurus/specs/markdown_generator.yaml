@@ -11,17 +11,21 @@ meta:
 
 contracts:
   capabilities:
-    - "Generate structured Markdown with proper heading hierarchy"
+    - "Generate structured Markdown with proper heading hierarchy (H1 for ID, H2 for top-level keys, H3 for second-level keys)"
     - "Create Docusaurus-compatible frontmatter with proper document IDs and routing"
-    - "Create meta section as the first section with key information"
-    - "Generate relationship diagrams showing component dependencies"
-    - "Format diagrams section with Mermaid code blocks"
-    - "Structure contracts section with clear behavioral definitions"
+    - "Create meta section as the first section with key information formatted as bulleted list"
+    - "Generate relationship diagrams showing component dependencies with default Mermaid graph if none present"
+    - "Format diagrams section with Mermaid code blocks for interactive rendering"
+    - "Structure contracts section with clear behavioral definitions and inline code for event data"
     - "Format validation section with acceptance criteria and edge cases"
     - "Create clickable references and cross-references"
-    - "Generate table of contents with up to level-2 headings"
+    - "Generate table of contents with up to level-3 headings using robust anchor generation"
     - "Maintain consistent formatting and styling across all sections"
     - "Handle special characters and embedded content properly"
+    - "Generate sections in specific order: Meta, Diagrams (with relationships), Contracts, Validation, Other, References, Specs YAML"
+    - "Include complete YAML specification as code block at the end of markdown"
+    - "Create default relationships diagram when no diagrams are present"
+    - "Format meta fields as bulleted list with bold labels"
   
   apis:
     - "generateMarkdown(specData: SpecPlaneData) -> string"
@@ -33,6 +37,11 @@ contracts:
     - "generateValidationSection(validation: Validation) -> string"
     - "generateReferencesSection(refs: References) -> string"
     - "generateTableOfContents(sections: Section[]) -> string"
+    - "generateDefaultRelationshipsDiagram(specData: SpecPlaneData) -> string"
+    - "generateGenericSection(key: string, value: any) -> string"
+    - "generateSpecsYamlSection(specData: SpecPlaneData) -> string"
+    - "generateAnchor(text: string) -> string"
+    - "capitalizeFirst(text: string) -> string"
   
   integrations:
     - "Mermaid diagram generation - For relationship and architecture diagrams"

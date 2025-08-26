@@ -49,8 +49,9 @@ relationships:
   
   contains:
     - "spec2md_converter - Container for converting YAML to Markdown"
-    - "cli_interface - Container for orchestrating the workflow"
-    - "docusaurus_runner - Container for managing Docusaurus execution"
+    - "cli_interface - Container for orchestrating the workflow and managing Docusaurus server lifecycle"
+    - "docusaurus_handler - Container for managing Docusaurus project setup, configuration, and server management"
+    - "logger - Utility component for centralized logging across all components"
 
 contracts:
   capabilities:
@@ -62,6 +63,14 @@ contracts:
     - "Provide responsive web interface for specification consumption"
     - "Automatically install and configure docusaurus-lunr-search plugin"
     - "Handle dependency checking and user guidance for missing tools"
+    - "Manage Docusaurus server lifecycle (start/stop/status) with PID tracking"
+    - "Setup Docusaurus projects with user confirmation and automatic backup"
+    - "Install and configure @docusaurus/theme-mermaid for interactive diagram rendering"
+    - "Build projects before serving for production-ready search indexes"
+    - "Create custom intro page with SpecPlane branding and workflow instructions"
+    - "Redirect root path to /intro page for better user experience"
+    - "Copy SpecPlane logo to static assets during setup"
+    - "Generate markdown with specific section ordering and YAML source inclusion"
   
   apis:
     - "YAML Input: Accept SpecPlane YAML files for processing"
@@ -85,7 +94,7 @@ dependencies:
   internal:
     - "spec2md_converter - YAML to Markdown conversion container"
     - "cli_interface - CLI orchestration and file watching container"
-    - "docusaurus_runner - Docusaurus execution and dependency management container"
+    - "docusaurus_handler - Docusaurus project setup and server management container"
   
   external:
     - "Node.js Runtime - For running conversion scripts and Docusaurus"

@@ -35,25 +35,32 @@ relationships:
 
 contracts:
   capabilities:
-    - "Parse SpecPlane YAML files and validate against schema"
+    - "Parse SpecPlane YAML files and validate against basic schema"
     - "Generate structured Markdown with proper sections and formatting"
     - "Maintain directory structure in output markdown files"
     - "Create clickable references and cross-references"
     - "Generate relationship diagrams showing component dependencies"
     - "Handle errors gracefully with meaningful feedback"
     - "Process multiple YAML files in batch operations"
+    - "Output markdown to .specplane/specs_viewer/docs directory"
+    - "Preserve file paths and directory hierarchy in output"
+    - "Generate Docusaurus-compatible markdown with frontmatter"
   
   apis:
     - "convertFile(inputPath, outputPath) -> Promise<ConversionResult>"
     - "convertDirectory(inputDir, outputDir) -> Promise<BatchConversionResult>"
     - "validateSpec(yamlContent) -> ValidationResult"
     - "generateMarkdown(specData) -> string"
+    - "ensureOutputDirectory(outputPath) -> Promise<void>"
+    - "processFile(inputPath, outputPath) -> Promise<ConversionResult>"
   
   integrations:
     - "File System APIs - For reading YAML and writing Markdown"
     - "YAML Parser Libraries - For parsing and validation"
     - "Markdown Libraries - For content generation"
     - "Mermaid Diagram Generation - For relationship visualization"
+    - "Logger utility - For operation logging and error reporting"
+    - "Path utilities - For directory structure management"
   
   events:
     - "file_conversion_started: {input_path, timestamp}"

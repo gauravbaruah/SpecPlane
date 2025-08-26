@@ -15,10 +15,12 @@ contracts:
     - "Detect YAML file modifications, additions, and deletions"
     - "Filter file changes to only process relevant YAML files"
     - "Trigger markdown conversion for changed files"
-    - "Handle multiple concurrent file changes efficiently with 2-second debouncing"
+    - "Handle multiple concurrent file changes efficiently with 2-second debouncing for stability"
     - "Provide real-time feedback on file watching status"
     - "Support configurable watch patterns and exclusions"
     - "Gracefully handle file system errors and permission issues"
+    - "Monitor specs directory and trigger conversion to .specplane/specs_viewer/docs"
+    - "Handle debouncing with CLI status updates during wait periods"
   
   apis:
     - "watchDirectory(path, options) -> Watcher"
@@ -27,12 +29,15 @@ contracts:
     - "addChangeListener(callback) -> void"
     - "removeChangeListener(callback) -> void"
     - "isWatching() -> boolean"
+    - "startWatching(specsPath, outputPath) -> Promise<void>"
   
   integrations:
     - "Chokidar - For cross-platform file system watching"
     - "Event system - For change notification and callbacks"
     - "File system APIs - For path resolution and validation"
     - "Conversion trigger - For initiating markdown generation"
+    - "CLI interface - For status updates and user feedback"
+    - "Spec2MD converter - For triggering YAML to Markdown conversion"
   
   events:
     - "watch_started: {directory_path, watch_patterns, timestamp}"
@@ -41,6 +46,8 @@ contracts:
     - "file_removed: {file_path, timestamp}"
     - "file_change_detected: {file_path, change_type, metadata, timestamp}"
     - "conversion_triggered: {file_path, trigger_source, timestamp}"
+    - "debounce_waiting: {wait_time, file_path, timestamp}"
+    - "debounce_reset: {file_path, reason, timestamp}"
     - "watch_error: {error_type, error_message, file_path, timestamp}"
     - "watch_stopped: {directory_path, reason, timestamp}"
 
@@ -60,6 +67,7 @@ constraints:
     memory_usage: "<20MB heap size during watching"
     file_handling: "Support watching 1000+ files simultaneously"
     change_detection: "Detect changes within 500ms of file system events with 2-second debouncing for stability"
+    debounce_delay: "2 seconds for markdown change processing"
   
   security_privacy:
     authentication: "No authentication required"

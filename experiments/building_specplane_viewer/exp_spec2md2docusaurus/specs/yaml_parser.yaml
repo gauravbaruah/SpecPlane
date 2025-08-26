@@ -11,13 +11,15 @@ meta:
 
 contracts:
   capabilities:
-    - "Parse YAML files and convert to JavaScript objects"
-    - "Validate parsed content against SpecPlane schema requirements"
+    - "Parse YAML files and convert to JavaScript objects using js-yaml library"
+    - "Validate parsed content against basic SpecPlane schema requirements"
     - "Provide detailed error messages with file location and line numbers"
     - "Handle YAML syntax errors gracefully with helpful feedback"
     - "Validate required fields and data types according to schema"
     - "Support nested structures and complex YAML content"
     - "Generate validation warnings for non-critical issues"
+    - "Handle UTF-8 encoding and special characters properly"
+    - "Provide fallback error handling for malformed YAML"
   
   apis:
     - "parseYAML(yamlContent: string) -> Promise<ParsedYAML>"
@@ -25,11 +27,14 @@ contracts:
     - "parseAndValidate(yamlContent: string) -> Promise<ParseValidationResult>"
     - "getSchemaErrors(parsedData: any) -> SchemaError[]"
     - "getValidationWarnings(parsedData: any) -> ValidationWarning[]"
+    - "parseFile(filePath: string) -> Promise<ParsedYAML>"
   
   integrations:
-    - "js-yaml or yaml library - For YAML parsing"
+    - "js-yaml library - For YAML parsing and validation"
     - "Custom validation logic - For SpecPlane schema compliance"
     - "Error reporting system - For detailed feedback"
+    - "File system APIs - For reading YAML files"
+    - "Logger utility - For error logging and debugging"
   
   events:
     - "yaml_parsed: {file_path, parsing_time, object_size, timestamp}"
