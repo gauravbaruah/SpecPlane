@@ -13,7 +13,7 @@ const { CLIInterface } = require('../src/cli/cli-interface');
 
 // Set up the CLI program
 program
-  .name('specplane')
+  .name('specplane_viewer')
   .description('Convert SpecPlane YAML specifications to Markdown and serve via Docusaurus')
   .version('0.1.0');
 
