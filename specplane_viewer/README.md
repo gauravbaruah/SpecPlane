@@ -337,20 +337,4 @@ node src/converter/yaml-parser.js
 ./bin/specplane_viewer --help
 ```
 
-## Contributing
-
-1. Follow the SpecPlane architecture specifications
-2. Add comprehensive logging for all operations
-3. Handle errors gracefully with helpful user messages
-4. Maintain cross-platform compatibility
-5. Add tests for new functionality
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Support
-
-- **Issues**: GitHub Issues
-- **Documentation**: SpecPlane specifications in `../specs/`
-- **Architecture**: Container/component specifications in `../specs/`
+> **🚧 Work in Progress** - This project is actively evolving and we're working to make SpecPlane and SpecPlane Viewer more featureful and user friendly. We welcome feedback, contributions, and suggestions for improvement! Please share your experiences and help us build better tools for software specification and development.
