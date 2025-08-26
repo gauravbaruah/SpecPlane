@@ -48,6 +48,9 @@ class DocusaurusHandler {
       // Create redirect index page
       await this.createRedirectIndexPage();
       
+      // Copy SpecPlane logo to static assets
+      await this.copySpecPlaneLogo();
+      
       // Install and configure Lunr search
       await this.installLunrSearch();
       
@@ -272,6 +275,34 @@ export default function Home(): JSX.Element {
   }
 
   /**
+   * Copy SpecPlane logo to static assets
+   */
+  async copySpecPlaneLogo() {
+    this.logger.info('Copying SpecPlane logo to static assets...');
+    
+    try {
+      const staticPath = path.join(this.docusaurusPath, 'static');
+      await fs.ensureDir(staticPath);
+      
+      // Source logo path (relative to the specplane_viewer directory)
+      const sourceLogoPath = path.join(path.dirname(this.docusaurusPath), '..', 'SpecPlane_Logo.png');
+      const destLogoPath = path.join(staticPath, 'SpecPlane_Logo.png');
+      
+      if (await fs.pathExists(sourceLogoPath)) {
+        await fs.copy(sourceLogoPath, destLogoPath);
+        this.logger.info('SpecPlane logo copied successfully');
+      } else {
+        this.logger.warn('SpecPlane logo not found at source path, skipping logo copy');
+      }
+      
+    } catch (error) {
+      this.logger.error('Failed to copy SpecPlane logo:', error.message);
+      // Don't throw error for logo copy failure, just log it
+      this.logger.warn('Continuing setup without logo copy');
+    }
+  }
+
+  /**
    * Install Docusaurus dependencies
    */
   async installDependencies() {
@@ -417,8 +448,8 @@ export default function Home(): JSX.Element {
           navbar: {
             title: 'SpecPlane Viewer',
             logo: {
-              alt: 'SpecPlane Viewer Logo',
-              src: 'img/logo.svg',
+              alt: 'SpecPlane Logo',
+              src: 'SpecPlane_Logo.png',
             },
             items: [
               {
