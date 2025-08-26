@@ -383,7 +383,7 @@ export default function Home(): JSX.Element {
         
         // Plugins
         plugins: [
-          'docusaurus-lunr-search',
+          require.resolve('docusaurus-lunr-search'),
         ],
         
         // Mermaid support
@@ -426,6 +426,11 @@ export default function Home(): JSX.Element {
                 sidebarId: 'tutorialSidebar',
                 position: 'left',
                 label: 'Specs',
+              },
+              // Search bar
+              {
+                type: 'search',
+                position: 'right',
               },
             ],
           },
@@ -493,7 +498,32 @@ export default config;`;
   }
 
   /**
-   * Start Docusaurus development server
+   * Build Docusaurus project for production
+   */
+  async buildProject() {
+    this.logger.info('Building Docusaurus project for production...');
+    
+    try {
+      const { execSync } = require('child_process');
+      
+      // Build the project
+      execSync('npm run build', { 
+        cwd: this.docusaurusPath,
+        stdio: 'inherit',
+        env: { ...process.env, PATH: process.env.PATH }
+      });
+      
+      this.logger.info('Docusaurus project built successfully');
+      return true;
+      
+    } catch (error) {
+      this.logger.error('Failed to build Docusaurus project:', error.message);
+      throw new Error(`Build failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Start Docusaurus server (builds first for search functionality)
    */
   async startDevServer(port = 3001) {
     // Check if server is already running by checking PID file
@@ -502,11 +532,16 @@ export default config;`;
       return false;
     }
 
-    this.logger.info(`Starting Docusaurus development server on port ${port}...`);
+    this.logger.info(`Starting Docusaurus server on port ${port}...`);
     
     try {
-      // Start the server process
-      this.serverProcess = spawn('npx', ['docusaurus', 'start', '--port', port.toString()], {
+      // Build the project first to generate search index
+      await this.buildProject();
+      
+      this.logger.info(`Starting Docusaurus server on port ${port}...`);
+      
+      // Start the server process (serve the built version)
+      this.serverProcess = spawn('npx', ['docusaurus', 'serve', '--port', port.toString()], {
         cwd: this.docusaurusPath,
         stdio: ['pipe', 'pipe', 'pipe'],
         detached: false
@@ -566,7 +601,7 @@ export default config;`;
         }, 5000);
       });
       
-      this.logger.info(`Docusaurus development server started successfully on port ${port}`);
+      this.logger.info(`Docusaurus server started successfully on port ${port}`);
       this.logger.info(`Server PID: ${this.serverPID}`);
       
       return true;
