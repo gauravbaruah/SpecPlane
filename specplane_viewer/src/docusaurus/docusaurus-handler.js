@@ -49,7 +49,7 @@ class DocusaurusHandler {
       await this.createRedirectIndexPage();
       
       // Copy SpecPlane logo to static assets
-      await this.copySpecPlaneLogo();
+      await this.copySpecPlaneLogo(options.logoPath);
       
       // Install and configure Lunr search
       await this.installLunrSearch();
@@ -282,28 +282,135 @@ export default function Home(): JSX.Element {
   /**
    * Copy SpecPlane logo to static assets
    */
-  async copySpecPlaneLogo() {
-    this.logger.info('Copying SpecPlane logo to static assets...');
+  async copySpecPlaneLogo(logoPath) {
+    this.logger.info('Setting up SpecPlane logo...');
     
     try {
       const staticPath = path.join(this.docusaurusPath, 'static');
       await fs.ensureDir(staticPath);
       
-      // Source logo path (relative to the specplane_viewer directory)
-      const sourceLogoPath = path.join(path.dirname(this.docusaurusPath), '..', 'SpecPlane_Logo.png');
-      const destLogoPath = path.join(staticPath, 'SpecPlane_Logo.png');
-      
-      if (await fs.pathExists(sourceLogoPath)) {
-        await fs.copy(sourceLogoPath, destLogoPath);
-        this.logger.info('SpecPlane logo copied successfully');
+      if (logoPath) {
+        // Handle explicit logo path (URL or local file)
+        const destLogoPath = path.join(staticPath, 'SpecPlane_Logo.png');
+        
+        // Check if it's a URL
+        if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+          this.logger.info(`Downloading logo from URL: ${logoPath}`);
+          const https = require('https');
+          const http = require('http');
+          
+          const protocol = logoPath.startsWith('https://') ? https : http;
+          
+          await new Promise((resolve, reject) => {
+            const file = fs.createWriteStream(destLogoPath);
+            protocol.get(logoPath, (response) => {
+              if (response.statusCode !== 200) {
+                reject(new Error(`Failed to download logo: HTTP ${response.statusCode}`));
+                return;
+              }
+              response.pipe(file);
+              file.on('finish', () => {
+                file.close();
+                resolve();
+              });
+              file.on('error', reject);
+            }).on('error', reject);
+          });
+          
+          this.logger.info('SpecPlane logo downloaded successfully');
+        } else {
+          // Local file path
+          const sourceLogoPath = path.resolve(logoPath);
+          
+          if (await fs.pathExists(sourceLogoPath)) {
+            await fs.copy(sourceLogoPath, destLogoPath);
+            this.logger.info('SpecPlane logo copied successfully');
+          } else {
+            this.logger.warn(`SpecPlane logo not found at: ${sourceLogoPath}`);
+          }
+        }
       } else {
-        this.logger.warn('SpecPlane logo not found at source path, skipping logo copy');
+        // No logo path provided, try to fetch from GitHub with fallback
+        await this.setupDefaultLogo(staticPath);
       }
       
     } catch (error) {
-      this.logger.error('Failed to copy SpecPlane logo:', error.message);
-      // Don't throw error for logo copy failure, just log it
-      this.logger.warn('Continuing setup without logo copy');
+      this.logger.error('Failed to setup SpecPlane logo:', error.message);
+      // Don't throw error for logo setup failure, just log it
+      this.logger.warn('Continuing setup without logo');
+    }
+  }
+
+  async setupDefaultLogo(staticPath) {
+    const githubLogoUrl = 'https://raw.githubusercontent.com/gauravbaruah/SpecPlane/main/SpecPlane_Logo.png';
+    const maxRetries = 3;
+    
+    // Store logo in .specplane folder first, then copy to static
+    const specplaneDir = path.dirname(path.dirname(staticPath)); // Go up from static to .specplane
+    const logoCachePath = path.join(specplaneDir, 'SpecPlane_Logo.png');
+    const destLogoPath = path.join(staticPath, 'SpecPlane_Logo.png');
+    
+    // Try to fetch from GitHub
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.info(`Attempting to fetch SpecPlane logo from GitHub (attempt ${attempt}/${maxRetries})...`);
+        
+        const https = require('https');
+        
+        await new Promise((resolve, reject) => {
+          const file = fs.createWriteStream(logoCachePath);
+          https.get(githubLogoUrl, (response) => {
+            if (response.statusCode !== 200) {
+              reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
+              return;
+            }
+            response.pipe(file);
+            file.on('finish', () => {
+              file.close();
+              resolve();
+            });
+            file.on('error', reject);
+          }).on('error', reject);
+        });
+        
+        // Copy from cache to static folder
+        await fs.copy(logoCachePath, destLogoPath);
+        this.logger.info('SpecPlane logo fetched from GitHub and cached successfully');
+        return;
+        
+      } catch (error) {
+        this.logger.warn(`Attempt ${attempt} failed: ${error.message}`);
+        
+        if (attempt === maxRetries) {
+          this.logger.warn('Failed to fetch logo from GitHub after 3 attempts, creating text-based logo');
+          await this.createTextLogo(staticPath);
+        } else {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+    }
+  }
+
+  async createTextLogo(staticPath) {
+    try {
+      this.logger.info('Creating text-based SpecPlane logo...');
+      
+      // Create a simple SVG logo
+      const svgLogo = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="80" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="80" fill="#f8f9fa" stroke="#e9ecef" stroke-width="2" rx="8"/>
+  <text x="100" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#495057">SpecPlane</text>
+  <text x="100" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Viewer</text>
+</svg>`;
+      
+      const destLogoPath = path.join(staticPath, 'SpecPlane_Logo.svg');
+      await fs.writeFile(destLogoPath, svgLogo);
+      
+      this.logger.info('Text-based logo created successfully');
+      
+    } catch (error) {
+      this.logger.warn('Failed to create text-based logo:', error.message);
     }
   }
 
@@ -928,6 +1035,121 @@ export default config;`;
    */
   getProjectPath() {
     return this.projectPath;
+  }
+
+  /**
+   * Validate that Docusaurus project is properly set up
+   */
+  async validateProjectSetup() {
+    try {
+      // Check if .specplane directory exists
+      if (!this.projectPath || !await fs.pathExists(this.projectPath)) {
+        return {
+          isValid: false,
+          error: 'No .specplane directory found. Please run "specplane_viewer setup" first.',
+          missingComponents: ['project_directory']
+        };
+      }
+
+      // Check if specs_viewer subdirectory exists
+      if (!await fs.pathExists(this.docusaurusPath)) {
+        return {
+          isValid: false,
+          error: 'Docusaurus project not found. Please run "specplane_viewer setup" first.',
+          missingComponents: ['docusaurus_project']
+        };
+      }
+
+      // Check for essential Docusaurus files
+      const essentialFiles = [
+        'package.json',
+        'docusaurus.config.ts',
+        'sidebars.ts',
+        'docs/intro.md'
+      ];
+
+      const missingFiles = [];
+      for (const file of essentialFiles) {
+        const filePath = path.join(this.docusaurusPath, file);
+        if (!await fs.pathExists(filePath)) {
+          missingFiles.push(file);
+        }
+      }
+
+      if (missingFiles.length > 0) {
+        return {
+          isValid: false,
+          error: `Docusaurus project is incomplete. Missing: ${missingFiles.join(', ')}. Please run "specplane_viewer setup" first.`,
+          missingComponents: missingFiles
+        };
+      }
+
+      // Check if dependencies are installed
+      const nodeModulesPath = path.join(this.docusaurusPath, 'node_modules');
+      if (!await fs.pathExists(nodeModulesPath)) {
+        return {
+          isValid: false,
+          error: 'Docusaurus dependencies not installed. Please run "specplane_viewer setup" first.',
+          missingComponents: ['dependencies']
+        };
+      }
+
+      // Check if package.json has required dependencies
+      try {
+        const packageJsonPath = path.join(this.docusaurusPath, 'package.json');
+        const packageJson = await fs.readJson(packageJsonPath);
+        
+        const requiredDeps = ['@docusaurus/core', '@docusaurus/preset-classic'];
+        const missingDeps = requiredDeps.filter(dep => !packageJson.dependencies?.[dep]);
+        
+        if (missingDeps.length > 0) {
+          return {
+            isValid: false,
+            error: `Missing required Docusaurus dependencies: ${missingDeps.join(', ')}. Please run "specplane_viewer setup" first.`,
+            missingComponents: ['required_dependencies']
+          };
+        }
+      } catch (error) {
+        return {
+          isValid: false,
+          error: 'Unable to read package.json. Please run "specplane_viewer setup" first.',
+          missingComponents: ['package_json_readable']
+        };
+      }
+
+      // Check if docs directory exists and has content
+      const docsPath = path.join(this.docusaurusPath, 'docs');
+      if (!await fs.pathExists(docsPath)) {
+        return {
+          isValid: false,
+          error: 'Docs directory not found. Please run "specplane_viewer setup" first.',
+          missingComponents: ['docs_directory']
+        };
+      }
+
+      // Check if static directory exists (for logo)
+      const staticPath = path.join(this.docusaurusPath, 'static');
+      if (!await fs.pathExists(staticPath)) {
+        return {
+          isValid: false,
+          error: 'Static assets directory not found. Please run "specplane_viewer setup" first.',
+          missingComponents: ['static_directory']
+        };
+      }
+
+      return {
+        isValid: true,
+        error: null,
+        missingComponents: []
+      };
+
+    } catch (error) {
+      return {
+        isValid: false,
+        error: `Validation failed: ${error.message}. Please run "specplane_viewer setup" first.`,
+        missingComponents: ['validation_error']
+      };
+    }
   }
 }
 

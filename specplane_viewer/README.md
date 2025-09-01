@@ -9,7 +9,7 @@ Convert SpecPlane YAML specifications to Markdown and serve them via Docusaurus 
 - **Lunr Search**: Full-text search across all specifications (using docusaurus-lunr-search)
 - **Mermaid Diagrams**: Render diagrams from markdown with proper syntax highlighting
 - **Cross-References**: Handle references and cross-linking between specifications
-- **3-Step Workflow**: Simple setup → convert → start process
+- **3-Step Workflow**: Explicit setup → convert → start process
 - **Server Management**: Start, stop, and status commands for Docusaurus server
 - **Automatic Build**: Production-ready builds with search indexes
 
@@ -37,8 +37,10 @@ chmod +x bin/specplane_viewer
 
 ### Quick Start
 
+**Important**: Run these commands from the directory that contains your `specs/` folder.
+
 ```bash
-# 1. Setup Docusaurus project
+# 1. Setup Docusaurus project (creates .specplane/ directory)
 ./bin/specplane_viewer setup
 
 # 2. Convert your specs to markdown
@@ -50,9 +52,11 @@ chmod +x bin/specplane_viewer
 # 4. Open http://localhost:3001 in your browser
 ```
 
+**Note**: The `setup` command will create a `.specplane/` directory in your current location. This directory contains the Docusaurus project and generated documentation.
+
 ### Workflow Overview
 
-SpecPlane Viewer uses a **3-step workflow** for optimal performance:
+SpecPlane Viewer uses an **explicit 3-step workflow** for optimal performance and clarity:
 
 1. **`setup`** - Initialize Docusaurus project
 2. **`convert`** - Convert YAML specs to Markdown
@@ -62,16 +66,28 @@ SpecPlane Viewer uses a **3-step workflow** for optimal performance:
 
 #### Setup Command (Step 1)
 ```bash
-# Setup Docusaurus project (creates .specplane/specs_viewer/)
+# Setup Docusaurus project (creates .specplane/ directory in current location)
 ./bin/specplane_viewer setup
 
 # Setup in custom directory
 ./bin/specplane_viewer setup ./my_project
+
+# Setup with custom logo (local file)
+./bin/specplane_viewer setup --logo ./path/to/logo.png
+
+# Setup with logo from URL
+./bin/specplane_viewer setup --logo https://raw.githubusercontent.com/gauravbaruah/SpecPlane/main/SpecPlane_Logo.png
 ```
+
+**Warning**: The setup command will create a `.specplane/` directory containing the Docusaurus project. If a `.specplane/` directory already exists, you'll be prompted to confirm deletion.
+
+**Logo Behavior**: If no `--logo` option is provided, the setup command will automatically attempt to fetch the SpecPlane logo from GitHub and cache it in the `.specplane/` directory. If the fetch fails after 3 attempts, it will create a simple text-based SVG logo as a fallback.
+
+**Setup Validation**: The `convert` and `start` commands automatically validate that the Docusaurus project is properly set up before proceeding. This includes checking for essential files, dependencies, and project structure.
 
 #### Convert Command (Step 2)
 ```bash
-# Convert specs to markdown (outputs to .specplane/specs_viewer/docs/)
+# Convert specs to markdown (auto-detects specs directory)
 ./bin/specplane_viewer convert
 
 # Convert with custom input directory
@@ -106,10 +122,46 @@ SpecPlane Viewer uses a **3-step workflow** for optimal performance:
 
 | Command | Option | Description | Default |
 |---------|--------|-------------|---------|
-| `convert` | `--input <path>` | Input directory containing YAML specs | `./specs` |
+| `convert` | `--input <path>` | Input directory containing YAML specs | Auto-detected (see below) |
 | `convert` | `--output <path>` | Output directory for markdown | `./.specplane/specs_viewer/docs` |
 | `start` | `--port <port>` | Port number for Docusaurus server | `3001` |
-| `setup` | `[directory]` | Project directory for Docusaurus setup | `./.specplane` |
+| `setup` | `[directory]` | Project directory for Docusaurus setup | Auto-detected (see below) |
+| `setup` | `--logo <path>` | Path to SpecPlane logo file or URL | Auto-fetch from GitHub (with text fallback) |
+
+### Intelligent Directory Detection
+
+All commands automatically detect directories using intelligent priority order:
+
+#### For Specs Directories (`convert` command):
+1. **Explicit path**: If you provide `--input <path>` or `specplane_viewer convert <path>`
+2. **Current directory**: If you're already inside a directory named `specs/`
+3. **Subdirectory**: If there's a `specs/` subdirectory in your current location
+4. **Error**: If none of the above are found, the command will exit with helpful instructions
+
+#### For .specplane Directories (`setup`, `start` commands):
+1. **Explicit path**: If you provide `specplane_viewer setup <path>`
+2. **Current directory**: If you're already inside a `.specplane/` directory
+3. **Subdirectory**: If there's a `.specplane/` subdirectory in your current location
+4. **Default**: Creates `.specplane/` in current directory
+
+**Examples:**
+```bash
+# From project root with specs/ subdirectory
+cd /path/to/my-project
+specplane_viewer convert  # Finds ./specs/
+specplane_viewer setup    # Creates ./.specplane/
+
+# From inside specs directory
+cd /path/to/my-project/specs
+specplane_viewer convert  # Uses current directory
+specplane_viewer setup    # Creates ./.specplane/
+
+# Explicit paths
+specplane_viewer convert /path/to/custom/specs
+specplane_viewer setup /path/to/custom/.specplane
+```
+
+**Important**: Always run the commands from the directory that contains your `specs/` folder for the best experience with auto-detection.
 
 ## Project Structure
 
@@ -178,14 +230,20 @@ The SpecPlane Viewer follows the container/component architecture specified in o
 mkdir -p test_specs
 echo "meta:\n  purpose: 'Test specification'\n  type: 'component'\n  level: 'component'" > test_specs/test.yaml
 
-# Test conversion
-./bin/specplane convert test_specs
+# Test conversion with explicit path
+./bin/specplane_viewer convert test_specs
+
+# Test auto-detection from project root
+mkdir -p specs
+echo "meta:\n  purpose: 'Test specification'\n  type: 'component'\n  level: 'component'" > specs/test.yaml
+./bin/specplane_viewer convert  # Auto-detects ./specs/
+
+# Test auto-detection from inside specs directory
+cd specs
+./bin/specplane_viewer convert  # Uses current directory
 
 # Convert with explicit input and output paths
 ./bin/specplane_viewer convert --input ./my_specs --output ./custom_output
-
-# Convert using only flags (no positional arguments)
-./bin/specplane_viewer convert --input ./specs --output ./.specplane/specs_viewer/docs
 
 # Check output
 ls -la .specplane/specs_viewer/docs/
@@ -206,7 +264,10 @@ ls -la .specplane/specs_viewer/docs/
 
 #### Test Full Workflow
 ```bash
-# Setup Docusaurus project
+# Navigate to your project directory (containing specs/ folder)
+cd /path/to/your/project
+
+# Setup Docusaurus project (creates .specplane/ directory)
 ./bin/specplane_viewer setup
 
 # Convert specs to markdown
@@ -216,7 +277,7 @@ ls -la .specplane/specs_viewer/docs/
 ./bin/specplane_viewer start
 
 # In another terminal, modify a YAML file
-echo "  domain: 'test'" >> test_specs/test.yaml
+echo "  domain: 'test'" >> specs/test.yaml
 
 # Convert again and restart server
 ./bin/specplane_viewer convert
@@ -225,7 +286,10 @@ echo "  domain: 'test'" >> test_specs/test.yaml
 
 #### Test Docusaurus Setup
 ```bash
-# Just setup Docusaurus
+# Navigate to your project directory (containing specs/ folder)
+cd /path/to/your/project
+
+# Just setup Docusaurus (creates .specplane/ directory)
 ./bin/specplane_viewer setup
 
 # Check generated files
@@ -301,6 +365,19 @@ cd .specplane
 npx docusaurus clear
 
 # Reinstall dependencies
+npm install
+```
+
+#### Setup Validation Issues
+If you encounter setup validation errors, the project may be in an incomplete state:
+
+```bash
+# Remove incomplete setup and start fresh
+rm -rf .specplane
+specplane_viewer setup
+
+# Or reinstall dependencies in existing setup
+cd .specplane/specs_viewer
 npm install
 ```
 

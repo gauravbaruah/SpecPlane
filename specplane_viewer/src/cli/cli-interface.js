@@ -30,14 +30,9 @@ class CLIInterface {
     try {
       this.logger.info('Starting SpecPlane Viewer...');
       
-      // Resolve absolute paths
-      const specsPath = path.resolve(specsDirectory);
+      // Intelligent directory detection
+      const specsPath = await this.detectSpecsDirectory(specsDirectory);
       const outputPath = path.join(path.dirname(specsPath), '.specplane', 'specs_viewer', 'docs');
-      
-      // Check if specs directory exists
-      if (!await fs.pathExists(specsPath)) {
-        throw new Error(`Specs directory not found: ${specsPath}`);
-      }
       
       this.logger.info(`Specs directory: ${specsPath}`);
       this.logger.info(`Output directory: ${outputPath}`);
@@ -45,6 +40,12 @@ class CLIInterface {
       // Setup Docusaurus project first
       const projectPath = path.dirname(outputPath);
       await this.docusaurusHandler.setupProject(projectPath, { port });
+      
+      // Validate that setup completed successfully
+      const validation = await this.docusaurusHandler.validateProjectSetup();
+      if (!validation.isValid) {
+        throw new Error(`Setup validation failed: ${validation.error}`);
+      }
       
       // Convert existing specs to the docs folder
       const docsPath = this.docusaurusHandler.getDocsPath();
@@ -73,11 +74,18 @@ class CLIInterface {
     try {
       this.logger.info('Converting SpecPlane specs to Markdown...');
       
-      const specsPath = path.resolve(specsDirectory);
+      // Intelligent directory detection
+      const specsPath = await this.detectSpecsDirectory(specsDirectory);
       const outputPath = path.resolve(output);
       
-      if (!await fs.pathExists(specsPath)) {
-        throw new Error(`Specs directory not found: ${specsPath}`);
+      // Validate that Docusaurus project is set up
+      // Use the same logic as setup - detect .specplane directory
+      const projectPath = await this.detectSpecPlaneDirectory();
+      this.docusaurusHandler.setProjectPath(projectPath);
+      
+      const validation = await this.docusaurusHandler.validateProjectSetup();
+      if (!validation.isValid) {
+        throw new Error(validation.error);
       }
       
       await this.converter.convertDirectory(specsPath, outputPath);
@@ -90,13 +98,84 @@ class CLIInterface {
   }
 
   /**
+   * Intelligently detect the specs directory
+   */
+  async detectSpecsDirectory(explicitPath) {
+    // If explicit path provided, use it
+    if (explicitPath) {
+      const resolvedPath = path.resolve(explicitPath);
+      if (!await fs.pathExists(resolvedPath)) {
+        throw new Error(`Specs directory not found: ${resolvedPath}`);
+      }
+      return resolvedPath;
+    }
+
+    const currentDir = process.cwd();
+    const currentDirName = path.basename(currentDir);
+
+    // Check if we're already in a specs directory
+    if (currentDirName === 'specs') {
+      this.logger.info(`Detected specs directory: ${currentDir}`);
+      return currentDir;
+    }
+
+    // Check for specs/ subdirectory in current directory
+    const specsSubdir = path.join(currentDir, 'specs');
+    if (await fs.pathExists(specsSubdir)) {
+      this.logger.info(`Found specs directory: ${specsSubdir}`);
+      return specsSubdir;
+    }
+
+    // No specs directory found
+    throw new Error(
+      'No specs directory found. Please either:\n' +
+      '  - Run this command from within a specs/ directory, or\n' +
+      '  - Run this command from a directory containing a specs/ subdirectory, or\n' +
+      '  - Specify the path explicitly: specplane_viewer convert <path-to-specs>'
+    );
+  }
+
+  /**
+   * Intelligently detect the .specplane directory
+   */
+  async detectSpecPlaneDirectory(explicitPath) {
+    // If explicit path provided, use it
+    if (explicitPath) {
+      const resolvedPath = path.resolve(explicitPath);
+      return resolvedPath;
+    }
+
+    const currentDir = process.cwd();
+    const currentDirName = path.basename(currentDir);
+
+    // Check if we're already in a .specplane directory
+    if (currentDirName === '.specplane') {
+      this.logger.info(`Detected .specplane directory: ${currentDir}`);
+      return currentDir;
+    }
+
+    // Check for .specplane/ subdirectory in current directory
+    const specPlaneSubdir = path.join(currentDir, '.specplane');
+    if (await fs.pathExists(specPlaneSubdir)) {
+      this.logger.info(`Found .specplane directory: ${specPlaneSubdir}`);
+      return specPlaneSubdir;
+    }
+
+    // Default to creating .specplane in current directory
+    const defaultSpecPlaneDir = path.join(currentDir, '.specplane');
+    this.logger.info(`Using default .specplane directory: ${defaultSpecPlaneDir}`);
+    return defaultSpecPlaneDir;
+  }
+
+  /**
    * Setup command - setup Docusaurus project
    */
   async setup(projectDirectory, options = {}) {
     try {
       this.logger.info('Setting up Docusaurus project...');
       
-      const projectPath = path.resolve(projectDirectory);
+      // Intelligent directory detection
+      const projectPath = await this.detectSpecPlaneDirectory(projectDirectory);
       
       // Create the directory if it doesn't exist
       if (!await fs.pathExists(projectPath)) {
@@ -105,8 +184,6 @@ class CLIInterface {
       }
       
       await this.docusaurusHandler.setupProject(projectPath, options);
-      
-      this.logger.info('Docusaurus project setup completed successfully!');
       
     } catch (error) {
       this.logger.error('Setup command failed:', error);
@@ -163,14 +240,21 @@ class CLIInterface {
     try {
       this.logger.info('Starting Docusaurus server...');
       
-      // Check if project exists
-      const projectPath = './.specplane';
+      // Intelligent directory detection for .specplane directory
+      const projectPath = await this.detectSpecPlaneDirectory();
+      
       if (!await fs.pathExists(projectPath)) {
         throw new Error('Docusaurus project not found. Please run "setup" first.');
       }
       
       // Set the project path for the handler
       this.docusaurusHandler.setProjectPath(projectPath);
+      
+      // Validate that Docusaurus project is properly set up
+      const validation = await this.docusaurusHandler.validateProjectSetup();
+      if (!validation.isValid) {
+        throw new Error(validation.error);
+      }
       
       // Start the server
       await this.docusaurusHandler.startDevServer(port);
