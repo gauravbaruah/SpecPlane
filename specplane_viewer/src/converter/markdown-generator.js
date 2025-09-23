@@ -36,7 +36,7 @@ class MarkdownGenerator {
       
       // 1. Meta section (first)
       if (specData.meta) {
-        sections.push(this.generateMetaSection(specData.meta));
+        sections.push(this.generateMetaSection(specData.meta, originalFilePath));
       }
       
       // 2. Diagrams section (only if explicitly defined)
@@ -168,7 +168,7 @@ class MarkdownGenerator {
   /**
    * Generate meta section
    */
-  generateMetaSection(meta) {
+  generateMetaSection(meta, originalFilePath) {
     let markdown = '## Meta\n\n';
     
     if (meta.purpose) {
@@ -205,6 +205,16 @@ class MarkdownGenerator {
     
     if (meta.last_updated) {
       markdown += `\n- **Last Updated:** ${this.formatJSXSafeText(meta.last_updated)}`;
+    }
+    
+    // Add source link if available
+    if (originalFilePath) {
+      const gitInfo = this.getGitInfo(originalFilePath);
+      if (gitInfo) {
+        markdown += `\n- **Source:** [${path.basename(originalFilePath)}](${gitInfo.url})`;
+      } else {
+        markdown += `\n- **Source:** \`${originalFilePath}\``;
+      }
     }
     
     return markdown.trim();
@@ -492,32 +502,42 @@ class MarkdownGenerator {
   generateSpecsYamlSection(specData, originalFilePath) {
     let markdown = '## Specs YAML\n\n';
     
-    // Add link to original spec file if available
-    if (originalFilePath) {
-      const gitInfo = this.getGitInfo(originalFilePath);
-      if (gitInfo) {
-        markdown += `**Source:** [${path.basename(originalFilePath)}](${gitInfo.url})\n\n`;
-      } else {
-        markdown += `**Source:** \`${originalFilePath}\`\n\n`;
-      }
-    }
-    
     markdown += '```yaml\n';
     
     try {
-      const yaml = require('js-yaml');
-      // Use safe options to avoid problematic YAML syntax
-      markdown += yaml.dump(specData, { 
-        indent: 2, 
-        lineWidth: 120,
-        noRefs: true,
-        noCompatMode: true,
-        sortKeys: false
-      });
+      // Try to use the original YAML file content to preserve formatting
+      if (originalFilePath) {
+        const fs = require('fs');
+        const originalContent = fs.readFileSync(originalFilePath, 'utf8');
+        markdown += originalContent;
+      } else {
+        // Fallback to re-serializing if no original file path
+        const yaml = require('js-yaml');
+        markdown += yaml.dump(specData, { 
+          indent: 2, 
+          lineWidth: 120,
+          noRefs: true,
+          noCompatMode: true,
+          sortKeys: false
+        });
+      }
     } catch (error) {
-      markdown += `# Error serializing YAML: ${error.message}\n`;
-      // Fallback to JSON if YAML serialization fails
-      markdown += JSON.stringify(specData, null, 2);
+      this.logger.debug(`Could not read original YAML file: ${error.message}`);
+      // Fallback to re-serializing
+      try {
+        const yaml = require('js-yaml');
+        markdown += yaml.dump(specData, { 
+          indent: 2, 
+          lineWidth: 120,
+          noRefs: true,
+          noCompatMode: true,
+          sortKeys: false
+        });
+      } catch (yamlError) {
+        markdown += `# Error serializing YAML: ${yamlError.message}\n`;
+        // Final fallback to JSON
+        markdown += JSON.stringify(specData, null, 2);
+      }
     }
     
     markdown += '```\n\n';
