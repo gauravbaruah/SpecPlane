@@ -4,6 +4,7 @@
  */
 
 const { Logger } = require('../utils/logger');
+const path = require('path');
 
 class MarkdownGenerator {
   constructor() {
@@ -122,10 +123,18 @@ class MarkdownGenerator {
     // We'll never set a custom ID - let Docusaurus handle it automatically
     let documentId = null;
     
+    // Generate sidebar label from filename to match Docusaurus document IDs
+    let sidebarLabel = meta.purpose || 'Specification';
+    if (outputPath) {
+      // Extract filename without extension for sidebar label
+      const filename = path.basename(outputPath, '.md');
+      sidebarLabel = filename;
+    }
+    
     // Manually construct frontmatter to avoid problematic YAML syntax
     const frontmatter = {
       title: meta.purpose || 'Specification',
-      sidebar_label: meta.id || meta.purpose || 'Specification',
+      sidebar_label: sidebarLabel,
       description: meta.purpose || 'SpecPlane specification',
       keywords: [...new Set([meta.type, meta.level, meta.domain].filter(Boolean))],
       hide_table_of_contents: false,
