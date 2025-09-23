@@ -655,8 +655,8 @@ class MarkdownGenerator {
     
     // Add subfolder groups as subsections
     Object.keys(subfolderGroups).sort().forEach(parentDir => {
-      // Create a nice label for the category
-      const categoryLabel = parentDir.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      // Use the actual directory name as the label
+      const categoryLabel = parentDir;
       
       sidebarItems.push({
         type: 'category',
