@@ -35,7 +35,7 @@ relationships:
   contains:
     - "file_watcher - Component for monitoring directory changes"
     - "command_line_handler - Component for processing CLI arguments and commands"
-    - "docusaurus_setup - Component for configuring and setting up Docusaurus"
+    - "docusaurus_handler - Component for configuring and setting up Docusaurus"
 
 contracts:
   capabilities:
@@ -78,7 +78,7 @@ contracts:
     - "file_watch_started: {directory_path, watch_patterns, timestamp}"
     - "file_change_detected: {file_path, change_type, timestamp}"
     - "conversion_triggered: {file_path, trigger_source, timestamp}"
-    - "docusaurus_setup_completed: {config_path, setup_time, timestamp}"
+    - "docusaurus_handler_completed: {config_path, setup_time, timestamp}"
     - "docusaurus_command_executed: {command, exit_code, execution_time, timestamp}"
     - "server_started: {port, pid, timestamp}"
     - "server_stopped: {pid, stop_time, timestamp}"
@@ -88,7 +88,7 @@ dependencies:
   internal:
     - "file_watcher - For monitoring directory changes"
     - "command_line_handler - For processing CLI commands"
-    - "docusaurus_setup - For Docusaurus configuration"
+    - "docusaurus_handler - For Docusaurus configuration"
     - "spec2md_converter - For triggering conversions"
   
   external:
@@ -221,7 +221,7 @@ diagrams:
             Container_Boundary(cli_interface, "CLI Interface Container") {
                 Component(command_handler, "Command Line Handler", "JavaScript", "Processes CLI arguments and commands")
                 Component(file_watcher, "File Watcher", "JavaScript", "Monitors directory for file changes")
-                Component(docusaurus_setup, "Docusaurus Setup", "JavaScript", "Configures and sets up Docusaurus")
+                Component(docusaurus_handler, "Docusaurus Handler", "JavaScript", "Configures and sets up Docusaurus")
             }
             
             Container_Ext(spec2md_converter, "Spec2MD Converter", "YAML to Markdown conversion")
@@ -231,8 +231,8 @@ diagrams:
             Rel(command_handler, terminal, "Receives commands from and provides output to")
             Rel(file_watcher, file_system, "Watches for changes in")
             Rel(file_watcher, spec2md_converter, "Triggers conversion in")
-            Rel(command_handler, docusaurus_setup, "Instructs to setup")
-            Rel(docusaurus_setup, file_system, "Creates configuration files in")
+            Rel(command_handler, docusaurus_handler, "Instructs to setup")
+            Rel(docusaurus_handler, file_system, "Creates configuration files in")
   
   sequence:
     - title: "CLI Command Execution Flow"
@@ -244,15 +244,15 @@ diagrams:
             participant Handler as Command Handler
             participant Watcher as File Watcher
             participant Converter as Spec2MD Converter
-            participant Setup as Docusaurus Setup
+            participant Docusaurus as Docusaurus Handler
             
             User->>CLI: specplane serve ./specs --watch
             CLI->>Handler: parseCommand(arguments)
             Handler-->>CLI: parsed command + options
             
             alt serve command
-                CLI->>Setup: setupDocusaurus(config)
-                Setup-->>CLI: setup completed
+                CLI->>Docusaurus: setupDocusaurus(config)
+                Docusaurus-->>CLI: setup completed
                 CLI->>Watcher: watchDirectory(./specs)
                 Watcher-->>CLI: watching started
                 
