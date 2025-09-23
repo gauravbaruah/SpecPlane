@@ -32,7 +32,7 @@ class Spec2MDConverter {
       }
       
       // Generate markdown
-      const markdownContent = await this.markdownGenerator.generateMarkdown(parsedData.data);
+      const markdownContent = await this.markdownGenerator.generateMarkdown(parsedData.data, outputPath);
       
       // Ensure output directory exists
       const outputDir = path.dirname(outputPath);
@@ -109,14 +109,16 @@ class Spec2MDConverter {
       // Generate sidebar configuration after conversion
       if (successCount > 0) {
         try {
-          // Extract actual document IDs from the converted files
+          // Generate document IDs based on Docusaurus's automatic ID generation rules
           const convertedFiles = results
             .filter(r => r.success)
             .map(r => {
-              const content = fs.readFileSync(r.outputPath, 'utf8');
-              const idMatch = content.match(/^id:\s*(.+)$/m);
-              return idMatch ? idMatch[1] : path.basename(r.outputPath, '.md');
-            });
+              // Get relative path from docs directory
+              const relativePath = path.relative(outputDir, r.outputPath);
+              // Docusaurus generates IDs based on file path: remove .md extension
+              return relativePath.replace(/\.md$/, '').replace(/\\/g, '/');
+            })
+            .sort();
           
           const sidebarConfig = this.markdownGenerator.generateSidebarConfig(convertedFiles);
           const sidebarPath = path.join(path.dirname(outputDir), 'sidebars.ts');

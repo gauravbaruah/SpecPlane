@@ -19,12 +19,12 @@ class MarkdownGenerator {
   /**
    * Generate complete markdown from SpecPlane data
    */
-  async generateMarkdown(specData) {
+  async generateMarkdown(specData, outputPath) {
     try {
       this.logger.debug('Generating markdown for specification');
       
       // Generate frontmatter for Docusaurus routing
-      const frontmatter = this.generateFrontmatter(specData.meta);
+      const frontmatter = this.generateFrontmatter(specData.meta, outputPath);
       
       // Start with the main title (H1) using the ID
       const mainTitle = `# ${specData.meta?.id || 'untitled'}\n\n`;
@@ -115,12 +115,15 @@ class MarkdownGenerator {
   /**
    * Generate frontmatter for Docusaurus routing
    */
-  generateFrontmatter(meta) {
+  generateFrontmatter(meta, outputPath) {
     if (!meta) return '';
+    
+    // Let Docusaurus auto-generate document IDs based on file structure
+    // We'll never set a custom ID - let Docusaurus handle it automatically
+    let documentId = null;
     
     // Manually construct frontmatter to avoid problematic YAML syntax
     const frontmatter = {
-      id: meta.id || 'untitled',
       title: meta.purpose || 'Specification',
       sidebar_label: meta.id || meta.purpose || 'Specification',
       description: meta.purpose || 'SpecPlane specification',
@@ -129,6 +132,11 @@ class MarkdownGenerator {
       toc_min_heading_level: 2,
       toc_max_heading_level: 3
     };
+    
+    // Only include id if explicitly provided
+    if (documentId) {
+      frontmatter.id = documentId;
+    }
     
     // Manually construct YAML frontmatter to avoid js-yaml.dump() issues
     let yamlContent = '---\n';
@@ -552,24 +560,55 @@ class MarkdownGenerator {
   }
 
   /**
-   * Generate sidebar configuration for Docusaurus
+   * Generate sidebar configuration for Docusaurus with proper subsections
    */
   generateSidebarConfig(convertedFiles) {
-    // Filter out intro.md and sort the rest alphabetically
+    // Filter out intro and sort the rest alphabetically
     const specFiles = convertedFiles
-      .filter(file => file !== 'intro.md')
-      .map(file => file.replace('.md', ''))
+      .filter(file => file !== 'intro')
       .sort();
     
-    // Create sidebar configuration with intro first
+    // Group files by their directory structure
+    const subfolderFiles = specFiles.filter(file => file.includes('/'));
+    const rootFiles = specFiles.filter(file => !subfolderFiles.includes(file));
+    
+    // Group subfolder files by their parent directory
+    const subfolderGroups = {};
+    subfolderFiles.forEach(file => {
+      const parentDir = file.split('/')[0]; // e.g., "container.data_storage"
+      if (!subfolderGroups[parentDir]) {
+        subfolderGroups[parentDir] = [];
+      }
+      subfolderGroups[parentDir].push(file);
+    });
+    
+    // Build sidebar structure
+    const sidebarItems = ['intro'];
+    
+    // Add root-level files
+    sidebarItems.push(...rootFiles);
+    
+    // Add subfolder groups as subsections
+    Object.keys(subfolderGroups).sort().forEach(parentDir => {
+      // Create a nice label for the category
+      const categoryLabel = parentDir.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      sidebarItems.push({
+        type: 'category',
+        label: categoryLabel,
+        items: subfolderGroups[parentDir].sort()
+      });
+    });
+    
+    // Create sidebar configuration
     const sidebarConfig = {
-      tutorialSidebar: ['intro', ...specFiles]
+      tutorialSidebar: sidebarItems
     };
     
     return `import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-// Auto-generated sidebar configuration
-// intro.md is always first, followed by converted spec files
+// Auto-generated sidebar configuration with subsections
+// intro.md is first, followed by root files, then subfolder categories
 const sidebars: SidebarsConfig = ${JSON.stringify(sidebarConfig, null, 2)};
 
 export default sidebars;`;
