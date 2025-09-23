@@ -20,7 +20,7 @@ class MarkdownGenerator {
   /**
    * Generate complete markdown from SpecPlane data
    */
-  async generateMarkdown(specData, outputPath) {
+  async generateMarkdown(specData, outputPath, originalFilePath) {
     try {
       this.logger.debug('Generating markdown for specification');
       
@@ -89,7 +89,7 @@ class MarkdownGenerator {
       }
       
       // 7. Specs YAML section (at the end)
-      sections.push(this.generateSpecsYamlSection(specData));
+      sections.push(this.generateSpecsYamlSection(specData, originalFilePath));
       
       // Combine all sections
       const markdown = sections.join('\n\n');
@@ -489,8 +489,19 @@ class MarkdownGenerator {
   /**
    * Generate specs YAML section
    */
-  generateSpecsYamlSection(specData) {
+  generateSpecsYamlSection(specData, originalFilePath) {
     let markdown = '## Specs YAML\n\n';
+    
+    // Add link to original spec file if available
+    if (originalFilePath) {
+      const gitInfo = this.getGitInfo(originalFilePath);
+      if (gitInfo) {
+        markdown += `**Source:** [${path.basename(originalFilePath)}](${gitInfo.url})\n\n`;
+      } else {
+        markdown += `**Source:** \`${originalFilePath}\`\n\n`;
+      }
+    }
+    
     markdown += '```yaml\n';
     
     try {
@@ -501,7 +512,7 @@ class MarkdownGenerator {
         lineWidth: 120,
         noRefs: true,
         noCompatMode: true,
-        sortKeys: true
+        sortKeys: false
       });
     } catch (error) {
       markdown += `# Error serializing YAML: ${error.message}\n`;
@@ -513,6 +524,73 @@ class MarkdownGenerator {
     return markdown;
   }
 
+
+  /**
+   * Get Git repository information for a file
+   */
+  getGitInfo(filePath) {
+    try {
+      const fs = require('fs');
+      const { execSync } = require('child_process');
+      
+      // Check if we're in a git repository
+      const gitDir = this.findGitRoot(path.dirname(filePath));
+      if (!gitDir) return null;
+      
+      // Get remote origin URL
+      const remoteUrl = execSync('git config --get remote.origin.url', { 
+        cwd: gitDir, 
+        encoding: 'utf8' 
+      }).trim();
+      
+      if (!remoteUrl) return null;
+      
+      // Convert SSH URL to HTTPS if needed
+      let httpsUrl = remoteUrl;
+      if (remoteUrl.startsWith('git@')) {
+        httpsUrl = remoteUrl
+          .replace('git@github.com:', 'https://github.com/')
+          .replace('git@gitlab.com:', 'https://gitlab.com/')
+          .replace('git@bitbucket.org:', 'https://bitbucket.org/')
+          .replace('.git', '');
+      }
+      
+      // Get current branch
+      const branch = execSync('git rev-parse --abbrev-ref HEAD', { 
+        cwd: gitDir, 
+        encoding: 'utf8' 
+      }).trim();
+      
+      // Get relative path from git root
+      const gitRoot = gitDir;
+      const relativePath = path.relative(gitRoot, filePath);
+      
+      return {
+        url: `${httpsUrl}/blob/${branch}/${relativePath}`,
+        branch,
+        relativePath
+      };
+    } catch (error) {
+      this.logger.debug(`Could not get git info for ${filePath}: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Find git root directory
+   */
+  findGitRoot(startPath) {
+    const fs = require('fs');
+    let currentPath = startPath;
+    
+    while (currentPath !== path.dirname(currentPath)) {
+      if (fs.existsSync(path.join(currentPath, '.git'))) {
+        return currentPath;
+      }
+      currentPath = path.dirname(currentPath);
+    }
+    return null;
+  }
 
   /**
    * Generate anchor link from heading text

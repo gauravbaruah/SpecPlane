@@ -32,7 +32,7 @@ class Spec2MDConverter {
       }
       
       // Generate markdown
-      const markdownContent = await this.markdownGenerator.generateMarkdown(parsedData.data, outputPath);
+      const markdownContent = await this.markdownGenerator.generateMarkdown(parsedData.data, outputPath, inputPath);
       
       // Ensure output directory exists
       const outputDir = path.dirname(outputPath);
