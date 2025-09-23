@@ -45,14 +45,18 @@ contracts:
     - "Output markdown to .specplane/specs_viewer/docs directory"
     - "Preserve file paths and directory hierarchy in output"
     - "Generate Docusaurus-compatible markdown with frontmatter"
+    - "Track original file paths for Git integration and source linking"
+    - "Generate dynamic sidebar configurations based on directory structure"
+    - "Preserve original YAML formatting and key order in output"
   
   apis:
     - "convertFile(inputPath, outputPath) -> Promise<ConversionResult>"
     - "convertDirectory(inputDir, outputDir) -> Promise<BatchConversionResult>"
     - "validateSpec(yamlContent) -> ValidationResult"
-    - "generateMarkdown(specData) -> string"
+    - "generateMarkdown(specData, outputPath, originalFilePath) -> string"
     - "ensureOutputDirectory(outputPath) -> Promise<void>"
     - "processFile(inputPath, outputPath) -> Promise<ConversionResult>"
+    - "generateSidebarConfig(convertedFiles) -> string"
   
   integrations:
     - "File System APIs - For reading YAML and writing Markdown"
@@ -61,6 +65,8 @@ contracts:
     - "Mermaid Diagram Generation - For relationship visualization"
     - "Logger utility - For operation logging and error reporting"
     - "Path utilities - For directory structure management"
+    - "Git integration - For source link generation and repository detection"
+    - "Sidebar generation - For dynamic Docusaurus navigation configuration"
   
   events:
     - "file_conversion_started: {input_path, timestamp}"
@@ -68,6 +74,8 @@ contracts:
     - "validation_error: {file_path, error_type, error_message, line_number}"
     - "conversion_warning: {file_path, warning_type, warning_message}"
     - "batch_conversion_completed: {total_files, successful, failed, total_time}"
+    - "sidebar_generated: {sidebar_path, file_count, category_count, timestamp}"
+    - "original_file_tracked: {input_path, output_path, timestamp}"
 
 dependencies:
   internal:
@@ -79,6 +87,8 @@ dependencies:
     - "marked or markdown-it - For Markdown generation"
     - "fs/promises - For file system operations"
     - "path - For path manipulation and directory structure"
+    - "Git command line tools - For repository information detection"
+    - "File system access - For reading original YAML files"
 
 constraints:
   performance:
@@ -146,6 +156,9 @@ validation:
     - "Relationship diagrams are generated and embedded"
     - "Error handling provides clear feedback for malformed files"
     - "Warnings are documented in the generated markdown"
+    - "Original file paths are tracked and passed to markdown generator"
+    - "Sidebar configuration is generated with dynamic directory-based labels"
+    - "YAML formatting is preserved from original files"
   
   edge_cases:
     - "YAML files with complex nested structures and circular references"
@@ -154,12 +167,18 @@ validation:
     - "Files with special characters or non-UTF-8 encoding"
     - "Concurrent processing of multiple files"
     - "Files with embedded binary content or large diagrams"
+    - "Directory structures with complex naming conventions"
+    - "YAML files that cannot be read for original formatting"
+    - "Git repositories without proper remote configuration"
   
   assumptions:
     - "Input YAML files follow SpecPlane schema conventions"
     - "File system has sufficient storage for generated markdown"
     - "YAML content is well-formed and parseable"
     - "Output directory structure can be created"
+    - "Original YAML files remain accessible during conversion"
+    - "Directory structure follows consistent naming patterns"
+    - "Git repositories have proper configuration when source links are needed"
   
   readiness: "draft"
   open_questions:
@@ -167,6 +186,9 @@ validation:
     - "How should we handle very large embedded diagrams or content?"
     - "What level of validation should be performed on cross-references?"
     - "Should we implement caching for frequently accessed specifications?"
+    - "How should we handle sidebar generation for deeply nested directory structures?"
+    - "What fallback behavior should we use when original YAML files are inaccessible?"
+    - "Should we support custom sidebar labeling strategies?"
 
 implementation_hints:
   api:
@@ -177,7 +199,7 @@ implementation_hints:
   
   web:
     output: ["Markdown files", "Mermaid diagrams", "Cross-reference links"]
-    formatting: ["Consistent section structure", "Proper heading hierarchy", "Table of contents"]
+    formatting: ["Consistent section structure", "Proper heading hierarchy", "Clean spacing"]
 
 evidence:
   user_research: "Feedback on current SpecPlane documentation limitations"

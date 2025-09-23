@@ -19,41 +19,50 @@ contracts:
     - "Structure contracts section with clear behavioral definitions and inline code for event data"
     - "Format validation section with acceptance criteria and edge cases"
     - "Create clickable references and cross-references"
-    - "Generate table of contents with up to level-3 headings using robust anchor generation"
     - "Maintain consistent formatting and styling across all sections"
     - "Handle special characters and embedded content properly"
     - "Generate sections in specific order: Meta, Diagrams (with relationships), Contracts, Validation, Other, References, Specs YAML"
     - "Include complete YAML specification as code block at the end of markdown"
     - "Create default relationships diagram when no diagrams are present"
     - "Format meta fields as bulleted list with bold labels"
+    - "Generate GitHub source links in meta section for original spec files"
+    - "Preserve original YAML formatting, spacing, and key order from source files"
+    - "Integrate with Git repositories to detect remote URLs and current branches"
+    - "Use original YAML file content directly instead of re-serializing to maintain authenticity"
   
   apis:
-    - "generateMarkdown(specData: SpecPlaneData) -> string"
-    - "generateFrontmatter(meta: MetaData) -> string"
-    - "generateMetaSection(meta: MetaData) -> string"
+    - "generateMarkdown(specData: SpecPlaneData, outputPath: string, originalFilePath: string) -> string"
+    - "generateFrontmatter(meta: MetaData, outputPath: string) -> string"
+    - "generateMetaSection(meta: MetaData, originalFilePath: string) -> string"
     - "generateRelationshipDiagram(relationships: Relationships) -> string"
     - "generateDiagramsSection(diagrams: Diagram[]) -> string"
     - "generateContractsSection(contracts: Contracts) -> string"
     - "generateValidationSection(validation: Validation) -> string"
     - "generateReferencesSection(refs: References) -> string"
-    - "generateTableOfContents(sections: Section[]) -> string"
     - "generateDefaultRelationshipsDiagram(specData: SpecPlaneData) -> string"
     - "generateGenericSection(key: string, value: any) -> string"
-    - "generateSpecsYamlSection(specData: SpecPlaneData) -> string"
+    - "generateSpecsYamlSection(specData: SpecPlaneData, originalFilePath: string) -> string"
     - "generateAnchor(text: string) -> string"
     - "capitalizeFirst(text: string) -> string"
+    - "getGitInfo(filePath: string) -> GitInfo | null"
+    - "findGitRoot(startPath: string) -> string | null"
   
   integrations:
     - "Mermaid diagram generation - For relationship and architecture diagrams"
     - "Markdown formatting libraries - For consistent output styling"
     - "Reference resolution system - For cross-linking between specifications"
     - "Template engine - For consistent section formatting"
+    - "Git integration - For detecting repository information and generating source links"
+    - "File system access - For reading original YAML files to preserve formatting"
+    - "js-yaml library - For YAML parsing with key order preservation"
   
   events:
     - "markdown_generation_started: {spec_id, generation_time, timestamp}"
     - "section_generated: {spec_id, section_name, content_length, timestamp}"
     - "diagram_rendered: {spec_id, diagram_type, diagram_size, timestamp}"
     - "references_resolved: {spec_id, refs_count, cross_refs_count, timestamp}"
+    - "git_info_detected: {spec_id, git_url, branch, timestamp}"
+    - "original_yaml_preserved: {spec_id, file_path, content_length, timestamp}"
     - "markdown_completed: {spec_id, total_sections, total_size, generation_time}"
 
 dependencies:
@@ -65,6 +74,9 @@ dependencies:
     - "Markdown formatting libraries - For consistent output"
     - "Mermaid diagram libraries - For diagram generation"
     - "Template engines - For section formatting"
+    - "js-yaml library - For YAML parsing and serialization"
+    - "Git command line tools - For repository information detection"
+    - "File system APIs - For reading original YAML files"
 
 constraints:
   performance:
@@ -129,14 +141,16 @@ observability:
 validation:
   acceptance_criteria:
     - "Markdown output follows specified section order and structure"
-    - "Meta section appears first with all key information"
+    - "Meta section appears first with all key information and source links"
     - "Relationship diagrams are properly embedded as Mermaid code blocks"
     - "All sections maintain proper heading hierarchy (H1, H2, H3)"
     - "References are clickable and properly formatted"
-    - "Table of contents includes up to level-2 headings"
     - "Generated markdown renders correctly in Docusaurus"
     - "Cross-references between specifications work properly"
     - "Output maintains consistent formatting and styling"
+    - "Source links in meta section point to correct GitHub URLs"
+    - "YAML section preserves original formatting and key order"
+    - "Git integration works for repositories with remote URLs"
   
   edge_cases:
     - "Specifications with missing or incomplete sections"
@@ -145,12 +159,19 @@ validation:
     - "Special characters and non-ASCII content"
     - "Circular references between specifications"
     - "Very large diagrams or embedded content"
+    - "YAML files with complex formatting that must be preserved"
+    - "Git repositories without remote URLs or in detached HEAD state"
+    - "Original YAML files that cannot be read or are corrupted"
+    - "YAML files with special characters in file paths"
   
   assumptions:
     - "Input SpecPlane data is well-structured and validated"
     - "Mermaid diagram syntax is supported by target rendering system"
     - "File system has sufficient storage for generated markdown"
     - "Cross-references point to valid specification files"
+    - "Original YAML files are accessible and readable"
+    - "Git repositories have proper remote configuration when source links are needed"
+    - "YAML files maintain consistent formatting that should be preserved"
   
   readiness: "draft"
   open_questions:
@@ -158,6 +179,9 @@ validation:
     - "How should we handle very long content sections?"
     - "What level of diagram customization should be supported?"
     - "Should we implement markdown validation before output?"
+    - "How should we handle Git repositories with multiple remotes?"
+    - "Should we support different YAML formatting preferences?"
+    - "What fallback behavior should we use when Git info is unavailable?"
 
 implementation_hints:
   api:
@@ -182,23 +206,25 @@ diagrams:
       description: "Complete flow from parsed data to formatted markdown output"
       mermaid: |
         flowchart TD
-            A[Parsed SpecPlane Data] --> B[Generate Meta Section]
-            B --> C[Generate Relationship Diagram]
-            C --> D[Generate Diagrams Section]
-            D --> E[Generate Contracts Section]
-            E --> F[Generate Validation Section]
-            F --> G[Generate Other Sections]
-            G --> H[Generate References Section]
-            H --> I[Generate Table of Contents]
-            I --> J[Apply Final Formatting]
-            J --> K[Output Markdown File]
+            A[Parsed SpecPlane Data] --> B[Detect Git Repository]
+            B --> C[Generate Meta Section with Source Link]
+            C --> D[Generate Relationship Diagram]
+            D --> E[Generate Diagrams Section]
+            E --> F[Generate Contracts Section]
+            F --> G[Generate Validation Section]
+            G --> H[Generate Other Sections]
+            H --> I[Generate References Section]
+            I --> J[Generate Specs YAML with Original Formatting]
+            J --> K[Apply Final Formatting]
+            K --> L[Output Markdown File]
             
             style B fill:#e1f5fe
             style C fill:#e1f5fe
             style D fill:#e1f5fe
             style E fill:#e1f5fe
             style F fill:#e1f5fe
-            style K fill:#c8e6c9
+            style J fill:#fff3e0
+            style L fill:#c8e6c9
   
   state:
     - title: "Section Generation States"
@@ -206,18 +232,21 @@ diagrams:
       mermaid: |
         stateDiagram-v2
             [*] --> Initializing
-            Initializing --> MetaSection
+            Initializing --> GitDetection
+            GitDetection --> MetaSection
             MetaSection --> RelationshipDiagram
             RelationshipDiagram --> DiagramsSection
             DiagramsSection --> ContractsSection
             ContractsSection --> ValidationSection
             ValidationSection --> OtherSections
             OtherSections --> ReferencesSection
-            ReferencesSection --> TableOfContents
-            TableOfContents --> Finalizing
+            ReferencesSection --> SpecsYaml
+            SpecsYaml --> Finalizing
             Finalizing --> [*]
             
+            GitDetection --> Error : Git Detection Failed
             MetaSection --> Error : Generation Failed
             RelationshipDiagram --> Error : Diagram Failed
             DiagramsSection --> Error : Section Failed
+            SpecsYaml --> Error : YAML Processing Failed
             Error --> [*]

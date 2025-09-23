@@ -71,6 +71,10 @@ contracts:
     - "Redirect root path to /intro page for better user experience"
     - "Copy SpecPlane logo to static assets during setup"
     - "Generate markdown with specific section ordering and YAML source inclusion"
+    - "Generate GitHub source links in meta sections for original spec files"
+    - "Preserve original YAML formatting, spacing, and key order from source files"
+    - "Create dynamic sidebar configurations based on directory structure"
+    - "Integrate with Git repositories for source link generation"
   
   apis:
     - "YAML Input: Accept SpecPlane YAML files for processing"
@@ -82,13 +86,18 @@ contracts:
     - "File System APIs - For reading YAML and writing markdown files"
     - "Markdown Processing - For YAML to markdown transformation"
     - "Docusaurus CLI - For static site generation and serving"
-    - "Git Integration - For version control and deployment"
+    - "Git Integration - For version control, deployment, and source link generation"
+    - "YAML Processing - For preserving original formatting and key order"
+    - "Sidebar Generation - For dynamic navigation configuration"
   
   events:
     - "specification_processed: {file_path, conversion_time, output_path, status}"
     - "documentation_generated: {site_path, generation_time, file_count, status}"
     - "deployment_completed: {environment, deployment_time, url, status}"
     - "error_occurred: {component, error_type, error_message, timestamp}"
+    - "source_link_generated: {file_path, git_url, branch, timestamp}"
+    - "sidebar_updated: {sidebar_path, file_count, category_count, timestamp}"
+    - "yaml_formatting_preserved: {file_path, original_size, preserved_size, timestamp}"
 
 dependencies:
   internal:
@@ -166,6 +175,10 @@ validation:
     - "Conversion process handles edge cases and malformed YAML gracefully"
     - "Generated documentation maintains specification structure and relationships"
     - "Site deployment and updates are automated and reliable"
+    - "Source links in meta sections point to correct GitHub URLs"
+    - "YAML sections preserve original formatting and key order"
+    - "Sidebar navigation reflects actual directory structure with dynamic labels"
+    - "Git integration works for repositories with proper remote configuration"
   
   edge_cases:
     - "YAML files with complex nested structures and references"
@@ -173,12 +186,19 @@ validation:
     - "Very large specification files (>1MB)"
     - "YAML files with syntax errors or invalid SpecPlane schema"
     - "Concurrent processing of multiple specification files"
+    - "Git repositories without remote URLs or in detached HEAD state"
+    - "YAML files with complex formatting that must be preserved"
+    - "Directory structures with unconventional naming patterns"
+    - "Original YAML files that cannot be read or are corrupted"
   
   assumptions:
     - "Input YAML files follow SpecPlane schema conventions"
     - "File system has sufficient storage for generated markdown and site"
     - "Network connectivity is available for external dependencies"
     - "Docusaurus framework remains stable and supported"
+    - "Original YAML files remain accessible during conversion"
+    - "Git repositories have proper remote configuration when source links are needed"
+    - "Directory structures follow consistent naming patterns for sidebar generation"
   
   readiness: "draft"
   open_questions:
@@ -187,6 +207,9 @@ validation:
     - "How should we handle specification file dependencies and relationships?"
     - "What backup and rollback strategies are needed for the documentation site?"
     - "Should we implement search functionality beyond Docusaurus defaults?"
+    - "How should we handle Git repositories with multiple remotes for source links?"
+    - "What fallback behavior should we use when original YAML files are inaccessible?"
+    - "Should we support custom sidebar labeling strategies beyond directory names?"
 
 implementation_hints:
   web:
