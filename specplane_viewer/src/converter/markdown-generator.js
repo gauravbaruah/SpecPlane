@@ -91,9 +91,6 @@ class MarkdownGenerator {
       // 7. Specs YAML section (at the end)
       sections.push(this.generateSpecsYamlSection(specData));
       
-      // Add table of contents
-      sections.push(this.generateTableOfContents(sections));
-      
       // Combine all sections
       const markdown = sections.join('\n\n');
       
@@ -516,45 +513,6 @@ class MarkdownGenerator {
     return markdown;
   }
 
-  /**
-   * Generate table of contents
-   */
-  generateTableOfContents(sections) {
-    let markdown = '# Table of Contents\n\n';
-    
-    // Extract headings from sections (up to level 3)
-    const headings = [];
-    
-    for (const section of sections) {
-      const lines = section.split('\n');
-      for (const line of lines) {
-        if (line.startsWith('# ')) {
-          // H1 header - main section
-          const title = line.substring(2);
-          const anchor = this.generateAnchor(title);
-          headings.push(`- [${title}](#${anchor})`);
-        } else if (line.startsWith('## ')) {
-          // H2 header - subsection
-          const title = line.substring(3);
-          const anchor = this.generateAnchor(title);
-          headings.push(`  - [${title}](#${anchor})`);
-        } else if (line.startsWith('### ')) {
-          // H3 header - sub-subsection
-          const title = line.substring(4);
-          const anchor = this.generateAnchor(title);
-          headings.push(`    - [${title}](#${anchor})`);
-        }
-      }
-    }
-    
-    if (headings.length > 0) {
-      markdown += headings.join('\n');
-    } else {
-      markdown += '*No headings found*';
-    }
-    
-    return markdown;
-  }
 
   /**
    * Generate anchor link from heading text
