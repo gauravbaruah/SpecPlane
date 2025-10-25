@@ -148,9 +148,9 @@ class MarkdownGenerator {
     let yamlContent = '---\n';
     
     if (frontmatter.id) yamlContent += `id: ${frontmatter.id}\n`;
-    if (frontmatter.title) yamlContent += `title: ${frontmatter.title}\n`;
+    if (frontmatter.title) yamlContent += `title: "${frontmatter.title}"\n`;
     if (frontmatter.sidebar_label) yamlContent += `sidebar_label: ${frontmatter.sidebar_label}\n`;
-    if (frontmatter.description) yamlContent += `description: ${frontmatter.description}\n`;
+    if (frontmatter.description) yamlContent += `description: "${frontmatter.description}"\n`;
     if (frontmatter.keywords && frontmatter.keywords.length > 0) {
       yamlContent += `keywords:\n`;
       frontmatter.keywords.forEach(keyword => {

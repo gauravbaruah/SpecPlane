@@ -1,9 +1,9 @@
 meta:
-  purpose: "Provide command-line interface for orchestrating the SpecPlane to Markdown to Docusaurus workflow, including file watching, conversion triggering, and Docusaurus configuration"
+  purpose: "Provide command-line interface for orchestrating the SpecPlane 3-step workflow: setup, convert, and start Docusaurus server with intelligent directory detection"
   type: "container"
   level: "container"
   domain: "documentation"
-  status: "draft"
+  status: "active"
   last_updated: "2025-01-15"
   version: "0.1.0"
   id: "container.cli_interface"
@@ -18,52 +18,56 @@ container_architecture:
 relationships:
   depends_on:
     - "spec2md_converter - For YAML to Markdown conversion"
+    - "docusaurus_handler - For Docusaurus project lifecycle management"
+    - "file_watcher - For monitoring directory changes"
     - "File system access - For watching and processing files"
     - "Node.js runtime - For CLI execution and file watching"
   
   used_by:
-    - "End users - For running conversion commands"
+    - "End users - For running the 3-step workflow (setup, convert, start)"
     - "Developers - For local development and testing"
     - "CI/CD systems - For automated documentation generation"
   
   integrates_with:
-    - "File system - For watching directory changes"
+    - "File system - For intelligent directory detection and file operations"
     - "Terminal - For user interaction and output"
     - "Process management - For running Docusaurus commands"
     - "Configuration files - For Docusaurus setup"
   
   contains:
     - "file_watcher - Component for monitoring directory changes"
-    - "command_line_handler - Component for processing CLI arguments and commands"
     - "docusaurus_handler - Component for configuring and setting up Docusaurus"
 
 contracts:
   capabilities:
     - "Process command-line arguments and options (convert, setup, start, stop, status, help)"
+    - "Intelligently detect specs directories using priority order (explicit path, current directory, specs subdirectory)"
+    - "Intelligently detect .specplane directories for Docusaurus project setup"
+    - "Convert YAML specs to Markdown in .specplane/specs_viewer/docs directory"
+    - "Setup Docusaurus project with proper configuration and validation"
+    - "Start Docusaurus development server with specified port"
+    - "Stop Docusaurus development server gracefully"
+    - "Check server status and provide detailed information"
     - "Watch specified directories for YAML file changes with 2-second debouncing"
-    - "Trigger YAML to Markdown conversion on file changes"
-    - "Set up Docusaurus configuration for markdown serving with proper routing"
-    - "Run Docusaurus build and serve commands from correct working directory"
+    - "Trigger YAML to Markdown conversion on file changes during watch mode"
     - "Provide real-time feedback on conversion progress with comprehensive logging"
     - "Handle errors gracefully with helpful user messages and dependency guidance"
     - "Support both single-file and batch processing modes"
     - "Automatically handle file naming conflicts and routing issues"
     - "Provide comprehensive JSONL logging for all operations"
-    - "Manage Docusaurus server lifecycle (start/stop/status)"
-    - "Convert specs to markdown in .specplane/specs_viewer/docs directory"
-    - "Setup Docusaurus project with user confirmation and backup"
+    - "Cleanup resources on process termination (SIGINT, SIGTERM)"
   
   apis:
-    - "serve(directory, options) -> Promise<void>"
     - "convert(specsDirectory, options) -> Promise<void>"
     - "setup(projectDirectory, options) -> Promise<void>"
     - "startServer(options) -> Promise<void>"
     - "stopServer() -> Promise<void>"
-    - "getServerStatus() -> ServerStatus"
-    - "watchDirectory(path, callback) -> Watcher"
-    - "processCommand(args) -> CommandResult"
-    - "setupDocusaurus(config) -> SetupResult"
-    - "runDocusaurusCommand(command) -> ProcessResult"
+    - "serverStatus() -> Promise<ServerStatus>"
+    - "startWatching(specsPath, outputPath) -> Promise<void>"
+    - "stopWatching() -> Promise<void>"
+    - "detectSpecsDirectory(explicitPath?) -> Promise<string>"
+    - "detectSpecPlaneDirectory(explicitPath?) -> Promise<string>"
+    - "cleanup() -> Promise<void>"
   
   integrations:
     - "Commander.js - For command-line argument parsing"
@@ -87,8 +91,7 @@ contracts:
 dependencies:
   internal:
     - "file_watcher - For monitoring directory changes"
-    - "command_line_handler - For processing CLI commands"
-    - "docusaurus_handler - For Docusaurus configuration"
+    - "docusaurus_handler - For Docusaurus configuration and lifecycle management"
     - "spec2md_converter - For triggering conversions"
   
   external:
@@ -219,41 +222,61 @@ diagrams:
             title CLI Interface Container
             
             Container_Boundary(cli_interface, "CLI Interface Container") {
-                Component(command_handler, "Command Line Handler", "JavaScript", "Processes CLI arguments and commands")
                 Component(file_watcher, "File Watcher", "JavaScript", "Monitors directory for file changes")
                 Component(docusaurus_handler, "Docusaurus Handler", "JavaScript", "Configures and sets up Docusaurus")
+                Component(cli_logic, "CLI Logic", "JavaScript", "Orchestrates 3-step workflow and intelligent directory detection")
             }
             
             Container_Ext(spec2md_converter, "Spec2MD Converter", "YAML to Markdown conversion")
             Container_Ext(terminal, "Terminal", "User interface and output")
             Container_Ext(file_system, "File System", "Directory watching and file processing")
+            Container_Ext(commander, "Commander.js", "Command-line argument parsing")
             
-            Rel(command_handler, terminal, "Receives commands from and provides output to")
+            Rel(cli_logic, terminal, "Receives commands from and provides output to")
+            Rel(cli_logic, commander, "Uses for argument parsing")
             Rel(file_watcher, file_system, "Watches for changes in")
             Rel(file_watcher, spec2md_converter, "Triggers conversion in")
-            Rel(command_handler, docusaurus_handler, "Instructs to setup")
+            Rel(cli_logic, docusaurus_handler, "Instructs to setup and start server")
+            Rel(cli_logic, spec2md_converter, "Triggers conversions")
             Rel(docusaurus_handler, file_system, "Creates configuration files in")
   
   sequence:
-    - title: "CLI Command Execution Flow"
-      description: "Complete flow from command input to execution completion"
+    - title: "3-Step CLI Workflow"
+      description: "Complete flow from setup through convert to start server"
       mermaid: |
         sequenceDiagram
             participant User as User
             participant CLI as CLI Interface
-            participant Handler as Command Handler
-            participant Watcher as File Watcher
             participant Converter as Spec2MD Converter
             participant Docusaurus as Docusaurus Handler
+            participant Watcher as File Watcher
             
-            User->>CLI: specplane serve ./specs --watch
-            CLI->>Handler: parseCommand(arguments)
-            Handler-->>CLI: parsed command + options
+            Note over User,Watcher: Step 1: Setup Docusaurus Project
+            User->>CLI: specplane_viewer setup
+            CLI->>CLI: detectSpecPlaneDirectory()
+            CLI->>Docusaurus: setupProject(projectPath, options)
+            Docusaurus-->>CLI: setup completed
+            CLI-->>User: Docusaurus project ready
             
-            alt serve command
-                CLI->>Docusaurus: setupDocusaurus(config)
-                Docusaurus-->>CLI: setup completed
-                CLI->>Watcher: watchDirectory(./specs)
+            Note over User,Watcher: Step 2: Convert YAML to Markdown
+            User->>CLI: specplane_viewer convert ./specs
+            CLI->>CLI: detectSpecsDirectory(./specs)
+            CLI->>Converter: convertDirectory(specsPath, outputPath)
+            Converter-->>CLI: conversion completed
+            CLI-->>User: Markdown files generated
+            
+            Note over User,Watcher: Step 3: Start Development Server
+            User->>CLI: specplane_viewer start --port 3001
+            CLI->>CLI: detectSpecPlaneDirectory()
+            CLI->>Docusaurus: validateProjectSetup()
+            Docusaurus-->>CLI: validation passed
+            CLI->>Docusaurus: startDevServer(port)
+            Docusaurus-->>CLI: server started
+            CLI-->>User: Server running on port 3001
+            
+            Note over User,Watcher: Optional: Watch Mode (if implemented)
+            alt watch mode enabled
+                CLI->>Watcher: startWatching(specsPath, outputPath)
                 Watcher-->>CLI: watching started
                 
                 loop file changes
@@ -262,27 +285,28 @@ diagrams:
                     Watcher->>CLI: file processed
                 end
             end
-            
-            CLI-->>User: command completed successfully
   
   user_journey:
-    - title: "CLI User Experience Journey"
-      description: "End-to-end user experience with the CLI interface"
+    - title: "3-Step CLI User Experience Journey"
+      description: "End-to-end user experience with the 3-step CLI workflow"
       mermaid: |
         journey
-            title CLI User Experience
-            section Command Input
-              Type command with options    : 5: User
-              See command validation      : 4: User
-              Get confirmation feedback   : 4: User
-            section File Processing
-              Watch conversion progress   : 3: User
-              See real-time updates      : 4: User
-              Handle any errors          : 2: User
-            section Docusaurus Setup
-              Wait for configuration     : 3: User
-              See setup completion       : 4: User
-              Access generated docs      : 5: User
+            title 3-Step CLI User Experience
+            section Step 1: Setup
+              Run setup command          : 4: User
+              See directory detection    : 4: User
+              Wait for Docusaurus setup  : 3: User
+              Get setup confirmation     : 5: User
+            section Step 2: Convert
+              Run convert command        : 4: User
+              See specs directory found  : 4: User
+              Watch conversion progress  : 3: User
+              See conversion completion  : 5: User
+            section Step 3: Start
+              Run start command          : 4: User
+              See server starting        : 4: User
+              Access documentation       : 5: User
+              Browse generated docs      : 5: User
 
 refs:
   commander_js:
