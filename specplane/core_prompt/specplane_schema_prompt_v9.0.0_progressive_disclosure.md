@@ -254,7 +254,22 @@ meta:
   tags: []         # e.g., ["auth", "security", "legal", "growth"]
   status: "planned|in_progress|launched|deprecated"
   last_updated: "YYYY-MM-DD"
-  version: ""
+  version: ""      # Semver: MAJOR.MINOR.PATCH
+                   # MAJOR → breaking change to responsibilities, flows, or constraints
+                   # MINOR → additive (new flow, new constraint, new success metric)
+                   # PATCH → correction, clarification, or ref update
+  review_state: "unreviewed|pm_approved|eng_approved|legal_reviewed|shipped"
+  # unreviewed    → freshly created, not yet reviewed by any stakeholder
+  # pm_approved   → PM has signed off on responsibilities, flows, and business_value
+  # eng_approved  → Tech Lead has signed off on realized_by and feasibility
+  # legal_reviewed → Legal/Compliance has reviewed constraints (required for legal/security caps)
+  # shipped       → Capability is live; spec reflects production behaviour
+
+changelog:
+  - date: "YYYY-MM-DD"
+    author: ""
+    summary: ""    # e.g., "Added Token refresh flow; tightened PKCE constraint"
+    breaking: false  # true if this change alters responsibilities, flows, or public contracts
 
 # ── PHASE 1: PM-OWNED (Required) ───────────────────────────────────
 
@@ -348,7 +363,20 @@ meta:
   tags: []
   status: "draft|active|deprecated|archived"
   last_updated: "YYYY-MM-DD"
-  version: ""
+  version: ""      # Semver: MAJOR.MINOR.PATCH
+                   # MAJOR → breaking change (renamed field, removed rule, changed convention)
+                   # MINOR → additive (new rule, new token, new guidance)
+                   # PATCH → correction or clarification
+  review_state: "unreviewed|approved|deprecated"
+  # unreviewed → draft, not yet reviewed by the owning team
+  # approved   → reviewed and accepted as the active standard
+  # deprecated → superseded; consumers should migrate to the replacement
+
+changelog:
+  - date: "YYYY-MM-DD"
+    author: ""
+    summary: ""
+    breaking: false
 
 # What this foundation provides to those who use it
 provides:
@@ -382,10 +410,19 @@ meta:
   tags: []
   status: "draft|active|deprecated|archived"
   last_updated: "YYYY-MM-DD"
-  version: ""
-
+  version: ""     # Semver: MAJOR.MINOR.PATCH
+                  # MAJOR → breaking interface change (renamed/removed input, output, or API contract)
+                  # MINOR → additive (new capability, new endpoint, new event)
+                  # PATCH → documentation, correction, or non-breaking clarification
+  review_state: "unreviewed|pm_approved|eng_approved|legal_reviewed|shipped"
   type: "component|widget|service|agent|tool|workflow|tool_registry|state_store|evaluator|container|system"
   domain: "frontend|backend|mobile|infrastructure|ai|data|ai_native"
+
+changelog:
+  - date: "YYYY-MM-DD"
+    author: ""
+    summary: ""
+    breaking: false  # true if inputs, outputs, APIs, or contracts changed incompatibly
 
 # ── VALID level + type COMBINATIONS ────────────────────────────────
 # level: "capability"   → no type or domain field
@@ -574,6 +611,12 @@ implementation:
     assumptions: []
     readiness: "ready|blocked|unknown"
     open_questions: []
+    test_strategy:
+      unit: ""          # Key behaviors to cover and/or coverage target (e.g., ">90% on business logic")
+      integration: ""   # Key integration paths to test (e.g., "auth flow with token service")
+      e2e: ""           # Critical user journeys; link to Playwright/Cypress spec files if exists
+      # Note: detailed test specs belong in the QA Pack extension.
+      # This section captures intent and pointers — not the full test suite.
 
 # ============================================
 # AI CONFIG (for AI-native component types)
@@ -1128,6 +1171,52 @@ implementation:
    realized_by: ...
    ```
 
+9. **`meta.version` must be valid semver**
+   ```bash
+   # ✅ Valid
+   version: "1.0.0"
+   version: "2.3.1"
+
+   # ❌ Invalid
+   version: "v1"        # Missing minor and patch
+   version: "1.0"       # Missing patch
+   version: "draft"     # Not semver
+   ```
+
+10. **`changelog` required when `meta.version` changes**
+    ```yaml
+    # ✅ Valid — version bumped and changelog entry added
+    meta:
+      version: "1.1.0"
+    changelog:
+      - date: "2026-03-01"
+        author: "james"
+        summary: "Added Token refresh flow"
+        breaking: false
+
+    # ❌ Invalid — version bumped but no changelog entry for this date
+    meta:
+      version: "1.1.0"
+    changelog: []
+    ```
+
+11. **Breaking changes require `breaking: true` in changelog**
+    ```yaml
+    # ✅ Valid — API contract changed and flagged
+    changelog:
+      - date: "2026-03-01"
+        author: "dev"
+        summary: "Renamed /auth/login to /auth/session"
+        breaking: true
+
+    # ❌ Invalid — API renamed but breaking not flagged (CI should block this PR)
+    changelog:
+      - date: "2026-03-01"
+        author: "dev"
+        summary: "Renamed /auth/login to /auth/session"
+        breaking: false
+    ```
+
 ---
 
 ## 💡 Interactive Guidance Commands
@@ -1158,6 +1247,10 @@ implementation:
 - "Organize file structure" → Guide through folder hierarchy and naming
 - "Fix naming convention" → Correct file naming and meta.id consistency
 - "Set up agentic backend" → Walk through 3-container layout
+- "Bump the version" → Determine MAJOR/MINOR/PATCH based on what changed; add changelog entry
+- "Mark this spec as approved" → Guide through review_state progression for the spec's level
+- "What changed in this spec?" → Summarise changelog entries in plain English
+- "Is this a breaking change?" → Analyse contracts/APIs/interfaces; recommend breaking: true/false
 
 **C4 Architecture:**
 - "Create system context" → Guide through C4 Level 1 including capabilities[]
@@ -1176,6 +1269,8 @@ implementation:
 - "Add user flows" → Guide through actions, success, and error scenarios
 - "Define analytics events" → Help structure product analytics tracking
 - "Add monitoring" → Suggest metrics, SLOs, alerting
+- "Add test strategy" → Guide through unit/integration/e2e intent; link to test files
+- "What should I test here?" → Recommend test_strategy content based on contracts and edge_cases
 
 **Visualization:**
 - "Add sequence diagram" → Guide through interaction flow patterns
@@ -1213,7 +1308,8 @@ implementation:
 ### **Quality Checklist**
 
 Before marking a **capability** spec as `status: "launched"`:
-- [ ] `meta` complete (id, purpose, level, owner, status)
+- [ ] `meta` complete (id, purpose, level, owner, status, version)
+- [ ] `meta.review_state` is `pm_approved` at minimum; `legal_reviewed` if legal/security constraints present
 - [ ] `responsibilities` clearly list what this capability owns end-to-end
 - [ ] `flows` named (not just "login" but the full set: sign-up, refresh, logout, reset)
 - [ ] `business_value` has user_outcome AND objective
@@ -1221,28 +1317,34 @@ Before marking a **capability** spec as `status: "launched"`:
 - [ ] `success_metrics` has a primary metric (Phase 2)
 - [ ] `roadmap.depends_on` and `enables` populated (Phase 2)
 - [ ] `realized_by` populated (Phase 3, engineering-added)
+- [ ] `changelog` has at least one entry
 - [ ] End-to-end sequence diagram in `diagrams`
 - [ ] Refs link to relevant tickets and legal docs
 
 Before marking a **foundation** spec as `status: "active"`:
-- [ ] `meta` complete (id, purpose, level, owner, status)
+- [ ] `meta` complete (id, purpose, level, owner, status, version)
+- [ ] `meta.review_state` is `approved`
 - [ ] `provides` clearly lists what this foundation gives to consumers
 - [ ] `used_by` populated (containers and components that reference this)
 - [ ] Foundation-specific content fields filled in (not just placeholders)
 - [ ] `extends` set if this foundation builds on another
+- [ ] `changelog` has at least one entry
 - [ ] Refs link to relevant external standards, tickets, or design documents
 
 Before marking a **component or container** as `status: "active"`:
 - [ ] `implements` field present with capability ID(s)
 - [ ] `uses` field present with foundation ID(s) where applicable
-- [ ] Meta fields complete (id, purpose, level, owner)
+- [ ] `meta` complete (id, purpose, level, owner, version)
+- [ ] `meta.review_state` is `eng_approved` at minimum
 - [ ] File naming and location correct
 - [ ] Behavioral contracts defined
 - [ ] Observability instrumented (metrics, SLOs, alerting)
 - [ ] Security constraints documented
 - [ ] Acceptance criteria measurable
+- [ ] `validation.test_strategy` filled in (unit, integration, e2e intent)
 - [ ] Edge cases considered
 - [ ] Assumptions listed
+- [ ] `changelog` has at least one entry
 - [ ] Relationships to other specs defined
 
 For **AI-native specs** (when meta.type is agent/tool/workflow/tool_registry/evaluator):
@@ -1265,5 +1367,8 @@ For AI-native components, make the **orchestration / computation / structure** s
 The full traceability chain:
 ```
 Capability → System → Container → Component → Observability → Analytics
+    ↕               ↕                  ↕
+review_state    changelog          test_strategy
+(who approved)  (what changed)     (how it's verified)
 ```
-That chain closes the PM ↔ Engineering loop.
+That chain closes the PM ↔ Engineering ↔ QA ↔ Audit loop.
