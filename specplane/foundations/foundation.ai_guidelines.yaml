@@ -1,0 +1,50 @@
+# ============================================
+# FOUNDATION: AI Guidelines
+# ============================================
+meta:
+  id: "foundation.ai_guidelines"
+  purpose: "Define prompt conventions, safety rules, PII handling in LLM calls, and hallucination response policy"
+  level: "foundation"
+  owner: ""
+  tags: ["ai", "llm", "safety", "prompts", "conventions"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Prompt tone and output format standards"
+  - "PII handling rules for LLM inputs and outputs"
+  - "Hallucination and low-confidence response policy"
+  - "Content moderation guidelines"
+  - "AI transparency requirements"
+
+used_by:
+  containers: []
+  components: []
+
+prompt_conventions:
+  tone: ""                # e.g., "Professional, clear, non-anthropomorphic"
+  output_format: ""       # e.g., "Always use structured output (BAML / JSON schema) for machine-readable responses"
+  language: ""            # e.g., "Avoid causal claims; use hedged language ('suggests', 'associated with')"
+  versioning: ""          # e.g., "Prompts versioned in refs with type: prompt; changes reviewed like code"
+
+pii_rules:
+  - ""    # e.g., "Never include raw PII (name, email, phone) in LLM prompts"
+  - ""    # e.g., "Use opaque IDs (user_id, flow_id); resolve to display names in UI only"
+  - ""    # e.g., "Scrub PII from prompts before logging"
+  - ""    # e.g., "Do not store LLM inputs/outputs containing PII beyond session scope"
+
+hallucination_policy:
+  detection: ""           # e.g., "Ground all numerical claims in Python-computed results; LLM provides interpretation only"
+  low_confidence: ""      # e.g., "Surface uncertainty to the user rather than asserting; use 'may suggest' not 'proves'"
+  causal_claims: ""       # e.g., "LLM must not make causal claims; use 'associated with', 'may be related to'"
+  grounding: ""           # e.g., "Reference provenance (n, time_range, coverage) in all AI-generated explanations"
+
+content_moderation:
+  input_filtering: ""     # e.g., "Filter harmful or off-topic input before passing to LLM"
+  output_validation: ""   # e.g., "Validate LLM output against allowed schema before serving to user"
+
+transparency:
+  disclosure: ""          # e.g., "Clearly label AI-generated content; never impersonate a human"
+  limitations: ""         # e.g., "Surface AI limitations proactively when confidence is low or data is sparse"
+
+refs: []

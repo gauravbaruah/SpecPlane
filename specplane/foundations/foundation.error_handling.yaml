@@ -1,0 +1,56 @@
+# ============================================
+# FOUNDATION: Error Handling
+# ============================================
+meta:
+  id: "foundation.error_handling"
+  purpose: "Define error codes, user-facing message conventions, retry policies, and fallback patterns"
+  level: "foundation"
+  owner: ""
+  tags: ["errors", "resilience", "conventions", "ux"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Error code taxonomy and naming"
+  - "User-facing error message guidelines"
+  - "Retry policy standards"
+  - "Fallback and degraded-mode patterns"
+
+used_by:
+  containers: []
+  components: []
+
+error_codes:
+  format: ""        # e.g., "SCREAMING_SNAKE_CASE: INVALID_CREDENTIALS, RATE_LIMIT_EXCEEDED"
+  categories:
+    validation: ""        # 400 — client input errors
+    authentication: ""    # 401 — identity errors
+    authorization: ""     # 403 — permission errors
+    not_found: ""         # 404 — resource not found
+    conflict: ""          # 409 — state conflict
+    rate_limit: ""        # 429 — too many requests
+    server: ""            # 5xx — internal errors
+
+user_facing_messages:
+  tone: ""          # e.g., "Friendly, non-technical, actionable"
+  rules:
+    - ""    # e.g., "Never expose internal error codes or stack traces to users"
+    - ""    # e.g., "Always offer a next step (retry, contact support, go back)"
+    - ""    # e.g., "Validation errors must identify the specific field"
+    - ""    # e.g., "Use plain language; avoid jargon"
+
+retry_policy:
+  strategy: ""          # e.g., "Exponential backoff with jitter"
+  max_attempts: 0       # e.g., 3
+  initial_delay_ms: 0   # e.g., 500
+  max_delay_ms: 0       # e.g., 10000
+  retryable_codes: []   # e.g., [429, 500, 502, 503, 504]
+  non_retryable: []     # e.g., [400, 401, 403, 404] — don't retry client errors
+
+fallback_patterns:
+  - ""    # e.g., "Show cached data with a staleness warning when API is unavailable"
+  - ""    # e.g., "Degrade gracefully: disable AI features, keep core features working"
+  - ""    # e.g., "Empty state with retry CTA instead of blank screen"
+  - ""    # e.g., "Queue writes locally and sync when connection is restored"
+
+refs: []

@@ -1,0 +1,57 @@
+# ============================================
+# FOUNDATION: Eval Standards
+# ============================================
+meta:
+  id: "foundation.eval_standards"
+  purpose: "Define minimum eval thresholds, evaluation methodology, and regression detection policy for AI components"
+  level: "foundation"
+  owner: ""
+  tags: ["ai", "evals", "quality", "testing", "standards"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Minimum pass rate thresholds by component type"
+  - "Eval methodology (dataset, scoring, invariants)"
+  - "Regression detection and blocking policy"
+  - "Eval frequency requirements"
+
+used_by:
+  containers: []
+  components: []
+
+thresholds:
+  classification: ""    # e.g., "> 95% accuracy on golden dataset"
+  extraction: ""        # e.g., "> 90% field-level accuracy"
+  generation: ""        # e.g., "> 80% human preference score vs. baseline"
+  invariants: ""        # e.g., "100% invariant pass rate; any failure blocks release"
+  workflow: ""          # e.g., "> 85% end-to-end success rate on eval dataset"
+
+methodology:
+  dataset:
+    minimum_size: 0       # e.g., 100 examples minimum per component
+    coverage: ""          # e.g., "Happy path + at least 3 known edge cases"
+    refresh_policy: ""    # e.g., "Add 10 new examples per quarter from production failures"
+    format: ""            # e.g., "JSONL: {input, expected_output, metadata}"
+  scoring:
+    automatic: []         # e.g., ["exact_match", "schema_validity", "invariant_pass"]
+    human: []             # e.g., ["preference", "factual_accuracy"] — when automatic is insufficient
+  invariants:
+    definition: "Behavioral rules that must always hold regardless of input"
+    examples:
+      - ""    # e.g., "Output is always valid JSON matching the output schema"
+      - ""    # e.g., "No PII in output"
+      - ""    # e.g., "No causal claims in AI-generated explanations"
+
+regression_policy:
+  threshold_drop: ""    # e.g., "Any metric drop > 2% triggers review before release"
+  automatic_block: ""   # e.g., "Invariant failure or accuracy < minimum blocks CI pipeline"
+  rollback: ""          # e.g., "Revert model or prompt if regression detected in production"
+
+frequency:
+  on_model_change: true
+  on_prompt_change: true
+  on_data_schema_change: true
+  scheduled: ""          # e.g., "Weekly against latest production traffic sample"
+
+refs: []

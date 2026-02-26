@@ -1,0 +1,48 @@
+# ============================================
+# FOUNDATION: Motion
+# ============================================
+meta:
+  id: "foundation.motion"
+  purpose: "Define animation timing, easing curves, and transition principles for consistent, accessible motion"
+  level: "foundation"
+  owner: ""
+  tags: ["design", "animation", "motion", "ui"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Duration scale"
+  - "Easing curves"
+  - "Transition patterns (enter, exit, state change)"
+  - "Reduced motion guidelines"
+
+used_by:
+  containers: []
+  components: []
+
+extends:
+  - "foundation.design_system"
+
+duration:
+  instant: ""       # e.g., "0ms    — immediate feedback (toggle, checkbox)"
+  fast: ""          # e.g., "100ms  — micro-interactions (hover, focus)"
+  normal: ""        # e.g., "200ms  — state changes (expand, collapse)"
+  slow: ""          # e.g., "300ms  — page transitions, modals"
+  deliberate: ""    # e.g., "500ms  — emphasis moments (onboarding, celebrations)"
+
+easing:
+  standard: ""      # e.g., "cubic-bezier(0.4, 0, 0.2, 1)  — default"
+  enter: ""         # e.g., "cubic-bezier(0, 0, 0.2, 1)    — decelerate in"
+  exit: ""          # e.g., "cubic-bezier(0.4, 0, 1, 1)    — accelerate out"
+  spring: ""        # e.g., "spring(1, 80, 10, 0)           — playful/expressive"
+
+accessibility:
+  reduced_motion: "Respect prefers-reduced-motion; substitute instant transitions or fade-only"
+  note: "See foundation.accessibility for full a11y motion policy"
+
+principles:
+  - ""    # e.g., "Motion should communicate, not decorate"
+  - ""    # e.g., "Exits are faster than entrances"
+  - ""    # e.g., "Never block interaction with animation"
+
+refs: []

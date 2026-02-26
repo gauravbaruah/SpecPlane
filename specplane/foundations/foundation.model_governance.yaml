@@ -1,0 +1,62 @@
+# ============================================
+# FOUNDATION: Model Governance
+# ============================================
+meta:
+  id: "foundation.model_governance"
+  purpose: "Define approved models per use case, capability tier mapping, cost budgets, and model change policy"
+  level: "foundation"
+  owner: ""
+  tags: ["ai", "llm", "models", "governance", "cost"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Approved model list per capability tier"
+  - "Use-case to capability tier mapping"
+  - "Cost budgets per request type"
+  - "Model change and rollback policy"
+
+used_by:
+  containers: []
+  components: []
+
+capability_tiers:
+  fast:
+    description: "Low-latency, low-cost; classification, routing, simple extraction"
+    approved_models: []   # e.g., ["claude-haiku-4-5-20251001"]
+    max_latency: ""       # e.g., "< 500ms"
+    use_cases: []         # e.g., ["intent classification", "feasibility check", "simple extraction"]
+  balanced:
+    description: "General purpose; most agent tasks, moderate reasoning"
+    approved_models: []   # e.g., ["claude-sonnet-4-6"]
+    max_latency: ""       # e.g., "< 3s"
+    use_cases: []         # e.g., ["plan extraction", "summarization", "explanation generation"]
+  capable:
+    description: "Maximum reasoning; complex multi-step analysis and planning"
+    approved_models: []   # e.g., ["claude-opus-4-6"]
+    max_latency: ""       # e.g., "< 15s"
+    use_cases: []         # e.g., ["complex analysis", "code generation", "deep reasoning"]
+
+approved_providers:
+  - ""    # e.g., "Anthropic"
+
+use_case_defaults:
+  classification: "fast"
+  extraction: "fast"
+  summarization: "balanced"
+  reasoning: "balanced"
+  complex_analysis: "capable"
+  code_generation: "balanced"
+
+cost_budgets:
+  per_api_request: ""       # e.g., "< $0.01 average"
+  per_user_session: ""      # e.g., "< $0.10 per session"
+  monthly_ceiling: ""       # e.g., "$5,000/month; alert at 80%"
+
+model_change_policy:
+  approval_required: true   # model changes require review before production
+  testing_required: ""      # e.g., "Full eval suite must pass; see foundation.eval_standards"
+  rollback: ""              # e.g., "Can revert to previous model within 1 hour"
+  changelog: ""             # e.g., "Model changes logged in model_registry with date, reason, and eval delta"
+
+refs: []

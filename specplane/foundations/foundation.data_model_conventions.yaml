@@ -1,0 +1,51 @@
+# ============================================
+# FOUNDATION: Data Model Conventions
+# ============================================
+meta:
+  id: "foundation.data_model_conventions"
+  purpose: "Define field naming, ID formats, timestamp standards, and nullability rules for all data models"
+  level: "foundation"
+  owner: ""
+  tags: ["data", "backend", "conventions", "naming"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Field naming conventions"
+  - "ID format and generation strategy"
+  - "Timestamp field standards"
+  - "Nullability rules"
+  - "Soft delete pattern"
+
+used_by:
+  containers: []
+  components: []
+
+field_naming:
+  convention: ""    # e.g., "snake_case for all field names"
+  booleans: ""      # e.g., "Prefix with is_, has_, can_, or should_"
+  enums: ""         # e.g., "SCREAMING_SNAKE_CASE for enum values"
+  foreign_keys: ""  # e.g., "Suffix with _id: user_id, flow_id"
+
+id_format:
+  strategy: ""      # e.g., "UUID v4" | "ULID" | "nanoid" | "sequential integer"
+  field_name: ""    # e.g., "id"
+  example: ""       # e.g., "550e8400-e29b-41d4-a716-446655440000"
+
+timestamps:
+  created_at: "ISO 8601 UTC; set on creation; never updated"
+  updated_at: "ISO 8601 UTC; updated on every write"
+  deleted_at: "ISO 8601 UTC | null; used for soft deletes"
+  format: ""        # e.g., "YYYY-MM-DDTHH:mm:ss.sssZ"
+
+soft_delete:
+  enabled: false
+  field: "deleted_at"
+  filter: ""        # e.g., "Exclude records where deleted_at IS NOT NULL by default"
+
+nullability:
+  - ""    # e.g., "Prefer empty string '' over null for optional text fields"
+  - ""    # e.g., "Nullable fields must be explicitly marked in schema"
+  - ""    # e.g., "Arrays are empty [] not null when no items exist"
+
+refs: []

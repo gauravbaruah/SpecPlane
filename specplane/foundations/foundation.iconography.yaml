@@ -1,0 +1,44 @@
+# ============================================
+# FOUNDATION: Iconography
+# ============================================
+meta:
+  id: "foundation.iconography"
+  purpose: "Define the icon set, sizing standards, and usage conventions for all UI surfaces"
+  level: "foundation"
+  owner: ""
+  tags: ["design", "icons", "ui"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Icon library source and format"
+  - "Standard icon sizes"
+  - "Usage rules (when to use icons, with/without labels)"
+  - "Custom icon contribution guidelines"
+
+used_by:
+  containers: []
+  components: []
+
+extends:
+  - "foundation.design_system"
+
+icon_set:
+  library: ""       # e.g., "Lucide", "Heroicons", "Phosphor", "custom"
+  source_url: ""
+  format: ""        # e.g., "SVG React components"
+  package: ""       # e.g., "lucide-react"
+
+sizes:
+  sm: ""            # e.g., "16px — inline with text"
+  md: ""            # e.g., "20px — default"
+  lg: ""            # e.g., "24px — standalone"
+  xl: ""            # e.g., "32px — feature icons"
+
+usage_rules:
+  - ""    # e.g., "Always pair icons with visible labels in primary navigation"
+  - ""    # e.g., "Icon-only buttons must have aria-label"
+  - ""    # e.g., "Use md (20px) as default; sm for dense UIs only"
+  - ""    # e.g., "Never resize icons outside the defined scale"
+
+refs: []

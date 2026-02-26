@@ -1,0 +1,55 @@
+# ============================================
+# FOUNDATION: Component Library
+# ============================================
+meta:
+  id: "foundation.component_library"
+  purpose: "Catalog of reusable UI components available to all frontend surfaces"
+  level: "foundation"
+  owner: ""
+  tags: ["design", "ui", "components", "frontend"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Primitive components (Button, Input, Select, Checkbox, Toggle)"
+  - "Layout components (Card, Modal, Drawer, Tabs, Accordion)"
+  - "Feedback components (Toast, Alert, Spinner, Skeleton)"
+  - "Navigation components (Navbar, Sidebar, Breadcrumb, Pagination)"
+
+used_by:
+  containers: []
+  components: []
+
+extends:
+  - "foundation.design_system"
+
+components:
+  primitives:
+    - name: "Button"
+      variants: []    # e.g., [primary, secondary, ghost, destructive]
+      sizes: []       # e.g., [sm, md, lg]
+    - name: "Input"
+      variants: []    # e.g., [text, password, search]
+    - name: "Select"
+    - name: "Checkbox"
+    - name: "Toggle"
+    - name: "Radio"
+  layout:
+    - name: "Card"
+    - name: "Modal"
+    - name: "Drawer"
+    - name: "Tabs"
+    - name: "Accordion"
+  feedback:
+    - name: "Toast"
+    - name: "Alert"
+    - name: "Spinner"
+    - name: "Skeleton"
+    - name: "ProgressBar"
+  navigation:
+    - name: "Navbar"
+    - name: "Sidebar"
+    - name: "Breadcrumb"
+    - name: "Pagination"
+
+refs: []

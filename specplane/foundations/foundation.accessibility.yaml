@@ -1,0 +1,51 @@
+# ============================================
+# FOUNDATION: Accessibility
+# ============================================
+meta:
+  id: "foundation.accessibility"
+  purpose: "Define WCAG compliance level, keyboard navigation patterns, and ARIA usage conventions"
+  level: "foundation"
+  owner: ""
+  tags: ["accessibility", "a11y", "wcag", "frontend", "ux"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "WCAG compliance target and audit process"
+  - "Keyboard navigation conventions"
+  - "Screen reader support requirements"
+  - "Focus management patterns"
+  - "Color contrast requirements"
+
+used_by:
+  containers: []
+  components: []
+
+standard:
+  target: "WCAG 2.2 Level AA"
+  audit_frequency: ""   # e.g., "Every major release"
+  tools: []             # e.g., ["axe-core", "Lighthouse", "NVDA", "VoiceOver"]
+
+keyboard_navigation:
+  tab_order: ""         # e.g., "Logical DOM order; skip links provided at page top"
+  focus_indicator: ""   # e.g., "2px solid focus ring; 3:1 contrast ratio minimum"
+  shortcuts: []         # e.g., ["Esc closes modals and drawers", "Enter activates buttons"]
+  trap_focus: ""        # e.g., "Modal and drawer components trap focus when open"
+  skip_links: ""        # e.g., "Skip to main content link at top of every page"
+
+screen_reader:
+  live_regions: ""      # e.g., "Use aria-live='polite' for status updates; 'assertive' for errors only"
+  labels: ""            # e.g., "All interactive elements must have an accessible name"
+  roles: ""             # e.g., "Use semantic HTML first; ARIA only when HTML is insufficient"
+  announcements: ""     # e.g., "Form errors announced on submit; success states announced on completion"
+
+color_contrast:
+  text_normal: ""       # e.g., "4.5:1 minimum (WCAG AA)"
+  text_large: ""        # e.g., "3:1 minimum (18pt or 14pt bold)"
+  ui_components: ""     # e.g., "3:1 for focus indicators, icons, and UI boundaries"
+  do_not: "Convey information by color alone; always pair with text or icon"
+
+motion:
+  reduced_motion: "Respect prefers-reduced-motion; see foundation.motion for details"
+
+refs: []

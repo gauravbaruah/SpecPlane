@@ -1,0 +1,62 @@
+# ============================================
+# FOUNDATION: Observability Standards
+# ============================================
+meta:
+  id: "foundation.observability_standards"
+  purpose: "Define metric naming, trace conventions, SLO baseline expectations, and alert escalation policy"
+  level: "foundation"
+  owner: ""
+  tags: ["observability", "metrics", "tracing", "alerting", "slo"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Metric naming conventions"
+  - "Distributed trace conventions"
+  - "Baseline SLO expectations for all services"
+  - "Alert severity definitions and escalation policy"
+
+used_by:
+  containers: []
+  components: []
+
+metrics:
+  naming:
+    convention: ""      # e.g., "snake_case: service_name.metric_name"
+    suffixes:
+      _total: "Counter — monotonically increasing"
+      _duration_ms: "Histogram — latency distribution"
+      _active: "Gauge — point-in-time value"
+      _error_rate: "Gauge — ratio 0.0–1.0"
+  required_labels: []   # e.g., ["service", "environment", "version"]
+
+tracing:
+  propagation: ""       # e.g., "W3C TraceContext (traceparent header)"
+  required_spans: []    # e.g., ["http_request", "db_query", "external_api_call", "llm_call"]
+  correlation:
+    join_key: ""        # e.g., "request_id — attach to both traces and analytics events"
+    note: ""            # e.g., "Enables cross-analysis of technical performance and user behavior"
+
+slo_baselines:
+  availability: ""      # e.g., "> 99.9% for all production services"
+  latency_p95: ""       # e.g., "< 500ms for synchronous API endpoints"
+  error_rate: ""        # e.g., "< 1% 5xx errors over any 5-minute window"
+  note: "Individual component specs may define stricter SLOs; these are system minimums"
+
+alerting:
+  severity:
+    critical:
+      definition: "System-wide failure or SLO breach sustained > 5 minutes"
+      response: "Page on-call immediately"
+      ack_within: ""    # e.g., "5 minutes"
+    warning:
+      definition: "Degraded performance or approaching SLO threshold"
+      response: "Notify team channel; investigate within business hours"
+      ack_within: ""    # e.g., "30 minutes"
+  escalation_policy: "" # e.g., "Critical: on-call → team lead → VP Engineering"
+  runbook_required: true  # true = every critical alert must have a runbook link
+
+dashboards:
+  required: []          # e.g., ["Service health (RED: Rate, Errors, Duration)", "Business KPIs"]
+
+refs: []

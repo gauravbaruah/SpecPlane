@@ -1,0 +1,58 @@
+# ============================================
+# FOUNDATION: Design System
+# ============================================
+meta:
+  id: "foundation.design_system"
+  purpose: "Define the visual language, design tokens, and layout principles shared across all frontend surfaces"
+  level: "foundation"
+  owner: ""
+  tags: ["design", "ui", "frontend", "tokens"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Color palette and semantic color tokens"
+  - "Typography scale (font families, sizes, weights, line heights)"
+  - "Spacing scale"
+  - "Shadow and elevation levels"
+  - "Border radius and border conventions"
+  - "Grid and layout system"
+
+used_by:
+  containers: []
+  components: []
+
+tokens:
+  colors:
+    primary: ""           # e.g., "#1A73E8"
+    secondary: ""
+    surface: ""
+    background: ""
+    error: ""
+    warning: ""
+    success: ""
+    text_primary: ""
+    text_secondary: ""
+  typography:
+    font_family_sans: ""  # e.g., "Inter, system-ui, sans-serif"
+    font_family_mono: ""  # e.g., "JetBrains Mono, monospace"
+    scale: []             # e.g., [12, 14, 16, 18, 24, 32, 48]
+    weights: []           # e.g., [400, 500, 600, 700]
+  spacing:
+    base_unit: ""         # e.g., "4px"
+    scale: []             # e.g., [4, 8, 12, 16, 24, 32, 48, 64]
+  elevation:
+    levels: []            # e.g., [none, low, medium, high, overlay]
+  border_radius:
+    default: ""           # e.g., "8px"
+    small: ""
+    large: ""
+    full: ""
+
+principles:
+  - ""    # e.g., "Clarity over decoration"
+  - ""    # e.g., "Accessible by default (WCAG 2.2 AA)"
+  - ""    # e.g., "Mobile-first, responsive by default"
+
+refs: []
+diagrams: []

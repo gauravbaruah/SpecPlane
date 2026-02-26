@@ -1,0 +1,62 @@
+# ============================================
+# FOUNDATION: API Conventions
+# ============================================
+meta:
+  id: "foundation.api_conventions"
+  purpose: "Define URL structure, versioning strategy, pagination, and response envelope conventions for all APIs"
+  level: "foundation"
+  owner: ""
+  tags: ["api", "backend", "conventions"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "URL naming and structure rules"
+  - "API versioning strategy"
+  - "Pagination envelope"
+  - "Standard success and error response shapes"
+  - "HTTP method semantics"
+
+used_by:
+  containers: []
+  components: []
+
+url_structure:
+  pattern: ""       # e.g., "/api/v{version}/{resource}/{id}/{sub-resource}"
+  convention: ""    # e.g., "lowercase-kebab-case for resource names"
+  examples:
+    - ""            # e.g., "/api/v1/users/{user_id}/sessions"
+    - ""            # e.g., "/api/v1/flows/{flow_id}/observations"
+
+versioning:
+  strategy: ""          # e.g., "URL path: /api/v1/, /api/v2/"
+  current: ""           # e.g., "v1"
+  deprecation_policy: ""  # e.g., "Deprecated versions supported 12 months after successor GA"
+
+pagination:
+  style: ""             # e.g., "cursor-based" | "offset-based"
+  default_page_size: 0  # e.g., 20
+  max_page_size: 0      # e.g., 100
+  envelope:
+    data: "[]"
+    next_cursor: "string | null"
+    total: "int | null"
+
+response_envelope:
+  success:
+    data: "object | array"
+    meta: "object (optional — pagination, timing)"
+  error:
+    error:
+      code: "string        # e.g., INVALID_CREDENTIALS"
+      message: "string     # human-readable"
+      details: "array      # field-level validation errors"
+
+http_semantics:
+  GET: "Read; idempotent; no request body"
+  POST: "Create; non-idempotent"
+  PUT: "Full replace; idempotent"
+  PATCH: "Partial update; idempotent"
+  DELETE: "Remove; idempotent"
+
+refs: []

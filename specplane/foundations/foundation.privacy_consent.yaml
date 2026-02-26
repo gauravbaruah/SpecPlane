@@ -1,0 +1,57 @@
+# ============================================
+# FOUNDATION: Privacy & Consent
+# ============================================
+meta:
+  id: "foundation.privacy_consent"
+  purpose: "Define GDPR/CCPA consent patterns, data subject rights, and consent record requirements"
+  level: "foundation"
+  owner: ""
+  tags: ["privacy", "gdpr", "ccpa", "consent", "legal"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Consent capture UX patterns"
+  - "Consent record storage requirements"
+  - "Data subject rights (access, deletion, portability)"
+  - "Cookie and tracking consent"
+  - "Data minimization principles"
+
+used_by:
+  containers: []
+  components: []
+
+frameworks:
+  applicable: []    # e.g., ["GDPR", "CCPA", "PIPEDA"]
+  legal_owner: ""   # e.g., "Legal Team"
+
+consent_capture:
+  timing: ""        # e.g., "Before account creation; before first analytics event fires"
+  required_for: []  # e.g., ["account creation", "marketing emails", "analytics tracking"]
+  pattern: ""       # e.g., "Explicit opt-in only; pre-ticked boxes prohibited under GDPR"
+  granularity: ""   # e.g., "Separate consent for: functional, analytics, marketing"
+  withdrawal: ""    # e.g., "User can withdraw consent at any time from account settings"
+
+consent_record:
+  storage: ""       # e.g., "Immutable audit log; retained 7 years (compliance)"
+  fields:
+    - "user_id"
+    - "consent_type"
+    - "granted: boolean"
+    - "timestamp: ISO 8601 UTC"
+    - "ip_address (hashed)"
+    - "consent_version"
+    - "channel: web|mobile|api"
+
+data_subject_rights:
+  access: ""        # e.g., "User can export all their data within 30 days of request"
+  deletion: ""      # e.g., "Account deletion removes PII within 30 days; audit logs anonymized"
+  portability: ""   # e.g., "Data exported in machine-readable format (JSON or CSV)"
+  correction: ""    # e.g., "User can update incorrect personal data via account settings"
+
+data_minimization:
+  - ""    # e.g., "Collect only data required for the stated purpose"
+  - ""    # e.g., "Do not retain data beyond stated retention period"
+  - ""    # e.g., "Anonymize or delete data when purpose is fulfilled"
+
+refs: []

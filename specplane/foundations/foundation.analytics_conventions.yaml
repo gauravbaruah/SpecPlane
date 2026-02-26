@@ -1,0 +1,57 @@
+# ============================================
+# FOUNDATION: Analytics Conventions
+# ============================================
+meta:
+  id: "foundation.analytics_conventions"
+  purpose: "Define event naming patterns, required properties, destination routing, and analytics governance rules"
+  level: "foundation"
+  owner: ""
+  tags: ["analytics", "events", "tracking", "conventions"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Event naming convention"
+  - "Required properties on every analytics event"
+  - "Destination routing rules"
+  - "PII rules for analytics"
+  - "Event taxonomy and governance"
+
+used_by:
+  containers: []
+  components: []
+
+naming:
+  convention: ""        # e.g., "snake_case past-tense verb_noun: login_succeeded, checkout_started"
+  tense: ""             # e.g., "Past tense for completed actions; present for ongoing states"
+  prohibited: []        # e.g., ["clicked", "tapped", "pressed" — too generic; be specific]
+
+required_properties:
+  - "event_name: string"
+  - "timestamp: ISO 8601 UTC"
+  - "user_id: string | null"
+  - "session_id: string"
+  - "platform: string       # web | ios | android"
+  - "app_version: string"
+
+destinations:
+  default: []           # e.g., ["mixpanel", "amplitude"] — applied to all events
+  warehouse: []         # e.g., ["bigquery"] — for events needing deeper analysis
+  override_policy: ""   # e.g., "Individual events can override default_destinations"
+
+pii_rules:
+  - ""    # e.g., "Never include email, name, or phone as event properties"
+  - ""    # e.g., "Use user_id (opaque) for user identification; never email"
+  - ""    # e.g., "Hash or omit user-entered search queries"
+
+taxonomy:
+  user_actions: []      # e.g., ["login_attempted", "button_clicked", "form_submitted"]
+  system_events: []     # e.g., ["session_started", "page_viewed"] — auto-tracked
+  business_events: []   # e.g., ["subscription_started", "payment_completed"]
+
+governance:
+  new_event_process: "" # e.g., "New events require PM sign-off and naming review before shipping"
+  registry: ""          # e.g., "All events documented in analytics registry; undocumented events rejected"
+  review_cadence: ""    # e.g., "Quarterly audit of unused or duplicate events"
+
+refs: []

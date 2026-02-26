@@ -1,0 +1,60 @@
+# ============================================
+# FOUNDATION: Logging Conventions
+# ============================================
+meta:
+  id: "foundation.logging_conventions"
+  purpose: "Define log format, severity levels, structured field standards, and PII scrubbing rules"
+  level: "foundation"
+  owner: ""
+  tags: ["logging", "observability", "backend", "conventions"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Log format (structured JSON)"
+  - "Severity level definitions"
+  - "Required fields on every log entry"
+  - "PII scrubbing rules"
+  - "What to log and what not to log"
+
+used_by:
+  containers: []
+  components: []
+
+format:
+  style: "structured_json"    # structured_json | plaintext
+  timestamp_format: ""        # e.g., "ISO 8601 UTC"
+
+severity_levels:
+  DEBUG: "Detailed diagnostic; disabled in production by default"
+  INFO: "Normal operational events (request received, job started, user action)"
+  WARNING: "Unexpected but recoverable; no immediate action required"
+  ERROR: "Failure affecting one request or operation; requires investigation"
+  CRITICAL: "System-wide failure or data integrity issue; requires immediate on-call response"
+
+required_fields:
+  - "timestamp: ISO 8601 UTC"
+  - "level: DEBUG|INFO|WARNING|ERROR|CRITICAL"
+  - "service: string           # container/service name"
+  - "message: string"
+  - "request_id: string | null # for request correlation"
+
+pii_rules:
+  - ""    # e.g., "Never log passwords, tokens, or secrets"
+  - ""    # e.g., "Log user_id only — never email, name, or phone"
+  - ""    # e.g., "Truncate or hash any value that could identify a user"
+  - ""    # e.g., "Scrub Authorization headers before logging request metadata"
+
+do_log:
+  - ""    # e.g., "Request start and end (with duration_ms)"
+  - ""    # e.g., "Unhandled exceptions with sanitized stack trace"
+  - ""    # e.g., "External API calls (service, endpoint, status, duration_ms)"
+  - ""    # e.g., "Background job start, completion, and failure"
+
+do_not_log:
+  - ""    # e.g., "Passwords or credentials of any kind"
+  - ""    # e.g., "Full request bodies that may contain PII"
+  - ""    # e.g., "Health check endpoint requests"
+  - ""    # e.g., "LLM prompt content containing user data"
+
+refs: []

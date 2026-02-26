@@ -1,0 +1,55 @@
+# ============================================
+# FOUNDATION: Security Baseline
+# ============================================
+meta:
+  id: "foundation.security_baseline"
+  purpose: "Define authentication patterns, CORS policy, rate limiting conventions, and secrets management standards"
+  level: "foundation"
+  owner: ""
+  tags: ["security", "auth", "backend", "conventions"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Authentication pattern standards"
+  - "CORS policy"
+  - "Rate limiting conventions"
+  - "Secrets management rules"
+  - "Input validation baseline"
+
+used_by:
+  containers: []
+  components: []
+
+authentication:
+  pattern: ""           # e.g., "JWT in httpOnly cookies; refresh token rotation"
+  session_duration: ""  # e.g., "Access token: 15min; Refresh token: 30 days"
+  oauth: ""             # e.g., "PKCE required for all OAuth flows"
+  mfa: ""               # e.g., "Optional for standard users; required for admin roles"
+
+cors:
+  allowed_origins: []   # e.g., ["https://app.company.com"]
+  allowed_methods: []   # e.g., ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+  allowed_headers: []   # e.g., ["Content-Type", "Authorization"]
+  allow_credentials: false
+
+rate_limiting:
+  default_limit: ""         # e.g., "100 requests/min per IP"
+  authenticated_limit: ""   # e.g., "1000 requests/min per user"
+  burst_allowance: ""       # e.g., "2x limit for up to 10 seconds"
+  response_headers: []      # e.g., ["X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After"]
+
+secrets_management:
+  storage: ""           # e.g., "AWS Secrets Manager; never in source code or env var files"
+  rotation: ""          # e.g., "Rotate all secrets every 90 days"
+  rules:
+    - ""    # e.g., "Never commit secrets to version control"
+    - ""    # e.g., "Never log secrets or tokens"
+    - ""    # e.g., "Prefer short-lived credentials over long-lived keys"
+
+input_validation:
+  - ""    # e.g., "Validate and sanitize all user input at the API boundary"
+  - ""    # e.g., "Use parameterized queries; never interpolate user input into SQL"
+  - ""    # e.g., "Reject requests with unexpected fields (strict schema validation)"
+
+refs: []

@@ -27,6 +27,7 @@ For the system as a whole, this extends further: **WHY does this exist in busine
 7. **Two-Phase Flow** - Planning (PM) → Implementation (Design + Engineering)
 8. **AI-Native by Design** - Agents, tools, and workflows are first-class component types
 9. **Capability-First** - Business value is modeled explicitly before architecture is decided. A capability spec is valid and useful before a single container or component exists.
+10. **Foundations as Infrastructure** - Cross-cutting concerns (design system, API conventions, security, AI guidelines) live in `foundations/` as shared reference specs. Components declare what they `uses`; foundations declare who `used_by`.
 
 ## The 5C Model
 
@@ -91,8 +92,12 @@ For capability specs, additionally:
 
 ```
 specs/
-├── capabilities/                             # Capability-level specifications (NEW)
+├── capabilities/                             # Capability-level specifications
 │   ├── capability.<capability_name>.yaml
+│   └── ...
+│
+├── foundations/                              # Foundation-level specifications (NEW)
+│   ├── foundation.<foundation_name>.yaml
 │   └── ...
 │
 ├── system.<system_name>.yaml                 # System-level specification
@@ -117,6 +122,27 @@ specs/
 │   ├── capability.authentication.yaml
 │   ├── capability.data_analytics.yaml
 │   └── capability.onboarding.yaml
+│
+├── foundations/
+│   ├── foundation.design_system.yaml          # Design & UI
+│   ├── foundation.component_library.yaml
+│   ├── foundation.iconography.yaml
+│   ├── foundation.motion.yaml
+│   ├── foundation.api_conventions.yaml        # API & Data
+│   ├── foundation.data_model_conventions.yaml
+│   ├── foundation.event_schema.yaml
+│   ├── foundation.error_handling.yaml         # Cross-cutting Technical
+│   ├── foundation.logging_conventions.yaml
+│   ├── foundation.security_baseline.yaml
+│   ├── foundation.performance_budget.yaml
+│   ├── foundation.accessibility.yaml          # Compliance & UX
+│   ├── foundation.internationalization.yaml
+│   ├── foundation.privacy_consent.yaml
+│   ├── foundation.ai_guidelines.yaml          # AI-Native
+│   ├── foundation.model_governance.yaml
+│   ├── foundation.eval_standards.yaml
+│   ├── foundation.analytics_conventions.yaml  # Analytics & Observability
+│   └── foundation.observability_standards.yaml
 │
 ├── system.saas_platform.yaml
 │
@@ -191,6 +217,7 @@ A capability is a **cross-cutting business concern** — it spans multiple conta
 **File Naming Pattern**: `<level>.<n>.yaml`
 
 - **Capability files**: `capability.<capability_name>.yaml`
+- **Foundation files**: `foundation.<foundation_name>.yaml`
 - **System files**: `system.<system_name>.yaml`
 - **Container files**: `container.<container_name>.yaml`
 - **Component files**: `component.<component_name>.yaml`
@@ -198,6 +225,7 @@ A capability is a **cross-cutting business concern** — it spans multiple conta
 
 **ID Field Consistency**: The `meta.id` must exactly match the filename (without extension):
 - File: `capability.authentication.yaml` → `meta.id: "capability.authentication"`
+- File: `foundation.design_system.yaml` → `meta.id: "foundation.design_system"`
 - File: `component.tool.fetch_series.yaml` → `meta.id: "component.tool.fetch_series"`
 
 ---
@@ -274,6 +302,48 @@ roadmap:
   depends_on: []      # Capability IDs that must exist before this one
   enables: []         # Capability IDs that this capability unlocks
 
+# ============================================
+# FOUNDATION SPEC (level: "foundation")
+# ============================================
+# Progressive disclosure:
+#   Minimal: meta + provides + used_by
+#   Full:    + content fields specific to the foundation type + refs + diagrams
+#
+# Foundation specs live in specs/foundations/.
+# Components and containers reference them via `uses`.
+# Foundations reference back via `used_by`.
+# A foundation may extend another foundation via `extends`.
+
+meta:
+  id: ""           # Required: "foundation.<name>" (must match filename)
+  purpose: ""      # Required: one sentence describing what this foundation defines
+  level: "foundation"  # Required
+  owner: ""
+  tags: []
+  status: "draft|active|deprecated|archived"
+  last_updated: "YYYY-MM-DD"
+  version: ""
+
+# What this foundation provides to those who use it
+provides:
+  - ""    # e.g., "Color palette and semantic color tokens"
+          # e.g., "API URL naming and versioning rules"
+
+# Who uses this foundation (bidirectional with component/container `uses`)
+used_by:
+  containers: []    # container meta.ids
+  components: []    # component meta.ids
+
+# If this foundation builds on another foundation (e.g., component_library extends design_system)
+extends: []         # foundation meta.ids
+
+# Foundation-specific content fields
+# These vary per foundation type — see boilerplate specs in specplane/foundations/
+# for the canonical field shapes per category (Design, API, Technical, Compliance, AI, etc.)
+
+refs: []
+diagrams: []
+
 # ── PHASE 3: ENGINEERING-ADDED (Optional) ──────────────────────────
 
 # What realizes this capability in the architecture
@@ -324,6 +394,13 @@ meta:
 implements:
   - ""    # e.g., "capability.authentication"
           # e.g., "capability.onboarding"
+
+# Declare which foundations this container or component builds on.
+# Used for traceability: find all components affected by a foundation change.
+uses:
+  - ""    # e.g., "foundation.design_system"
+          # e.g., "foundation.api_conventions"
+          # e.g., "foundation.accessibility"
 
 # ============================================
 # REFS - Central Resource Registry
@@ -1002,6 +1079,15 @@ implementation:
 
 ### When user asks for help:
 
+**Foundations:**
+- "Add a foundation" → Identify category (Design/API/Technical/Compliance/AI/Analytics), copy boilerplate from specplane/foundations/, fill in values
+- "Which foundation applies here?" → Match component needs to the 19 foundation types
+- "Link a component to a foundation" → Add foundation ID to component's `uses` field and component ID to foundation's `used_by`
+- "What's affected by this foundation change?" → Look up `used_by` to find all impacted containers and components
+- "Add a design system" → Guide through foundation.design_system tokens (colors, typography, spacing)
+- "Set up AI foundations" → Walk through ai_guidelines + model_governance + eval_standards as a trio
+- "What foundations does a new project need?" → Recommend universal set: design_system, api_conventions, error_handling, accessibility, analytics_conventions
+
 **Capabilities:**
 - "Add a capability" → Guide through responsibilities, flows, business_value, constraints (Phase 1)
 - "Map a capability to architecture" → Help populate realized_by with containers and components
@@ -1083,8 +1169,17 @@ Before marking a **capability** spec as `status: "launched"`:
 - [ ] End-to-end sequence diagram in `diagrams`
 - [ ] Refs link to relevant tickets and legal docs
 
+Before marking a **foundation** spec as `status: "active"`:
+- [ ] `meta` complete (id, purpose, level, owner, status)
+- [ ] `provides` clearly lists what this foundation gives to consumers
+- [ ] `used_by` populated (containers and components that reference this)
+- [ ] Foundation-specific content fields filled in (not just placeholders)
+- [ ] `extends` set if this foundation builds on another
+- [ ] Refs link to relevant external standards, tickets, or design documents
+
 Before marking a **component or container** as `status: "active"`:
 - [ ] `implements` field present with capability ID(s)
+- [ ] `uses` field present with foundation ID(s) where applicable
 - [ ] Meta fields complete (id, purpose, level, owner)
 - [ ] File naming and location correct
 - [ ] Behavioral contracts defined

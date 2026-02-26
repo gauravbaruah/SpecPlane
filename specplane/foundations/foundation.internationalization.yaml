@@ -1,0 +1,52 @@
+# ============================================
+# FOUNDATION: Internationalization
+# ============================================
+meta:
+  id: "foundation.internationalization"
+  purpose: "Define language support, locale formatting, RTL layout support, and i18n implementation conventions"
+  level: "foundation"
+  owner: ""
+  tags: ["i18n", "l10n", "internationalization", "frontend"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Supported languages and locales"
+  - "String externalization rules"
+  - "Date, time, number, and currency formatting"
+  - "RTL layout support"
+  - "Locale detection and fallback strategy"
+
+used_by:
+  containers: []
+  components: []
+
+supported_languages:
+  default: ""       # e.g., "en-US"
+  supported: []     # e.g., ["en-US", "es-ES", "fr-FR", "de-DE", "ja-JP"]
+  rtl: []           # e.g., ["ar", "he"] — languages requiring RTL layout
+
+string_externalization:
+  rule: ""          # e.g., "All user-visible strings in locale files; no hardcoded UI text"
+  key_format: ""    # e.g., "dot.notation: component.section.key"
+  pluralization: "" # e.g., "ICU MessageFormat for plural/select forms"
+
+formatting:
+  dates:
+    short: ""       # e.g., "Locale-appropriate via Intl.DateTimeFormat"
+    long: ""        # e.g., "Include weekday for dates within current week"
+    relative: ""    # e.g., "'2 hours ago', '3 days ago' for recent timestamps"
+  numbers: ""       # e.g., "Intl.NumberFormat; locale decimal and grouping separators"
+  currency: ""      # e.g., "Intl.NumberFormat with currency option; symbol + amount"
+  times: ""         # e.g., "12h or 24h per locale; always include timezone for absolute times"
+
+rtl:
+  support: false    # true when RTL languages are in supported list
+  approach: ""      # e.g., "CSS logical properties (inline-start/end); mirrored directional icons"
+
+locale_detection:
+  order: []         # e.g., ["user preference (stored)", "Accept-Language header", "default"]
+  fallback: ""      # e.g., "en-US"
+  persistence: ""   # e.g., "Stored in user profile; falls back to browser header"
+
+refs: []

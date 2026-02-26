@@ -1,0 +1,47 @@
+# ============================================
+# FOUNDATION: Performance Budget
+# ============================================
+meta:
+  id: "foundation.performance_budget"
+  purpose: "Define frontend performance targets, API latency budgets, and bundle size limits"
+  level: "foundation"
+  owner: ""
+  tags: ["performance", "frontend", "api", "budgets"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Core Web Vitals targets"
+  - "Bundle size limits"
+  - "API latency budgets"
+  - "AI/LLM latency expectations"
+
+used_by:
+  containers: []
+  components: []
+
+frontend:
+  core_web_vitals:
+    LCP: ""     # Largest Contentful Paint    — e.g., "< 2.5s"
+    INP: ""     # Interaction to Next Paint   — e.g., "< 200ms"
+    CLS: ""     # Cumulative Layout Shift     — e.g., "< 0.1"
+  time_to_interactive: ""   # e.g., "< 3.5s on 4G mobile"
+  bundle:
+    initial_js: ""    # e.g., "< 200KB gzipped"
+    initial_css: ""   # e.g., "< 50KB gzipped"
+    images: ""        # e.g., "< 500KB total per page; WebP preferred"
+
+api:
+  p50_latency: ""     # e.g., "< 100ms"
+  p95_latency: ""     # e.g., "< 300ms"
+  p99_latency: ""     # e.g., "< 1000ms"
+  timeout: ""         # e.g., "30s hard timeout on all endpoints"
+  note: "Individual component specs may set stricter targets; these are minimums"
+
+ai_llm:
+  time_to_first_token: ""       # e.g., "< 2s"
+  p95_workflow_latency: ""      # e.g., "< 10s end-to-end for agentic workflows"
+  streaming: "Prefer streaming for responses > 500 tokens to improve perceived latency"
+  cost_per_request: ""          # e.g., "< $0.01 average; see foundation.model_governance"
+
+refs: []

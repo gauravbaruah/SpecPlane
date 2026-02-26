@@ -1,0 +1,48 @@
+# ============================================
+# FOUNDATION: Event Schema
+# ============================================
+meta:
+  id: "foundation.event_schema"
+  purpose: "Define the envelope structure, naming conventions, and required fields for all system and analytics events"
+  level: "foundation"
+  owner: ""
+  tags: ["events", "analytics", "observability", "conventions"]
+  status: "draft"
+  last_updated: "2026-02-26"
+
+provides:
+  - "Event envelope (required fields on every event)"
+  - "Naming conventions for event names and properties"
+  - "Event type taxonomy (analytics vs system)"
+  - "PII rules for events"
+
+used_by:
+  containers: []
+  components: []
+
+event_types:
+  analytics: "User behavioral events — sent to analytics platforms (Mixpanel, Amplitude)"
+  system: "Technical events for inter-component communication — not for analytics platforms"
+
+naming:
+  analytics_events: ""    # e.g., "snake_case past-tense verb_noun: login_succeeded, checkout_started"
+  system_events: ""       # e.g., "snake_case noun_verb: auth_state_changed, payment_completed"
+  properties: ""          # e.g., "snake_case; descriptive; no abbreviations"
+
+envelope:
+  required:
+    - "event_name: string"
+    - "timestamp: ISO 8601 UTC"
+    - "user_id: string | null"
+    - "session_id: string"
+  recommended:
+    - "platform: string        # web | ios | android | api"
+    - "app_version: string"
+    - "request_id: string      # for correlating with observability traces"
+
+pii_rules:
+  - ""    # e.g., "Never include email, name, or phone number as event properties"
+  - ""    # e.g., "Use user_id (opaque) not email for user identification"
+  - ""    # e.g., "Hash or omit PII in search query properties"
+
+refs: []
