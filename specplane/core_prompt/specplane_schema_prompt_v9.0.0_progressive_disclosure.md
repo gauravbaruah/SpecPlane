@@ -302,6 +302,32 @@ roadmap:
   depends_on: []      # Capability IDs that must exist before this one
   enables: []         # Capability IDs that this capability unlocks
 
+# ── PHASE 3: ENGINEERING-ADDED (Optional) ──────────────────────────
+
+# What realizes this capability in the architecture
+# Added by engineering when implementation is planned or underway
+# A capability spec is complete and valid without this section
+realized_by:
+  containers: []    # container meta.ids that participate in this capability
+  components: []    # component meta.ids that implement parts of this capability
+
+# ── FUTURE ─────────────────────────────────────────────────────────
+# blockers:       # To be defined — open questions, dependencies, risks
+
+# ── SHARED (Optional, any phase) ───────────────────────────────────
+
+refs: []          # Same structure as other specs — tickets, designs, research, docs
+
+# Capability diagrams: prefer the end-to-end sequence or user journey
+# This is the right home for cross-system flows that span multiple containers
+diagrams:
+  - type: "sequence|flowchart|user_journey"
+    title: ""
+    description: ""
+    mermaid: |
+      # Cross-system flow spanning multiple containers
+      # e.g., User → WebApp → AuthProvider → API → WebApp
+
 # ============================================
 # FOUNDATION SPEC (level: "foundation")
 # ============================================
@@ -344,32 +370,6 @@ extends: []         # foundation meta.ids
 refs: []
 diagrams: []
 
-# ── PHASE 3: ENGINEERING-ADDED (Optional) ──────────────────────────
-
-# What realizes this capability in the architecture
-# Added by engineering when implementation is planned or underway
-# A capability spec is complete and valid without this section
-realized_by:
-  containers: []    # container meta.ids that participate in this capability
-  components: []    # component meta.ids that implement parts of this capability
-
-# ── FUTURE ─────────────────────────────────────────────────────────
-# blockers:       # To be defined — open questions, dependencies, risks
-
-# ── SHARED (Optional, any phase) ───────────────────────────────────
-
-refs: []          # Same structure as other specs — tickets, designs, research, docs
-
-# Capability diagrams: prefer the end-to-end sequence or user journey
-# This is the right home for cross-system flows that span multiple containers
-diagrams:
-  - type: "sequence|flowchart|user_journey"
-    title: ""
-    description: ""
-    mermaid: |
-      # Cross-system flow spanning multiple containers
-      # e.g., User → WebApp → AuthProvider → API → WebApp
-
 # ============================================
 # META (for system / container / component)
 # ============================================
@@ -386,6 +386,23 @@ meta:
 
   type: "component|widget|service|agent|tool|workflow|tool_registry|state_store|evaluator|container|system"
   domain: "frontend|backend|mobile|infrastructure|ai|data|ai_native"
+
+# ── VALID level + type COMBINATIONS ────────────────────────────────
+# level: "capability"   → no type or domain field
+# level: "foundation"   → no type or domain field
+# level: "system"       → type: "system"
+# level: "container"    → type: "container"
+# level: "component"    → type: one of:
+#                           component    (generic logical unit)
+#                           widget       (UI component)
+#                           service      (backend service)
+#                           agent        (AI agent) → requires ai_config
+#                           tool         (AI tool)  → requires ai_config
+#                           workflow     (AI workflow) → requires ai_config
+#                           tool_registry            → requires ai_config
+#                           state_store              → requires ai_config
+#                           evaluator                → requires ai_config
+# ───────────────────────────────────────────────────────────────────
 
 # ── NEW in v9.0.0 ──────────────────────────────────────────────────
 # Declare which capabilities this container or component implements.
@@ -407,9 +424,11 @@ uses:
 # ============================================
 refs:
   - id: ""
-    type: "design|ticket|doc|image|video|dataset|api|prompt|spec|other"
-    # prompt → system prompts, BAML functions, output schemas
-    # spec   → links to another SpecPlane spec file (including capability specs)
+    type: "design|ticket|doc|image|video|dataset|api|prompt|spec|incident|postmortem|other"
+    # prompt     → system prompts, BAML functions, output schemas
+    # spec       → links to another SpecPlane spec file (including capability specs)
+    # incident   → links to a production incident that informed or changed this spec
+    # postmortem → links to a post-mortem action item that resulted in a spec change
     title: ""
     url: ""
     path: ""
@@ -749,6 +768,8 @@ diagrams:
 - `figma.com` → `design` | `atlassian.net|jira.com` → `ticket` | `linear.app` → `ticket`
 - `docs.google.com` → `doc` | `.png|.jpg|.svg` → `image` | `.mp4|.mov` → `video`
 - `.baml|.prompt|system_prompt` → `prompt` | other `.yaml` SpecPlane files → `spec`
+- incident tracking URLs (PagerDuty, Opsgenie, Statuspage) → `incident`
+- post-mortem docs (Notion, Confluence, Google Docs titled "post-mortem") → `postmortem`
 
 ---
 
@@ -1071,6 +1092,40 @@ implementation:
    meta:
      level: "capability"
    ai_config: ...
+   ```
+
+7. **`type` must be valid for the `level`**
+   ```yaml
+   # ✅ Valid
+   meta:
+     level: "component"
+     type: "agent"
+
+   # ❌ Invalid — capability and foundation specs have no type field
+   meta:
+     level: "capability"
+     type: "service"
+
+   # ❌ Invalid — container level only allows type: "container"
+   meta:
+     level: "container"
+     type: "widget"
+   ```
+
+8. **`realized_by` only on capability specs; `used_by` only on foundation specs**
+   ```yaml
+   # ✅ Valid
+   # capability spec:
+   realized_by:
+     containers: ["container.web_app"]
+
+   # foundation spec:
+   used_by:
+     components: ["component.login_form"]
+
+   # ❌ Invalid — realized_by does not exist on foundation specs
+   # foundation spec:
+   realized_by: ...
    ```
 
 ---
