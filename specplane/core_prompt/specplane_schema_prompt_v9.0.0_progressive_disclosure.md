@@ -235,6 +235,12 @@ meta:
   status: ""          # See per-level values below
   version: ""         # Semver MAJOR.MINOR.PATCH — see versioning rules (Validation Rule 9)
   review_state: ""    # See per-level values below
+  introduced_in: ""   # Semver at which this spec was first created (e.g., "1.0.0")
+                      # Set once on creation; never changed. Enables CI to compute "spec age"
+                      # and surface how far behind consumers are relative to current version.
+  deprecated_in: ""   # Semver at which this spec was deprecated (e.g., "3.0.0")
+                      # Required when status: "deprecated". Together with introduced_in,
+                      # CI can enforce "deprecated for N major versions — migration required."
   replaced_by: ""     # Only when status: "deprecated" — meta.id of the spec that supersedes this one
                       # e.g., "component.auth_service_v2" or "foundation.security_baseline_v2"
   migration_notes: "" # Only when status: "deprecated" or changelog has breaking: true
@@ -944,7 +950,29 @@ diagrams:
         breaking: false
     ```
 
-12. **`replaced_by` required when `status: "deprecated"`**
+12. **`introduced_in` required on all specs; `deprecated_in` required when `status: "deprecated"`**
+    ```yaml
+    # ✅ Valid — active spec with introduction version
+    meta:
+      version: "2.1.0"
+      introduced_in: "1.0.0"
+      status: "active"
+
+    # ✅ Valid — deprecated spec with full evolution range
+    meta:
+      version: "3.0.0"
+      introduced_in: "1.0.0"
+      deprecated_in: "3.0.0"
+      status: "deprecated"
+      replaced_by: "component.auth_service_v2"
+
+    # ❌ Invalid — deprecated but deprecated_in missing
+    meta:
+      status: "deprecated"
+      deprecated_in: ""      # CI cannot compute deprecation age or enforce migration gates
+    ```
+
+13. **`replaced_by` required when `status: "deprecated"`**
     ```yaml
     # ✅ Valid — deprecated with a clear successor
     meta:
@@ -958,7 +986,7 @@ diagrams:
       replaced_by: ""
     ```
 
-13. **`replaced_by` must reference an existing spec by meta.id**
+14. **`replaced_by` must reference an existing spec by meta.id**
     ```yaml
     # ✅ Valid
     replaced_by: "component.auth_service_v2"   # File exists: components/.../component.auth_service_v2.yaml
@@ -968,7 +996,7 @@ diagrams:
     replaced_by: "the new auth service"        # Not a meta.id
     ```
 
-14. **Component `data_classification` must not be weaker than the parent capability's**
+15. **Component `data_classification` must not be weaker than the parent capability's**
     ```yaml
     # Strictness order (weakest → strictest): public → internal → confidential → regulated
 
@@ -985,7 +1013,7 @@ diagrams:
     # component.login_form: data_classification: "public"
     ```
 
-15. **`test_strategy` CI inference rules**
+16. **`test_strategy` CI inference rules**
     ```yaml
     # CI derives test requirements as follows:
     # unit != ""        → run unit tests
@@ -1010,7 +1038,7 @@ diagrams:
     # Missing: security testing gate is implied by regulated data_classification
     ```
 
-16. **`rollout.feature_flag` is required when strategy is `feature_flag` or `dark_launch`**
+17. **`rollout.feature_flag` is required when strategy is `feature_flag` or `dark_launch`**
     ```yaml
     # ✅ Valid
     rollout:
@@ -1029,7 +1057,7 @@ diagrams:
       feature_flag: ""
     ```
 
-17. **All bidirectional relationships must be kept in sync (both sides required)**
+18. **All bidirectional relationships must be kept in sync (both sides required)**
 
     The following pairs are bidirectional. Adding an ID to one side **requires** adding the reciprocal ID to the other. CI must validate both directions.
 
@@ -1414,6 +1442,7 @@ implementation:
 - "Is this a breaking change?" → Analyse contracts/APIs/interfaces; recommend breaking: true/false
 - "Deprecate this spec" → Set status: "deprecated", populate replaced_by with the successor meta.id, write migration_notes for consumers
 - "What replaced X?" → Look up replaced_by on deprecated spec; surface migration_notes
+- "How old is this spec?" → Compute version delta between introduced_in and current version; flag if spec has been deprecated for more than one MAJOR version without consumer migration
 - "What breaks if this spec changes?" → Read depended_on_by.components and depended_on_by.containers; trace to their capabilities via implements
 - "Audit bidirectional links" → Check all four pairs: implements↔realized_by, uses↔used_by, dependencies.internal↔depended_on_by.components, relationships.depends_on↔depended_on_by.containers; flag any one-sided entries
 - "Set data classification" → Guide through public|internal|confidential|regulated; remind that regulated triggers compliance pack validation and that all implementing components must match or exceed the capability's classification
@@ -1484,6 +1513,7 @@ implementation:
 
 Before marking a **capability** spec as `status: "launched"`:
 - [ ] `meta` complete (id, purpose, level, owner, status, version)
+- [ ] `meta.introduced_in` set to the version when this spec was first created
 - [ ] `meta.review_state` is `pm_approved` at minimum; `legal_reviewed` if legal/security constraints present
 - [ ] `responsibilities` clearly list what this capability owns end-to-end
 - [ ] `flows` named (not just "login" but the full set: sign-up, refresh, logout, reset)
@@ -1498,6 +1528,7 @@ Before marking a **capability** spec as `status: "launched"`:
 
 Before marking a **foundation** spec as `status: "active"`:
 - [ ] `meta` complete (id, purpose, level, owner, status, version)
+- [ ] `meta.introduced_in` set to the version when this spec was first created
 - [ ] `meta.review_state` is `approved`
 - [ ] `provides` clearly lists what this foundation gives to consumers
 - [ ] `used_by` populated (containers and components that reference this)
@@ -1510,6 +1541,7 @@ Before marking a **component or container** as `status: "active"`:
 - [ ] `implements` field present with capability ID(s)
 - [ ] `uses` field present with foundation ID(s) where applicable
 - [ ] `meta` complete (id, purpose, level, owner, version)
+- [ ] `meta.introduced_in` set to the version when this spec was first created
 - [ ] `meta.review_state` is `eng_approved` at minimum
 - [ ] File naming and location correct
 - [ ] Behavioral contracts defined
