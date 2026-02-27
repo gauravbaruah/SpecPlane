@@ -316,7 +316,7 @@ success_metrics:
 roadmap:
   phase: ""           # e.g., "Q1 2026", "v1.0 launch", "Sprint 23"
   priority: ""        # e.g., "P0", "must-have", "nice-to-have"
-  depends_on: []      # Capability IDs that must exist before this one
+  depends_on: []      # Capability IDs that must exist before this one. Must not create a cycle — use enables for the reverse direction.
   enables: []         # Capability IDs that this capability unlocks
 
 # ── PHASE 3: ENGINEERING-ADDED (Optional) ──────────────────────────
@@ -413,12 +413,14 @@ diagrams: []
 # Declare which capabilities this container or component implements.
 # Added by engineering when realized_by is populated in the capability spec.
 # A component may implement more than one capability.
+# Bidirectional: adding a capability ID here REQUIRES adding this component's ID to realized_by.components in the capability spec.
 implements:
   - ""    # e.g., "capability.authentication"
           # e.g., "capability.onboarding"
 
 # Declare which foundations this container or component builds on.
 # Used for traceability: find all components affected by a foundation change.
+# Bidirectional: adding a foundation ID here REQUIRES adding this component's ID to used_by.components in the foundation spec.
 uses:
   - ""    # e.g., "foundation.design_system"
           # e.g., "foundation.api_conventions"
