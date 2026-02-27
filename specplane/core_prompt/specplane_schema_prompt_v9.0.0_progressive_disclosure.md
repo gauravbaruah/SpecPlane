@@ -235,6 +235,11 @@ meta:
   status: ""          # See per-level values below
   version: ""         # Semver MAJOR.MINOR.PATCH — see versioning rules (Validation Rule 9)
   review_state: ""    # See per-level values below
+  replaced_by: ""     # Only when status: "deprecated" — meta.id of the spec that supersedes this one
+                      # e.g., "component.auth_service_v2" or "foundation.security_baseline_v2"
+  migration_notes: "" # Only when status: "deprecated" or changelog has breaking: true
+                      # Plain-text standing instruction for consumers arriving at this spec cold
+                      # e.g., "Replace uses: [foundation.design_system] with uses: [foundation.design_system_v2]; update all color tokens to semantic aliases"
 
 changelog:
   - date: "YYYY-MM-DD"
@@ -311,6 +316,14 @@ constraints:
   legal: []       # e.g., "GDPR consent required before account creation"
   security: []    # e.g., "PKCE required for OAuth flows"
   ux: []          # e.g., "Explicit consent gate must block account creation until accepted"
+  data_classification: "public|internal|confidential|regulated"
+  # public       → no access controls required; safe to expose externally
+  # internal     → employees and authenticated users only
+  # confidential → restricted access; PII, credentials, business-sensitive data
+  # regulated    → subject to external regulation (GDPR, HIPAA, PCI-DSS, SOC2, etc.)
+  #                When set to "regulated", compliance pack validation activates if a pack is loaded.
+  #                This field is the compliance pack trigger — pack-specific fields
+  #                (audit_required, retention_policy_ref, regulatory_mappings) live in the pack.
 
 # ── PHASE 2: OPTIONAL (PM + Stakeholders) ──────────────────────────
 
@@ -555,8 +568,17 @@ implementation:
     data_models: {}
 
   dependencies:
-    internal: []
-    external: []
+    internal: []    # component meta.ids this component depends on
+                    # Bidirectional: adding a component ID here REQUIRES adding this component's ID
+                    # to depended_on_by.components in the target component's spec.
+    external: []    # Named external services, SDKs, or APIs (not SpecPlane specs)
+
+  depended_on_by:
+    components: []  # component meta.ids that list this component in their dependencies.internal
+    containers: []  # container meta.ids that list this component in their relationships.depends_on
+    # Bidirectional: adding an ID here REQUIRES that spec to list this component in its
+    # dependencies.internal (for components) or relationships.depends_on (for containers).
+    # Used by CI to answer: "If this spec changes, what else breaks?"
 
   observability:
     # ── OBSERVABILITY scope ──────────────────────────────────────────────
@@ -593,10 +615,11 @@ implementation:
       authentication: ""
       authorization: ""
       data_protection: ""
-      compliance: ""
+      data_classification: "public|internal|confidential|regulated"  # Must match or be stricter than the parent capability's data_classification
+      compliance: ""        # Free-text note (e.g., "GDPR, SOC 2 Type II"). Machine-readable compliance fields live in compliance packs.
       threats: []
       mitigations: []
-      data_retention: {}
+      data_retention: ""    # Retention period or policy name (e.g., "90 days", "per GDPR Article 5(1)(e)")
     technical:
       compatibility: ""
       accessibility: ""
@@ -609,11 +632,33 @@ implementation:
     readiness: "ready|blocked|unknown"
     open_questions: []
     test_strategy:
-      unit: ""          # Key behaviors to cover and/or coverage target (e.g., ">90% on business logic")
-      integration: ""   # Key integration paths to test (e.g., "auth flow with token service")
-      e2e: ""           # Critical user journeys; link to Playwright/Cypress spec files if exists
-      # Note: detailed test specs belong in the QA Pack extension.
-      # This section captures intent and pointers — not the full test suite.
+      unit: ""          # Key behaviors to cover (e.g., ">90% on business logic, all error branches")
+                        # Presence implies required — CI treats non-empty as "run unit tests"
+      integration: ""   # Key integration paths (e.g., "auth flow with token_service and session_store")
+                        # Presence implies required — CI treats non-empty as "run integration tests"
+      e2e: ""           # Critical user journeys; link to Playwright/Cypress spec files
+                        # Presence implies required — CI treats non-empty as "run E2E tests"
+      performance: false  # Set true for latency-sensitive or high-throughput components
+                          # Cannot be inferred from prose — this is the explicit load/perf test gate
+      # Security test requirement is inferred from data_classification — no separate flag needed:
+      # data_classification: "confidential" or "regulated" → CI requires security testing
+      # Note: contract_testing, chaos_testing, accessibility_testing live in the QA Pack extension.
+
+  rollout:
+    strategy: "immediate|blue_green|canary|feature_flag|dark_launch"
+    # immediate   — deploy all-at-once; fast but no blast-radius control
+    # blue_green  — full traffic switches after parallel env validates; zero-downtime swap
+    # canary      — incremental traffic shift; requires SLO monitoring to auto-advance/rollback
+    # feature_flag — ship to prod dark; flag gates exposure; decouples deploy from release
+    # dark_launch  — same as feature_flag but traffic mirrors to new path without user-visible effect
+    feature_flag: ""   # Required when strategy: "feature_flag" or "dark_launch"
+                       # Must be the flag key as it appears in your flag management system
+                       # (LaunchDarkly, Unleash, Statsig, etc.)
+    rollback_trigger: ""  # Condition that triggers automated rollback
+                          # Link to an observability SLO for machine-readable enforcement
+                          # e.g., "error_rate > 1% sustained for 5min" or "p99_latency > 2s"
+    # Note: per-environment config, traffic-split percentages, and flag variants
+    # belong in the DevOps Pack extension — this captures intent and strategy only.
 
 # ============================================
 # AI CONFIG (for AI-native component types)
@@ -897,6 +942,117 @@ diagrams:
         author: "dev"
         summary: "Renamed /auth/login to /auth/session"
         breaking: false
+    ```
+
+12. **`replaced_by` required when `status: "deprecated"`**
+    ```yaml
+    # ✅ Valid — deprecated with a clear successor
+    meta:
+      status: "deprecated"
+      replaced_by: "foundation.security_baseline_v2"
+      migration_notes: "Update all uses: references to foundation.security_baseline_v2; review new rate_limiting.burst_allowance field"
+
+    # ❌ Invalid — deprecated but no successor or migration guidance
+    meta:
+      status: "deprecated"
+      replaced_by: ""
+    ```
+
+13. **`replaced_by` must reference an existing spec by meta.id**
+    ```yaml
+    # ✅ Valid
+    replaced_by: "component.auth_service_v2"   # File exists: components/.../component.auth_service_v2.yaml
+
+    # ❌ Invalid
+    replaced_by: "auth_service_v2"             # Missing level prefix
+    replaced_by: "the new auth service"        # Not a meta.id
+    ```
+
+14. **Component `data_classification` must not be weaker than the parent capability's**
+    ```yaml
+    # Strictness order (weakest → strictest): public → internal → confidential → regulated
+
+    # ✅ Valid — component is as strict as its capability
+    # capability.authentication: data_classification: "confidential"
+    # component.login_form: data_classification: "confidential"
+
+    # ✅ Valid — component is stricter than its capability
+    # capability.authentication: data_classification: "confidential"
+    # component.token_service: data_classification: "regulated"
+
+    # ❌ Invalid — component is weaker than its capability
+    # capability.authentication: data_classification: "regulated"
+    # component.login_form: data_classification: "public"
+    ```
+
+15. **`test_strategy` CI inference rules**
+    ```yaml
+    # CI derives test requirements as follows:
+    # unit != ""        → run unit tests
+    # integration != "" → run integration tests
+    # e2e != ""         → run E2E tests (trigger Playwright MCP if configured)
+    # performance: true → run load/performance tests
+    # data_classification: "confidential" or "regulated" → run security tests
+
+    # ✅ Valid — e2e not required for an internal utility component
+    test_strategy:
+      unit: "cover all transformation branches; >90% on business logic"
+      integration: "verify contract with component.data_store"
+      e2e: ""
+      performance: false
+
+    # ❌ Invalid — security test not enforced but component handles regulated data
+    # (data_classification: "regulated" on the parent capability means CI must require security testing)
+    test_strategy:
+      unit: "basic coverage"
+      e2e: ""
+      performance: false
+    # Missing: security testing gate is implied by regulated data_classification
+    ```
+
+16. **`rollout.feature_flag` is required when strategy is `feature_flag` or `dark_launch`**
+    ```yaml
+    # ✅ Valid
+    rollout:
+      strategy: "feature_flag"
+      feature_flag: "referral_program_enabled"
+      rollback_trigger: "error_rate > 1% for 5min"
+
+    # ✅ Valid — immediate rollout, no flag needed
+    rollout:
+      strategy: "immediate"
+      rollback_trigger: "p99_latency > 2s"
+
+    # ❌ Invalid — strategy requires feature_flag key but it's missing
+    rollout:
+      strategy: "feature_flag"
+      feature_flag: ""
+    ```
+
+17. **All bidirectional relationships must be kept in sync (both sides required)**
+
+    The following pairs are bidirectional. Adding an ID to one side **requires** adding the reciprocal ID to the other. CI must validate both directions.
+
+    | If you add X to... | You must also add Y to... |
+    |---|---|
+    | `implements: ["capability.X"]` on a component | `realized_by.components: ["component.Y"]` on the capability |
+    | `uses: ["foundation.X"]` on a component/container | `used_by.components/containers: ["component.Y"]` on the foundation |
+    | `dependencies.internal: ["component.X"]` on a component | `depended_on_by.components: ["component.Y"]` on the dependency |
+    | `relationships.depends_on: ["container.X"]` on a container | `depended_on_by.containers: ["container.Y"]` on the dependency |
+
+    ```yaml
+    # ✅ Valid — both sides populated
+    # component.login_form:
+    dependencies:
+      internal: ["component.token_service"]
+
+    # component.token_service:
+    depended_on_by:
+      components: ["component.login_form"]
+
+    # ❌ Invalid — only one side populated
+    # component.login_form lists component.token_service in dependencies.internal
+    # but component.token_service has no depended_on_by entry for component.login_form
     ```
 
 ---
@@ -1256,6 +1412,18 @@ implementation:
 - "Mark this spec as approved" → Guide through review_state progression for the spec's level
 - "What changed in this spec?" → Summarise changelog entries in plain English
 - "Is this a breaking change?" → Analyse contracts/APIs/interfaces; recommend breaking: true/false
+- "Deprecate this spec" → Set status: "deprecated", populate replaced_by with the successor meta.id, write migration_notes for consumers
+- "What replaced X?" → Look up replaced_by on deprecated spec; surface migration_notes
+- "What breaks if this spec changes?" → Read depended_on_by.components and depended_on_by.containers; trace to their capabilities via implements
+- "Audit bidirectional links" → Check all four pairs: implements↔realized_by, uses↔used_by, dependencies.internal↔depended_on_by.components, relationships.depends_on↔depended_on_by.containers; flag any one-sided entries
+- "Set data classification" → Guide through public|internal|confidential|regulated; remind that regulated triggers compliance pack validation and that all implementing components must match or exceed the capability's classification
+- "Does this need a compliance pack?" → Check data_classification on capability and component specs; if "regulated", recommend loading the appropriate pack (GDPR, HIPAA, SOC2, PCI-DSS)
+
+**Rollout & Release:**
+- "Plan rollout for X" → Guide through strategy enum; ask if a feature flag is needed; link rollback_trigger to an existing SLO in observability
+- "Add a feature flag" → Set strategy: "feature_flag", prompt for flag key name, warn if flag not yet created in flag management system
+- "What's the rollback condition?" → Derive from observability.slos if defined; otherwise prompt for error_rate or latency threshold
+- "Is this a breaking change for consumers?" → Check depended_on_by, then recommend canary or feature_flag strategy over immediate rollout
 
 **C4 Architecture:**
 - "Create system context" → Guide through C4 Level 1 including capabilities[]
@@ -1353,6 +1521,9 @@ Before marking a **component or container** as `status: "active"`:
 - [ ] Assumptions listed
 - [ ] `changelog` has at least one entry
 - [ ] Relationships to other specs defined
+- [ ] All bidirectional links verified: implements↔realized_by, uses↔used_by, dependencies.internal↔depended_on_by
+- [ ] `rollout.strategy` set (not blank); `feature_flag` populated if strategy is `feature_flag` or `dark_launch`
+- [ ] `rollout.rollback_trigger` links to an SLO or has an explicit condition
 
 For **AI-native specs** (when meta.type is agent/tool/workflow/tool_registry/evaluator):
 - [ ] `ai_config` section present with type-appropriate fields
