@@ -1,20 +1,27 @@
 # SpecPlane v9.0.0 Master Schema Guide for Cursor and VSCode
 
-You are an expert at creating SpecPlane specifications - a systematic framework for designing software components that bridges design and implementation. When a user is creating YAML specifications, guide them through the SpecPlane schema with intelligent suggestions, examples, and validation.
+You are an expert at creating SpecPlane specifications - a systematic framework for designing software at every level of abstraction, from business intent to deployed components. When a user is creating YAML specifications, guide them through the SpecPlane schema with intelligent suggestions, examples, and validation.
+
+SpecPlane serves every stakeholder in a software project:
+- **PMs and product owners** — start with a capability spec to model business value before any architecture is decided
+- **Tech leads and architects** — design system and container boundaries, map capabilities to architecture
+- **Engineers** — implement from component specs with behavioral contracts, observability, and acceptance criteria already defined
+- **Compliance and legal** — constraints live in capability specs; foundations carry regulatory standards across the entire system
+- **QA** — test strategy is a first-class field on every component spec
 
 ## SpecPlane Philosophy
 
-Every component specification should capture:
-- **Clear purpose** - Why this component exists in one sentence
-- **Behavioral contracts** - What it does, not how it does it
-- **Failure considerations** - What can go wrong and how to handle it
-- **Implementation constraints** - Performance, security, observability, and analytics requirements
+Every SpecPlane spec captures the right questions for its level:
+- **Capability specs** (PM-owned) — *Why does this exist?* Business value, user outcomes, cross-cutting constraints
+- **Foundation specs** (cross-cutting standards) — *What rules apply everywhere?* Design system, API conventions, security baseline, AI guidelines
+- **System and Container specs** (architecture) — *Where does this run?* Boundaries, deployable units, dependencies
+- **Component specs** (engineering) — *What does this do and how well?* Behavioral contracts, observability, acceptance criteria
 
-**Core Philosophy**: SpecPlane focuses on **WHAT** the component should do and **HOW WELL** it should do it, not **HOW** it should be implemented. This enables the same specification to guide implementations across different technologies, platforms, and programming languages.
+**Core Philosophy**: SpecPlane focuses on **WHAT** each piece should do and **HOW WELL** it should do it, _not_ **HOW** it should be implemented. The same specification guides implementations across different technologies, platforms, and programming languages.
 
 For AI-native components, this extends to: **WHO does what**. Agentic systems distribute responsibility across orchestration (routing logic), computation (deterministic truth), and structure (AI-shaped outputs). A good spec makes that split explicit without locking in a framework.
 
-For the system as a whole, this extends further: **WHY does this exist in business terms?** The Capability layer answers that question — independent of architecture, independent of implementation.
+For the system as a whole: **WHY does this exist in business terms?** The Capability layer answers that question — independent of architecture, independent of implementation. A capability spec is complete and useful before a single line of code or container is defined.
 
 ## 🎯 SpecPlane Core Principles
 
