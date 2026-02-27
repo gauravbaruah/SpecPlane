@@ -20,7 +20,7 @@ For the system as a whole, this extends further: **WHY does this exist in busine
 
 1. **Pure DRY** - Author once, no top-level mirrors
 2. **Progressive Disclosure** - Start minimal, expand as needed
-3. **Clear Separation** - Analytics (business) vs Observability (technical) & System Events
+3. **Clear Separation** - Analytics (business intent, PM-owned) vs Observability (system health, engineering-owned). The test: would a PM put this on a product dashboard? → analytics. Would an engineer page on this at 2am? → observability. An event can be both; it belongs in the section of the person who owns the question.
 4. **C4 Aligned** - Capability → System → Container → Component hierarchy (5C model)
 5. **Opinionated Structure** - Clear file organization and naming
 6. **Connected Ecosystem** - Link to designs, tickets, research via refs
@@ -64,27 +64,6 @@ capability.authentication          capability.data_analytics
 
 **C4 answers:** Where does this run? What contains what? What depends on what?
 **Capability answers:** What product outcome does this enable? What user value is unlocked? What business objective does this serve? Which components together realize a capability?
-
-## Quality Indicators
-
-A good SpecPlane spec should have:
-- ✅ Clear, measurable acceptance criteria
-- ✅ Comprehensive error handling scenarios
-- ✅ Realistic performance constraints
-- ✅ Appropriate security considerations
-- ✅ Observable metrics and events with alerting
-- ✅ Clear integration points with other components
-- ✅ Language-agnostic behavioral contracts
-- ✅ Platform-independent specifications with optional implementation hints
-- ✅ Connected to design artifacts, tickets, and research
-
-For capability specs, additionally:
-- ✅ Clear responsibilities (semantic boundary — what this capability owns end-to-end)
-- ✅ Flows covered (sign-up, login, refresh, etc.)
-- ✅ Business value articulated (user outcome + objective)
-- ✅ Cross-cutting constraints captured (legal, security, UX)
-
----
 
 ## 📁 File Organization and Naming Conventions
 
@@ -189,7 +168,9 @@ specs/
     │   └── component.<collection>_collection.yaml
     └── evaluations/
         ├── component.<name>_invariants.yaml         # meta.type: "evaluator" (eval_type: invariant)
-        └── component.<name>_dataset.yaml            # meta.type: "evaluator" (eval_type: dataset)
+        ├── component.<name>_dataset.yaml            # meta.type: "evaluator" (eval_type: dataset)
+        ├── component.<name>_scorer.yaml             # meta.type: "evaluator" (eval_type: scorer)
+        └── component.<name>_sim_generator.yaml      # meta.type: "evaluator" (eval_type: sim_generator)
 ```
 
 ### **What Makes Something a Capability?**
@@ -212,64 +193,85 @@ A capability is a **cross-cutting business concern** — it spans multiple conta
 - Yes → Capability
 - No → Container or Component
 
-### **Strict Naming Conventions**
+### **Naming Convention**
 
-**File Naming Pattern**: `<level>.<n>.yaml`
+`<level>.<name>.yaml` — `meta.id` must exactly match the filename without extension.
 
-- **Capability files**: `capability.<capability_name>.yaml`
-- **Foundation files**: `foundation.<foundation_name>.yaml`
-- **System files**: `system.<system_name>.yaml`
-- **Container files**: `container.<container_name>.yaml`
-- **Component files**: `component.<component_name>.yaml`
-- **Tool files**: `component.tool.<tool_name>.yaml`
+| Spec type | Filename pattern |
+|---|---|
+| Capability | `capability.<name>.yaml` |
+| Foundation | `foundation.<name>.yaml` |
+| System | `system.<name>.yaml` |
+| Container | `container.<name>.yaml` |
+| Component | `component.<name>.yaml` |
+| Tool | `component.tool.<name>.yaml` |
 
-**ID Field Consistency**: The `meta.id` must exactly match the filename (without extension):
-- File: `capability.authentication.yaml` → `meta.id: "capability.authentication"`
-- File: `foundation.design_system.yaml` → `meta.id: "foundation.design_system"`
-- File: `component.tool.fetch_series.yaml` → `meta.id: "component.tool.fetch_series"`
+See Validation Rules 1–2 for enforcement examples.
 
 ---
 
 ## 📐 Complete Schema Structure
 
-```yaml
-# ============================================
-# CAPABILITY SPEC (level: "capability")
-# ============================================
-# Progressive disclosure — two phases:
-#
-# Phase 1 (PM-owned, early): meta + responsibilities + flows + business_value + constraints
-# Phase 2 (optional, mature): + success_metrics + roadmap
-# Phase 3 (engineering-added): + realized_by
-# Future:                      + blockers
-#
-# A capability spec is valid and useful from Phase 1 alone.
-# Engineering adds realized_by when implementation is planned or underway.
+### Shared Meta Block (all spec types)
 
+All specs begin with the same `meta` block and `changelog`. Per-level differences are in the callout table below.
+
+```yaml
 meta:
-  id: ""           # Required: "capability.<name>" (must match filename)
-  purpose: ""      # Required: one-sentence statement of what this capability enables
-  level: "capability"  # Required
-  owner: ""        # Team or person responsible (usually Product Team)
-  tags: []         # e.g., ["auth", "security", "legal", "growth"]
-  status: "planned|in_progress|launched|deprecated"
+  id: ""              # Required: must match filename without extension
+                      # e.g., "capability.authentication", "foundation.design_system"
+  purpose: ""         # Required: one sentence describing what this spec defines
+  level: ""           # Required: capability | foundation | system | container | component
+  owner: ""           # Team or person responsible
+  tags: []
   last_updated: "YYYY-MM-DD"
-  version: ""      # Semver: MAJOR.MINOR.PATCH
-                   # MAJOR → breaking change to responsibilities, flows, or constraints
-                   # MINOR → additive (new flow, new constraint, new success metric)
-                   # PATCH → correction, clarification, or ref update
-  review_state: "unreviewed|pm_approved|eng_approved|legal_reviewed|shipped"
-  # unreviewed    → freshly created, not yet reviewed by any stakeholder
-  # pm_approved   → PM has signed off on responsibilities, flows, and business_value
-  # eng_approved  → Tech Lead has signed off on realized_by and feasibility
-  # legal_reviewed → Legal/Compliance has reviewed constraints (required for legal/security caps)
-  # shipped       → Capability is live; spec reflects production behaviour
+  status: ""          # See per-level values below
+  version: ""         # Semver MAJOR.MINOR.PATCH — see versioning rules (Validation Rule 9)
+  review_state: ""    # See per-level values below
 
 changelog:
   - date: "YYYY-MM-DD"
     author: ""
-    summary: ""    # e.g., "Added Token refresh flow; tightened PKCE constraint"
-    breaking: false  # true if this change alters responsibilities, flows, or public contracts
+    summary: ""       # e.g., "Added Token refresh flow; tightened PKCE constraint"
+    breaking: false   # true if this change alters public contracts, responsibilities, or interfaces
+```
+
+**Per-level differences:**
+
+| Field | capability | foundation | system / container / component |
+|---|---|---|---|
+| `status` | `planned\|in_progress\|launched\|deprecated` | `draft\|active\|deprecated\|archived` | `draft\|active\|deprecated\|archived` |
+| `review_state` | `unreviewed\|pm_approved\|eng_approved\|legal_reviewed\|shipped` | `unreviewed\|approved\|deprecated` | `unreviewed\|pm_approved\|eng_approved\|legal_reviewed\|shipped` |
+| `type` | — (not used) | — (not used) | `component\|widget\|service\|agent\|tool\|workflow\|tool_registry\|state_store\|evaluator\|container\|system` |
+| `domain` | — (not used) | — (not used) | `frontend\|backend\|mobile\|infrastructure\|ai\|data\|ai_native` |
+
+**`version` semantics per level:**
+- **capability:** MAJOR = breaking change to responsibilities, flows, or constraints
+- **foundation:** MAJOR = renamed field, removed rule, or changed convention
+- **component/container:** MAJOR = breaking interface change (renamed/removed input, output, or API contract)
+- All levels: MINOR = additive; PATCH = correction or clarification
+
+**`review_state` semantics:**
+- `unreviewed` → freshly created, not yet reviewed
+- `pm_approved` → PM has signed off on scope and business value
+- `eng_approved` → Tech Lead has confirmed feasibility and architecture fit
+- `legal_reviewed` → Legal/Compliance has reviewed (required when constraints include legal or security)
+- `shipped` → Live in production; spec reflects actual behaviour
+- `approved` *(foundation only)* → Reviewed and accepted as the active standard
+
+---
+
+### Capability Spec (level: "capability")
+
+Progressive disclosure:
+- Phase 1 (PM-owned, required): `meta` + `responsibilities` + `flows` + `business_value` + `constraints`
+- Phase 2 (optional): + `success_metrics` + `roadmap`
+- Phase 3 (engineering-added): + `realized_by`
+
+A capability spec is valid and useful from Phase 1 alone.
+
+```yaml
+# (meta + changelog — see Shared Meta Block above)
 
 # ── PHASE 1: PM-OWNED (Required) ───────────────────────────────────
 
@@ -355,28 +357,7 @@ diagrams:
 # Foundations reference back via `used_by`.
 # A foundation may extend another foundation via `extends`.
 
-meta:
-  id: ""           # Required: "foundation.<name>" (must match filename)
-  purpose: ""      # Required: one sentence describing what this foundation defines
-  level: "foundation"  # Required
-  owner: ""
-  tags: []
-  status: "draft|active|deprecated|archived"
-  last_updated: "YYYY-MM-DD"
-  version: ""      # Semver: MAJOR.MINOR.PATCH
-                   # MAJOR → breaking change (renamed field, removed rule, changed convention)
-                   # MINOR → additive (new rule, new token, new guidance)
-                   # PATCH → correction or clarification
-  review_state: "unreviewed|approved|deprecated"
-  # unreviewed → draft, not yet reviewed by the owning team
-  # approved   → reviewed and accepted as the active standard
-  # deprecated → superseded; consumers should migrate to the replacement
-
-changelog:
-  - date: "YYYY-MM-DD"
-    author: ""
-    summary: ""
-    breaking: false
+# (meta + changelog — see Shared Meta Block above; use foundation-specific status and review_state values)
 
 # What this foundation provides to those who use it
 provides:
@@ -399,30 +380,10 @@ refs: []
 diagrams: []
 
 # ============================================
-# META (for system / container / component)
+# SYSTEM / CONTAINER / COMPONENT SPEC
 # ============================================
-meta:
-  id: ""
-  purpose: ""
-  level: "system|container|component"
 
-  owner: ""
-  tags: []
-  status: "draft|active|deprecated|archived"
-  last_updated: "YYYY-MM-DD"
-  version: ""     # Semver: MAJOR.MINOR.PATCH
-                  # MAJOR → breaking interface change (renamed/removed input, output, or API contract)
-                  # MINOR → additive (new capability, new endpoint, new event)
-                  # PATCH → documentation, correction, or non-breaking clarification
-  review_state: "unreviewed|pm_approved|eng_approved|legal_reviewed|shipped"
-  type: "component|widget|service|agent|tool|workflow|tool_registry|state_store|evaluator|container|system"
-  domain: "frontend|backend|mobile|infrastructure|ai|data|ai_native"
-
-changelog:
-  - date: "YYYY-MM-DD"
-    author: ""
-    summary: ""
-    breaking: false  # true if inputs, outputs, APIs, or contracts changed incompatibly
+# (meta + changelog — see Shared Meta Block above; add type and domain fields per the table)
 
 # ── VALID level + type COMBINATIONS ────────────────────────────────
 # level: "capability"   → no type or domain field
@@ -430,15 +391,22 @@ changelog:
 # level: "system"       → type: "system"
 # level: "container"    → type: "container"
 # level: "component"    → type: one of:
-#                           component    (generic logical unit)
-#                           widget       (UI component)
-#                           service      (backend service)
-#                           agent        (AI agent) → requires ai_config
-#                           tool         (AI tool)  → requires ai_config
-#                           workflow     (AI workflow) → requires ai_config
-#                           tool_registry            → requires ai_config
-#                           state_store              → requires ai_config
-#                           evaluator                → requires ai_config
+#
+#   Non-AI types (no ai_config block):
+#     component     Generic logical unit. Use when the piece doesn't fit widget or service —
+#                   e.g., a state manager, a route guard, a data transformer.
+#     widget        A self-contained UI element rendered in the frontend.
+#                   Use when domain is "frontend" and the unit has its own visual contract.
+#     service       A backend unit with its own lifecycle, API surface, or data ownership.
+#                   Use when the unit is independently deployable or has clear API boundaries.
+#
+#   AI-native types (require ai_config block):
+#     agent         → requires ai_config (role, tools, memory, handoffs)
+#     tool          → requires ai_config (computation_type, output_contract, call_sites)
+#     workflow      → requires ai_config (pattern, nodes, edges, state_schema)
+#     tool_registry → requires ai_config (provides_discovery, mcp_compatible)
+#     state_store   → requires ai_config (persistence, access_pattern)
+#     evaluator     → requires ai_config (eval_type, target, scoring_method, threshold)
 # ───────────────────────────────────────────────────────────────────
 
 # ── NEW in v9.0.0 ──────────────────────────────────────────────────
@@ -531,6 +499,19 @@ planning:
     errors: []
 
   analytics:
+    # ── ANALYTICS vs OBSERVABILITY — where does an event belong? ───────
+    # analytics   → business intent; answers PM questions; goes to Mixpanel, Amplitude, warehouse
+    #               WHO did WHAT and did the product goal succeed?
+    #               e.g., login_attempted, checkout_started, feature_adopted
+    # observability → system health; answers engineering questions; goes to Datadog, Grafana, PagerDuty
+    #               IS THE SYSTEM WORKING? latency, error rate, saturation
+    #               e.g., auth_latency_ms, db_query_duration_ms, error_rate
+    #
+    # An event can be BOTH. login_attempted is an analytics event (PM tracks success rate)
+    # AND can emit a trace span (engineer tracks latency). Put it in analytics if the PM
+    # owns the question; put a corresponding metric/trace in observability if engineering owns it.
+    # Do NOT duplicate the same event definition in both sections — reference, don't repeat.
+    # ────────────────────────────────────────────────────────────────────
     success_metric: ""
     target: ""
     default_destinations: []
@@ -569,6 +550,13 @@ implementation:
     external: []
 
   observability:
+    # ── OBSERVABILITY scope ──────────────────────────────────────────────
+    # Engineering-owned signals: latency, error rates, saturation, system events.
+    # If it answers "is the system working?" it lives here.
+    # If it answers "did the user achieve their goal?" it lives in planning.analytics.
+    # Use correlation.join_key to link a technical trace to its analytics counterpart
+    # (e.g., attach request_id to both the trace span and the analytics event).
+    # ────────────────────────────────────────────────────────────────────
     metrics: []
     logs: []
     traces: []
@@ -578,12 +566,12 @@ implementation:
       critical: []
       warning: []
     business_impact:
-      primary_metric: ""
-      dashboard_ref: ""
-      success_criteria: ""
+      primary_metric: ""    # The one PM metric this component most affects (link to analytics)
+      dashboard_ref: ""     # Link to the product dashboard that surfaces this metric
+      success_criteria: ""  # When is this component "healthy" in business terms?
     correlation:
-      join_key: ""
-      note: ""
+      join_key: ""  # Shared key that joins traces to analytics events (e.g., "request_id")
+      note: ""      # e.g., "Attach request_id to both auth_flow trace and login_attempted event"
 
   technical_constraints:
     performance:
@@ -700,9 +688,17 @@ ai_config:
 # ── FOR meta.type: "evaluator" ─────────────────────────────────────
 ai_config:
   eval_type: "invariant|dataset|scorer|sim_generator"
-  target: ""
-  scoring_method: ""
-  threshold: ""
+  # invariant      → hard rule that must always hold; fails if violated
+  #                  e.g., "response must never contain PII", "output schema must be valid JSON"
+  # dataset        → a set of input/expected-output pairs used to measure model accuracy or regression
+  #                  e.g., labelled test cases for a classification tool
+  # scorer         → a function or LLM judge that assigns a quality score to a model output
+  #                  e.g., "rate coherence 1–5", "check if answer is grounded in context"
+  # sim_generator  → generates synthetic inputs to stress-test the system at scale
+  #                  e.g., produce 1000 varied user queries to probe edge cases before launch
+  target: ""        # The component or workflow this evaluator tests (meta.id)
+  scoring_method: "" # How outputs are judged: e.g., "exact_match", "llm_judge", "human_review", "regex"
+  threshold: ""      # Pass/fail threshold: e.g., ">0.85 accuracy", "0 invariant violations"
 
 # ============================================
 # OPTIONAL: IMPLEMENTATION HINTS
@@ -1269,6 +1265,8 @@ implementation:
 - "Add user flows" → Guide through actions, success, and error scenarios
 - "Define analytics events" → Help structure product analytics tracking
 - "Add monitoring" → Suggest metrics, SLOs, alerting
+- "Is X analytics or observability?" → Apply the decision rule: PM dashboard question → analytics; engineer on-call question → observability; can be both with correlation.join_key linking them
+- "Link analytics to observability" → Guide through correlation.join_key and business_impact fields
 - "Add test strategy" → Guide through unit/integration/e2e intent; link to test files
 - "What should I test here?" → Recommend test_strategy content based on contracts and edge_cases
 
