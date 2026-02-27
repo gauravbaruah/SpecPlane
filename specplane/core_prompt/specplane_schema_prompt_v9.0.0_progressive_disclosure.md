@@ -739,6 +739,161 @@ diagrams:
 
 ---
 
+## 🔧 Tooling & Validation
+
+### **File Validation Rules**
+
+1. **Filename matches meta.id**
+   ```bash
+   # ✅ Valid
+   File: capability.authentication.yaml → meta.id: "capability.authentication"
+   File: component.login_form.yaml      → meta.id: "component.login_form"
+
+   # ❌ Invalid
+   File: capability.authentication.yaml → meta.id: "authentication"
+   ```
+
+2. **Capability files live in `specs/capabilities/`**
+   ```bash
+   # ✅ Valid
+   specs/capabilities/capability.authentication.yaml
+
+   # ❌ Invalid
+   specs/capability.authentication.yaml        # Should be in capabilities/
+   specs/containers/capability.authentication.yaml
+   ```
+
+3. **`implements` references existing capability specs**
+   ```yaml
+   # ✅ Valid
+   implements:
+     - "capability.authentication"   # File exists: capabilities/capability.authentication.yaml
+
+   # ❌ Invalid
+   implements:
+     - "authentication"              # Missing level prefix
+     - "capability.nonexistent"      # File doesn't exist
+   ```
+
+4. **`realized_by` references existing containers/components**
+   ```yaml
+   # ✅ Valid
+   realized_by:
+     containers: ["container.web_app"]
+     components: ["component.login_form"]
+
+   # ❌ Invalid
+   realized_by:
+     components: ["login_form"]      # Missing level prefix
+   ```
+
+5. **`system_context.capabilities` references existing capability specs**
+   ```yaml
+   # ✅ Valid
+   system_context:
+     capabilities: ["capability.authentication"]
+
+   # ❌ Invalid
+   system_context:
+     capabilities: ["authentication"]
+   ```
+
+6. **`ai_config` only on AI-native types**
+   ```yaml
+   # ✅ Valid
+   meta:
+     type: "workflow"
+   ai_config:
+     pattern: "directed_graph"
+
+   # ❌ Invalid — ai_config not applicable to capability, system, or standard component types
+   meta:
+     level: "capability"
+   ai_config: ...
+   ```
+
+7. **`type` must be valid for the `level`**
+   ```yaml
+   # ✅ Valid
+   meta:
+     level: "component"
+     type: "agent"
+
+   # ❌ Invalid — capability and foundation specs have no type field
+   meta:
+     level: "capability"
+     type: "service"
+
+   # ❌ Invalid — container level only allows type: "container"
+   meta:
+     level: "container"
+     type: "widget"
+   ```
+
+8. **`realized_by` only on capability specs; `used_by` only on foundation specs**
+   ```yaml
+   # ✅ Valid
+   # capability spec:
+   realized_by:
+     containers: ["container.web_app"]
+
+   # foundation spec:
+   used_by:
+     components: ["component.login_form"]
+
+   # ❌ Invalid — realized_by does not exist on foundation specs
+   # foundation spec:
+   realized_by: ...
+   ```
+
+9. **`meta.version` must be valid semver**
+   ```bash
+   # ✅ Valid
+   version: "1.0.0"
+   version: "2.3.1"
+
+   # ❌ Invalid
+   version: "v1"        # Missing minor and patch
+   version: "1.0"       # Missing patch
+   version: "draft"     # Not semver
+   ```
+
+10. **`changelog` required when `meta.version` changes**
+    ```yaml
+    # ✅ Valid — version bumped and changelog entry added
+    meta:
+      version: "1.1.0"
+    changelog:
+      - date: "2026-03-01"
+        author: "james"
+        summary: "Added Token refresh flow"
+        breaking: false
+
+    # ❌ Invalid — version bumped but no changelog entry for this date
+    meta:
+      version: "1.1.0"
+    changelog: []
+    ```
+
+11. **Breaking changes require `breaking: true` in changelog**
+    ```yaml
+    # ✅ Valid — API contract changed and flagged
+    changelog:
+      - date: "2026-03-01"
+        author: "dev"
+        summary: "Renamed /auth/login to /auth/session"
+        breaking: true
+
+    # ❌ Invalid — API renamed but breaking not flagged (CI should block this PR)
+    changelog:
+      - date: "2026-03-01"
+        author: "dev"
+        summary: "Renamed /auth/login to /auth/session"
+        breaking: false
+    ```
+
+---
+
 ## 🤖 NodeContext Pattern (AI-Native Best Practice)
 
 The NodeContext pattern prevents AI from hallucinating invalid tool names, chart types, or other constrained values. Use it whenever an AI node must choose from a finite set of options.
@@ -1059,161 +1214,6 @@ implementation:
       - "Consent gate shown to new users before login completes"
     readiness: "ready"
 ```
-
----
-
-## 🔧 Tooling & Validation
-
-### **File Validation Rules**
-
-1. **Filename matches meta.id**
-   ```bash
-   # ✅ Valid
-   File: capability.authentication.yaml → meta.id: "capability.authentication"
-   File: component.login_form.yaml      → meta.id: "component.login_form"
-
-   # ❌ Invalid
-   File: capability.authentication.yaml → meta.id: "authentication"
-   ```
-
-2. **Capability files live in `specs/capabilities/`**
-   ```bash
-   # ✅ Valid
-   specs/capabilities/capability.authentication.yaml
-
-   # ❌ Invalid
-   specs/capability.authentication.yaml        # Should be in capabilities/
-   specs/containers/capability.authentication.yaml
-   ```
-
-3. **`implements` references existing capability specs**
-   ```yaml
-   # ✅ Valid
-   implements:
-     - "capability.authentication"   # File exists: capabilities/capability.authentication.yaml
-
-   # ❌ Invalid
-   implements:
-     - "authentication"              # Missing level prefix
-     - "capability.nonexistent"      # File doesn't exist
-   ```
-
-4. **`realized_by` references existing containers/components**
-   ```yaml
-   # ✅ Valid
-   realized_by:
-     containers: ["container.web_app"]
-     components: ["component.login_form"]
-
-   # ❌ Invalid
-   realized_by:
-     components: ["login_form"]      # Missing level prefix
-   ```
-
-5. **`system_context.capabilities` references existing capability specs**
-   ```yaml
-   # ✅ Valid
-   system_context:
-     capabilities: ["capability.authentication"]
-
-   # ❌ Invalid
-   system_context:
-     capabilities: ["authentication"]
-   ```
-
-6. **`ai_config` only on AI-native types**
-   ```yaml
-   # ✅ Valid
-   meta:
-     type: "workflow"
-   ai_config:
-     pattern: "directed_graph"
-
-   # ❌ Invalid — ai_config not applicable to capability, system, or standard component types
-   meta:
-     level: "capability"
-   ai_config: ...
-   ```
-
-7. **`type` must be valid for the `level`**
-   ```yaml
-   # ✅ Valid
-   meta:
-     level: "component"
-     type: "agent"
-
-   # ❌ Invalid — capability and foundation specs have no type field
-   meta:
-     level: "capability"
-     type: "service"
-
-   # ❌ Invalid — container level only allows type: "container"
-   meta:
-     level: "container"
-     type: "widget"
-   ```
-
-8. **`realized_by` only on capability specs; `used_by` only on foundation specs**
-   ```yaml
-   # ✅ Valid
-   # capability spec:
-   realized_by:
-     containers: ["container.web_app"]
-
-   # foundation spec:
-   used_by:
-     components: ["component.login_form"]
-
-   # ❌ Invalid — realized_by does not exist on foundation specs
-   # foundation spec:
-   realized_by: ...
-   ```
-
-9. **`meta.version` must be valid semver**
-   ```bash
-   # ✅ Valid
-   version: "1.0.0"
-   version: "2.3.1"
-
-   # ❌ Invalid
-   version: "v1"        # Missing minor and patch
-   version: "1.0"       # Missing patch
-   version: "draft"     # Not semver
-   ```
-
-10. **`changelog` required when `meta.version` changes**
-    ```yaml
-    # ✅ Valid — version bumped and changelog entry added
-    meta:
-      version: "1.1.0"
-    changelog:
-      - date: "2026-03-01"
-        author: "james"
-        summary: "Added Token refresh flow"
-        breaking: false
-
-    # ❌ Invalid — version bumped but no changelog entry for this date
-    meta:
-      version: "1.1.0"
-    changelog: []
-    ```
-
-11. **Breaking changes require `breaking: true` in changelog**
-    ```yaml
-    # ✅ Valid — API contract changed and flagged
-    changelog:
-      - date: "2026-03-01"
-        author: "dev"
-        summary: "Renamed /auth/login to /auth/session"
-        breaking: true
-
-    # ❌ Invalid — API renamed but breaking not flagged (CI should block this PR)
-    changelog:
-      - date: "2026-03-01"
-        author: "dev"
-        summary: "Renamed /auth/login to /auth/session"
-        breaking: false
-    ```
 
 ---
 
