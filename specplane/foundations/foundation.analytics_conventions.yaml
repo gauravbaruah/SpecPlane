@@ -3,55 +3,149 @@
 # ============================================
 meta:
   id: "foundation.analytics_conventions"
-  purpose: "Define event naming patterns, required properties, destination routing, and analytics governance rules"
+  purpose: "Define how product analytics events are specified, implemented, and traced — ensuring a single source of truth and clear separation from observability"
   level: "foundation"
   owner: ""
-  tags: ["analytics", "events", "tracking", "conventions"]
-  status: "draft"
+  tags: ["analytics", "events", "observability", "product-metrics", "traceability"]
+  status: "active"
+  review_state: "approved"
+  version: "0.2.0"
+  introduced_in: "0.6.0"
   last_updated: "2026-02-26"
 
+changelog:
+  - date: "2026-02-26"
+    author: ""
+    summary: "v0.2.0 — single-source-of-truth, capability vs component ownership, analytics vs observability, roll-up to success_metrics"
+    breaking: false
+  - date: "2026-02-26"
+    author: ""
+    summary: "v0.1.0 — initial analytics conventions"
+    breaking: false
+
+# ── WHAT THIS FOUNDATION PROVIDES ────────────────────────────────────────────
+
 provides:
-  - "Event naming convention"
-  - "Required properties on every analytics event"
-  - "Destination routing rules"
-  - "PII rules for analytics"
-  - "Event taxonomy and governance"
+  - "Single-source-of-truth rule for analytics event implementation"
+  - "Analytics vs observability distinction (PM vs engineering ownership)"
+  - "Capability vs component event ownership model"
+  - "Event naming and property conventions"
+  - "Correlation between analytics and observability (join_key)"
+  - "Roll-up from analytics_events to success_metrics"
 
 used_by:
   containers: []
   components: []
 
+# ── SINGLE SOURCE OF TRUTH (CRITICAL) ────────────────────────────────────────
+
+single_source_of_truth:
+  rule: |
+    Each analytics event is emitted exactly ONCE in the codebase — from the component
+    that performs the user or system action.
+
+  anti_patterns:
+    - "Emitting the same event from multiple places (e.g. login_screen AND api_client)"
+    - "Implementing capability-level events separately from component-level events"
+    - "Duplicating event emission for 'safety' or 'backup'"
+
+  pattern: |
+    The owning component (the one that executes the action) emits the event.
+    Other components do NOT re-emit capability-level events.
+    Example: login_succeeded is emitted by component.login_screen only — not by
+    api_client, route_guard, or any middleware.
+
+  implementation_check: |
+    Before adding an analytics call: "Is this the component that performs the action?"
+    If no — do not emit. The owning component will.
+
+# ── ANALYTICS vs OBSERVABILITY ───────────────────────────────────────────────
+
+separation:
+  analytics:
+    owner: "PM / product"
+    question: "WHO did WHAT and did the product goal succeed?"
+    destinations: "Mixpanel, Amplitude, data warehouse"
+    examples: ["login_attempted", "snippet_marked_read", "thesis_created"]
+    location: "Capability specs (analytics_events) + component planning.analytics (who emits)"
+
+  observability:
+    owner: "Engineering"
+    question: "IS THE SYSTEM WORKING? latency, error rate, saturation"
+    destinations: "Datadog, Grafana, PagerDuty"
+    examples: ["auth_latency_ms", "extraction_duration_ms", "error_rate"]
+    location: "Component implementation.observability"
+
+  overlap: |
+    An event can inform BOTH. login_attempted is analytics (PM tracks success rate)
+    AND can have a corresponding trace span (engineer tracks latency). Use
+    correlation.join_key (e.g. request_id) to link them — do NOT duplicate the
+    event definition; reference, don't repeat.
+
+# ── CAPABILITY vs COMPONENT OWNERSHIP ────────────────────────────────────────
+
+ownership_model:
+  capability_spec:
+    role: "Defines WHAT events matter for this capability"
+    content: "analytics_events list (name, when, properties, emitted_by)"
+    purpose: "Product intent; success_metrics.derived_from traceability; design and QA reference"
+
+  component_spec:
+    role: "Defines WHICH component emits each event and WHEN"
+    content: "planning.analytics.events"
+    purpose: "Implementation contract; single place that fires the event"
+
+  traceability: |
+    Capability analytics_events and component planning.analytics.events REFERENCE the same event.
+    The component that performs the action is listed in capability.analytics_events[].emitted_by
+    and in capability.realized_by.components. Implementation: ONE emit call in ONE component.
+
+  roll_up: |
+    success_metrics.derived_from lists event names that feed each metric. Events roll up
+    from components (who emit) to capabilities (who define what matters). Enables
+    machine-readable traceability for dashboards and CI.
+
+# ── EVENT NAMING & PROPERTIES ────────────────────────────────────────────────
+
 naming:
-  convention: ""        # e.g., "snake_case past-tense verb_noun: login_succeeded, checkout_started"
-  tense: ""             # e.g., "Past tense for completed actions; present for ongoing states"
-  prohibited: []        # e.g., ["clicked", "tapped", "pressed" — too generic; be specific]
+  format: "snake_case"
+  pattern: "{action}_{object}"
+  examples:
+    - "login_attempted"
+    - "snippet_marked_read"
+    - "thesis_created"
+    - "import_completed"
+  avoid:
+    - "loginAttempted (camelCase)"
+    - "user_login (redundant object prefix)"
+    - "did_thing (vague)"
 
-required_properties:
-  - "event_name: string"
-  - "timestamp: ISO 8601 UTC"
-  - "user_id: string | null"
-  - "session_id: string"
-  - "platform: string       # web | ios | android"
-  - "app_version: string"
+properties:
+  rule: "Include enough context to answer the PM question, not more"
+  common: ["entity_norm", "source_id", "mode", "duration_ms"]
+  pii: "Never include PII in event properties; use hashed or scoped identifiers"
 
-destinations:
-  default: []           # e.g., ["mixpanel", "amplitude"] — applied to all events
-  warehouse: []         # e.g., ["bigquery"] — for events needing deeper analysis
-  override_policy: ""   # e.g., "Individual events can override default_destinations"
+# ── CORRELATION ──────────────────────────────────────────────────────────────
 
-pii_rules:
-  - ""    # e.g., "Never include email, name, or phone as event properties"
-  - ""    # e.g., "Use user_id (opaque) for user identification; never email"
-  - ""    # e.g., "Hash or omit user-entered search queries"
+correlation:
+  join_key: |
+    Use a shared identifier (e.g. request_id, session_id) to join analytics
+    events with observability traces. Enables: "This login_attempted event
+    corresponded to 340ms auth latency — was that slow?"
+  location: "component implementation.observability.correlation.join_key"
 
-taxonomy:
-  user_actions: []      # e.g., ["login_attempted", "button_clicked", "form_submitted"]
-  system_events: []     # e.g., ["session_started", "page_viewed"] — auto-tracked
-  business_events: []   # e.g., ["subscription_started", "payment_completed"]
+# ── DEFAULT DESTINATIONS ─────────────────────────────────────────────────────
 
-governance:
-  new_event_process: "" # e.g., "New events require PM sign-off and naming review before shipping"
-  registry: ""          # e.g., "All events documented in analytics registry; undocumented events rejected"
-  review_cadence: ""    # e.g., "Quarterly audit of unused or duplicate events"
+default_destinations:
+  product_analytics: ["mixpanel", "amplitude"]
+  backend_logging: "Structured logs with event name + properties for debugging"
+  note: "Component planning.analytics.default_destinations overrides when specified"
+
+# ── EXTENSION: ANALYTICS PACK ────────────────────────────────────────────────
+# Event sync architecture (client/server/hybrid), connection templates for
+# Mixpanel/Amplitude/Segment, MCP server configs, and schema validation against
+# provider taxonomies live in the paid Analytics Pack extension — not in this
+# foundation. This foundation defines principles and schema structure; the pack
+# provides implementation wiring.
 
 refs: []
