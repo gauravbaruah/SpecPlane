@@ -642,7 +642,7 @@ implementation:
                         # Presence implies required — CI treats non-empty as "run unit tests"
       integration: ""   # Key integration paths (e.g., "auth flow with token_service and session_store")
                         # Presence implies required — CI treats non-empty as "run integration tests"
-      e2e: ""           # Critical user journeys; link to Playwright/Cypress spec files
+      e2e: ""           # Critical user journeys; link to Playwright/Cypress (web) or Maestro (Flutter/mobile) spec files
                         # Presence implies required — CI treats non-empty as "run E2E tests"
       performance: false  # Set true for latency-sensitive or high-throughput components
                           # Cannot be inferred from prose — this is the explicit load/perf test gate
@@ -1018,7 +1018,7 @@ diagrams:
     # CI derives test requirements as follows:
     # unit != ""        → run unit tests
     # integration != "" → run integration tests
-    # e2e != ""         → run E2E tests (trigger Playwright MCP if configured)
+    # e2e != ""         → run E2E tests (Playwright MCP for web; Maestro for Flutter/mobile if configured)
     # performance: true → run load/performance tests
     # data_classification: "confidential" or "regulated" → run security tests
 
