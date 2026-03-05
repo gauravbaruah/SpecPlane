@@ -16,11 +16,11 @@ meta:
 changelog:
   - date: "2026-02-26"
     author: ""
-    summary: "v0.2.0 — single-source-of-truth, capability vs component ownership, analytics vs observability, roll-up to success_metrics"
-    breaking: false
+    summary: "v0.2.0 — single-source-of-truth, capability vs component ownership, analytics vs observability, roll-up to success_metrics. Structure changed from v0.1; migration: naming→naming, required_properties→properties, destinations→default_destinations"
+    breaking: true
   - date: "2026-02-26"
     author: ""
-    summary: "v0.1.0 — initial analytics conventions"
+    summary: "v0.1.0 — initial analytics conventions (naming, required_properties, destinations, pii_rules, taxonomy)"
     breaking: false
 
 # ── WHAT THIS FOUNDATION PROVIDES ────────────────────────────────────────────

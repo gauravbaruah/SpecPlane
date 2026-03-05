@@ -1,7 +1,5 @@
 # SpecPlane v9.1.0 Master Schema Guide for Cursor and VSCode
 
-**v9.1.0** — Analytics traceability: capability `analytics_events` with roll-up to `success_metrics.derived_from`; single-source-of-truth ownership model; expanded `foundation.analytics_conventions`. Use `uses: ["foundation.analytics_conventions"]` for projects with product analytics.
-
 You are an expert at creating SpecPlane specifications - a systematic framework for designing software at every level of abstraction, from business intent to deployed components. When a user is creating YAML specifications, guide them through the SpecPlane schema with intelligent suggestions, examples, and validation.
 
 SpecPlane serves every stakeholder in a software project:
@@ -335,8 +333,9 @@ constraints:
 
 # ── PHASE 2: OPTIONAL (PM + Stakeholders) ──────────────────────────
 
-# Analytics events — what product events matter for this capability
-# Components in realized_by emit these; use foundation.analytics_conventions for naming and ownership.
+# Analytics events — only when using product analytics (uses: foundation.analytics_conventions)
+# What product events matter for this capability; components in realized_by emit these.
+# See foundation.analytics_conventions for naming, ownership model, and single-source-of-truth rule.
 analytics_events:
   - name: ""         # Event name (snake_case, e.g., login_attempted, snippet_marked_read)
     when: ""         # Trigger condition (e.g., "user submits login form", "snippet marked read")
@@ -347,9 +346,8 @@ analytics_events:
 success_metrics:
   primary: ""        # The one KPI that proves this capability is working
   targets: {}        # Measurable targets, e.g.: {login_success_rate: ">99%"}
-  derived_from: {}   # Metric name → event names that feed it
+  derived_from: {}   # Optional when analytics_events exist — metric name → event names that feed it
                      # e.g., {login_success_rate: ["login_attempted", "login_succeeded"]}
-                     # Enables machine-readable traceability: events → metrics
 
 # Roadmap context — human-filled; system does not auto-populate or act on these
 roadmap:
@@ -554,17 +552,13 @@ planning:
     # Do NOT duplicate the same event definition in both sections — reference, don't repeat.
     # ────────────────────────────────────────────────────────────────────
     #
-    # ── SINGLE SOURCE OF TRUTH (foundation.analytics_conventions) ───────
-    # Each event is emitted exactly ONCE — by the component that performs the action.
-    # Events here MUST match capability.analytics_events when this component implements
-    # that capability. The capability declares WHAT events matter; this component declares
-    # that IT emits them. Other components (api_client, middleware) do NOT re-emit.
-    # ────────────────────────────────────────────────────────────────────
+    # When using foundation.analytics_conventions: single-source-of-truth applies — each event
+    # emitted exactly once by the owning component. Events here match capability.analytics_events.
     success_metric: ""      # Link to capability success_metrics.primary this component contributes to
     target: ""
     default_destinations: []
     events:
-      - name: ""            # Must match capability.analytics_events[].name when implementing that capability
+      - name: ""            # Match capability.analytics_events[].name when implementing that capability
         when: ""
         properties: {}
         destinations: []
@@ -1103,12 +1097,11 @@ diagrams:
     # but component.token_service has no depended_on_by entry for component.login_form
     ```
 
-19. **Analytics traceability: single-source-of-truth and roll-up**
+19. **Analytics traceability** — *Only when* `analytics_events` is non-empty *or* `uses` includes `foundation.analytics_conventions`:
     - Each capability `analytics_events[].emitted_by` must reference a component in `realized_by.components`.
     - Each such component must list that event in `planning.analytics.events[].name`.
-    - No other component may emit the same event (single-source-of-truth).
-    - `success_metrics.derived_from` must reference event names that exist in `analytics_events`.
-    - When `uses` includes `foundation.analytics_conventions`, all components in `realized_by` must follow the ownership model.
+    - No other component may emit the same event (single-source-of-truth; see foundation).
+    - When present, `success_metrics.derived_from` must reference event names that exist in `analytics_events`.
 
 ---
 
@@ -1237,19 +1230,16 @@ constraints:
 
 # ── PHASE 2 (Optional) ─────────────────────────────────────────────
 
+# When using product analytics — see foundation.analytics_conventions
 analytics_events:
   - name: "login_attempted"
     when: "user submits login form"
     properties: ["source", "method"]
     emitted_by: "component.login_form"
   - name: "login_succeeded"
-    when: "auth succeeds and session is established"
+    when: "auth succeeds and session established"
     properties: ["method", "duration_ms"]
     emitted_by: "component.login_form"
-  - name: "consent_captured"
-    when: "user accepts consent and proceeds"
-    properties: ["consent_type"]
-    emitted_by: "component.consent_capture"
 
 success_metrics:
   primary: "login_success_rate"
@@ -1259,7 +1249,6 @@ success_metrics:
     account_creation_drop_off: "<10%"
   derived_from:
     login_success_rate: ["login_attempted", "login_succeeded"]
-    consent_capture_completion_rate: ["consent_captured"]
 
 roadmap:
   phase: "v1.0 launch"
@@ -1569,8 +1558,8 @@ Before marking a **capability** spec as `status: "launched"`:
 - [ ] `flows` named (not just "login" but the full set: sign-up, refresh, logout, reset)
 - [ ] `business_value` has user_outcome AND objective
 - [ ] `constraints` cover legal, security, and UX
-- [ ] `success_metrics` has a primary metric; `derived_from` populated when analytics_events exist (Phase 2)
-- [ ] `analytics_events` defined with emitted_by when product analytics matter; uses foundation.analytics_conventions (Phase 2)
+- [ ] `success_metrics` has a primary metric (Phase 2)
+- [ ] When product analytics matter: `analytics_events` defined, `derived_from` populated, `uses` includes foundation.analytics_conventions (Phase 2)
 - [ ] `roadmap.depends_on` and `enables` populated (Phase 2)
 - [ ] `realized_by` populated (Phase 3, engineering-added)
 - [ ] `changelog` has at least one entry
