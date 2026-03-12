@@ -35,6 +35,7 @@ For the system as a whole: **WHY does this exist in business terms?** The Capabi
 8. **AI-Native by Design** - Agents, tools, and workflows are first-class component types
 9. **Capability-First** - Business value is modeled explicitly before architecture is decided. A capability spec is valid and useful before a single container or component exists.
 10. **Foundations as Infrastructure** - Cross-cutting concerns (design system, API conventions, security, AI guidelines) live in `foundations/` as shared reference specs. Components declare what they `uses`; foundations declare who `used_by`.
+11. **Consistent Identifiers** - Use consistent identifiers across sections (e.g. `invited_count` vs `invitedCount`). Prefer snake_case and align with `foundation.api_conventions` or `foundation.data_model_conventions` where applicable. Avoid conflicting property names across analytics, observability, and contracts.
 
 ## The 5C Model
 
@@ -466,6 +467,8 @@ uses:
 # ============================================
 # REFS - Central Resource Registry
 # ============================================
+# For refs used in diagrams ({{refs.<id>.<field>}}): url or path must be non-empty
+# so the reference is resolvable. External resources use url; local files use path.
 refs:
   - id: ""
     type: "design|ticket|doc|image|video|dataset|api|prompt|spec|incident|postmortem|other"
@@ -1102,6 +1105,11 @@ diagrams:
     - Each such component must list that event in `planning.analytics.events[].name`.
     - No other component may emit the same event (single-source-of-truth; see foundation).
     - When present, `success_metrics.derived_from` must reference event names that exist in `analytics_events`.
+    - When `planning.analytics.events` is non-empty, each event must list `properties` (or reference `foundation.analytics_conventions.properties.common`) so contract-test generation can validate payloads.
+
+20. **Ref resolution** — All refs used in diagrams (`{{refs.<id>.<field>}}`) must have a resolvable `url` or `path`. At least one of `url` or `path` must be non-empty for each ref that is interpolated into diagrams or descriptions.
+
+21. **No conflicting property names** — Property names used in analytics events, observability metrics, and contracts must not conflict (e.g. `invited_count` in one section and `invitedCount` in another for the same concept). Use consistent identifiers across sections; prefer snake_case.
 
 ---
 

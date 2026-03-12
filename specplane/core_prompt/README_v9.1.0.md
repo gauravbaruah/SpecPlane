@@ -111,6 +111,9 @@ Component types: `agent`, `workflow`, `tool`, `tool_registry`, `state_store`, `e
 - Clear `review_state` and `changelog`
 - Analytics (PM) vs observability (engineering) clearly separated
 - Language-agnostic behavioral contracts
+- Refs used in diagrams have resolvable `url` or `path`
+- Consistent identifiers (snake_case) across analytics, observability, and contracts
+- Analytics events include `properties` for contract-test generation
 
 ## Related Files
 
