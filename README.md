@@ -46,7 +46,8 @@ specplane/
 ├── specplane/              # Core SpecPlane schema and examples
 │   ├── core_prompt/        # Master schema definitions and guidance
 │   └── supporting_prompts/   # other prompts that support the core prompt
-├── specplane_viewer/       # Web-based specification viewer and validator
+├── legacy/                 # Archived code — not the forward product path
+│   └── specplane_viewer/  # (legacy) Docusaurus/CLI viewer — see legacy/README.md
 ├── README.md              # This file
 └── LICENSE                # Apache 2.0 License
 ```
@@ -57,10 +58,10 @@ specplane/
 Start by reviewing the SpecPlane schema in [`specplane/core_prompt/`](./specplane/core_prompt/)
 
 ### 2. Explore Examples
-Browse component specifications in [`specplane_viewer/specs/`](./specplane_viewer/specs/). We built a web-based viewer for specs.yaml files using the SpecPlane schema.
+Browse sample component specifications in [`legacy/specplane_viewer/specs/`](./legacy/specplane_viewer/specs/). (That viewer stack is [legacy only](./legacy/README.md); a new SpecPlane viewer is planned.)
 
-### 3. Try the Viewer
-Use the web-based viewer in [`specplane_viewer/`](./specplane_viewer/) to validate and visualize specifications
+### 3. Legacy Docusaurus viewer
+The old **YAML → Markdown + Docusaurus** tool lives under [`legacy/specplane_viewer/`](./legacy/specplane_viewer/). It is **not** maintained as the long-term product; use it only if you need the historical implementation.
 
 ### 4. Create Your First Spec
 ```yaml
@@ -144,8 +145,8 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 ## Learn More
 
 - [Core Schema Documentation](./specplane/core_prompt/)
-- [Example Specifications](./specplane_viewer/specs/)
-- [Web Viewer](./specplane_viewer/)
+- [Example specifications (from legacy viewer)](./legacy/specplane_viewer/specs/)
+- [Legacy Docusaurus viewer (archived)](./legacy/specplane_viewer/) — see [legacy/](./legacy/README.md)
 
 ---
 

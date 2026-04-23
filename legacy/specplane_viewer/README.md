@@ -1,4 +1,8 @@
-# SpecPlane Viewer
+# SpecPlane Viewer (legacy / archived)
+
+> This package lives at `legacy/specplane_viewer/`. It is **not** the long-term or supported direction for a SpecPlane viewer. It remains in the repository for **history, reference, and sample `specs/`** only. A new viewer is planned to replace it; **do not** use this stack for new work.
+
+---
 
 Convert SpecPlane YAML specifications to Markdown and serve them via Docusaurus with full-text search capabilities.
 
@@ -23,7 +27,7 @@ Convert SpecPlane YAML specifications to Markdown and serve them via Docusaurus 
 ### Install Dependencies
 
 ```bash
-cd specplane_viewer
+cd legacy/specplane_viewer
 npm install
 ```
 
@@ -165,8 +169,10 @@ specplane_viewer setup /path/to/custom/.specplane
 
 ## Project Structure
 
+From the repository root, this package is `legacy/specplane_viewer/`.
+
 ```
-specplane_viewer/
+legacy/specplane_viewer/
 ├── bin/
 │   └── specplane_viewer       # CLI executable
 ├── src/
