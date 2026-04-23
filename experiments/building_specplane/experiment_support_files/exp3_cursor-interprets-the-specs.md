@@ -1,1 +1,0 @@
-We point cursor to the specs directory and ask it to generate the code for the application.

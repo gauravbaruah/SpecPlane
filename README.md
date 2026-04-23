@@ -47,7 +47,6 @@ specplane/
 │   ├── core_prompt/        # Master schema definitions and guidance
 │   └── supporting_prompts/   # other prompts that support the core prompt
 ├── specplane_viewer/       # Web-based specification viewer and validator
-├── experiments/            # Research and validation studies
 ├── README.md              # This file
 └── LICENSE                # Apache 2.0 License
 ```
@@ -136,7 +135,7 @@ See individual component READMEs for specific contribution guidelines.
 
 ## Research & Validation
 
-The `experiments/` directory contains preliminary experiments validating SpecPlane's effectiveness in reducing development time and improving code quality. Initial findings show that structured specifications significantly improve AI-generated code quality and reduce post-implementation debugging.
+We run ad hoc validation studies in a local `experiments/` directory, which is **not** versioned in this repository. Those runs inform the core schema and documentation; you can use the same layout on your machine if you are reproducing or extending that work.
 
 ## License
 
@@ -147,7 +146,6 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 - [Core Schema Documentation](./specplane/core_prompt/)
 - [Example Specifications](./specplane_viewer/specs/)
 - [Web Viewer](./specplane_viewer/)
-- [Experimental Validation](./experiments/)
 
 ---
 
