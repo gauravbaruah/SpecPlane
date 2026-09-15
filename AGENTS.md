@@ -17,7 +17,7 @@ Do **not** ingest the full master prompt into a coding session.
 | Init a `specs/` tree | `specplane-bootstrap` | 02, 03 |
 | Create or expand a spec | `specplane-author` | 03 + the matching type (04–07), example in 10 |
 | Implement code from a spec | `specplane-implement` | 06 contracts/validation; 08 for links |
-| Review or check a spec | `specplane-validate` | 08, 11, then `python3 tools/specplane/validate.py` |
+| Review or check a spec | `specplane-validate` | 08, 11; optional in-session `validate.py` |
 
 ## This repository
 
@@ -30,7 +30,7 @@ specplane/foundations/                                    # 19 boilerplate found
 .agents/skills/specplane-*                                # portable skills (source)
 .cursor/skills/specplane-*                                # Cursor copy — keep identical to .agents
 .cursor/rules/                                            # Cursor always-on + YAML globs
-tools/specplane/                                          # validate.py + drift.py
+tools/specplane/                                          # optional local validate.py + drift.py
 legacy/specplane_viewer/                                  # archived viewer; do not extend
 ```
 

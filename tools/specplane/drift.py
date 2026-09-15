@@ -49,7 +49,9 @@ def classify(files: list[str]) -> tuple[list[str], list[str]]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="SpecPlane drift gate")
+    parser = argparse.ArgumentParser(
+        description="SpecPlane drift reminder (local/agent; not a git hook)"
+    )
     parser.add_argument("--scope", choices=["changed", "full"], default="changed")
     parser.add_argument("--repo", type=Path, default=Path.cwd())
     args = parser.parse_args(argv)
@@ -64,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.scope == "changed" and has_specs and code and not specs:
         blockers.append(
-            "Code changed without spec YAML updates. Update specs/ or record Spec-Impact: none."
+            "Code changed without spec YAML updates in this change set."
         )
     if args.scope == "changed" and specs and not code:
         warnings.append("Specs changed without code changes; confirm that is intentional.")

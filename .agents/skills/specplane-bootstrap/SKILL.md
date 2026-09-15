@@ -19,5 +19,5 @@ Read `specplane/core_prompt/applicable/02-file-layout.md` and `03-shared-meta.md
 2. Add one `specs/system.<name>.yaml`.
 3. If the user named capabilities or foundations, create those files; otherwise create one example capability and copy needed files from `specplane/foundations/`.
 4. Every file: `meta.id` equals filename without extension, semver `version`, `introduced_in`, at least one `changelog` entry.
-5. Run `python3 tools/specplane/validate.py` if the toolkit is present.
+5. If `tools/specplane/validate.py` exists, run it in this session. Do not add git hooks or CI.
 6. Report the tree and the next authoring step (usually capability Phase 1).

@@ -18,5 +18,5 @@ Do not load the full master prompt.
 3. If there is no spec impact, state that before writing code.
 4. Implement to the spec: capabilities, errors, states, acceptance criteria, emitted events.
 5. Keep bidirectional links valid if you touched `implements` / `uses` / dependencies.
-6. Run `python3 tools/specplane/validate.py` and `python3 tools/specplane/drift.py --scope changed` when those scripts exist.
+6. If present, run `python3 tools/specplane/validate.py` and `python3 tools/specplane/drift.py --scope changed` in this session only. Do not install hooks or CI.
 7. Summarize spec files changed, code files changed, and any remaining drift.

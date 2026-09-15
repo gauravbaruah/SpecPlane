@@ -1,5 +1,7 @@
 name: specplane-toolkit
 
+# Tests the toolkit in this repository. Not a consumer CI template.
+
 on:
   push:
     paths:

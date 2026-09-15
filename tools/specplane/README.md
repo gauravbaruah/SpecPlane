@@ -1,8 +1,10 @@
 # SpecPlane toolkit
 
-Generic validator and drift gate for v9.1.0 specs. Copy `tools/specplane/` into a product repo alongside `specplane/` and `specs/`.
+Optional local commands for v9.1.0 specs. Copy `tools/specplane/` into a product repo alongside `specplane/` and `specs/` if you want the agent (or you) to run checks in a session.
 
-Requires Python 3.10+ and [PyYAML](https://pypi.org/project/PyYAML/):
+They are **not** an installer. Do not wire them into Git hooks or CI/CD for a product repo yet. SpecPlane does not ship a setup program that can do that safely.
+
+Requires Python 3.10+ and PyYAML:
 
 ```bash
 pip install -r tools/specplane/requirements.txt
@@ -10,29 +12,30 @@ pip install -r tools/specplane/requirements.txt
 
 ## Validate
 
-Checks filename/`meta.id`, folder layout, semver, changelog, `introduced_in`, deprecation fields, `implements`/`uses` existence, bidirectional links, classification, rollout flags, analytics emitters, and diagram refs (applicable section 08).
+Reads YAML under `specs/` and reports structural problems (filename/`meta.id`, folders, semver, changelog, link existence and bidirectional pairs, and related v9.1.0 rules). It does not judge product quality or whether code implements the spec.
 
 ```bash
 python3 tools/specplane/validate.py --spec-root specs
-# or, with specplane.config.json in the project root:
 python3 tools/specplane/validate.py
 ```
 
 Exit `1` on errors. `--strict-warnings` also fails on warnings.
 
-Copy [`specplane.config.json.example`](specplane.config.json.example) to the product repo as `specplane.config.json`.
+Copy [`specplane.config.json.example`](specplane.config.json.example) to the product repo as `specplane.config.json` if you want a default spec root.
 
 ## Drift
 
-When `specs/` exists, staged/unstaged code changes without spec YAML updates are a blocker. This is a process gate, not a semantic spec-vs-source prover.
+Looks at git path names in the current change set. If `specs/` exists and app code changed with no spec YAML in that set, it prints a blocker. If only specs changed, it prints a warning. It does not compare contracts to source.
 
 ```bash
 python3 tools/specplane/drift.py --scope changed
 ```
 
-Record `Spec-Impact: none` in the commit/PR if the code change truly has no spec impact, then skip or waive the gate locally.
+Use this in an agent or local terminal as a reminder. Do not treat it as a required pre-commit hook.
 
-## Tests (this repo)
+## Tests (this SpecPlane repository only)
+
+The GitHub Action in this repo runs these commands against fixture trees. That workflow is for maintaining the toolkit, not a template to copy into a product.
 
 ```bash
 python3 tools/specplane/test_validate.py
