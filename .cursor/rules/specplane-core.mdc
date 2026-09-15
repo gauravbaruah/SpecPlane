@@ -1,0 +1,12 @@
+---
+description: SpecPlane loading contract — never dump the full master prompt
+alwaysApply: true
+---
+
+# SpecPlane
+
+Default schema is v9.1.0. Follow `AGENTS.md`.
+
+For spec authoring, read `specplane/core_prompt/applicable/README.md` and load only the section for the current task. Do not attach `specplane_schema_prompt_v9.1.0.md` unless the user is changing the schema or explicitly asks for the complete reference.
+
+Specs describe what and how well, not how. Keep bidirectional links in sync. Add a changelog entry when bumping `meta.version`.

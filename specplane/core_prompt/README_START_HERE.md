@@ -1,7 +1,11 @@
-# Seed Input Prompt for setting up the SpecPlane schema for your conversation with Cursor (or another similar tool)
+# Load SpecPlane into an agent session
 
-Please review and remember the instructions provided in this file as a prompt @`{core_prompt_file}`
+Do **not** attach the full master prompt.
 
-NOTE: attached context is included in `core_prompt/specplane_schema_prompt_v<version>.md`
+1. Read [`AGENTS.md`](../../AGENTS.md) (Claude Code: [`CLAUDE.md`](../../CLAUDE.md) already includes it).
+2. Open [`applicable/README.md`](applicable/README.md) and load **only** the section for the current task.
+3. Do not start writing specs until asked.
 
-Please don't start building the specs yet.
+Human reference (complete prompt, one file): `specplane_schema_prompt_v9.1.0.md`
+
+Older single-file loaders (`@specplane_schema_prompt_v5.5.1_balanced.md`, etc.) are archived and should not be used.

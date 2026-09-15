@@ -1,224 +1,51 @@
-# SpecPlane Core Prompts
+# SpecPlane Core
 
-This directory contains the master schema definitions and guidance for creating SpecPlane specifications. The core prompts serve as the **control plane for specifications**, ensuring that all components are described in a consistent, machine-readable, and AI-ready way.
+Master schema, applicable split, and foundation boilerplates.
 
-SpecPlane prompts are especially powerful in AI-assisted development: they ensure that generated code follows specified requirements whenever available, rather than drifting from design intent. By capturing design, architecture, and observability in one schema, they reduce the burden of spec-to-code drift as systems evolve.
+**Default schema: v9.1.0.** Use v6.1.0 only when you want C4 without capability or foundation layers.
 
-## Schema & Examples Overview
+## Reference vs applicable
 
-### Schema Definitions
+| | File | When to use |
+|---|---|---|
+| **Reference** | [`core_prompt/specplane_schema_prompt_v9.1.0.md`](core_prompt/specplane_schema_prompt_v9.1.0.md) | Complete prompt in one file. Humans browsing. Schema changes. Do **not** dump into an agent session. |
+| **Applicable** | [`core_prompt/applicable/README.md`](core_prompt/applicable/README.md) | Split of the same prompt. Agents load **one section per task**. |
 
-- **`specplane_schema_prompt_v5.5.1_balanced.md`** - The current production schema (RECOMMENDED)
-  - Optimized balance of comprehensiveness and usability
-  - Proven through experimental validation
-  - Includes smart constraints to prevent complexity bloat
-  - Enhanced with business metrics and observability patterns
+v6.1.0 (C4 only): [`core_prompt/specplane_schema_prompt_v6.1.0_progressive_disclosure.md`](core_prompt/specplane_schema_prompt_v6.1.0_progressive_disclosure.md) — [`README_v6.1.0.md`](core_prompt/README_v6.1.0.md)
 
-- **`specplane_schema_prompt_v7_detailed.md`** - Extended schema with advanced features
-  - More comprehensive business metrics tracking
-  - Advanced compliance and governance features
-  - Detailed organizational workflow integration
-  - (Possibly) Use for enterprise or heavily regulated environments
+Older versions live in [`core_prompt/archived/`](core_prompt/archived/). v5.5.1 and v7 are **not** current.
 
-### Usage Instructions
+## Agent files
 
-- **`README_START_HERE.md`** - Quick setup guide for AI development tools
-  - How to load the schema into your development session
-  - Basic workflow for creating specifications
-  - Integration with Cursor and other AI assistants
+Repo root [`AGENTS.md`](../AGENTS.md) is the router. [`CLAUDE.md`](../CLAUDE.md) includes it. Skills in `.agents/skills/` (mirrored under `.cursor/skills/`) tell the agent which applicable section to open.
 
-### Example Patterns
+## Foundations
 
-- **`spec_validation_prompt_examples.md`** - Validation and review prompts
-  - How to validate existing specifications
-  - Gap analysis techniques
-  - Quality improvement suggestions
+[`foundations/`](foundations/) — 19 boilerplate specs (design system, API conventions, security, AI guidelines, and others). Copy into a project's `specs/foundations/` and fill in.
 
-- **`widget_spec_examples.md`** - Component specification examples
-  - Login widget with OAuth integration
-  - Onboarding flow specifications
-  - Real-world component patterns
+## Supporting prompts
 
-## How to Use These Prompts
+- [`supporting_prompts/spec_validation_prompt_examples.md`](supporting_prompts/spec_validation_prompt_examples.md)
+- [`supporting_prompts/widget_spec_examples.md`](supporting_prompts/widget_spec_examples.md)
+- [`supporting_prompts/when_making_changes.md`](supporting_prompts/when_making_changes.md) — spec first, then code
 
-### For AI Development Tools (Cursor, Claude, etc.)
+## How to author
 
-1. **Load the Schema**: Start your session by referencing the schema prompt:
-   ```
-   Please review and remember the instructions in @specplane_schema_prompt_v5.5.1_balanced.md
-   ```
+1. Open [`AGENTS.md`](../AGENTS.md) or [`core_prompt/README_START_HERE.md`](core_prompt/README_START_HERE.md).
+2. Follow the applicable loading contract — do not attach the full v9.1.0 file.
+3. Capability-first: Phase 1 (`responsibilities`, `flows`, `business_value`, `constraints`) is enough to start.
 
-2. **Generate Specifications**: Use the schema to create component specs:
-   ```
-   Create a SpecPlane specification for a login widget with OAuth support
-   ```
+Specs capture **what** and **how well**, not **how**. Same spec can guide web, mobile, and API implementations.
 
-3. **Validate and Improve**: Use validation prompts to review your specs:
-   ```
-   Can you validate this spec and find any gaps we need to address?
-   ```
+### Spec types
 
-### Schema Selection Guide
+| Spec | Owner | Question |
+|---|---|---|
+| Capability | PM | Why does this exist? |
+| Foundation | Cross-cutting | What rules apply everywhere? |
+| System / Container | Architecture | Where does this run? |
+| Component | Engineering | What does it do and how well? |
 
-**Use v5.5.1 (Balanced) when:**
-- Creating specifications for most development teams
-- Need proven patterns with good usability
-- Want built-in constraints to prevent over-engineering
-- Building MVPs or iterative development
+## Quality
 
-**Use v7 (Detailed) when:**
-- Working in regulated industries (healthcare, finance)
-- Need comprehensive business metrics tracking
-- Require detailed compliance documentation
-- Building large enterprise systems
-
-## Core Schema Philosophy
-
-SpecPlane specifications focus on **behavioral contracts** rather than implementation details:
-
-- **What** the component should do (capabilities)
-- **How well** it should perform (constraints and SLOs)
-- **What can go wrong** (edge cases and error handling)
-- **How success is measured** (acceptance criteria and metrics)
-
-Beyond technical contracts, SpecPlane enables teams to align **product, design, engineering, and observability** responsibilities in one shared artifact, ensuring clarity across disciplines.
-
-### Key Sections Explained
-
-**`meta`** - Component identification and ownership
-**`contracts`** - Behavioral capabilities, APIs, events, and state transitions
-**`constraints`** - Performance, security, and technical requirements
-**`observability`** - Monitoring, alerting, and business metrics
-**`validation`** - Acceptance criteria and edge cases
-**`diagrams`** - Mermaid-based visual documentation
-
-## C4 Architecture Integration
-
-SpecPlane uses the C4 model for architectural specifications:
-
-- **System Level** (`level: "system"`) - High-level system context and boundaries
-- **Container Level** (`level: "container"`) - Services, databases, deployment units
-- **Component Level** (`level: "component"`) - Features, widgets, modules
-- **Code Level** (`level: "code"`) - Functions, classes, detailed implementation
-
-## Best Practices
-
-### 1. Start with Purpose and Constraints
-Define why the component exists and its operating limits before detailing behavior.
-
-### 2. Focus on Observable Behavior
-Describe what users and other systems can observe, not internal implementation.
-
-### 3. Consider Failure Modes Early
-Think through what can go wrong and how to handle it before implementation.
-
-### 4. Make Requirements Testable
-Every acceptance criterion should be measurable and verifiable.
-
-### 5. Link to External Resources
-Use the `refs` section to connect specifications to designs, tickets, and documentation.
-
-## Example Component Types
-
-### Frontend Widgets
-```yaml
-meta:
-  type: "widget"
-  domain: "frontend"
-contracts:
-  capabilities:
-    - "User authentication via OAuth providers"
-    - "Display validation errors with clear messaging"
-constraints:
-  performance:
-    response_time: "<200ms for UI interactions"
-  technical:
-    accessibility: "WCAG 2.1 AA compliance"
-```
-
-### Backend Services
-```yaml
-meta:
-  type: "service"
-  domain: "backend"
-contracts:
-  apis:
-    - "POST /auth/login -> {token, user, expires}"
-  events:
-    - "user_authenticated: {user_id, provider, timestamp}"
-constraints:
-  performance:
-    response_time: "<500ms P95"
-    throughput: "1000 requests/second"
-```
-
-### AI Agents
-```yaml
-meta:
-  type: "agent"
-  domain: "ai"
-contracts:
-  capabilities:
-    - "Process user queries with contextual understanding"
-    - "Generate responses with confidence scoring"
-constraints:
-  performance:
-    response_time: "<3s for text generation"
-  security_privacy:
-    data_protection: "No PII in training data"
-```
-
-## Integration with Development Tools
-
-### Cursor Integration
-The schema prompts work seamlessly with Cursor for:
-- Context-aware specification generation
-- Code generation from specifications
-- Specification validation and improvement
-
-### Other AI Tools
-Compatible with Claude, Cursor, and "possibly" other AI development assistants for:
-- Specification creation and review
-- Architecture design guidance
-- Implementation planning
-
-*Tested with: Cursor, Claude* (copilot testing to follow. Please let us know your experience with copilot and specplane.)
-
-## Quality Guidelines
-
-Good SpecPlane specifications should have:
-- Clear, one-sentence purpose statement
-- Measurable acceptance criteria
-- Comprehensive error handling scenarios
-- Realistic performance constraints
-- Appropriate security considerations
-- Observable metrics and events
-- Language-agnostic behavioral contracts
-
-## Contributing to Schema Evolution
-
-The schema evolves based on:
-- Real-world usage patterns
-- Experimental validation results
-- Community feedback
-- Industry best practices
-
-To suggest schema improvements:
-1. Create specifications using current schema
-2. Document gaps or usability issues
-3. Propose specific enhancements
-4. Test with actual development workflows
-
-## Version History
-
-- **v5.5.1** - Production-ready balanced schema with smart constraints
-- **v7** - Extended schema with advanced enterprise features
-- **v5** - Original foundational schema with C4 integration
-- **Earlier versions** - Experimental iterations and validation studies
-
----
-
-**Getting Started**: Begin with `README_START_HERE.md` to set up your development environment, then use `specplane_schema_prompt_v5.5.1_balanced.md` to create your first specification.
-
-
-> **🚧 Work in Progress** - This project is actively evolving and we're working to make the core prompts better. We welcome feedback, contributions, and suggestions for improvement! Please share your experiences using SpecPlane in your development workflows.
+A good spec has a one-sentence purpose, measurable acceptance criteria, named failure modes, realistic constraints, and language-agnostic contracts. Components `implements` capabilities and `uses` foundations; keep the reverse links in the same change.

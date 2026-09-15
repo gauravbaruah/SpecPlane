@@ -68,6 +68,8 @@ Central resource registry for designs, tickets, docs, images, videos. Use `{{ref
 
 ## When to Use v6.1.0
 
+v9.1.0 is the default SpecPlane schema. Use v6.1.0 only when you want C4 without capability or foundation layers.
+
 - **Teams** using C4 and no capability/foundation layer
 - **Projects** where planning (PM) and implementation (engineering) are clearly separated
 - **Workflows** that want progressive disclosure and minimal starting footprint

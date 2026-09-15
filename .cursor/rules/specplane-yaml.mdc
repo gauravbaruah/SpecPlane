@@ -1,0 +1,16 @@
+---
+description: SpecPlane YAML authoring — load the applicable schema section for the spec type
+globs: "**/*.yaml"
+alwaysApply: false
+---
+
+# SpecPlane YAML
+
+When editing SpecPlane YAML (`capability.*`, `foundation.*`, `system.*`, `container.*`, `component.*`):
+
+1. Confirm `meta.id` matches the filename without extension.
+2. Load only the applicable section for this spec type from `specplane/core_prompt/applicable/README.md` (03 plus 04–07).
+3. If you add `implements`, `uses`, or `dependencies.internal`, update the reciprocal field in the same change.
+4. Bump `meta.version` and add a `changelog` entry.
+
+Do not load the full v9.1.0 master prompt for a single-file edit.

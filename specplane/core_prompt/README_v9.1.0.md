@@ -115,8 +115,19 @@ Component types: `agent`, `workflow`, `tool`, `tool_registry`, `state_store`, `e
 - Consistent identifiers (snake_case) across analytics, observability, and contracts
 - Analytics events include `properties` for contract-test generation
 
+## Two forms of the v9.1.0 prompt
+
+| Form | Path | Use |
+|---|---|---|
+| **Reference** | `specplane_schema_prompt_v9.1.0.md` | Complete prompt. Schema edits. Do not dump into a coding agent. |
+| **Applicable** | `applicable/README.md` and `01`–`11` | Same content, split. Load only the section the task needs. |
+
+If a section and the reference disagree, the reference is canonical.
+
 ## Related Files
 
-- **Schema prompt**: `specplane_schema_prompt_v9.1.0.md`
+- **Reference prompt**: `specplane_schema_prompt_v9.1.0.md`
+- **Applicable split**: `applicable/README.md`
 - **Foundations**: `specplane/foundations/*.yaml`
+- **Repo router**: `AGENTS.md`
 - **Examples**: `spec_validation_prompt_examples.md`, `widget_spec_examples.md`

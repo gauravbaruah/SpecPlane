@@ -42,54 +42,68 @@ The ultimate aim is to guide teams into thinking more deeply about core applicat
 ## Repository Structure
 
 ```
-specplane/
-├── specplane/              # Core SpecPlane schema and examples
-│   ├── core_prompt/        # Master schema definitions and guidance
-│   └── supporting_prompts/   # other prompts that support the core prompt
-├── legacy/                 # Archived code — not the forward product path
-│   └── specplane_viewer/  # (legacy) Docusaurus/CLI viewer — see legacy/README.md
-├── README.md              # This file
-└── LICENSE                # Apache 2.0 License
+SpecPlane/
+├── AGENTS.md              # Agent router (load applicable sections, not the full prompt)
+├── CLAUDE.md              # Includes AGENTS.md
+├── .agents/skills/        # Portable SpecPlane skills
+├── .cursor/rules/         # Cursor rules
+├── .cursor/skills/        # Cursor copy of the same skills
+├── specplane/
+│   ├── core_prompt/       # v9.1.0 reference + applicable split; v6.1.0 C4-only
+│   ├── foundations/       # Boilerplate foundation specs
+│   └── supporting_prompts/
+├── legacy/                # Archived viewer — not the product path
+├── README.md
+└── LICENSE
 ```
 
 ## Quick Start
 
-### 1. Learn the Schema
-Start by reviewing the SpecPlane schema in [`specplane/core_prompt/`](./specplane/core_prompt/)
+### 1. Load SpecPlane for an agent
 
-### 2. Explore Examples
-Browse sample component specifications in [`legacy/specplane_viewer/specs/`](./legacy/specplane_viewer/specs/). (That viewer stack is [legacy only](./legacy/README.md); a new SpecPlane viewer is planned.)
+Follow [`AGENTS.md`](./AGENTS.md). For spec work, open the [applicable loading contract](./specplane/core_prompt/applicable/README.md) and read only the section you need. The [full v9.1.0 prompt](./specplane/core_prompt/specplane_schema_prompt_v9.1.0.md) is the reference encyclopedia — do not paste it into every session.
 
-### 3. Legacy Docusaurus viewer
-The old **YAML → Markdown + Docusaurus** tool lives under [`legacy/specplane_viewer/`](./legacy/specplane_viewer/). It is **not** maintained as the long-term product; use it only if you need the historical implementation.
+Human overview: [`specplane/README.md`](./specplane/README.md) and [`README_v9.1.0.md`](./specplane/core_prompt/README_v9.1.0.md).
 
-### 4. Create Your First Spec
+### 2. Example specs
+
+Sample YAML from the archived viewer: [`legacy/specplane_viewer/specs/`](./legacy/specplane_viewer/specs/). That viewer is [legacy only](./legacy/README.md).
+
+### 3. Create a first spec (v9.1.0 capability, Phase 1)
+
 ```yaml
 meta:
-  purpose: "User authentication interface with OAuth support"
-  type: "widget"
-  level: "component"
-  domain: "frontend"
+  id: capability.authentication
+  purpose: "Allow users to prove identity and establish a session"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
 
-contracts:
-  capabilities:
-    - "Authenticate user with Google/Apple OAuth"
-    - "Handle authentication failures gracefully"
-    - "Navigate to dashboard on success"
+changelog:
+  - date: "2026-09-15"
+    author: ""
+    summary: "Initial Phase 1 capability"
+    breaking: false
+
+responsibilities:
+  - "Identity verification"
+  - "Session establishment and token lifecycle"
+
+flows:
+  - "Login"
+  - "Logout"
+
+business_value:
+  user_outcome: "Users can securely access their account"
+  objective: "Enable personalized product use"
+  revenue_dependency: high
+  strategic_priority: core
 
 constraints:
-  performance:
-    response_time: "<2s for OAuth flow completion"
-  
-  security_privacy:
-    data_protection: "Only access email and profile picture"
-    compliance: "GDPR consent required"
-
-validation:
-  acceptance_criteria:
-    - "Shows loading state during OAuth flow"
-    - "Displays specific error messages for failures"
-    - "Redirects to onboarding for new users"
+  security:
+    - "PKCE required for OAuth"
 ```
 
 ## Core Principles
@@ -144,14 +158,17 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 
 ## Learn More
 
-- [Core Schema Documentation](./specplane/core_prompt/)
+- [Agent loading contract (AGENTS.md)](./AGENTS.md)
+- [Applicable schema split](./specplane/core_prompt/applicable/README.md)
+- [v9.1.0 reference prompt](./specplane/core_prompt/specplane_schema_prompt_v9.1.0.md)
+- [Core schema overview](./specplane/README.md)
 - [Example specifications (from legacy viewer)](./legacy/specplane_viewer/specs/)
 - [Legacy Docusaurus viewer (archived)](./legacy/specplane_viewer/) — see [legacy/](./legacy/README.md)
 
 ---
 
 **Ready to align your design and implementation?**  
-Start with the core schema guide and create your first specification.
+Start with `AGENTS.md` and the applicable split, then write a Phase 1 capability spec.
 
 
 > **🚧 Work in Progress** - This project is actively evolving and we're working to make SpecPlane more featureful and user friendly. We welcome feedback, contributions, and suggestions for improvement! Please share your experiences and help us build better tools for software specification and development.
