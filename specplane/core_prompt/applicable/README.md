@@ -49,5 +49,6 @@ Always start from this table. Read **only** the listed sections unless a field y
 
 ## Related
 
+- Using SpecPlane in a product repo: [`docs/use-in-your-project.md`](../../../docs/use-in-your-project.md)
 - Repo router: [`AGENTS.md`](../../../AGENTS.md)
 - Simpler C4-only schema (no capability/foundation layer): [`specplane_schema_prompt_v6.1.0_progressive_disclosure.md`](../specplane_schema_prompt_v6.1.0_progressive_disclosure.md)

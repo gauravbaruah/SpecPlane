@@ -21,7 +21,7 @@ Do **not** ingest the full master prompt into a coding session.
 
 ## This repository
 
-This repo ships the schema, foundations, and agent files. It is not a product app with a `specs/` tree of its own.
+This repo ships the schema, foundations, and agent files. It is not a product app with a `specs/` tree of its own. **To specify a product**, copy the kit into that product’s repo: [docs/use-in-your-project.md](docs/use-in-your-project.md).
 
 ```
 specplane/core_prompt/specplane_schema_prompt_v9.1.0.md   # reference (complete)

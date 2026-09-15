@@ -48,6 +48,8 @@ SpecPlane/
 ├── .agents/skills/        # Portable SpecPlane skills
 ├── .cursor/rules/         # Cursor rules
 ├── .cursor/skills/        # Cursor copy of the same skills
+├── docs/
+│   └── use-in-your-project.md  # Copy the kit into a product repo
 ├── specplane/
 │   ├── core_prompt/       # v9.1.0 reference + applicable split; v6.1.0 C4-only
 │   ├── foundations/       # Boilerplate foundation specs
@@ -59,17 +61,26 @@ SpecPlane/
 
 ## Quick Start
 
-### 1. Load SpecPlane for an agent
+**Using SpecPlane in your own app** is the usual path. This GitHub repo is the schema kit; your product repo holds `specs/`.
 
-Follow [`AGENTS.md`](./AGENTS.md). For spec work, open the [applicable loading contract](./specplane/core_prompt/applicable/README.md) and read only the section you need. The [full v9.1.0 prompt](./specplane/core_prompt/specplane_schema_prompt_v9.1.0.md) is the reference encyclopedia — do not paste it into every session.
+Follow **[Use SpecPlane in your project](./docs/use-in-your-project.md)**:
 
-Human overview: [`specplane/README.md`](./specplane/README.md) and [`README_v9.1.0.md`](./specplane/core_prompt/README_v9.1.0.md).
+1. Copy `specplane/`, skills, and Cursor rules into the product repo (paths must stay `specplane/core_prompt/applicable/`).
+2. Add a consuming `AGENTS.md` (template in that guide) and `CLAUDE.md` with `@AGENTS.md`.
+3. Open the **product** workspace and ask: `Set up SpecPlane for this repo. Create a specs/ tree and a Phase 1 capability for <name>.`
+4. Do not paste the full v9.1.0 prompt into chat. The agent loads one applicable section per task.
 
-### 2. Example specs
+Human overview of the schema: [`specplane/README.md`](./specplane/README.md) and [`README_v9.1.0.md`](./specplane/core_prompt/README_v9.1.0.md).
+
+### Working in *this* repo (schema maintainers)
+
+[`AGENTS.md`](./AGENTS.md) is already here. Skills and rules apply to this clone. Use that when changing the schema, not when specifying a product.
+
+### Example specs
 
 Sample YAML from the archived viewer: [`legacy/specplane_viewer/specs/`](./legacy/specplane_viewer/specs/). That viewer is [legacy only](./legacy/README.md).
 
-### 3. Create a first spec (v9.1.0 capability, Phase 1)
+### A Phase 1 capability (v9.1.0)
 
 ```yaml
 meta:
@@ -158,6 +169,7 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 
 ## Learn More
 
+- [Use SpecPlane in your project](./docs/use-in-your-project.md)
 - [Agent loading contract (AGENTS.md)](./AGENTS.md)
 - [Applicable schema split](./specplane/core_prompt/applicable/README.md)
 - [v9.1.0 reference prompt](./specplane/core_prompt/specplane_schema_prompt_v9.1.0.md)
@@ -168,7 +180,7 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 ---
 
 **Ready to align your design and implementation?**  
-Start with `AGENTS.md` and the applicable split, then write a Phase 1 capability spec.
+Copy the kit into your product repo — [Use SpecPlane in your project](./docs/use-in-your-project.md).
 
 
 > **🚧 Work in Progress** - This project is actively evolving and we're working to make SpecPlane more featureful and user friendly. We welcome feedback, contributions, and suggestions for improvement! Please share your experiences and help us build better tools for software specification and development.

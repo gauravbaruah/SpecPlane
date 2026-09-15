@@ -1,0 +1,104 @@
+# Use SpecPlane in your project
+
+This repo is the schema and agent kit. Your product repo is where `specs/` lives. There is no npm package or marketplace plugin yet — you copy a small set of files, then let the agent scaffold specs.
+
+## What you are installing
+
+| In this repo | In your project | Why |
+|---|---|---|
+| `specplane/` | `specplane/` (same path) | Schema reference, applicable sections, foundation boilerplates |
+| `AGENTS.md` | `AGENTS.md` (use the consuming template below) | Tells the agent what to load |
+| `CLAUDE.md` | `CLAUDE.md` | Claude Code reads this; it should include `AGENTS.md` |
+| `.agents/skills/specplane-*` | `.agents/skills/specplane-*` | Portable skills (Cursor, Claude, Codex) |
+| `.cursor/skills/specplane-*` | `.cursor/skills/specplane-*` | Cursor discovery |
+| `.cursor/rules/specplane-*.mdc` | `.cursor/rules/specplane-*.mdc` | Cursor always-on + YAML globs |
+
+Skills and `AGENTS.md` look for **`specplane/core_prompt/applicable/`** at the root of *your* project. Copy the `specplane/` directory, not the whole SpecPlane git repo (that would also pull `legacy/` and this README).
+
+Pin the SpecPlane commit or tag you copied from (today: branch `main` / schema **v9.1.0**).
+
+## Setup (once)
+
+From a clone of [SpecPlane](https://github.com/gauravbaruah/SpecPlane), in your product repo:
+
+```bash
+# Schema + foundations (required path: specplane/)
+rsync -a --delete /path/to/SpecPlane/specplane/ ./specplane/
+
+# Skills
+mkdir -p .agents/skills .cursor/skills .cursor/rules
+rsync -a /path/to/SpecPlane/.agents/skills/specplane-*/ .agents/skills/
+rsync -a /path/to/SpecPlane/.cursor/skills/specplane-*/ .cursor/skills/
+rsync -a /path/to/SpecPlane/.cursor/rules/specplane-*.mdc .cursor/rules/
+```
+
+Add a consuming `AGENTS.md` (below) and:
+
+```md
+# CLAUDE.md
+@AGENTS.md
+```
+
+Commit those files. Open the **product** repo in Cursor or Claude Code (not only the SpecPlane clone).
+
+If you already have an `AGENTS.md`, keep your project rules and append the SpecPlane loading contract rather than replacing the file.
+
+### Consuming `AGENTS.md`
+
+```markdown
+# SpecPlane (this product)
+
+This project uses SpecPlane v9.1.0. Specs live in `specs/`. Schema files live in `specplane/`.
+
+Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a coding session.
+
+1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
+2. Skills: specplane-bootstrap, specplane-author, specplane-implement, specplane-validate.
+
+Rules:
+- Filename without extension equals `meta.id`.
+- Capability Phase 1 is valid without architecture.
+- Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
+- Changelog entry whenever `meta.version` changes.
+- Specs before code when behavior, contracts, events, rollout, or security change. If there is no spec impact, say so.
+```
+
+## First session
+
+Ask the agent:
+
+> Set up SpecPlane for this repo. Use schema v9.1.0. Create a `specs/` tree and a Phase 1 capability for \<name\>.
+
+That should trigger `specplane-bootstrap`, then `specplane-author`. You should get:
+
+```
+specs/
+├── capabilities/capability.<name>.yaml
+├── foundations/          # copies from specplane/foundations/ as needed
+├── system.<product>.yaml
+├── containers/
+└── components/
+```
+
+Do **not** paste the full master prompt into chat.
+
+## Daily use
+
+| You say | Agent should |
+|---|---|
+| Add a capability / foundation / component | `specplane-author` → applicable sections 03 + 04–07 |
+| Implement this feature | `specplane-implement` → update spec if behavior changes, then code |
+| Review / validate specs | `specplane-validate` → sections 08 and 11 |
+| “No spec impact” | Agent states that and does not invent spec churn |
+
+Authoring order: **capability Phase 1** (`responsibilities`, `flows`, `business_value`, `constraints`) → foundations you actually need → system/containers → components with `implements` / `uses`.
+
+## Updating SpecPlane
+
+Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your consuming `AGENTS.md` if the loading contract changed. Do not merge `legacy/` or private folders.
+
+## Not included yet
+
+- Marketplace plugin (Cursor / Claude Code / Codex)
+- CLI validator or drift checker in this repo
+- A supported spec viewer (the Docusaurus tool under `legacy/` is archived)

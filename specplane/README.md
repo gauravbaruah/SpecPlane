@@ -31,6 +31,10 @@ Repo root [`AGENTS.md`](../AGENTS.md) is the router. [`CLAUDE.md`](../CLAUDE.md)
 
 ## How to author
 
+**In a product repo:** follow [Use SpecPlane in your project](../docs/use-in-your-project.md), then ask the agent to bootstrap `specs/`.
+
+**In this schema repo:**
+
 1. Open [`AGENTS.md`](../AGENTS.md) or [`core_prompt/README_START_HERE.md`](core_prompt/README_START_HERE.md).
 2. Follow the applicable loading contract — do not attach the full v9.1.0 file.
 3. Capability-first: Phase 1 (`responsibilities`, `flows`, `business_value`, `constraints`) is enough to start.
