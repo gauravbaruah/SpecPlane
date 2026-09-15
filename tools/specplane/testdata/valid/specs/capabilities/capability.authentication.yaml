@@ -1,0 +1,38 @@
+meta:
+  id: capability.authentication
+  purpose: "Allow users to prove identity and establish a session"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+  owner: "example"
+
+changelog:
+  - date: "2026-09-15"
+    author: "specplane"
+    summary: "Fixture capability"
+    breaking: false
+
+responsibilities:
+  - "Identity verification"
+
+flows:
+  - "Login"
+
+business_value:
+  user_outcome: "Users can access their account"
+  objective: "Enable signed-in product use"
+  revenue_dependency: high
+  strategic_priority: core
+
+constraints:
+  security:
+    - "PKCE required for OAuth"
+  data_classification: confidential
+
+realized_by:
+  containers:
+    - container.web_app
+  components:
+    - component.login_form

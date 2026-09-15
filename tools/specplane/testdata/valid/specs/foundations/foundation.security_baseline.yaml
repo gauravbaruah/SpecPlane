@@ -1,0 +1,22 @@
+meta:
+  id: foundation.security_baseline
+  purpose: "Shared authentication and data-protection rules"
+  level: foundation
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: approved
+  status: active
+
+changelog:
+  - date: "2026-09-15"
+    author: "specplane"
+    summary: "Fixture foundation"
+    breaking: false
+
+provides:
+  - "PKCE and session cookie rules"
+
+used_by:
+  containers: []
+  components:
+    - component.login_form

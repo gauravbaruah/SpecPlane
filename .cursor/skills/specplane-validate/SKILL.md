@@ -11,10 +11,11 @@ Read `specplane/core_prompt/applicable/08-validation-rules.md` and `11-guidance-
 
 ## Procedure
 
-1. Check each changed (or named) spec against rules 1–21 in section 08.
-2. Run the quality checklist in section 11 for that spec type.
-3. Report by severity:
-   - blocker: missing required meta, broken id/filename, one-sided links, version bump without changelog
-   - warn: incomplete Phase 2/3, missing diagrams, weak acceptance criteria
+1. Run `python3 tools/specplane/validate.py` (or `--spec-root specs`). Install PyYAML if needed.
+2. Optionally run `python3 tools/specplane/drift.py --scope changed`.
+3. Read `specplane/core_prompt/applicable/08-validation-rules.md` and `11-guidance-and-checklists.md` for findings the CLI cannot see (wording, completeness).
+4. Report by severity:
+   - blocker: CLI errors (id/filename, links, semver, changelog)
+   - warn: CLI warnings plus incomplete Phase 2/3
    - info: naming or wording
-4. Suggest the smallest fix per finding. Do not rewrite unrelated sections.
+5. Suggest the smallest fix per finding. Do not rewrite unrelated sections.

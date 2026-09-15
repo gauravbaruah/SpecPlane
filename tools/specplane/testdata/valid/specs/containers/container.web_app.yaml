@@ -1,0 +1,23 @@
+meta:
+  id: container.web_app
+  purpose: "Browser app that hosts authentication UI"
+  level: container
+  type: container
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-15"
+    author: "specplane"
+    summary: "Fixture container"
+    breaking: false
+
+implements:
+  - capability.authentication
+
+relationships:
+  contains:
+    - component.login_form
+  depends_on: []

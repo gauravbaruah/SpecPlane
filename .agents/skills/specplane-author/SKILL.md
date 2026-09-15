@@ -25,4 +25,5 @@ Do not load `specplane_schema_prompt_v9.1.0.md` unless a field is missing from t
 3. Set `meta.id` to the filename without extension. Use snake_case ids.
 4. If adding `implements`, `uses`, or internal dependencies, update the other side of the link.
 5. Add a `changelog` row; bump `meta.version` on edits.
-6. Summarize what was authored and what is still Phase-incomplete.
+6. Run `python3 tools/specplane/validate.py` if the toolkit is present.
+7. Summarize what was authored and what is still Phase-incomplete.

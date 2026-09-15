@@ -50,6 +50,7 @@ SpecPlane/
 ├── .cursor/skills/        # Cursor copy of the same skills
 ├── docs/
 │   └── use-in-your-project.md  # Copy the kit into a product repo
+├── tools/specplane/       # validate.py and drift.py
 ├── specplane/
 │   ├── core_prompt/       # v9.1.0 reference + applicable split; v6.1.0 C4-only
 │   ├── foundations/       # Boilerplate foundation specs
@@ -170,6 +171,7 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 ## Learn More
 
 - [Use SpecPlane in your project](./docs/use-in-your-project.md)
+- [Toolkit (validate / drift)](./tools/specplane/README.md)
 - [Agent loading contract (AGENTS.md)](./AGENTS.md)
 - [Applicable schema split](./specplane/core_prompt/applicable/README.md)
 - [v9.1.0 reference prompt](./specplane/core_prompt/specplane_schema_prompt_v9.1.0.md)

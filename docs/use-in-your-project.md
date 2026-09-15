@@ -11,7 +11,8 @@ This repo is the schema and agent kit. Your product repo is where `specs/` lives
 | `CLAUDE.md` | `CLAUDE.md` | Claude Code reads this; it should include `AGENTS.md` |
 | `.agents/skills/specplane-*` | `.agents/skills/specplane-*` | Portable skills (Cursor, Claude, Codex) |
 | `.cursor/skills/specplane-*` | `.cursor/skills/specplane-*` | Cursor discovery |
-| `.cursor/rules/specplane-*.mdc` | `.cursor/rules/specplane-*.mdc` | Cursor always-on + YAML globs |
+| `tools/specplane/` | `tools/specplane/` | `validate.py` and `drift.py` |
+| `tools/specplane/specplane.config.json.example` | `specplane.config.json` | Spec root and schema version |
 
 Skills and `AGENTS.md` look for **`specplane/core_prompt/applicable/`** at the root of *your* project. Copy the `specplane/` directory, not the whole SpecPlane git repo (that would also pull `legacy/` and this README).
 
@@ -27,9 +28,19 @@ rsync -a --delete /path/to/SpecPlane/specplane/ ./specplane/
 
 # Skills
 mkdir -p .agents/skills .cursor/skills .cursor/rules
-rsync -a /path/to/SpecPlane/.agents/skills/specplane-*/ .agents/skills/
-rsync -a /path/to/SpecPlane/.cursor/skills/specplane-*/ .cursor/skills/
+rsync -a /path/to/SpecPlane/.agents/skills/specplane-* .agents/skills/
+rsync -a /path/to/SpecPlane/.cursor/skills/specplane-* .cursor/skills/
 rsync -a /path/to/SpecPlane/.cursor/rules/specplane-*.mdc .cursor/rules/
+
+# Toolkit
+mkdir -p tools/specplane
+rsync -a /path/to/SpecPlane/tools/specplane/validate.py \
+          /path/to/SpecPlane/tools/specplane/drift.py \
+          /path/to/SpecPlane/tools/specplane/README.md \
+          tools/specplane/
+cp /path/to/SpecPlane/tools/specplane/specplane.config.json.example specplane.config.json
+# then: pip install pyyaml
+
 ```
 
 Add a consuming `AGENTS.md` (below) and:
@@ -54,6 +65,7 @@ Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a c
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-implement, specplane-validate.
+3. Validate with `python3 tools/specplane/validate.py`.
 
 Rules:
 - Filename without extension equals `meta.id`.
@@ -88,7 +100,7 @@ Do **not** paste the full master prompt into chat.
 |---|---|
 | Add a capability / foundation / component | `specplane-author` → applicable sections 03 + 04–07 |
 | Implement this feature | `specplane-implement` → update spec if behavior changes, then code |
-| Review / validate specs | `specplane-validate` → sections 08 and 11 |
+| Review / validate specs | `specplane-validate` → `python3 tools/specplane/validate.py`, then sections 08 and 11 |
 | “No spec impact” | Agent states that and does not invent spec churn |
 
 Authoring order: **capability Phase 1** (`responsibilities`, `flows`, `business_value`, `constraints`) → foundations you actually need → system/containers → components with `implements` / `uses`.
@@ -100,5 +112,4 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 ## Not included yet
 
 - Marketplace plugin (Cursor / Claude Code / Codex)
-- CLI validator or drift checker in this repo
 - A supported spec viewer (the Docusaurus tool under `legacy/` is archived)
