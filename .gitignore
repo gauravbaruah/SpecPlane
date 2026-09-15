@@ -1,4 +1,17 @@
 experiments/
 
+# Local-only. Claude dumps, private consumer packs, and plugin drafts.
+# Do not publish.
+trial-implementations/
+
+# Internal notes, not product
+legacy/initial_ideation_validation/
+
+# Private consumer specs (Progress Flow / PFIO)
+legacy/specplane_viewer/test_cases/
+
+# Research PDFs, not product
+design-docs/research_references/
+
 node_modules
 *.log
