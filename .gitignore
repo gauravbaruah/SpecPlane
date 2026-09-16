@@ -13,5 +13,7 @@ legacy/specplane_viewer/test_cases/
 # Research PDFs, not product
 design-docs/research_references/
 
+.DS_Store
+**/__pycache__/
 node_modules
 *.log
