@@ -10,8 +10,8 @@ legacy/initial_ideation_validation/
 # Private consumer specs (Progress Flow / PFIO)
 legacy/specplane_viewer/test_cases/
 
-# Research PDFs, not product
-design-docs/research_references/
+# Internal strategy, design notes, and working brand files. Not published.
+design-docs/
 
 .DS_Store
 **/__pycache__/

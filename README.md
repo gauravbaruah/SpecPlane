@@ -50,7 +50,6 @@ SpecPlane/
 ├── .cursor/skills/        # Cursor copy of the same skills
 ├── docs/
 │   └── use-in-your-project.md  # Copy the kit into a product repo
-├── design-docs/           # Public brand (logo); research PDFs stay gitignored
 ├── SpecPlane_Logo.png
 ├── tools/specplane/       # optional local validate / drift (not consumer CI)
 ├── specplane/
@@ -173,7 +172,6 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 ## Learn More
 
 - [Use SpecPlane in your project](./docs/use-in-your-project.md)
-- [Design docs (logo)](./design-docs/README.md)
 - [Toolkit (validate / drift)](./tools/specplane/README.md)
 - [Agent loading contract (AGENTS.md)](./AGENTS.md)
 - [Applicable schema split](./specplane/core_prompt/applicable/README.md)
