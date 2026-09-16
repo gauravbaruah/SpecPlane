@@ -1,0 +1,29 @@
+name: specplane-toolkit
+
+# Tests the toolkit in this repository. Not a consumer CI template.
+
+on:
+  push:
+    paths:
+      - "tools/specplane/**"
+      - ".github/workflows/specplane-toolkit.yml"
+  pull_request:
+    paths:
+      - "tools/specplane/**"
+      - ".github/workflows/specplane-toolkit.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/specplane/requirements.txt
+      - run: python3 tools/specplane/test_validate.py
+      - run: python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/valid/specs
+      - run: |
+          set +e
+          python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/invalid/specs
+          test $? -eq 1

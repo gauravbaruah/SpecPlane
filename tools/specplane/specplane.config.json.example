@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "schemaVersion": "9.1.0",
+  "specRoot": "specs",
+  "strictMode": false
+}

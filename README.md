@@ -42,54 +42,82 @@ The ultimate aim is to guide teams into thinking more deeply about core applicat
 ## Repository Structure
 
 ```
-specplane/
-├── specplane/              # Core SpecPlane schema and examples
-│   ├── core_prompt/        # Master schema definitions and guidance
-│   └── supporting_prompts/   # other prompts that support the core prompt
-├── legacy/                 # Archived code — not the forward product path
-│   └── specplane_viewer/  # (legacy) Docusaurus/CLI viewer — see legacy/README.md
-├── README.md              # This file
-└── LICENSE                # Apache 2.0 License
+SpecPlane/
+├── AGENTS.md              # Agent router (load applicable sections, not the full prompt)
+├── CLAUDE.md              # Includes AGENTS.md
+├── .agents/skills/        # Portable SpecPlane skills
+├── .cursor/rules/         # Cursor rules
+├── .cursor/skills/        # Cursor copy of the same skills
+├── docs/
+│   └── use-in-your-project.md  # Copy the kit into a product repo
+├── design-docs/           # Public brand (logo); research PDFs stay gitignored
+├── SpecPlane_Logo.png
+├── tools/specplane/       # optional local validate / drift (not consumer CI)
+├── specplane/
+│   ├── core_prompt/       # v9.1.0 reference + applicable split; v6.1.0 C4-only
+│   ├── foundations/       # Boilerplate foundation specs
+│   └── supporting_prompts/
+├── legacy/                # Archived viewer — not the product path
+├── README.md
+└── LICENSE
 ```
 
 ## Quick Start
 
-### 1. Learn the Schema
-Start by reviewing the SpecPlane schema in [`specplane/core_prompt/`](./specplane/core_prompt/)
+**Using SpecPlane in your own app** is the usual path. This GitHub repo is the schema kit; your product repo holds `specs/`.
 
-### 2. Explore Examples
-Browse sample component specifications in [`legacy/specplane_viewer/specs/`](./legacy/specplane_viewer/specs/). (That viewer stack is [legacy only](./legacy/README.md); a new SpecPlane viewer is planned.)
+Follow **[Use SpecPlane in your project](./docs/use-in-your-project.md)**:
 
-### 3. Legacy Docusaurus viewer
-The old **YAML → Markdown + Docusaurus** tool lives under [`legacy/specplane_viewer/`](./legacy/specplane_viewer/). It is **not** maintained as the long-term product; use it only if you need the historical implementation.
+1. Copy `specplane/`, skills, and Cursor rules into the product repo (paths must stay `specplane/core_prompt/applicable/`).
+2. Add a consuming `AGENTS.md` (template in that guide) and `CLAUDE.md` with `@AGENTS.md`.
+3. Open the **product** workspace and ask: `Set up SpecPlane for this repo. Create a specs/ tree and a Phase 1 capability for <name>.`
+4. Do not paste the full v9.1.0 prompt into chat. The agent loads one applicable section per task.
 
-### 4. Create Your First Spec
+Human overview of the schema: [`specplane/README.md`](./specplane/README.md) and [`README_v9.1.0.md`](./specplane/core_prompt/README_v9.1.0.md).
+
+### Working in *this* repo (schema maintainers)
+
+[`AGENTS.md`](./AGENTS.md) is already here. Skills and rules apply to this clone. Use that when changing the schema, not when specifying a product.
+
+### Example specs
+
+Sample YAML from the archived viewer: [`legacy/specplane_viewer/specs/`](./legacy/specplane_viewer/specs/). That viewer is [legacy only](./legacy/README.md).
+
+### A Phase 1 capability (v9.1.0)
+
 ```yaml
 meta:
-  purpose: "User authentication interface with OAuth support"
-  type: "widget"
-  level: "component"
-  domain: "frontend"
+  id: capability.authentication
+  purpose: "Allow users to prove identity and establish a session"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
 
-contracts:
-  capabilities:
-    - "Authenticate user with Google/Apple OAuth"
-    - "Handle authentication failures gracefully"
-    - "Navigate to dashboard on success"
+changelog:
+  - date: "2026-09-15"
+    author: ""
+    summary: "Initial Phase 1 capability"
+    breaking: false
+
+responsibilities:
+  - "Identity verification"
+  - "Session establishment and token lifecycle"
+
+flows:
+  - "Login"
+  - "Logout"
+
+business_value:
+  user_outcome: "Users can securely access their account"
+  objective: "Enable personalized product use"
+  revenue_dependency: high
+  strategic_priority: core
 
 constraints:
-  performance:
-    response_time: "<2s for OAuth flow completion"
-  
-  security_privacy:
-    data_protection: "Only access email and profile picture"
-    compliance: "GDPR consent required"
-
-validation:
-  acceptance_criteria:
-    - "Shows loading state during OAuth flow"
-    - "Displays specific error messages for failures"
-    - "Redirects to onboarding for new users"
+  security:
+    - "PKCE required for OAuth"
 ```
 
 ## Core Principles
@@ -144,14 +172,20 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 
 ## Learn More
 
-- [Core Schema Documentation](./specplane/core_prompt/)
+- [Use SpecPlane in your project](./docs/use-in-your-project.md)
+- [Design docs (logo)](./design-docs/README.md)
+- [Toolkit (validate / drift)](./tools/specplane/README.md)
+- [Agent loading contract (AGENTS.md)](./AGENTS.md)
+- [Applicable schema split](./specplane/core_prompt/applicable/README.md)
+- [v9.1.0 reference prompt](./specplane/core_prompt/specplane_schema_prompt_v9.1.0.md)
+- [Core schema overview](./specplane/README.md)
 - [Example specifications (from legacy viewer)](./legacy/specplane_viewer/specs/)
 - [Legacy Docusaurus viewer (archived)](./legacy/specplane_viewer/) — see [legacy/](./legacy/README.md)
 
 ---
 
 **Ready to align your design and implementation?**  
-Start with the core schema guide and create your first specification.
+Copy the kit into your product repo — [Use SpecPlane in your project](./docs/use-in-your-project.md).
 
 
 > **🚧 Work in Progress** - This project is actively evolving and we're working to make SpecPlane more featureful and user friendly. We welcome feedback, contributions, and suggestions for improvement! Please share your experiences and help us build better tools for software specification and development.

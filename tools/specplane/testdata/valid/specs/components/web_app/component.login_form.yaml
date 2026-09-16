@@ -1,0 +1,39 @@
+meta:
+  id: component.login_form
+  purpose: "Collect credentials and start a session"
+  level: component
+  type: widget
+  domain: frontend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-15"
+    author: "specplane"
+    summary: "Fixture component"
+    breaking: false
+
+implements:
+  - capability.authentication
+
+uses:
+  - foundation.security_baseline
+
+implementation:
+  technical_constraints:
+    security:
+      data_classification: confidential
+  validation:
+    acceptance_criteria:
+      - "Valid credentials reach the dashboard"
+    test_strategy:
+      unit: "cover success and invalid-credential branches"
+      integration: ""
+      e2e: ""
+      performance: false
+      security: "credential stuffing, lockout, and PKCE negative cases"
+  rollout:
+    strategy: immediate
+    rollback_trigger: "login_success_rate < 95% for 5 minutes"
