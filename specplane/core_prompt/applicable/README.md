@@ -13,7 +13,7 @@ The section files are the same schema, split so an agent loads only what the cur
 ## Do not load the full prompt when
 
 - Creating or editing a capability, foundation, container, or component spec
-- Implementing code from a spec
+- Implementing code from a spec, or a natural-language product change (`specplane-implement`)
 - Validating naming, links, or completeness
 - Adding a diagram or ref
 
@@ -30,6 +30,7 @@ Always start from this table. Read **only** the listed sections unless a field y
 | Task | Read (in order) |
 |---|---|
 | First orientation | this file, then [`01-philosophy-and-5c.md`](01-philosophy-and-5c.md) |
+| Product request (feature, bug, experiment) | skill `specplane-implement`; [`docs/golden-journey.md`](../../../docs/golden-journey.md); then `06` when coding |
 | New `specs/` tree / naming | [`02-file-layout.md`](02-file-layout.md) |
 | Any new spec (required meta) | [`03-shared-meta.md`](03-shared-meta.md) |
 | Capability spec | `03`, [`04-capability.md`](04-capability.md), capability example in [`10-worked-examples.md`](10-worked-examples.md) |
@@ -50,5 +51,6 @@ Always start from this table. Read **only** the listed sections unless a field y
 ## Related
 
 - Using SpecPlane in a product repo: [`docs/use-in-your-project.md`](../../../docs/use-in-your-project.md)
+- Agent ritual (golden journey): [`docs/golden-journey.md`](../../../docs/golden-journey.md)
 - Repo router: [`AGENTS.md`](../../../AGENTS.md)
 - Simpler C4-only schema (no capability/foundation layer): [`specplane_schema_prompt_v6.1.0_progressive_disclosure.md`](../specplane_schema_prompt_v6.1.0_progressive_disclosure.md)

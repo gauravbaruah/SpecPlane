@@ -4,6 +4,8 @@ Optional local commands for v9.1.0 specs. Copy `tools/specplane/` into a product
 
 They are **not** an installer. Do not wire them into Git hooks or CI/CD for a product repo yet. SpecPlane does not ship a setup program that can do that safely.
 
+Agents call these commands. Humans should not have to. Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md).
+
 Requires Python 3.10+ and PyYAML:
 
 ```bash

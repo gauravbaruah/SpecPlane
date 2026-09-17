@@ -12,7 +12,7 @@ Do not collapse these. That is how the recursive definition stays honest.
 |---|---|---|
 | `specplane/` | The **kit** — schema, applicable sections, foundation *boilerplates* | Load applicable sections. Copy this into other products. |
 | `specs/` | The **kernel product** — what SpecPlane-the-CLI must do and how well (first slice: bit, retrieve, blast, check_sync, change folders) | Author and implement *this product* from here. |
-| `tools/specplane/` | Realization of the kernel (validate.py today; retrieve/blast/check_sync next) | Implement against `specs/`, not against brainstorm prose. |
+| `tools/specplane/` | Realization of the kernel (`cli.py`: validate, retrieve, blast, check_sync) | Implement against `specs/`, not against brainstorm prose. Call the CLI; do not slurp `specs/`. |
 | `design-docs/` | Local strategy (gitignored) | Do not publish. Do not treat as specs. |
 
 **Copy-the-kit** into another repo copies `specplane/`, skills, and rules. It does **not** copy `specs/`. Those YAML files are SpecPlane specifying itself, not a starter app.
@@ -28,9 +28,11 @@ Do **not** ingest the full master prompt into a coding session.
 | Task | Skill | Applicable sections |
 |---|---|---|
 | Init a `specs/` tree | `specplane-bootstrap` | 02, 03 |
-| Create or expand a spec | `specplane-author` | 03 + the matching type (04–07), example in 10 |
-| Implement code from a spec | `specplane-implement` | 06 contracts/validation; 08 for links |
-| Review or check a spec | `specplane-validate` | 08, 11; optional in-session `validate.py` |
+| Product request in natural language (feature, bug, experiment) | `specplane-implement` | retrieve/blast first; 06 when coding; 08 at promote |
+| Create or expand YAML (user asked to spec) | `specplane-author` | 03 + the matching type (04–07), example in 10 |
+| Review or check a spec | `specplane-validate` | 08, 11; `cli.py validate` / `check_sync` |
+
+Intended chat shape (human never types `retrieve`): [`docs/golden-journey.md`](docs/golden-journey.md).
 
 ## This repository
 
@@ -53,15 +55,18 @@ Private and gitignored (do not commit, do not publish): `trial-implementations/`
 - Filename without extension equals `meta.id`.
 - Capability-first: Phase 1 is valid without architecture.
 - Bidirectional links in the same change: `implements` ↔ `realized_by`, `uses` ↔ `used_by`, `dependencies.internal` ↔ `depended_on_by`.
-- Changelog entry whenever `meta.version` changes.
-- Specs before code when behavior, contracts, events, rollout, or security change. If there is no spec impact, say so.
+- Changelog entry whenever `meta.version` changes **on live 5C files**.
+- In-flight writes go in `specs/changes/<id>/`. Do not turn live YAML into diaries.
+- Call `tools/specplane/cli.py retrieve|blast|check_sync`; do not slurp `specs/`.
+- Ceremony scales with semantic consequence, not diff size. Trivial work: no change folder, say “no spec impact.”
+- Specs before code when behavior, contracts, events, rollout, or security change.
 
 ## Working on SpecPlane itself
 
 Two different jobs — pick one per session:
 
 1. **Kit / schema** — field changes go in the v9.1.0 **reference** first, then the matching applicable section. Do not put schema prose into `specs/`.
-2. **Kernel product** — change `specs/` first (Phase 1), then implement in `tools/specplane/`. Do not invent CLI behavior that is not in `specs/`.
+2. **Kernel product** — open a change folder, then implement in `tools/specplane/`. Do not invent CLI behavior that is not in `specs/`.
 
 Do not resurrect the Docusaurus viewer. Do not copy private consumer toolkits (Bhajami, Progress Flow) into this repo. Do not treat `specplane/foundations/` boilerplates as the kernel product tree.
 

@@ -49,10 +49,11 @@ SpecPlane/
 ├── .cursor/rules/         # Cursor rules
 ├── .cursor/skills/        # Cursor copy of the same skills
 ├── docs/
-│   └── use-in-your-project.md  # Copy the kit into a product repo
+│   ├── use-in-your-project.md  # Copy the kit into a product repo
+│   └── golden-journey.md       # Agent ritual (intended chat shape)
 ├── specs/                 # Kernel product (SpecPlane specifying its CLI) — do not copy into other apps
 ├── SpecPlane_Logo.png
-├── tools/specplane/       # optional local validate / drift (not consumer CI)
+├── tools/specplane/       # kernel CLI: validate / retrieve / blast / check_sync
 ├── specplane/
 │   ├── core_prompt/       # v9.1.0 reference + applicable split; v6.1.0 C4-only
 │   ├── foundations/       # Boilerplate foundation specs
@@ -71,7 +72,8 @@ Follow **[Use SpecPlane in your project](./docs/use-in-your-project.md)**:
 1. Copy `specplane/`, skills, and Cursor rules into the product repo (paths must stay `specplane/core_prompt/applicable/`).
 2. Add a consuming `AGENTS.md` (template in that guide) and `CLAUDE.md` with `@AGENTS.md`.
 3. Open the **product** workspace and ask: `Set up SpecPlane for this repo. Create a specs/ tree and a Phase 1 capability for <name>.`
-4. Do not paste the full v9.1.0 prompt into chat. The agent loads one applicable section per task.
+4. After that, speak product language. The agent should follow [`docs/golden-journey.md`](./docs/golden-journey.md) (`specplane-implement`). You should not type `retrieve` or `blast`.
+5. Do not paste the full v9.1.0 prompt into chat. The agent loads one applicable section per task.
 
 Human overview of the schema: [`specplane/README.md`](./specplane/README.md) and [`README_v9.1.0.md`](./specplane/core_prompt/README_v9.1.0.md).
 

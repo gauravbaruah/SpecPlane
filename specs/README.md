@@ -8,7 +8,7 @@
 
 `design-docs/` is gitignored strategy, not specs. H01’s location is superseded; YAML lives here and is committed. Schema v9.1.0. Branch: `kernel-first-slice`. Handoff: [`../design-docs/handoffs/H02-relocate-specs.md`](../design-docs/handoffs/H02-relocate-specs.md) (local).
 
-This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.1.0 is still unfrozen for the four-value bit field; v1 maps `deprecated`/`replaced_by` → replaced. MCP is not built yet.
+This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.1.0 is still unfrozen for the four-value bit field; v1 maps `deprecated`/`replaced_by` → replaced. MCP is not built yet. Skills/`AGENTS.md` now follow [`docs/golden-journey.md`](../docs/golden-journey.md) (change ritual); they no longer teach “edit live YAML in the same task.”
 
 ---
 
@@ -98,10 +98,13 @@ Older Qs still used: 53 four-value bit; 43 retrieve+check_sync together; 54 infe
 
 ## How a coding agent should consume this
 
-1. Call `tools/specplane/cli.py retrieve|blast|check_sync` (and shell out for `validate`). Do not slurp `specs/`.
+Follow [`docs/golden-journey.md`](../docs/golden-journey.md) and `specplane-implement`. Do not slurp `specs/`.
+
+1. Call `tools/specplane/cli.py retrieve|blast|check_sync` (and `validate`).
 2. Overlay, not Tessl: the CLI does not compile specs into the product.
 3. Copy-the-kit to other products copies `specplane/`, skills, and rules — **not** this folder.
 4. `validate.py` skips `specs/changes/` (convention, not 5C).
+5. In-flight writes go in `specs/changes/`. Promote live YAML only after the human accepts.
 
 ```bash
 python3 tools/specplane/cli.py validate --spec-root specs

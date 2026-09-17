@@ -11,6 +11,7 @@ When editing SpecPlane YAML (`capability.*`, `foundation.*`, `system.*`, `contai
 1. Confirm `meta.id` matches the filename without extension.
 2. Load only the applicable section for this spec type from `specplane/core_prompt/applicable/README.md` (03 plus 04–07).
 3. If you add `implements`, `uses`, or `dependencies.internal`, update the reciprocal field in the same change.
-4. Bump `meta.version` and add a `changelog` entry.
+4. Bump `meta.version` and add a `changelog` entry on **live** 5C files. Files under `specs/changes/` are the in-flight write path — not 5C meta, not changelog novels on the live capability.
+5. If this edit is a behavior change, it should already live in an open change folder (`specplane-implement`). Do not silently patch live YAML.
 
 Do not load the full v9.1.0 master prompt for a single-file edit.
