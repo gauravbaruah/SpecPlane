@@ -1,6 +1,8 @@
 # Use SpecPlane in your project
 
-This repo is the schema and agent kit. Your product repo is where `specs/` lives. There is no npm package or marketplace plugin yet — you copy a small set of files, then let the agent scaffold specs.
+This repo is the schema **kit** plus (in this GitHub tree) SpecPlane’s own **kernel product** specs. Your product repo is where *your* `specs/` lives. Do **not** copy SpecPlane’s `specs/` into your app — that tree is SpecPlane specifying its CLI, not a template product.
+
+There is no npm package or marketplace plugin yet — you copy a small set of kit files, then let the agent scaffold *your* specs.
 
 ## What you are installing
 
@@ -14,9 +16,7 @@ This repo is the schema and agent kit. Your product repo is where `specs/` lives
 | `tools/specplane/` | `tools/specplane/` | Optional: `validate.py` and `drift.py` for the agent to run locally |
 | `tools/specplane/specplane.config.json.example` | `specplane.config.json` | Spec root and schema version |
 
-Skills and `AGENTS.md` look for **`specplane/core_prompt/applicable/`** at the root of *your* project. Copy the `specplane/` directory, not the whole SpecPlane git repo (that would also pull `legacy/` and this README).
-
-Pin the SpecPlane commit or tag you copied from (today: branch `main` / schema **v9.1.0**).
+Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPlane git repo, and **not** this repo’s `specs/` folder. Pin the SpecPlane commit or tag you copied from (today: branch `main` / schema **v9.1.0**; kernel specs live on `kernel-first-slice` until merged).
 
 ## Setup (once)
 
@@ -107,7 +107,7 @@ Authoring order: **capability Phase 1** (`responsibilities`, `flows`, `business_
 
 ## Updating SpecPlane
 
-Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your consuming `AGENTS.md` if the loading contract changed. Do not merge `legacy/` or private folders.
+Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your consuming `AGENTS.md` if the loading contract changed. Do not merge `legacy/`, `specs/` (this repo’s kernel product), or private folders.
 
 ## Not included yet
 

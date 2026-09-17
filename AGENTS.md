@@ -4,6 +4,19 @@ Git-native YAML specifications for what a system should do and how well — not 
 
 Default schema: **v9.1.0** (5C: Capability, System, Container, Component, plus Foundations). Simpler C4-only path: **v6.1.0**.
 
+## Two trees in this repo
+
+Do not collapse these. That is how the recursive definition stays honest.
+
+| Tree | What it is | Agents |
+|---|---|---|
+| `specplane/` | The **kit** — schema, applicable sections, foundation *boilerplates* | Load applicable sections. Copy this into other products. |
+| `specs/` | The **kernel product** — what SpecPlane-the-CLI must do and how well (first slice: bit, retrieve, blast, check_sync, change folders) | Author and implement *this product* from here. |
+| `tools/specplane/` | Realization of the kernel (validate.py today; retrieve/blast/check_sync next) | Implement against `specs/`, not against brainstorm prose. |
+| `design-docs/` | Local strategy (gitignored) | Do not publish. Do not treat as specs. |
+
+**Copy-the-kit** into another repo copies `specplane/`, skills, and rules. It does **not** copy `specs/`. Those YAML files are SpecPlane specifying itself, not a starter app.
+
 ## Agent loading contract
 
 Do **not** ingest the full master prompt into a coding session.
@@ -21,22 +34,21 @@ Do **not** ingest the full master prompt into a coding session.
 
 ## This repository
 
-This repo ships the schema, foundations, and agent files. It is not a product app with a `specs/` tree of its own. **To specify a product**, copy the kit into that product’s repo: [docs/use-in-your-project.md](docs/use-in-your-project.md).
+Ships the **kit** and, on `kernel-first-slice` and later, the **kernel product specs**. Other products still copy the kit: [docs/use-in-your-project.md](docs/use-in-your-project.md).
 
 ```
-specplane/core_prompt/specplane_schema_prompt_v9.1.0.md   # reference (complete)
-specplane/core_prompt/applicable/                         # applicability (split)
-specplane/foundations/                                    # 19 boilerplate foundation YAMLs
-.agents/skills/specplane-*                                # portable skills (source)
-.cursor/skills/specplane-*                                # Cursor copy — keep identical to .agents
-.cursor/rules/                                            # Cursor always-on + YAML globs
-tools/specplane/                                          # optional local validate.py + drift.py
-legacy/specplane_viewer/                                  # archived viewer; do not extend
+specplane/                 # kit: language
+specs/                     # kernel product: overlay of what we are building
+tools/specplane/           # kernel realization (CLI)
+.agents/skills/specplane-*
+.cursor/skills/specplane-* # keep identical to .agents
+.cursor/rules/
+legacy/specplane_viewer/   # archived; do not extend
 ```
 
 Private and gitignored (do not commit, do not publish): `trial-implementations/`, `experiments/`, `legacy/initial_ideation_validation/`, `legacy/specplane_viewer/test_cases/`, `design-docs/`.
 
-## Spec rules (when a consuming project has `specs/`)
+## Spec rules (`specs/` in this repo or any consumer)
 
 - Filename without extension equals `meta.id`.
 - Capability-first: Phase 1 is valid without architecture.
@@ -46,6 +58,10 @@ Private and gitignored (do not commit, do not publish): `trial-implementations/`
 
 ## Working on SpecPlane itself
 
-- Schema field changes go in the v9.1.0 **reference** file first, then the matching applicable section.
-- Do not resurrect the Docusaurus viewer as the product path.
-- Do not copy private consumer toolkits (Bhajami, Progress Flow) into this repo.
+Two different jobs — pick one per session:
+
+1. **Kit / schema** — field changes go in the v9.1.0 **reference** first, then the matching applicable section. Do not put schema prose into `specs/`.
+2. **Kernel product** — change `specs/` first (Phase 1), then implement in `tools/specplane/`. Do not invent CLI behavior that is not in `specs/`.
+
+Do not resurrect the Docusaurus viewer. Do not copy private consumer toolkits (Bhajami, Progress Flow) into this repo. Do not treat `specplane/foundations/` boilerplates as the kernel product tree.
+

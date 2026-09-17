@@ -50,6 +50,7 @@ SpecPlane/
 ├── .cursor/skills/        # Cursor copy of the same skills
 ├── docs/
 │   └── use-in-your-project.md  # Copy the kit into a product repo
+├── specs/                 # Kernel product (SpecPlane specifying its CLI) — do not copy into other apps
 ├── SpecPlane_Logo.png
 ├── tools/specplane/       # optional local validate / drift (not consumer CI)
 ├── specplane/
@@ -63,7 +64,7 @@ SpecPlane/
 
 ## Quick Start
 
-**Using SpecPlane in your own app** is the usual path. This GitHub repo is the schema kit; your product repo holds `specs/`.
+**Using SpecPlane in your own app** is the usual path. Copy the **kit** (`specplane/`, skills, rules). Your product repo holds *your* `specs/`. This GitHub repo also has a `specs/` tree for **SpecPlane’s own kernel** — do not copy that into your app.
 
 Follow **[Use SpecPlane in your project](./docs/use-in-your-project.md)**:
 
