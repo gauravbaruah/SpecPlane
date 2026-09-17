@@ -31,11 +31,10 @@ specplane/foundations/                                    # 19 boilerplate found
 .cursor/skills/specplane-*                                # Cursor copy — keep identical to .agents
 .cursor/rules/                                            # Cursor always-on + YAML globs
 tools/specplane/                                          # optional local validate.py + drift.py
-design-docs/                                              # public logo; research_references/ is gitignored
 legacy/specplane_viewer/                                  # archived viewer; do not extend
 ```
 
-Private and gitignored (do not commit, do not publish): `trial-implementations/`, `experiments/`, `legacy/initial_ideation_validation/`, `legacy/specplane_viewer/test_cases/`, `design-docs/research_references/`.
+Private and gitignored (do not commit, do not publish): `trial-implementations/`, `experiments/`, `legacy/initial_ideation_validation/`, `legacy/specplane_viewer/test_cases/`, `design-docs/`.
 
 ## Spec rules (when a consuming project has `specs/`)
 
