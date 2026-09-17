@@ -1,0 +1,73 @@
+meta:
+  id: "foundation.epistemic_status"
+  purpose: "Four-value bit on every SpecPlane id so retrieve's default graph is honest"
+  level: "foundation"
+  owner: "SpecPlane"
+  tags: ["kernel", "epistemic", "status"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Adopt live | inferred | in-flight | replaced as the replacement for status soup"
+    breaking: false
+
+provides:
+  - "Single epistemic enum on every id: live | inferred | in-flight | replaced"
+  - "Writer rules: who may stamp each value"
+  - "Retrieve default-graph rule: only live; leftovers visible as replaced"
+
+used_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_validate"
+    - "component.cli_retrieve"
+    - "component.cli_blast"
+    - "component.cli_check_sync"
+    - "component.mcp_stdio"
+
+extends: []
+
+# Foundation-specific content. Schema field that carries this bit is still v9.1.0
+# status soup until examination unfreezes the public schema. Collapse, do not stack.
+bit:
+  enum:
+    - live
+    - inferred
+    - in-flight
+    - replaced
+  collapse_not_accumulate: true
+  replaces: "meta.status / review_state / aligns_with_code soup — one enum, not a stacked field"
+  values:
+    live:
+      meaning: "Promised now; retrieve's default graph"
+      writer: "Human or CI promote"
+    inferred:
+      meaning: "Inventory from code or docs; never looks as live"
+      writer: "One-shot infer job (not first-slice CLI)"
+    in-flight:
+      meaning: "Open change object. Live id gets a pointer, not a second status (Q71)"
+      writer: "Change folder"
+    replaced:
+      meaning: "Leftover / prior graph; visible, not default"
+      writer: "Promote on merge"
+  forbidden:
+    - "Infer writes live"
+    - "Weekly re-infer"
+    - "Claude reconstructed enum live | intended | superseded | archived"
+    - "Fifth value archived in this slice (Q70 default: collapse to four)"
+    - "Coach or coding agent auto-writing live to match code"
+
+refs:
+  - id: "design_notes_bit"
+    type: "doc"
+    title: "Design notes — epistemic bit"
+    path: "design-docs/design-notes.md"
+    status: "active"
+    last_updated: "2026-09-17"
+    access: "internal"

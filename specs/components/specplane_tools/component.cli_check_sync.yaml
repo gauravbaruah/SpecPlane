@@ -1,0 +1,58 @@
+meta:
+  id: "component.cli_check_sync"
+  purpose: "Local check_sync command: fail moved named behavior and empty blast"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Planning + implements for check_sync CLI; no how"
+    breaking: false
+
+implements:
+  - "capability.specplane_check_sync"
+
+uses:
+  - "foundation.epistemic_status"
+  - "foundation.join_key"
+  - "foundation.error_handling"
+  - "foundation.observability_standards"
+
+planning:
+  user_flows:
+    actions:
+      - "check_sync after an agent edits code against live + open deltas"
+    success:
+      - "In sync: exit 0"
+      - "Named behavior moved, live spec unchanged: fail"
+      - "Empty blast on a behavior-changing diff: fail"
+    errors:
+      - "Must not auto-write live"
+      - "Must not be invoked as self-grade by the same maker session as the only check"
+
+implementation:
+  dependencies:
+    internal:
+      - "component.cli_retrieve"
+      - "component.cli_blast"
+    external: []
+  depended_on_by:
+    components:
+      - "component.mcp_stdio"
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "Roadmap done-when: check_sync fails when a named behavior moved and the live spec did not"
+      - "Empty blast fails"
+    open_questions:
+      - "How a named behavior is detected in code this slice (heuristic vs explicit sensors) — do not invent; Build Pack / examination"
+    readiness: "unknown"

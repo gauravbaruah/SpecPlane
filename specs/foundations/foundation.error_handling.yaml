@@ -1,0 +1,68 @@
+meta:
+  id: "foundation.error_handling"
+  purpose: "CLI and MCP exit, stderr, and fail-closed rules for the kernel tools"
+  level: "foundation"
+  owner: "SpecPlane"
+  tags: ["errors", "cli", "kernel"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Reuse kit error-handling foundation for local CLI/MCP; fill kernel exit conventions"
+    breaking: false
+
+provides:
+  - "Exit-code taxonomy for local commands"
+  - "Stderr finding format; no stack traces as the user-facing message"
+  - "Fail-closed rules for check_sync and empty blast"
+
+used_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_validate"
+    - "component.cli_retrieve"
+    - "component.cli_blast"
+    - "component.cli_check_sync"
+    - "component.mcp_stdio"
+
+extends: []
+
+error_codes:
+  format: "CLI exit integers; MCP maps the same integers to tool error vs content"
+  categories:
+    validation: "validate findings (garbage YAML, broken links, missing changelog)"
+    authentication: "not used in first slice (local, no auth)"
+    authorization: "not used in first slice"
+    not_found: "retrieve id does not exist"
+    conflict: "check_sync: named behavior moved and live spec did not; or contradiction flagged"
+    rate_limit: "not used in first slice"
+    server: "tool crash / unreadable spec root"
+
+user_facing_messages:
+  tone: "Short, actionable, no 5C lecture"
+  rules:
+    - "Print findings on stderr; keep stdout for the map / blast / retrieve payload"
+    - "Never dump a Python traceback as the primary message"
+    - "Name the spec id the finding joins to"
+    - "When the human must decide, say DECISION REQUIRED — do not pick a side"
+
+retry_policy:
+  strategy: "None — local commands are not retried by the tool"
+  max_attempts: 1
+  initial_delay_ms: 0
+  max_delay_ms: 0
+  retryable_codes: []
+  non_retryable: [1, 2]
+
+fallback_patterns:
+  - "Missing spec root: exit non-zero and say how to pass --spec-root"
+  - "Empty blast on a behavior-changing diff: check_sync fails (no silent pass)"
+  - "Unknown id: retrieve says not found; does not invent a live graph"
+
+refs: []

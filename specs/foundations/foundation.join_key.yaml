@@ -1,0 +1,55 @@
+meta:
+  id: "foundation.join_key"
+  purpose: "Same id string everywhere intent, deltas, sensors, and CLI output must join"
+  level: "foundation"
+  owner: "SpecPlane"
+  tags: ["kernel", "join-key", "identity"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Join key capability.* / component.* / foundation.* as assignment, not extra folders"
+    breaking: false
+
+provides:
+  - "Stable SpecPlane ids as the join key"
+  - "Same string in live YAML, change-folder deltas, named sensors, and CLI output"
+  - "raw / law / lore / run as assignment of existing talkers, not new directories"
+
+used_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_validate"
+    - "component.cli_retrieve"
+    - "component.cli_blast"
+    - "component.cli_check_sync"
+    - "component.mcp_stdio"
+
+extends: []
+
+join_key:
+  patterns:
+    - "capability.*"
+    - "component.*"
+    - "foundation.*"
+  same_string_in:
+    - "live YAML meta.id"
+    - "change-folder delta ADDED / MODIFIED / REMOVED"
+    - "eval / test / event names that claim a promise"
+    - "retrieve / blast / check_sync / list_gaps output"
+  layers_as_assignment:
+    raw: "evidence (code, PRs, design-docs until a delta merges)"
+    law: "live specs + open deltas — checker-owned"
+    lore: "LLM wiki citing law — never a writer of live YAML"
+    run: "flags and sensors"
+  not_in_first_slice:
+    - "raw/ law/ lore/ run directories in the kit"
+    - "A second catalog besides these ids"
+
+refs: []

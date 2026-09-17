@@ -1,0 +1,24 @@
+change_id: "honest_kernel"
+kind: "evolve"
+
+sensors:
+  - id: "retrieve_messy_capability"
+    promise: "capability.specplane_retrieve"
+    must: "Returns one live graph, marks leftovers replaced, shows the open delta"
+  - id: "check_sync_moved_behavior"
+    promise: "capability.specplane_check_sync"
+    must: "Fails when a named behavior moved and the live spec did not"
+  - id: "validate_garbage_yaml"
+    promise: "capability.specplane_validate"
+    must: "Still catches garbage YAML"
+  - id: "blast_five_seconds"
+    promise: "capability.specplane_blast"
+    must: "Change, affects tree, DECISION REQUIRED when intent vs code disagree; does not pick a side"
+  - id: "empty_blast_fails"
+    promise: "capability.specplane_check_sync"
+    must: "Empty blast on a behavior-changing diff fails check_sync"
+  - id: "live_yaml_small"
+    promise: "capability.specplane_change_folders"
+    must: "In-flight writes are in this folder; live capabilities are not changelog novels"
+
+looks_fine_is_not_a_sensor: true

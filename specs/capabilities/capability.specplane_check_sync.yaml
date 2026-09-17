@@ -1,0 +1,69 @@
+meta:
+  id: "capability.specplane_check_sync"
+  purpose: "Fail when a named behavior moved and the live spec did not"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "check_sync"]
+  last_updated: "2026-09-17"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 — checker that can fail; maker is not the checker"
+    breaking: false
+
+responsibilities:
+  - "Fail when a named live promise moved in code and the live spec (plus open delta) did not"
+  - "Fail an empty blast on a behavior-changing diff"
+  - "Treat declared / observed / verified as a retrieve-time join, not new YAML fields (Q97)"
+  - "Never auto-write live to match code"
+  - "Same coding session must not grade itself"
+
+flows:
+  - "After implement: check_sync against live + open deltas"
+  - "On a merge-shaped invocation: fail the PR-shaped check when the spec rule would only nag"
+  - "Surface DECISION REQUIRED from blast rather than resolving it"
+
+business_value:
+  user_outcome: "A merge does not ship a third graph as if it were live"
+  objective: "Kill test — an hour a week on fat agent PRs; spec rule becomes a fail, not a nag"
+  revenue_dependency: "medium"
+  strategic_priority: "core"
+
+constraints:
+  legal: []
+  security:
+    - "Local comparison of specs, changes/, and named behavior claims — no hosted check in this slice"
+  ux:
+    - "Fail closed on moved named behavior and on empty blast"
+    - "Do not silently pick spec vs code"
+    - "GitHub App / required check is out of slice; this is the local command that later wraps"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "moved_behavior_fails"
+  targets:
+    moved_behavior_fails: "named behavior moved, live spec unchanged → non-zero exit"
+    empty_blast_fails: "behavior-changing diff with empty blast → non-zero exit"
+    no_autowrite_live: "check_sync never stamps live"
+  derived_from: {}
+
+roadmap:
+  phase: "first kernel slice"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_retrieve"
+    - "capability.specplane_blast"
+    - "capability.specplane_change_folders"
+  enables: []
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_check_sync"
+    - "component.mcp_stdio"

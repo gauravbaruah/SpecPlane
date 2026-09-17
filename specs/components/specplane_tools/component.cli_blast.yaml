@@ -1,0 +1,57 @@
+meta:
+  id: "component.cli_blast"
+  purpose: "Local blast command: computed affects tree and DECISION REQUIRED"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Planning + implements for blast CLI; no how"
+    breaking: false
+
+implements:
+  - "capability.specplane_blast"
+
+uses:
+  - "foundation.epistemic_status"
+  - "foundation.join_key"
+  - "foundation.error_handling"
+  - "foundation.observability_standards"
+
+planning:
+  user_flows:
+    actions:
+      - "blast a change or id"
+    success:
+      - "Output names the change, the affects tree, and DECISION REQUIRED when intent vs code disagree"
+      - "Readable in about five seconds"
+    errors:
+      - "Empty blast on a behavior-changing diff is not success — check_sync must fail it"
+      - "Do not pick spec vs code"
+
+implementation:
+  dependencies:
+    internal:
+      - "component.cli_retrieve"
+    external: []
+  depended_on_by:
+    components:
+      - "component.cli_check_sync"
+      - "component.mcp_stdio"
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "Hero fixture: change → consequences without a 5C preamble"
+      - "Full impact returned in v1 (Q94); skip-isolated-pixels is a later ADR (Q98)"
+    open_questions:
+      - "Which edges blast traverses, and whether foundations are terminal — Autonomous Build Pack"
+    readiness: "unknown"

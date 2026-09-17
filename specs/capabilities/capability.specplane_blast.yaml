@@ -1,0 +1,67 @@
+meta:
+  id: "capability.specplane_blast"
+  purpose: "Compute what a change hits so a small edit cannot silently break the rest"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "blast"]
+  last_updated: "2026-09-17"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 — computed blast; empty blast fails check_sync; DECISION REQUIRED when sides disagree"
+    breaking: false
+
+responsibilities:
+  - "Compute blast from join-key edges (implements, depended_on_by, open delta ids) — not a hand-written essay"
+  - "Name the change, the affects tree, and whether a human must decide"
+  - "Return full impact in this slice; do not silently drop rows (Q94 / Q98 interruption policy is a later ADR)"
+  - "When intent and code disagree, emit DECISION REQUIRED — SpecPlane does not pick a side"
+
+flows:
+  - "blast a named id"
+  - "blast the open change folder"
+  - "blast a behavior-changing diff so check_sync can refuse an empty blast"
+
+business_value:
+  user_outcome: "A lead sees consequences of a small change in about five seconds"
+  objective: "Job 3 — change something small without breaking the rest; job 2 fat-PR review"
+  revenue_dependency: "medium"
+  strategic_priority: "core"
+
+constraints:
+  legal: []
+  security:
+    - "Local graph only"
+  ux:
+    - "Five-second readable: change, affects tree, DECISION REQUIRED when ambiguity exists"
+    - "If it needs a 1,500-word preamble, the command is not simple enough yet"
+    - "Empty blast on a behavior-changing diff is a fail for check_sync, not a pass"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "five_second_readable_blast"
+  targets:
+    five_second_readable_blast: "fixture output shows change + affects tree without a lecture"
+    decision_required: "intent vs code disagreement is labeled DECISION REQUIRED"
+    empty_blast_fails_check: "behavior-changing diff with empty blast does not pass check_sync"
+  derived_from: {}
+
+roadmap:
+  phase: "first kernel slice"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_retrieve"
+  enables:
+    - "capability.specplane_check_sync"
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_blast"
+    - "component.mcp_stdio"

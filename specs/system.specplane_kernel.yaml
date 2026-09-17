@@ -1,0 +1,68 @@
+meta:
+  id: "system.specplane_kernel"
+  purpose: "Git-native overlay of living product intent with a retrieve / blast / check loop"
+  level: "system"
+  type: "system"
+  owner: "SpecPlane"
+  tags: ["kernel", "first-slice"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.1"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "H02 — kernel product lives in specs/; MCP four tools; validate is CLI"
+    breaking: false
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 system boundary for the honest kernel slice"
+    breaking: false
+
+system_context:
+  actors:
+    - "Coding agent (drafts deltas, implements, calls retrieve/blast; does not merge live)"
+    - "Human / checker (promotes live, decides DECISION REQUIRED, merges change folders)"
+  external_systems: []
+  system_boundaries:
+    - "This repo: YAML in specs/, CLI in tools/specplane/, stdio MCP (retrieve / blast / check_sync / list_gaps). validate is CLI only."
+  capabilities:
+    - "capability.specplane_validate"
+    - "capability.specplane_retrieve"
+    - "capability.specplane_blast"
+    - "capability.specplane_check_sync"
+    - "capability.specplane_list_gaps"
+    - "capability.specplane_change_folders"
+
+relationships:
+  contains:
+    - "container.specplane_tools"
+  integrates_with: []
+
+refs:
+  - id: "kernel_readme"
+    type: "doc"
+    title: "Kernel specs README"
+    path: "specs/README.md"
+    status: "active"
+    last_updated: "2026-09-17"
+    access: "public"
+    notes: "Examination entry. specs/ = kernel product; specplane/ = kit."
+  - id: "h02"
+    type: "spec"
+    title: "Handoff H02 — Put kernel specs in git"
+    path: "design-docs/handoffs/H02-relocate-specs.md"
+    status: "active"
+    last_updated: "2026-09-17"
+    access: "internal"
+    notes: "Location of this tree. H01 location superseded."
+  - id: "h01"
+    type: "spec"
+    title: "Handoff H01 — Spec the first kernel slice"
+    path: "design-docs/handoffs/H01-kernel-first-slice.md"
+    status: "deprecated"
+    last_updated: "2026-09-17"
+    access: "internal"
+    notes: "Slice contents still bind; path design-docs/kernel-slice/ does not."
