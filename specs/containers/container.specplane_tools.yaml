@@ -7,11 +7,15 @@ meta:
   tags: ["kernel", "cli", "mcp"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.1"
+  version: "1.0.2"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "kit_init — implements capability.specplane_init; contains component.cli_init"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "H02 — keep container for layout; MCP four tools; not copied with the kit"
@@ -27,6 +31,7 @@ implements:
   - "capability.specplane_blast"
   - "capability.specplane_check_sync"
   - "capability.specplane_list_gaps"
+  - "capability.specplane_init"
 
 uses:
   - "foundation.epistemic_status"
@@ -52,6 +57,7 @@ relationships:
     - "component.cli_blast"
     - "component.cli_check_sync"
     - "component.mcp_stdio"
+    - "component.cli_init"
   depends_on: []
   used_by: []
   integrates_with: []

@@ -1,0 +1,21 @@
+change_id: "kit_init"
+kind: "evolve"
+
+sensors:
+  - id: "init_copies_kit_not_kernel_specs"
+    promise: "capability.specplane_init"
+    must: "Dest has specplane/ and skills; dest has no capability.specplane_retrieve.yaml from this repo"
+  - id: "init_empty_specs_tree"
+    promise: "capability.specplane_init"
+    must: "Creates specs/capabilities, foundations, containers, components, changes with no example capability"
+  - id: "init_appends_agents"
+    promise: "capability.specplane_init"
+    must: "Existing AGENTS.md is appended, not replaced; missing file is created"
+  - id: "init_no_ci"
+    promise: "capability.specplane_init"
+    must: "Does not create .github/workflows"
+  - id: "init_refuses_self"
+    promise: "capability.specplane_init"
+    must: "Dest equal to kit root exits non-zero"
+
+looks_fine_is_not_a_sensor: true

@@ -12,7 +12,7 @@ Do not collapse these. That is how the recursive definition stays honest.
 |---|---|---|
 | `specplane/` | The **kit** — schema, applicable sections, foundation *boilerplates* | Load applicable sections. Copy this into other products. |
 | `specs/` | The **kernel product** — what SpecPlane-the-CLI must do and how well (first slice: bit, retrieve, blast, check_sync, change folders) | Author and implement *this product* from here. |
-| `tools/specplane/` | Realization of the kernel (`cli.py`: validate, retrieve, blast, check_sync) | Implement against `specs/`, not against brainstorm prose. Call the CLI; do not slurp `specs/`. |
+| `tools/specplane/` | Realization of the kernel (`cli.py`: validate, retrieve, blast, check_sync, init) | Implement against `specs/`, not against brainstorm prose. Call the CLI; do not slurp `specs/`. |
 | `design-docs/` | Local strategy (gitignored) | Do not publish. Do not treat as specs. |
 
 **Copy-the-kit** into another repo copies `specplane/`, skills, and rules. It does **not** copy `specs/`. Those YAML files are SpecPlane specifying itself, not a starter app.

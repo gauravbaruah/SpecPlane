@@ -6,11 +6,15 @@ meta:
   tags: ["errors", "cli", "kernel"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.0"
+  version: "1.0.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "kit_init — used_by component.cli_init"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Reuse kit error-handling foundation for local CLI/MCP; fill kernel exit conventions"
@@ -30,6 +34,7 @@ used_by:
     - "component.cli_blast"
     - "component.cli_check_sync"
     - "component.mcp_stdio"
+    - "component.cli_init"
 
 extends: []
 

@@ -18,18 +18,17 @@ This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.
 specs/
 ├── README.md                          ← you are here
 ├── system.specplane_kernel.yaml
-├── changes/honest_kernel/             ← in-flight delta this slice *is* (kind: evolve)
-│   ├── proposal.yaml
-│   ├── delta.yaml
-│   ├── success.yaml
-│   └── decision.md
+├── changes/
+│   ├── honest_kernel/                 ← first-slice kernel (kind: evolve)
+│   └── kit_init/                      ← v0 copier + empty specs/ dirs
 ├── capabilities/
 │   ├── capability.specplane_validate.yaml
 │   ├── capability.specplane_retrieve.yaml
 │   ├── capability.specplane_blast.yaml
 │   ├── capability.specplane_check_sync.yaml
 │   ├── capability.specplane_list_gaps.yaml
-│   └── capability.specplane_change_folders.yaml
+│   ├── capability.specplane_change_folders.yaml
+│   └── capability.specplane_init.yaml
 ├── foundations/
 │   ├── foundation.epistemic_status.yaml    ← live | inferred | in-flight | replaced
 │   ├── foundation.join_key.yaml
@@ -42,6 +41,7 @@ specs/
     ├── component.cli_retrieve.yaml
     ├── component.cli_blast.yaml
     ├── component.cli_check_sync.yaml
+    ├── component.cli_init.yaml
     └── component.mcp_stdio.yaml
 ```
 
@@ -60,10 +60,11 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 | Epistemic bit (retrieve default-graph) | `foundation.epistemic_status` | mapped from v9.1.0 status until schema unfreeze |
 | Join key | `foundation.join_key` | graph walk uses these ids |
 | CLI `validate` / `retrieve` / `blast` / `check_sync` | matching capabilities + `component.cli_*` | `tools/specplane/cli.py` |
+| CLI `init` | `capability.specplane_init` + `component.cli_init` | `tools/specplane/initkit.py` — copy kit, empty `specs/` dirs, no kernel `specs/` |
 | MCP `retrieve` / `blast` / `check_sync` / `list_gaps` | `component.mcp_stdio` | not built this pass |
 | Change folders | `capability.specplane_change_folders` + `specs/changes/` | loaded by retrieve/check_sync; skipped by structural validate |
 
-**Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `init/scan`, QA agent, Figma ingest, hosted MCP, MCP stdio, `list_gaps` CLI.
+**Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `npx`/`uvx`/`scan`, QA agent, Figma ingest, hosted MCP, MCP stdio, `list_gaps` CLI.
 
 **Still later / schema**
 
@@ -84,7 +85,7 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 
 | Topic | Default |
 |---|---|
-| CLI | `validate`, `retrieve`, `blast`, `check_sync` |
+| CLI | `validate`, `retrieve`, `blast`, `check_sync`, `init` |
 | MCP | `retrieve`, `blast`, `check_sync`, `list_gaps` — validate is **not** an MCP tool |
 | `list_gaps` CLI | Not this slice |
 | `container.specplane_tools` | Keep — 5C layout, not a SKU |
@@ -102,7 +103,7 @@ Follow [`docs/golden-journey.md`](../docs/golden-journey.md) and `specplane-impl
 
 1. Call `tools/specplane/cli.py retrieve|blast|check_sync` (and `validate`).
 2. Overlay, not Tessl: the CLI does not compile specs into the product.
-3. Copy-the-kit to other products copies `specplane/`, skills, and rules — **not** this folder.
+3. Copy-the-kit via `cli.py init` (or rsync). Never copy this `specs/` folder.
 4. `validate.py` skips `specs/changes/` (convention, not 5C).
 5. In-flight writes go in `specs/changes/`. Promote live YAML only after the human accepts.
 

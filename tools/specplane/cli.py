@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync.
+"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, init.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -26,6 +26,7 @@ from kernel import (  # noqa: E402
     retrieve,
     structural_validate,
 )
+from initkit import default_kit_root, init_kit  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
 
@@ -125,9 +126,24 @@ def cmd_check_sync(args: argparse.Namespace) -> int:
     return 1
 
 
+def cmd_init(args: argparse.Namespace) -> int:
+    dest = (args.dest or Path.cwd()).resolve()
+    kit_root = (args.kit_root or default_kit_root()).resolve()
+    code, notes = init_kit(
+        dest,
+        kit_root,
+        with_cli=not args.kit_only,
+        force=args.force,
+    )
+    stream = sys.stderr if code else sys.stdout
+    for note in notes:
+        stream.write(note + "\n")
+    return code
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / init)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -158,6 +174,34 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_sync.add_argument("--repo", type=Path, default=None, help="Git repo for default changed set")
     p_sync.set_defaults(func=cmd_check_sync)
+
+    p_init = sub.add_parser(
+        "init",
+        help="Copy the kit into a product repo; create empty specs/ folders",
+    )
+    p_init.add_argument(
+        "--dest",
+        type=Path,
+        default=None,
+        help="Product repo (default: cwd). Must not be the SpecPlane kit root.",
+    )
+    p_init.add_argument(
+        "--kit-root",
+        type=Path,
+        default=None,
+        help="SpecPlane clone to copy from (default: parent of tools/specplane)",
+    )
+    p_init.add_argument(
+        "--kit-only",
+        action="store_true",
+        help="Skip copying tools/specplane CLI files",
+    )
+    p_init.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace dest/specplane if it already exists",
+    )
+    p_init.set_defaults(func=cmd_init)
 
     return parser
 

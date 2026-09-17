@@ -2,7 +2,7 @@
 
 This repo is the schema **kit** plus (in this GitHub tree) SpecPlane’s own **kernel product** specs. Your product repo is where *your* `specs/` lives. Do **not** copy SpecPlane’s `specs/` into your app — that tree is SpecPlane specifying its CLI, not a template product.
 
-There is no npm package or marketplace plugin yet — you copy a small set of kit files, then let the agent scaffold *your* specs.
+There is no npm package or marketplace plugin yet. From a SpecPlane clone, run `init` in your product repo (rsync below is the fallback).
 
 ## What you are installing
 
@@ -20,7 +20,20 @@ Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPla
 
 ## Setup (once)
 
-From a clone of [SpecPlane](https://github.com/gauravbaruah/SpecPlane), in your product repo:
+From a clone of [SpecPlane](https://github.com/gauravbaruah/SpecPlane), in your **product** repo:
+
+```bash
+python3 /path/to/SpecPlane/tools/specplane/cli.py init
+# optional: --kit-only   skip tools/specplane
+#           --force      replace dest/specplane
+#           --dest PATH  if you are not already in the product repo
+```
+
+That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions.
+
+Then: `pip install -r tools/specplane/requirements.txt` if you want `retrieve` / `blast` / `check_sync` locally.
+
+Manual rsync (fallback):
 
 ```bash
 # Schema + foundations (required path: specplane/)
@@ -81,11 +94,11 @@ Rules:
 
 ## First session
 
-Ask the agent:
+After `init`, empty `specs/` folders already exist. Ask the agent:
 
-> Set up SpecPlane for this repo. Use schema v9.1.0. Create a `specs/` tree and a Phase 1 capability for \<name\>.
+> Use schema v9.1.0. Add a Phase 1 capability for \<name\> and a system spec.
 
-That should trigger `specplane-bootstrap`, then `specplane-author`. You should get:
+That should trigger `specplane-bootstrap` / `specplane-author`. You should get:
 
 ```
 specs/
@@ -121,7 +134,7 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 
 ## Not included yet
 
-- Marketplace plugin or installer (Cursor / Claude Code / Codex)
+- `npx` / `uvx` / marketplace plugin (Cursor / Claude Code / Codex)
 - Git hooks or CI/CD wiring for validate/drift in product repos
 - A supported spec viewer (the Docusaurus tool under `legacy/` is archived)
 - Copying this kit into an important product until a real session matches [`golden-journey.md`](./golden-journey.md)

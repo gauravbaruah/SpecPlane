@@ -69,11 +69,10 @@ SpecPlane/
 
 Follow **[Use SpecPlane in your project](./docs/use-in-your-project.md)**:
 
-1. Copy `specplane/`, skills, and Cursor rules into the product repo (paths must stay `specplane/core_prompt/applicable/`).
-2. Add a consuming `AGENTS.md` (template in that guide) and `CLAUDE.md` with `@AGENTS.md`.
-3. Open the **product** workspace and ask: `Set up SpecPlane for this repo. Create a specs/ tree and a Phase 1 capability for <name>.`
-4. After that, speak product language. The agent should follow [`docs/golden-journey.md`](./docs/golden-journey.md) (`specplane-implement`). You should not type `retrieve` or `blast`.
-5. Do not paste the full v9.1.0 prompt into chat. The agent loads one applicable section per task.
+1. From a SpecPlane clone, in the product repo: `python3 /path/to/SpecPlane/tools/specplane/cli.py init`
+2. Open the **product** workspace and ask for a Phase 1 capability (empty `specs/` folders already exist).
+3. After that, speak product language. The agent should follow [`docs/golden-journey.md`](./docs/golden-journey.md) (`specplane-implement`). You should not type `retrieve` or `blast`.
+4. Do not paste the full v9.1.0 prompt into chat. The agent loads one applicable section per task.
 
 Human overview of the schema: [`specplane/README.md`](./specplane/README.md) and [`README_v9.1.0.md`](./specplane/core_prompt/README_v9.1.0.md).
 
