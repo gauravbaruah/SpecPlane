@@ -1,0 +1,30 @@
+meta:
+  id: component.banner
+  purpose: "Marketing banner (shares a foundation with auth; must not join auth blast)"
+  level: component
+  type: widget
+  domain: frontend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden unrelated component"
+    breaking: false
+
+implements:
+  - capability.marketing
+
+uses:
+  - foundation.security_baseline
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components: []
+    containers: []

@@ -1,0 +1,26 @@
+meta:
+  id: foundation.security_baseline
+  purpose: "Shared authentication and data-protection rules"
+  level: foundation
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: approved
+  status: active
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden shared foundation (blast must not explode)"
+    breaking: false
+
+provides:
+  - "PKCE and session cookie rules"
+
+used_by:
+  containers:
+    - container.web_app
+  components:
+    - component.login_api
+    - component.session_manager
+    - component.token_store
+    - component.banner

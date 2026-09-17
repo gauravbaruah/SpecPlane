@@ -1,0 +1,7 @@
+change_id: add_passkeys
+kind: evolve
+ADDED: []
+MODIFIED:
+  - id: capability.authentication
+    summary: "Passkeys as an additional login method"
+REMOVED: []

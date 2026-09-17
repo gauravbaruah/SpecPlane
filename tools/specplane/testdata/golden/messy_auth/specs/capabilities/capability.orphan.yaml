@@ -1,0 +1,30 @@
+meta:
+  id: capability.orphan
+  purpose: "No architecture; used to test empty blast"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+  owner: "example"
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden empty-blast capability"
+    breaking: false
+
+responsibilities:
+  - "Nothing wired"
+
+flows:
+  - "None"
+
+business_value:
+  user_outcome: "n/a"
+  objective: "Empty blast fixture"
+  revenue_dependency: low
+  strategic_priority: foundation
+
+constraints:
+  data_classification: internal

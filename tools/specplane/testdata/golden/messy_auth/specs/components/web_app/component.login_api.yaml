@@ -1,0 +1,31 @@
+meta:
+  id: component.login_api
+  purpose: "Start a session from credentials"
+  level: component
+  type: service
+  domain: backend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden component"
+    breaking: false
+
+implements:
+  - capability.authentication
+
+uses:
+  - foundation.security_baseline
+
+implementation:
+  dependencies:
+    internal:
+      - component.session_manager
+    external: []
+  depended_on_by:
+    components: []
+    containers: []

@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "check_sync"]
   last_updated: "2026-09-17"
   status: "planned"
-  version: "1.0.0"
+  version: "1.0.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "v1 checker: id coverage vs open change; does not parse application source"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Phase 1 — checker that can fail; maker is not the checker"
@@ -40,6 +44,7 @@ constraints:
     - "Local comparison of specs, changes/, and named behavior claims — no hosted check in this slice"
   ux:
     - "Fail closed on moved named behavior and on empty blast"
+    - "v1: a change is detected as SpecPlane ids (--changed-ids or spec YAML in git). Coverage = open change promise_ids (or a component that implements a promised capability). Does not parse application source."
     - "Do not silently pick spec vs code"
     - "GitHub App / required check is out of slice; this is the local command that later wraps"
   data_classification: "internal"

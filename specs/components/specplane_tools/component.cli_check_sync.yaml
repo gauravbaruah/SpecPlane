@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.0"
+  version: "1.0.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "v1 check_sync: changed ids vs open change coverage; empty blast fails; does not parse source"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Planning + implements for check_sync CLI; no how"
@@ -51,8 +55,10 @@ implementation:
     containers: []
   validation:
     acceptance_criteria:
-      - "Roadmap done-when: check_sync fails when a named behavior moved and the live spec did not"
-      - "Empty blast fails"
+      - "Pass when each changed id is named in an open change promise_ids or implements a promised capability"
+      - "Fail + DECISION REQUIRED when a changed id has no covering open change"
+      - "Fail when a changed id has an empty blast"
+      - "Never auto-write live. v1 does not parse source to learn values (e.g. timeout 60)"
     open_questions:
-      - "How a named behavior is detected in code this slice (heuristic vs explicit sensors) — do not invent; Build Pack / examination"
-    readiness: "unknown"
+      - "Optional realization.paths file map — later"
+    readiness: "ready"

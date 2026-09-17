@@ -8,7 +8,7 @@
 
 `design-docs/` is gitignored strategy, not specs. H01’s location is superseded; YAML lives here and is committed. Schema v9.1.0. Branch: `kernel-first-slice`. Handoff: [`../design-docs/handoffs/H02-relocate-specs.md`](../design-docs/handoffs/H02-relocate-specs.md) (local).
 
-This pass **stops for examination**. No schema edits, no CLI implementation.
+This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.1.0 is still unfrozen for the four-value bit field; v1 maps `deprecated`/`replaced_by` → replaced. MCP is not built yet.
 
 ---
 
@@ -53,27 +53,30 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 
 **Phase 1 (this pass)** — capabilities have `responsibilities`, `flows`, `business_value`, `constraints`. Kill-test capabilities also have `success_metrics` (jobs 2–3). Components are planning + `implements` + `uses` + dependency links. Not how.
 
-**In this slice, not yet a schema/CLI commit**
+**In this slice**
 
-| Ship | Spec ids |
-|---|---|
-| Epistemic bit | `foundation.epistemic_status` |
-| Join key | `foundation.join_key` |
-| CLI `validate` / `retrieve` / `blast` / `check_sync` | matching capabilities + `component.cli_*` |
-| MCP `retrieve` / `blast` / `check_sync` / `list_gaps` | `component.mcp_stdio` (validate is CLI; agents shell out) |
-| Change folders | `capability.specplane_change_folders` + `specs/changes/honest_kernel/` |
+| Ship | Spec ids | Code |
+|---|---|---|
+| Epistemic bit (retrieve default-graph) | `foundation.epistemic_status` | mapped from v9.1.0 status until schema unfreeze |
+| Join key | `foundation.join_key` | graph walk uses these ids |
+| CLI `validate` / `retrieve` / `blast` / `check_sync` | matching capabilities + `component.cli_*` | `tools/specplane/cli.py` |
+| MCP `retrieve` / `blast` / `check_sync` / `list_gaps` | `component.mcp_stdio` | not built this pass |
+| Change folders | `capability.specplane_change_folders` + `specs/changes/` | loaded by retrieve/check_sync; skipped by structural validate |
 
-**Explicitly later (do not author here):** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `init/scan`, QA agent, Figma ingest, hosted MCP, Autonomous Build Pack stdout tables.
+**Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `init/scan`, QA agent, Figma ingest, hosted MCP, MCP stdio, `list_gaps` CLI.
 
-**Phase-incomplete on purpose**
+**Still later / schema**
 
-- `capability.specplane_change_folders` has empty `realized_by` — the write path is the folder convention, not a sixth CLI personality (`open_delta` is the folder).
-- `list_gaps` has no `component.cli_*` — MCP-only this slice (H02).
-- Components have no `implementation.interface` / contracts / rollout — not how.
-- Blast edge traversal (foundations terminal or not) is **Build Pack**, not these files.
-- Exact CLI stdout and exit codes are **Build Pack**.
-- How `check_sync` detects a named behavior in code waits for the Build Pack. No grep rules in Phase 1.
-- Pointer field from live id → change object is **schema unfreeze** (Q71 default recorded in `changes/honest_kernel/`; no new v9.1.0 meta key).
+- Pointer field from live id → change object (Q71).
+- Four-value bit as a real `meta` field (v1 maps deprecated/replaced_by).
+- check_sync does not parse application source (timeout 30 vs 60). Sensors as runnable tests come next.
+
+```bash
+python3 tools/specplane/cli.py validate --spec-root specs
+python3 tools/specplane/cli.py retrieve capability.specplane_retrieve --spec-root specs
+python3 tools/specplane/cli.py blast component.cli_retrieve --spec-root specs
+python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids component.cli_retrieve
+```
 
 ---
 
@@ -85,7 +88,7 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 | MCP | `retrieve`, `blast`, `check_sync`, `list_gaps` — validate is **not** an MCP tool |
 | `list_gaps` CLI | Not this slice |
 | `container.specplane_tools` | Keep — 5C layout, not a SKU |
-| `check_sync` heuristic | Fail-when stays; do not invent |
+| `check_sync` heuristic | v1: `--changed-ids` or spec YAML in git vs open change `promise_ids` |
 | Live-id pointer field | Q71 recorded; field name waits for schema unfreeze |
 | `changes/` | `specs/changes/` — same layout consuming repos will use |
 
@@ -95,19 +98,15 @@ Older Qs still used: 53 four-value bit; 43 retrieve+check_sync together; 54 infe
 
 ## How a coding agent should consume this
 
-After examination (roadmap sign-off box 2):
-
-1. Implement from **this** tree + the Build Pack (not written yet). Do not invent CLI behavior that is not here.
-2. Overlay, not Tessl: agents still write the CLI in `tools/specplane/`; these specs do not compile into Python.
-3. Call retrieve/blast/check_sync once they exist; shell out for validate; do not teach “read `specs/`” as the habit.
-4. Sequence: Build Pack (stdout, blast traversal, fixtures) → unfreeze schema/`validate.py` on this branch → three agent tasks (validate+retrieve+blast → check_sync+folders → MCP/skill).
-5. Copy-the-kit to other products copies `specplane/`, skills, and rules — **not** this folder.
+1. Call `tools/specplane/cli.py retrieve|blast|check_sync` (and shell out for `validate`). Do not slurp `specs/`.
+2. Overlay, not Tessl: the CLI does not compile specs into the product.
+3. Copy-the-kit to other products copies `specplane/`, skills, and rules — **not** this folder.
+4. `validate.py` skips `specs/changes/` (convention, not 5C).
 
 ```bash
-python3 tools/specplane/validate.py --spec-root specs
+python3 tools/specplane/cli.py validate --spec-root specs
+python3 tools/specplane/cli.py retrieve capability.specplane_retrieve --spec-root specs
 ```
-
-v9.1.0 `validate.py` loads every `*.yaml` under the spec root. `specs/changes/` is convention, not 5C; those files are not kernel spec types yet. Structural validate is the 5C tree.
 
 ---
 

@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.0"
+  version: "1.0.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "v1 retrieve: live slice + replaced leftovers + open changes; inferred never printed as live"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Planning + implements for retrieve CLI; no how"
@@ -52,7 +56,8 @@ implementation:
   validation:
     acceptance_criteria:
       - "Roadmap done-when: retrieve of a messy capability returns one live graph, marks leftovers, shows the open delta"
+      - "v1 bit: deprecated/archived/replaced_by → replaced; tags inferred → inferred (never printed as live); else live"
+      - "Stdout: live slice, replaced list, in-flight change ids; unknown id exits 1 and invents nothing"
     open_questions:
       - "Pointer field name from live id to change object (Q71) — schema unfreeze"
-      - "Exact stdout shape — Build Pack"
-    readiness: "unknown"
+    readiness: "ready"

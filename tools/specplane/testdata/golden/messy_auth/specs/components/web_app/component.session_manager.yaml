@@ -1,0 +1,32 @@
+meta:
+  id: component.session_manager
+  purpose: "Hold session timeout and tokens"
+  level: component
+  type: service
+  domain: backend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden component"
+    breaking: false
+
+implements:
+  - capability.authentication
+
+uses:
+  - foundation.security_baseline
+
+implementation:
+  dependencies:
+    internal:
+      - component.token_store
+    external: []
+  depended_on_by:
+    components:
+      - component.login_api
+    containers: []

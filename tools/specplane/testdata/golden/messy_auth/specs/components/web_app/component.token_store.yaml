@@ -1,0 +1,31 @@
+meta:
+  id: component.token_store
+  purpose: "Persist session tokens"
+  level: component
+  type: service
+  domain: backend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden component"
+    breaking: false
+
+implements:
+  - capability.authentication
+
+uses:
+  - foundation.security_baseline
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components:
+      - component.session_manager
+    containers: []

@@ -6,10 +6,12 @@ on:
   push:
     paths:
       - "tools/specplane/**"
+      - "specs/**"
       - ".github/workflows/specplane-toolkit.yml"
   pull_request:
     paths:
       - "tools/specplane/**"
+      - "specs/**"
       - ".github/workflows/specplane-toolkit.yml"
 
 jobs:
@@ -22,7 +24,10 @@ jobs:
           python-version: "3.11"
       - run: pip install -r tools/specplane/requirements.txt
       - run: python3 tools/specplane/test_validate.py
+      - run: python3 tools/specplane/test_kernel.py
       - run: python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/valid/specs
+      - run: python3 tools/specplane/cli.py validate --spec-root tools/specplane/testdata/golden/messy_auth/specs
+      - run: python3 tools/specplane/cli.py validate --spec-root specs
       - run: |
           set +e
           python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/invalid/specs

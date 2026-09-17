@@ -1,0 +1,7 @@
+change_id: add_passkeys
+kind: evolve
+sensors:
+  - id: login_still_works
+    promise: capability.authentication
+    must: "Users can still establish a session"
+looks_fine_is_not_a_sensor: true

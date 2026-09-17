@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.0"
+  version: "1.0.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "v1 blast: recursive component deps; foundations terminal (do not follow used_by)"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Planning + implements for blast CLI; no how"
@@ -51,7 +55,8 @@ implementation:
   validation:
     acceptance_criteria:
       - "Hero fixture: change → consequences without a 5C preamble"
-      - "Full impact returned in v1 (Q94); skip-isolated-pixels is a later ADR (Q98)"
-    open_questions:
-      - "Which edges blast traverses, and whether foundations are terminal — Autonomous Build Pack"
-    readiness: "unknown"
+      - "Traverse implements/realized_by and recursive component depends_on/depended_on_by"
+      - "uses → foundation is listed then STOP; do not fan out through used_by"
+      - "Empty blast (no other components, extra capabilities, or foundations) is flagged for check_sync"
+    open_questions: []
+    readiness: "ready"

@@ -10,18 +10,27 @@ Requires Python 3.10+ and PyYAML:
 pip install -r tools/specplane/requirements.txt
 ```
 
-## Validate
+## Kernel CLI
 
-Reads YAML under `specs/` and reports structural problems (filename/`meta.id`, folders, semver, changelog, link existence and bidirectional pairs, and related v9.1.0 rules). It does not judge product quality or whether code implements the spec.
+Simple commands. Agents call them. No model in the loop.
 
 ```bash
-python3 tools/specplane/validate.py --spec-root specs
-python3 tools/specplane/validate.py
+python3 tools/specplane/cli.py validate --spec-root specs
+python3 tools/specplane/cli.py retrieve <id> --spec-root specs
+python3 tools/specplane/cli.py blast <id> --spec-root specs
+python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids component.foo
 ```
 
-Exit `1` on errors. `--strict-warnings` also fails on warnings.
+| Command | Job | Exit 1 when |
+|---|---|---|
+| `validate` | Structural YAML, names, bidirectional links. Skips `specs/changes/`. | Errors |
+| `retrieve <id>` | One live slice, `replaced` leftovers, open change folders | Unknown id |
+| `blast <id>` | Affects tree. Component deps recurse. **Foundations are terminal** (listed, not exploded via `used_by`). | Unknown id |
+| `check_sync` | Changed ids vs open change `promise_ids`. Empty blast fails. Does **not** parse app source. | Uncovered id, empty blast, or unknown id |
 
-Copy [`specplane.config.json.example`](specplane.config.json.example) to the product repo as `specplane.config.json` if you want a default spec root.
+`check_sync --changed-ids` is explicit. If omitted, spec YAML files in `git diff` are mapped to ids.
+
+`python3 tools/specplane/validate.py` still works as the validate-only entry point.
 
 ## Drift
 
@@ -31,7 +40,7 @@ Looks at git path names in the current change set. If `specs/` exists and app co
 python3 tools/specplane/drift.py --scope changed
 ```
 
-Use this in an agent or local terminal as a reminder. Do not treat it as a required pre-commit hook.
+Use this in an agent or local terminal as a reminder. Do not treat this as a required pre-commit hook.
 
 ## Tests (this SpecPlane repository only)
 
@@ -39,5 +48,7 @@ The GitHub Action in this repo runs these commands against fixture trees. That w
 
 ```bash
 python3 tools/specplane/test_validate.py
+python3 tools/specplane/test_kernel.py
 python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/valid/specs
+python3 tools/specplane/cli.py validate --spec-root tools/specplane/testdata/golden/messy_auth/specs
 ```
