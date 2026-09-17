@@ -11,4 +11,6 @@ This repo has **two trees**: `specplane/` is the kit (language). `specs/` is the
 
 For spec authoring, read `specplane/core_prompt/applicable/README.md` and load only the section for the current task. Do not attach `specplane_schema_prompt_v9.1.0.md` unless the user is changing the schema or explicitly asks for the complete reference.
 
-Specs describe what and how well, not how. Keep bidirectional links in sync. Add a changelog entry when bumping `meta.version`.
+Specs describe what and how well, not how. Keep bidirectional links in sync. Add a changelog entry when bumping `meta.version` on live 5C files.
+
+Product requests in natural language use the change ritual in `specplane-implement` ([`docs/golden-journey.md`](docs/golden-journey.md)): retrieve → classify trivial/fix/evolve/learn → `specs/changes/` → blast → ask only consequential questions → implement → check_sync → promote. Do not slurp `specs/`. Do not edit live YAML for in-flight work.

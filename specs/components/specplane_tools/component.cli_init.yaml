@@ -1,0 +1,50 @@
+meta:
+  id: "component.cli_init"
+  purpose: "Local init command: copy kit into dest, empty specs/ folders, append AGENTS.md"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "init"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Planning + implements for cli.py init; no how beyond copy rules"
+    breaking: false
+
+implements:
+  - "capability.specplane_init"
+
+uses:
+  - "foundation.error_handling"
+
+planning:
+  user_flows:
+    actions:
+      - "Point init at a destination repo, with kit root defaulting to the SpecPlane clone"
+    success:
+      - "Kit, skills, rules, optional CLI, specplane.config.json, AGENTS.md, empty specs/ dirs"
+      - "Kernel specs/ from the clone are absent in dest"
+    errors:
+      - "Dest is the kit root → exit 1"
+      - "Dest already has specplane/ and no --force → exit 1"
+  validation:
+    acceptance_criteria:
+      - "Tests assert kit copied, kernel specs not copied, empty dirs, AGENTS append, no .github/workflows"
+      - "Does not stamp epistemic live"
+    open_questions: []
+    readiness: "in-progress"
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components: []
+    containers: []

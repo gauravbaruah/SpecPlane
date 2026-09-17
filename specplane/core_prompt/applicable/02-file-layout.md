@@ -31,13 +31,22 @@ specs/
 │   ├── container.<container_name>.yaml
 │   └── ...
 │
-└── components/                               # Component specifications
-    ├── <container_name>/
-    │   ├── component.<component_name>.yaml
-    │   └── ...
-    └── <another_container>/
-        └── ...
+├── components/                               # Component specifications
+│   ├── <container_name>/
+│   │   ├── component.<component_name>.yaml
+│   │   └── ...
+│   └── <another_container>/
+│       └── ...
+│
+└── changes/                                  # In-flight write path (not 5C)
+    └── <change_id>/
+        ├── proposal.yaml
+        ├── delta.yaml
+        ├── success.yaml
+        └── decision.md                       # only if a human must choose
 ```
+
+`validate` skips path parts named `changes`. Live capabilities stay small; in-flight narrative lives on the change object. Promote into live YAML after the human accepts, then archive under `specs/changes/_archive/`.
 
 ### **Complete Example Structure**
 

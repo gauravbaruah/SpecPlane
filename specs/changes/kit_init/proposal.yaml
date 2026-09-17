@@ -1,0 +1,18 @@
+id: "kit_init"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-17"
+promise_ids:
+  - "capability.specplane_init"
+  - "component.cli_init"
+  - "container.specplane_tools"
+  - "system.specplane_kernel"
+  - "foundation.error_handling"
+why: "One command copies the kit into a product repo and creates empty specs/ folders. Not npx, not CI, not a full bootstrap."
+non_goals:
+  - "npx / npm / uvx package as the README lead"
+  - "writing .github/workflows or git hooks"
+  - "copying this repo's specs/ into the dest"
+  - "example capability or system YAML (that stays bootstrap)"
+  - "MCP registration"
+  - "specplane update / marketplace plugin"

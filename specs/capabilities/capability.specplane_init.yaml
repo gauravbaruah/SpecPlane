@@ -1,0 +1,66 @@
+meta:
+  id: "capability.specplane_init"
+  purpose: "Copy the kit into a product repo and create empty specs/ folders in one command"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "init"]
+  last_updated: "2026-09-17"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 — v0 init is a copier plus empty specs/ dirs, not npx or CI"
+    breaking: false
+
+responsibilities:
+  - "Copy specplane/, SpecPlane skills, and Cursor rules into a destination repo"
+  - "Optionally copy the local kernel CLI (cli.py and siblings), never this repo's specs/"
+  - "Create empty specs/capabilities, foundations, containers, components, changes"
+  - "Write or append a consuming AGENTS.md; do not replace an existing project AGENTS.md"
+  - "Refuse dest equal to the kit root; do not write GitHub Actions or hooks"
+
+flows:
+  - "From a SpecPlane clone, in a product repo: python3 .../cli.py init"
+  - "Re-run without --force when specplane/ already exists → fail"
+  - "Ask the agent for a Phase 1 capability after folders exist"
+
+business_value:
+  user_outcome: "A product repo has the kit and an empty specs/ tree without hand-rsync"
+  objective: "Time-to-first-win; on-ramp for the agent ritual"
+  revenue_dependency: "low"
+  strategic_priority: "growth"
+
+constraints:
+  legal: []
+  security:
+    - "Local filesystem copy only"
+  ux:
+    - "Does not copy kernel specs/ into the dest"
+    - "Does not write .github/workflows or git hooks"
+    - "Does not invent an example capability (bootstrap does that)"
+    - "npx / uvx / marketplace are not this command"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "kit_without_kernel_specs"
+  targets:
+    kit_without_kernel_specs: "dest has specplane/ and skills; no copied kernel capability YAML"
+    empty_specs_dirs: "five specs/ folders exist with no example capability"
+  derived_from: {}
+
+roadmap:
+  phase: "after agent ritual"
+  priority: "P1"
+  depends_on:
+    - "capability.specplane_change_folders"
+  enables: []
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_init"

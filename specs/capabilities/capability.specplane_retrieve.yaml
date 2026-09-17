@@ -1,0 +1,70 @@
+meta:
+  id: "capability.specplane_retrieve"
+  purpose: "Return one live graph for an id, mark leftovers, and show the open delta"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "retrieve"]
+  last_updated: "2026-09-17"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 — retrieve as the agent habit instead of read specs/"
+    breaking: false
+
+responsibilities:
+  - "Default graph for an id is live — one live graph, not three"
+  - "Mark leftovers as replaced so they stay visible and not default"
+  - "Show the open in-flight change that points at this id"
+  - "Never present inferred as live"
+  - "Join on capability.* / component.* / foundation.*"
+
+flows:
+  - "retrieve <id> for a messy capability"
+  - "Agent calls retrieve instead of slurping specs/"
+  - "Human asks what is promised now vs leftover vs open"
+
+business_value:
+  user_outcome: "A lead or agent sees what is live, leftover, and in-flight without reading every YAML file"
+  objective: "Job 2 — review agent work without reading every file; keep the product from forking in the head"
+  revenue_dependency: "medium"
+  strategic_priority: "core"
+
+constraints:
+  legal: []
+  security:
+    - "Reads the local spec root and changes/ only"
+  ux:
+    - "Default answer is the live graph; leftovers and open delta are labeled, not mixed in as live"
+    - "Skills and AGENTS.md call retrieve, not read specs/"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "one_live_graph"
+  targets:
+    one_live_graph: "messy capability returns exactly one live graph"
+    leftovers_visible: "replaced ids are marked, not omitted and not default"
+    open_delta_shown: "in-flight change for that id is listed"
+  derived_from: {}
+
+roadmap:
+  phase: "first kernel slice"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_validate"
+    - "capability.specplane_change_folders"
+  enables:
+    - "capability.specplane_blast"
+    - "capability.specplane_check_sync"
+    - "capability.specplane_list_gaps"
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_retrieve"
+    - "component.mcp_stdio"

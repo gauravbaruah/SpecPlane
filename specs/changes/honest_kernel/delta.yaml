@@ -1,0 +1,35 @@
+change_id: "honest_kernel"
+kind: "evolve"
+against: "public kit v9.1.0 (schema still frozen until this slice is examined)"
+
+ADDED:
+  capabilities:
+    - "capability.specplane_validate"
+    - "capability.specplane_retrieve"
+    - "capability.specplane_blast"
+    - "capability.specplane_check_sync"
+    - "capability.specplane_list_gaps"
+    - "capability.specplane_change_folders"
+  foundations:
+    - "foundation.epistemic_status"
+    - "foundation.join_key"
+  system:
+    - "system.specplane_kernel"
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_validate"
+    - "component.cli_retrieve"
+    - "component.cli_blast"
+    - "component.cli_check_sync"
+    - "component.mcp_stdio"
+  note: "These ids live in repo-root specs/ (kernel product). Do not copy this tree into other apps. Schema still frozen until examination."
+
+MODIFIED:
+  - id: "kit meta.status soup"
+    summary: "Collapse to live | inferred | in-flight | replaced after examination — do not stack a new enum beside the old one"
+    not_in_this_pass: true
+
+REMOVED: []
+
+RENAMED: []

@@ -1,0 +1,66 @@
+meta:
+  id: "capability.specplane_list_gaps"
+  purpose: "Surface unreconciled hotfixes, contradictions, and missing sensors as a queue"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "mcp", "list_gaps"]
+  last_updated: "2026-09-17"
+  status: "planned"
+  version: "1.0.1"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "H02 — list_gaps stays MCP-only; no CLI this slice"
+    breaking: false
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 — list_gaps as MCP tool wrapping the same kernel; not a coverage essay"
+    breaking: false
+
+responsibilities:
+  - "List unreconciled hotfixes (kind: fix past expiry / still not promoted)"
+  - "List contradictions flagged, not clobbered"
+  - "List missing success sensors on open evolve/fix changes"
+  - "List orphans: public surface with no live id"
+  - "Not an LLM coverage essay; not a sixth infer tool"
+
+flows:
+  - "Agent calls list_gaps (MCP) to see the queue"
+  - "Weekly habit: what is still unreconciled"
+
+business_value:
+  user_outcome: "Drift is a queue, not a lifestyle"
+  objective: "Make leftover honesty visible without a viewer"
+  revenue_dependency: "low"
+  strategic_priority: "foundation"
+
+constraints:
+  legal: []
+  security:
+    - "Local spec root and changes/ only"
+  ux:
+    - "Ids and gap kind; no lecture"
+    - "First slice: MCP tool (H02). No CLI command this slice."
+  data_classification: "internal"
+
+success_metrics:
+  primary: "gap_queue_visible"
+  targets:
+    gap_queue_visible: "fixture with unreconciled hotfix appears in list_gaps"
+  derived_from: {}
+
+roadmap:
+  phase: "first kernel slice"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_retrieve"
+  enables: []
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.mcp_stdio"

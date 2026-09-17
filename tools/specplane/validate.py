@@ -143,6 +143,13 @@ def load_specs(spec_root: Path) -> tuple[list[SpecDoc], list[Finding]]:
         if path.name.startswith("."):
             continue
         try:
+            rel = path.resolve().relative_to(spec_root.resolve())
+        except ValueError:
+            rel = path
+        if "changes" in rel.parts:
+            # Change-folder YAML is convention, not a 5C spec (capability.specplane_change_folders).
+            continue
+        try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
         except yaml.YAMLError as exc:
             findings.append(Finding("error", "yaml", path, f"parse error: {exc}"))
@@ -659,6 +666,13 @@ def validate(spec_root: Path) -> Report:
     return report
 
 
+def resolve_spec_root(spec_root: Path | None, config_dir: Path) -> Path:
+    if spec_root is not None:
+        return spec_root.resolve()
+    cfg = load_config(config_dir.resolve())
+    return (Path(cfg["_config_dir"]) / cfg.get("specRoot", "specs")).resolve()
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate SpecPlane specs")
     parser.add_argument(
@@ -682,11 +696,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    cfg = load_config(args.config_dir.resolve())
-    spec_root = args.spec_root
-    if spec_root is None:
-        spec_root = Path(cfg["_config_dir"]) / cfg.get("specRoot", "specs")
-    spec_root = spec_root.resolve()
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
 
     report = validate(spec_root)
     for finding in report.findings:

@@ -1,0 +1,23 @@
+change_id: "kit_init"
+kind: "evolve"
+
+ADDED:
+  capabilities:
+    - "capability.specplane_init"
+  components:
+    - "component.cli_init"
+  note: "cli.py init. Copies kit + skills + rules + optional CLI. Creates empty specs/ folders. Does not copy kernel specs/."
+
+MODIFIED:
+  - id: "container.specplane_tools"
+    summary: "implements + contains init"
+  - id: "system.specplane_kernel"
+    summary: "lists capability.specplane_init"
+  - id: "foundation.error_handling"
+    summary: "used_by component.cli_init"
+  - id: "docs/use-in-your-project.md"
+    summary: "Lead with cli.py init; rsync remains fallback"
+
+REMOVED: []
+
+RENAMED: []

@@ -1,0 +1,63 @@
+meta:
+  id: "component.cli_retrieve"
+  purpose: "Local retrieve <id> command: one live graph, leftovers, open delta"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.1"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "v1 retrieve: live slice + replaced leftovers + open changes; inferred never printed as live"
+    breaking: false
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Planning + implements for retrieve CLI; no how"
+    breaking: false
+
+implements:
+  - "capability.specplane_retrieve"
+
+uses:
+  - "foundation.epistemic_status"
+  - "foundation.join_key"
+  - "foundation.error_handling"
+  - "foundation.observability_standards"
+
+planning:
+  user_flows:
+    actions:
+      - "retrieve a capability id on a messy tree (live + replaced leftover + open change)"
+    success:
+      - "Exactly one live graph"
+      - "Leftovers labeled replaced"
+      - "Open delta listed"
+      - "inferred never presented as live"
+    errors:
+      - "Unknown id → not found, do not invent"
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components:
+      - "component.cli_blast"
+      - "component.cli_check_sync"
+      - "component.mcp_stdio"
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "Roadmap done-when: retrieve of a messy capability returns one live graph, marks leftovers, shows the open delta"
+      - "v1 bit: deprecated/archived/replaced_by → replaced; tags inferred → inferred (never printed as live); else live"
+      - "Stdout: live slice, replaced list, in-flight change ids; unknown id exits 1 and invents nothing"
+    open_questions:
+      - "Pointer field name from live id to change object (Q71) — schema unfreeze"
+    readiness: "ready"

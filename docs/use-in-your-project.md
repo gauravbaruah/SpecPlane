@@ -2,7 +2,7 @@
 
 This repo is the schema **kit** plus (in this GitHub tree) SpecPlane’s own **kernel product** specs. Your product repo is where *your* `specs/` lives. Do **not** copy SpecPlane’s `specs/` into your app — that tree is SpecPlane specifying its CLI, not a template product.
 
-There is no npm package or marketplace plugin yet — you copy a small set of kit files, then let the agent scaffold *your* specs.
+There is no npm package or marketplace plugin yet. From a SpecPlane clone, run `init` in your product repo (rsync below is the fallback).
 
 ## What you are installing
 
@@ -13,14 +13,27 @@ There is no npm package or marketplace plugin yet — you copy a small set of ki
 | `CLAUDE.md` | `CLAUDE.md` | Claude Code reads this; it should include `AGENTS.md` |
 | `.agents/skills/specplane-*` | `.agents/skills/specplane-*` | Portable skills (Cursor, Claude, Codex) |
 | `.cursor/skills/specplane-*` | `.cursor/skills/specplane-*` | Cursor discovery |
-| `tools/specplane/` | `tools/specplane/` | Optional: `validate.py` and `drift.py` for the agent to run locally |
+| `tools/specplane/` | `tools/specplane/` | Optional: kernel CLI (`cli.py`, `kernel.py`, `validate.py`, `drift.py`) for the agent to run locally |
 | `tools/specplane/specplane.config.json.example` | `specplane.config.json` | Spec root and schema version |
 
 Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPlane git repo, and **not** this repo’s `specs/` folder. Pin the SpecPlane commit or tag you copied from (today: branch `main` / schema **v9.1.0**; kernel specs live on `kernel-first-slice` until merged).
 
 ## Setup (once)
 
-From a clone of [SpecPlane](https://github.com/gauravbaruah/SpecPlane), in your product repo:
+From a clone of [SpecPlane](https://github.com/gauravbaruah/SpecPlane), in your **product** repo:
+
+```bash
+python3 /path/to/SpecPlane/tools/specplane/cli.py init
+# optional: --kit-only   skip tools/specplane
+#           --force      replace dest/specplane
+#           --dest PATH  if you are not already in the product repo
+```
+
+That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions.
+
+Then: `pip install -r tools/specplane/requirements.txt` if you want `retrieve` / `blast` / `check_sync` locally.
+
+Manual rsync (fallback):
 
 ```bash
 # Schema + foundations (required path: specplane/)
@@ -32,14 +45,17 @@ rsync -a /path/to/SpecPlane/.agents/skills/specplane-* .agents/skills/
 rsync -a /path/to/SpecPlane/.cursor/skills/specplane-* .cursor/skills/
 rsync -a /path/to/SpecPlane/.cursor/rules/specplane-*.mdc .cursor/rules/
 
-# Toolkit (optional — agent/local only, not CI)
+# Toolkit (optional — agent/local only, not CI). Needed for retrieve/blast/check_sync.
 mkdir -p tools/specplane
-rsync -a /path/to/SpecPlane/tools/specplane/validate.py \
+rsync -a /path/to/SpecPlane/tools/specplane/cli.py \
+          /path/to/SpecPlane/tools/specplane/kernel.py \
+          /path/to/SpecPlane/tools/specplane/validate.py \
           /path/to/SpecPlane/tools/specplane/drift.py \
           /path/to/SpecPlane/tools/specplane/README.md \
+          /path/to/SpecPlane/tools/specplane/requirements.txt \
           tools/specplane/
 cp /path/to/SpecPlane/tools/specplane/specplane.config.json.example specplane.config.json
-# then, if you want the agent to run checks: pip install -r /path/to/SpecPlane/tools/specplane/requirements.txt
+# then, if you want the agent to run checks: pip install -r tools/specplane/requirements.txt
 
 ```
 
@@ -65,23 +81,24 @@ Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a c
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-implement, specplane-validate.
-3. Optional: if `tools/specplane/validate.py` is present, the agent may run it in-session. Do not add git hooks or CI jobs for it unless you choose to.
+3. Product requests in natural language use **specplane-implement** (retrieve → change folder → blast → decide → code → check_sync). Do not slurp `specs/`.
+4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
 Rules:
 - Filename without extension equals `meta.id`.
 - Capability Phase 1 is valid without architecture.
 - Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
-- Changelog entry whenever `meta.version` changes.
-- Specs before code when behavior, contracts, events, rollout, or security change. If there is no spec impact, say so.
+- Changelog on live 5C files when `meta.version` changes. In-flight work lives in `specs/changes/`.
+- Specs before code when behavior, contracts, events, rollout, or security change. Trivial work: say “no spec impact” and skip the change folder.
 ```
 
 ## First session
 
-Ask the agent:
+After `init`, empty `specs/` folders already exist. Ask the agent:
 
-> Set up SpecPlane for this repo. Use schema v9.1.0. Create a `specs/` tree and a Phase 1 capability for \<name\>.
+> Use schema v9.1.0. Add a Phase 1 capability for \<name\> and a system spec.
 
-That should trigger `specplane-bootstrap`, then `specplane-author`. You should get:
+That should trigger `specplane-bootstrap` / `specplane-author`. You should get:
 
 ```
 specs/
@@ -89,21 +106,27 @@ specs/
 ├── foundations/          # copies from specplane/foundations/ as needed
 ├── system.<product>.yaml
 ├── containers/
-└── components/
+├── components/
+└── changes/              # empty until a real evolve/fix/learn
 ```
+
+Daily requests after that are product language, not more scaffolding. See [`golden-journey.md`](./golden-journey.md).
 
 Do **not** paste the full master prompt into chat.
 
 ## Daily use
 
+You speak product language. The agent should run the ritual in [`golden-journey.md`](./golden-journey.md). You should not type `retrieve` or `blast`.
+
 | You say | Agent should |
 |---|---|
-| Add a capability / foundation / component | `specplane-author` → applicable sections 03 + 04–07 |
-| Implement this feature | `specplane-implement` → update spec if behavior changes, then code |
-| Review / validate specs | `specplane-validate` → optionally run `validate.py` in the session, then sections 08 and 11 |
-| “No spec impact” | Agent states that and does not invent spec churn |
+| “Reminders should trigger from observations” (or any feature/bug/experiment) | `specplane-implement` → retrieve, propose trivial/fix/evolve/learn, open `specs/changes/` if consequential, blast, ask only consequential questions, implement, `check_sync` |
+| Move that button 4px / typo / rename helper | Just do it. “No spec impact.” No change folder. |
+| Add a capability / foundation / component (explicit spec work) | `specplane-author` → applicable sections 03 + 04–07. If the thing already exists and behavior is changing, switch to implement. |
+| Review / validate specs | `specplane-validate` → `cli.py validate` / `check_sync`, then sections 08 and 11 |
+| “Ship it” / accept the change | Promote delta into live YAML, archive the change folder |
 
-Authoring order: **capability Phase 1** (`responsibilities`, `flows`, `business_value`, `constraints`) → foundations you actually need → system/containers → components with `implements` / `uses`.
+Authoring order for a **new** tree: **capability Phase 1** → foundations you actually need → system/containers → components with `implements` / `uses`. After that, in-flight work belongs in `specs/changes/`.
 
 ## Updating SpecPlane
 
@@ -111,6 +134,7 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 
 ## Not included yet
 
-- Marketplace plugin or installer (Cursor / Claude Code / Codex)
+- `npx` / `uvx` / marketplace plugin (Cursor / Claude Code / Codex)
 - Git hooks or CI/CD wiring for validate/drift in product repos
 - A supported spec viewer (the Docusaurus tool under `legacy/` is archived)
+- Copying this kit into an important product until a real session matches [`golden-journey.md`](./golden-journey.md)

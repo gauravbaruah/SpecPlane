@@ -1,0 +1,66 @@
+meta:
+  id: "component.mcp_stdio"
+  purpose: "Local stdio MCP: retrieve, blast, check_sync, list_gaps — not a product SKU"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "mcp"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.1"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "H02 — MCP is four tools; validate is CLI only; agents shell out for validate"
+    breaking: false
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Planning + implements for stdio MCP socket; wraps CLI; not hosted"
+    breaking: false
+
+implements:
+  - "capability.specplane_retrieve"
+  - "capability.specplane_blast"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_list_gaps"
+
+uses:
+  - "foundation.epistemic_status"
+  - "foundation.join_key"
+  - "foundation.error_handling"
+  - "foundation.observability_standards"
+
+planning:
+  user_flows:
+    actions:
+      - "Agent calls retrieve / blast / check_sync / list_gaps via MCP instead of reading specs/"
+      - "Agent shells out for validate — not an MCP tool"
+    success:
+      - "Same answers as the CLI for retrieve, blast, and check_sync"
+      - "list_gaps returns the gap queue"
+    errors:
+      - "Do not add specify/implement tools"
+      - "Do not add infer as a sixth tool"
+      - "Do not add open_delta as a personality — the folder is the write path"
+
+implementation:
+  dependencies:
+    internal:
+      - "component.cli_retrieve"
+      - "component.cli_blast"
+      - "component.cli_check_sync"
+    external: []
+  depended_on_by:
+    components: []
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "Catalog is retrieve, blast, check_sync, list_gaps"
+      - "validate is not in the catalog; agents shell out"
+      - "Hosted MCP is out of slice"
+    open_questions: []
+    readiness: "unknown"

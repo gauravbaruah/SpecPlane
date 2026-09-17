@@ -1,0 +1,30 @@
+meta:
+  id: container.web_app
+  purpose: "Browser/API app"
+  level: container
+  type: container
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden container"
+    breaking: false
+
+implements:
+  - capability.authentication
+  - capability.marketing
+
+uses:
+  - foundation.security_baseline
+
+relationships:
+  contains:
+    - component.login_api
+    - component.session_manager
+    - component.token_store
+    - component.banner
+  depends_on: []

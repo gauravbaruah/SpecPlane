@@ -1,0 +1,58 @@
+meta:
+  id: "component.cli_validate"
+  purpose: "Local validate command: schema, naming, links, changelog"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.1"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "H02 — MCP does not depend on validate; agents shell out"
+    breaking: false
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Planning + implements for validate CLI; no how"
+    breaking: false
+
+implements:
+  - "capability.specplane_validate"
+
+uses:
+  - "foundation.epistemic_status"
+  - "foundation.join_key"
+  - "foundation.error_handling"
+  - "foundation.observability_standards"
+
+planning:
+  user_flows:
+    actions:
+      - "Point validate at a spec root"
+    success:
+      - "Valid tree exits 0"
+      - "Garbage YAML, id/filename mismatch, or one-sided links exit non-zero with named findings"
+    errors:
+      - "Missing spec root → tell how to pass --spec-root"
+      - "Unreadable YAML → parse error, not a live graph"
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components: []
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "Existing tools/specplane testdata invalid fixtures still fail after this slice is implemented"
+      - "Does not stamp epistemic live"
+    open_questions:
+      - "Exact stdout/exit-code table is Build Pack work after examination"
+    readiness: "unknown"

@@ -1,0 +1,66 @@
+meta:
+  id: "capability.specplane_validate"
+  purpose: "Catch garbage YAML, broken naming, and one-sided links before retrieve can lie"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "validate"]
+  last_updated: "2026-09-17"
+  status: "planned"
+  version: "1.0.1"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "H02 — realized_by is CLI only; validate is not an MCP tool"
+    breaking: false
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 — boring required validate as kernel command"
+    breaking: false
+
+responsibilities:
+  - "Schema and layout: filename equals meta.id, files in the right folder, valid level"
+  - "Changelog present when version exists; introduced_in semver"
+  - "Bidirectional links: implements ↔ realized_by, uses ↔ used_by, internal depends ↔ depended_on_by"
+  - "Refuse to call a tree a map when YAML does not parse"
+
+flows:
+  - "Point at a spec root and report errors/warnings"
+  - "Exit non-zero on errors so a later check can fail"
+
+business_value:
+  user_outcome: "An agent or human knows the YAML is structurally honest before they trust retrieve"
+  objective: "Keep the kernel from mapping garbage"
+  revenue_dependency: "low"
+  strategic_priority: "foundation"
+
+constraints:
+  legal: []
+  security:
+    - "Local filesystem only; no network required to validate"
+  ux:
+    - "Findings name the file and the rule; no 5C lecture"
+    - "Does not judge live vs leftover — that is retrieve / check_sync"
+    - "CLI command; not an MCP tool — agents shell out"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "garbage_yaml_caught"
+  targets:
+    garbage_yaml_caught: "invalid fixtures fail; valid fixtures pass"
+  derived_from: {}
+
+roadmap:
+  phase: "first kernel slice"
+  priority: "P0"
+  depends_on: []
+  enables:
+    - "capability.specplane_retrieve"
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_validate"

@@ -1,0 +1,32 @@
+meta:
+  id: capability.auth_v1
+  purpose: "Legacy email-only authentication (leftover)"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  deprecated_in: "1.0.0"
+  replaced_by: capability.authentication
+  review_state: unreviewed
+  status: deprecated
+  owner: "example"
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Leftover graph replaced by capability.authentication"
+    breaking: true
+
+responsibilities:
+  - "Email-only login"
+
+flows:
+  - "Login"
+
+business_value:
+  user_outcome: "Users could access their account"
+  objective: "Superseded"
+  revenue_dependency: low
+  strategic_priority: foundation
+
+constraints:
+  data_classification: confidential

@@ -1,0 +1,69 @@
+meta:
+  id: "capability.specplane_change_folders"
+  purpose: "In-flight writes live in change folders so live YAML stays small"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "changes", "in-flight"]
+  last_updated: "2026-09-17"
+  status: "planned"
+  version: "1.0.1"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "H02 — write path is specs/changes/; pointer field name waits for schema unfreeze"
+    breaking: false
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Phase 1 — native changes/ write path; kind evolve/fix/learn; promote on merge"
+    breaking: false
+
+responsibilities:
+  - "Open work is a change folder, not a changelog novel on the live capability"
+  - "Each change has kind learn | fix | evolve, named promise ids, and a way to fail"
+  - "Coding agent may draft the delta; human or checker merges into live"
+  - "On merge: promote delta into live YAML, mark leftovers replaced, archive the change"
+  - "Hotfixes allowed and not invisible: unreconciled fix stays on retrieve / list_gaps"
+
+flows:
+  - "Open specs/changes/<id>/ for a signal (bug, eval fail, this kernel slice)"
+  - "Draft proposal + ADDED/MODIFIED/REMOVED + success sensors"
+  - "Retrieve shows the open delta beside live"
+  - "Merge: live stays small; history lives in the archive, not the constitution"
+
+business_value:
+  user_outcome: "Fast tempo does not turn live capabilities into diaries; leftover graphs do not look live"
+  objective: "Two tempos in one system — live snapshot vs change object"
+  revenue_dependency: "low"
+  strategic_priority: "core"
+
+constraints:
+  legal: []
+  security: []
+  ux:
+    - "Live YAML stays small"
+    - "in-flight lives on the change object; live id gets a pointer, not a second status (Q71). Field name waits for schema unfreeze — no new v9.1.0 meta key"
+    - "Do not fork OpenSpec; do not stuff 5C into spec.md; native specs/changes/ this slice"
+    - "No dedicated CLI personality named open_delta — the folder is the write path"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "live_yaml_stays_small"
+  targets:
+    live_yaml_stays_small: "in-flight narrative is in specs/changes/, not capability changelog novels"
+    kinds_required: "a change without kind is invalid to merge"
+  derived_from: {}
+
+roadmap:
+  phase: "first kernel slice"
+  priority: "P0"
+  depends_on: []
+  enables:
+    - "capability.specplane_retrieve"
+    - "capability.specplane_check_sync"
+
+realized_by:
+  containers: []
+  components: []

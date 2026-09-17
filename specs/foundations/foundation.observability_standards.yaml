@@ -1,0 +1,75 @@
+meta:
+  id: "foundation.observability_standards"
+  purpose: "First-slice observability is command stdout, exit code, and join-keyed findings — not hosted telemetry"
+  level: "foundation"
+  owner: "SpecPlane"
+  tags: ["observability", "cli", "kernel"]
+  last_updated: "2026-09-17"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Reuse kit observability foundation; constrain first slice to stdout/exit, telemetry default off"
+    breaking: false
+
+provides:
+  - "Stdout as the five-second face of retrieve / blast / check_sync"
+  - "Findings join on SpecPlane ids"
+  - "No opt-in product telemetry in this slice"
+
+used_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_validate"
+    - "component.cli_retrieve"
+    - "component.cli_blast"
+    - "component.cli_check_sync"
+    - "component.mcp_stdio"
+
+extends: []
+
+metrics:
+  naming:
+    convention: "Not a metrics product in this slice. If a line is counted, name it snake_case on the id."
+    suffixes:
+      _total: "Counter — unused in first slice"
+      _duration_ms: "Histogram — unused in first slice"
+      _active: "Gauge — unused in first slice"
+      _error_rate: "Gauge — unused in first slice"
+  required_labels: []
+
+tracing:
+  propagation: "None in first slice"
+  required_spans: []
+  correlation:
+    join_key: "SpecPlane meta.id (capability.* / component.* / foundation.*)"
+    note: "Attach the id to every finding and every blast row"
+
+slo_baselines:
+  availability: "Local command; no hosted SLO"
+  latency_p95: "blast readable in about five seconds on a small repo (Build Pack will pin the fixture)"
+  error_rate: "validate catches garbage YAML; check_sync does not false-pass a moved named behavior"
+  note: "Exact CLI stdout and exit codes belong in the Autonomous Build Pack, not this foundation"
+
+alerting:
+  severity:
+    critical:
+      definition: "check_sync fail on merge-shaped invocation"
+      response: "Block; do not auto-write live"
+      ack_within: "before merge"
+    warning:
+      definition: "list_gaps items (unreconciled hotfix, missing sensor, contradiction)"
+      response: "Queue; retrieve still returns the live graph"
+      ack_within: "visible on next retrieve / list_gaps"
+  escalation_policy: "Human decides DECISION REQUIRED. Agent does not promote live."
+  runbook_required: false
+
+dashboards:
+  required: []
+
+refs: []

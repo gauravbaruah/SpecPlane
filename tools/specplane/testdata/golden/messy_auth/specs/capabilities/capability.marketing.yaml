@@ -1,0 +1,36 @@
+meta:
+  id: capability.marketing
+  purpose: "Site banner"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: launched
+  owner: "example"
+
+changelog:
+  - date: "2026-09-17"
+    author: "specplane"
+    summary: "Golden unrelated capability (shared foundation)"
+    breaking: false
+
+responsibilities:
+  - "Show a banner"
+
+flows:
+  - "View banner"
+
+business_value:
+  user_outcome: "See a campaign"
+  objective: "Unrelated to auth blast"
+  revenue_dependency: low
+  strategic_priority: growth
+
+constraints:
+  data_classification: public
+
+realized_by:
+  containers:
+    - container.web_app
+  components:
+    - component.banner
