@@ -1,0 +1,14 @@
+change_id: "check_sync_honesty"
+kind: "fix"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_check_sync"
+    summary: "Default changed-set includes untracked specs YAML; Phase 1 (no join edges) is advisory, not fail"
+  - id: "component.cli_check_sync"
+    summary: "git_changed_files + check_sync + format_check_sync implement Q115+Q116"
+
+REMOVED: []
+
+RENAMED: []

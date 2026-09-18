@@ -89,7 +89,7 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 | MCP | `retrieve`, `blast`, `check_sync`, `list_gaps` — validate is **not** an MCP tool |
 | `list_gaps` CLI | Not this slice |
 | `container.specplane_tools` | Keep — 5C layout, not a SKU |
-| `check_sync` heuristic | v1: `--changed-ids` or spec YAML in git vs open change `promise_ids` |
+| `check_sync` heuristic | v1: `--changed-ids` or git diff **plus untracked** `specs/**/*.yaml` (not `changes/`). Phase 1 (no join edges) is advisory. Linked empty blast still fails. |
 | Live-id pointer field | Q71 recorded; field name waits for schema unfreeze |
 | `changes/` | `specs/changes/` — same layout consuming repos will use |
 

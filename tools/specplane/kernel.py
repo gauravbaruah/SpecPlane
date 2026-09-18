@@ -288,6 +288,18 @@ def id_covered(kernel: Kernel, spec_id: str) -> bool:
     return any(change_covers(kernel, change, spec_id) for change in kernel.changes if change.open)
 
 
+def is_phase1_shaped(doc: SpecDoc) -> bool:
+    """No join edges: no realized_by, uses, or component implements (Q116)."""
+    realized = doc.data.get("realized_by") if isinstance(doc.data.get("realized_by"), dict) else {}
+    if as_str_list(realized.get("components")) or as_str_list(realized.get("containers")):
+        return False
+    if as_str_list(doc.data.get("uses")):
+        return False
+    if as_str_list(doc.data.get("implements")):
+        return False
+    return True
+
+
 def map_changed_files(kernel: Kernel, files: list[str]) -> list[str]:
     ids: list[str] = []
     spec_root_name = kernel.spec_root.name
@@ -313,18 +325,27 @@ def check_sync(
     changed_ids: list[str],
 ) -> dict[str, Any]:
     changed_ids = sorted({cid for cid in changed_ids if cid})
-    uncovered = [cid for cid in changed_ids if cid in kernel.by_id and not id_covered(kernel, cid)]
+    phase1_advisory: list[str] = []
+    linked: list[str] = []
     unknown = [cid for cid in changed_ids if cid not in kernel.by_id]
-    empty_blasts: list[str] = []
     for cid in changed_ids:
-        if cid not in kernel.by_id:
+        doc = kernel.by_id.get(cid)
+        if not doc:
             continue
+        if is_phase1_shaped(doc):
+            phase1_advisory.append(cid)
+        else:
+            linked.append(cid)
+
+    uncovered = [cid for cid in linked if not id_covered(kernel, cid)]
+    empty_blasts: list[str] = []
+    for cid in linked:
         result = blast(kernel, cid)
         if result and result["empty"]:
             empty_blasts.append(cid)
 
     fail_uncovered = bool(uncovered)
-    fail_empty = bool(changed_ids) and bool(empty_blasts)
+    fail_empty = bool(empty_blasts)
     decision = fail_uncovered or fail_empty
     ok = not fail_uncovered and not fail_empty and not unknown
     return {
@@ -332,6 +353,7 @@ def check_sync(
         "uncovered": uncovered,
         "unknown": unknown,
         "empty_blast": empty_blasts,
+        "phase1_advisory": phase1_advisory,
         "ok": ok,
         "decision_required": decision,
     }
@@ -411,6 +433,11 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         lines.append("  (none)")
     if payload["ok"]:
         lines.append("result: pass")
+        if payload.get("phase1_advisory"):
+            lines.append("phase1_advisory:")
+            for item in payload["phase1_advisory"]:
+                lines.append(f"  - {item}")
+            lines.append("  Phase 1 ids have no join edges; uncovered / empty blast do not fail.")
         return "\n".join(lines) + "\n"
     lines.append("result: fail")
     if payload["uncovered"]:
@@ -420,6 +447,10 @@ def format_check_sync(payload: dict[str, Any]) -> str:
     if payload["empty_blast"]:
         lines.append("empty_blast:")
         for item in payload["empty_blast"]:
+            lines.append(f"  - {item}")
+    if payload.get("phase1_advisory"):
+        lines.append("phase1_advisory:")
+        for item in payload["phase1_advisory"]:
             lines.append(f"  - {item}")
     if payload["unknown"]:
         lines.append("unknown_ids:")

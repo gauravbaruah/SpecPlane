@@ -1,0 +1,18 @@
+change_id: "check_sync_honesty"
+kind: "fix"
+
+sensors:
+  - id: "untracked_specs_visible"
+    promise: "capability.specplane_check_sync"
+    must: "Default changed-set includes untracked specs/**/*.yaml (not specs/changes/)"
+  - id: "phase1_advisory"
+    promise: "capability.specplane_check_sync"
+    must: "Phase-1-shaped id (no realized_by, uses, or implements) exits 0 with phase1_advisory; not empty_blast fail"
+  - id: "linked_still_fails"
+    promise: "capability.specplane_check_sync"
+    must: "Id with join edges and no covering open change still fails"
+  - id: "no_source_parse"
+    promise: "capability.specplane_check_sync"
+    must: "Still does not parse application source"
+
+looks_fine_is_not_a_sensor: true

@@ -30,9 +30,9 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 | `validate` | Structural YAML, names, bidirectional links. Skips `specs/changes/`. | Errors |
 | `retrieve <id>` | One live slice, `replaced` leftovers, open change folders | Unknown id |
 | `blast <id>` | Affects tree. Component deps recurse. **Foundations are terminal** (listed, not exploded via `used_by`). | Unknown id |
-| `check_sync` | Changed ids vs open change `promise_ids`. Empty blast fails. Does **not** parse app source. | Uncovered id, empty blast, or unknown id |
+| `check_sync` | Changed ids vs open change `promise_ids`. Linked empty blast fails. Phase 1 (no join edges) is advisory. Does **not** parse app source. | Uncovered linked id, empty blast on a linked id, or unknown id |
 
-`check_sync --changed-ids` is explicit. If omitted, spec YAML files in `git diff` are mapped to ids.
+`check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids.
 
 `python3 tools/specplane/validate.py` still works as the validate-only entry point.
 
