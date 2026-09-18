@@ -1,0 +1,7 @@
+id: no_sensor
+kind: fix
+status: in-flight
+opened: "2026-09-18"
+promise_ids:
+  - capability.orphan
+why: "Golden: open change with no success sensor."

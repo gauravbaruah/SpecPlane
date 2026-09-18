@@ -1,0 +1,53 @@
+meta:
+  id: "component.cli_list_gaps"
+  purpose: "Local list_gaps command: kernel-generic advisory queue; CLI is source of truth"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "list_gaps"]
+  last_updated: "2026-09-18"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-18"
+    author: "kernel-slice"
+    summary: "list_gaps CLI personality; same kernel as MCP; advisory exit 0"
+    breaking: false
+
+implements:
+  - "capability.specplane_list_gaps"
+
+uses:
+  - "foundation.error_handling"
+
+planning:
+  user_flows:
+    actions:
+      - "list_gaps --spec-root specs"
+    success:
+      - "Prints phase1_no_join, open_changes, replaced, missing_success_sensor"
+      - "Exit 0 when the spec root exists"
+    errors:
+      - "Missing spec root → exit 1"
+      - "Must not parse application source"
+      - "Must not take --bar= or compliance packs"
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components:
+      - "component.mcp_stdio"
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "Golden messy_auth: capability.orphan under phase1_no_join; add_passkeys under open_changes; capability.auth_v1 under replaced"
+      - "Open change with no success.yaml listed under missing_success_sensor"
+      - "Exit 0 on a tree that has gaps"
+    open_questions: []
+    readiness: "in-progress"

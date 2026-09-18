@@ -1,0 +1,7 @@
+id: add_dunning
+kind: evolve
+status: in-flight
+opened: "2026-09-18"
+promise_ids:
+  - capability.billing
+why: "Email the customer when a renewal charge fails. Reset-link expiry stays 60 minutes until a dedicated auth change."

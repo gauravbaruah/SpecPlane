@@ -1,192 +1,98 @@
 # SpecPlane
 
-**The specification control plane for software teams**
+**Keep coding agents aligned with what you actually meant to build.**
 
-SpecPlane is a flexible design-architecture framework for creating structured, machine-readable software specifications that bridge the gap between design thinking and implementation, transforming vague requirements into detailed, testable specifications that guide both human developers and AI coding assistants.
+It is a **git-native overlay of what a living product should do and how well** — not how it is implemented. You speak product language. The agent uses SpecPlane. You answer only consequential decisions.
 
-<img src="./SpecPlane_Logo.png" alt="SpecPlane Logo: geometric planes aligning to a shared normal" width="200">
+**Free now:** kit, local kernel, skills, optional MCP. No SpecPlane API key.
 
-**SpecPlane helps align design, engineering, and product teams by providing a shared language and framework for capturing requirements, constraints, and success metrics across all aspects of product development.**
+**Later (not shipped):** spec coach, required GitHub check, viewer. Do not treat those as available today.
 
-## Why SpecPlane Exists
+<img src="./SpecPlane_Logo.png" alt="SpecPlane" width="160">
 
-**The Problem**: Design and implementation live in separate worlds. Figma mockups become stale, API documentation drifts from reality, and system requirements hide in Slack threads. Teams spend 50% of their engineering time on rework, debugging, and asking "why doesn't this work like the design?"
+## The loop
 
-**The Solution**: SpecPlane creates Git-native YAML specifications that capture:
-- **What** components should do (behavioral contracts)
-- **How well** they should perform (constraints and SLOs)  
-- **What can go wrong** and how to handle it (edge cases and error scenarios)
-- **How success is measured** (acceptance criteria and observability)
+You tell your coding agent:
 
-The ultimate aim is to guide teams into thinking more deeply about core application behavior, constraints, and metrics when developing products, resulting in predictable and maintainable development processes.
+> Reset links should expire in 15 minutes instead of 60.
 
-## What SpecPlane Helps With
+SpecPlane **retrieves** the current promise, **classifies** this as an evolve (the live promise is 60 minutes), **blasts** what else is tied to that id, asks **one question** only if a decision is unresolved, and gives the agent the minimum context to **implement**. Then **check_sync** — did the change stay aligned with intent?
 
-### For Development Teams
-- **Eliminate design-implementation gaps** - Specifications ensure design decisions map to validated technical architecture
-- **AI-Assisted Development** - Rich specifications prevent codegen drift by providing structured context for AI tools, ensuring generated code follows requirements instead of hallucinating intent
-- **Cross-discipline alignment** - Ties product requirements, design intent, engineering specs, and observability metrics into one source of truth across product, design, engineering, and DevOps teams
-- **Reduce rework cycles** - Comprehensive edge case analysis prevents common production issues
-- **Developer discipline** - SpecPlane prompts help teams update specifications as code evolves, maintaining alignment between intent and implementation
+You do not operate the CLI. The coding agent does.
 
-### For Regulated Industries
-- **Built-in compliance** - Automatic audit trails, requirement traceability, and governance documentation
-- **Security by design** - Threat modeling and mitigation strategies embedded in specifications
-- **Risk management** - Systematic analysis of failure modes and recovery strategies
+**Ask** — you speak product language.
 
-### For Platform Teams
-- **API consistency** - OpenAPI-compatible contracts ensure stable interfaces
-- **Observability alignment** - SLIs and SLOs defined alongside functional requirements
-- **Scalability planning** - Performance constraints and capacity planning built into specs
+![Ask: reset links 60 to 15, retrieve, classify evolve](./docs/ask.gif)
 
-## Repository Structure
+**Impact** — blast shows who else is tied to that id.
 
-```
-SpecPlane/
-├── AGENTS.md              # Agent router (load applicable sections, not the full prompt)
-├── CLAUDE.md              # Includes AGENTS.md
-├── .agents/skills/        # Portable SpecPlane skills
-├── .cursor/rules/         # Cursor rules
-├── .cursor/skills/        # Cursor copy of the same skills
-├── docs/
-│   ├── use-in-your-project.md  # Copy the kit into a product repo
-│   └── golden-journey.md       # Agent ritual (intended chat shape)
-├── specs/                 # Kernel product (SpecPlane specifying its CLI) — do not copy into other apps
-├── SpecPlane_Logo.png
-├── tools/specplane/       # kernel CLI: validate / retrieve / blast / check_sync
-├── specplane/
-│   ├── core_prompt/       # v9.1.0 reference + applicable split; v6.1.0 C4-only
-│   ├── foundations/       # Boilerplate foundation specs
-│   └── supporting_prompts/
-├── legacy/                # Archived viewer — not the product path
-├── README.md
-└── LICENSE
+![Impact: blast component.password_reset](./docs/impact.gif)
+
+**Ship** — implement, then check_sync.
+
+![Ship: check_sync pass](./docs/ship.gif)
+
+### SpecPlane should stay out of your way
+
+| You ask | What happens |
+|---|---|
+| “Fix the typo” | Agent just fixes it |
+| “Rename this helper” | Agent just does it |
+| “Reset links expire in 15m, not 60m” | SpecPlane tracks the product change |
+| “Make destructive actions green” | SpecPlane warns if this changes a shared design rule |
+
+Ceremony scales with **semantic consequence**, not diff size. Full transcript: [`docs/golden-journey.md`](./docs/golden-journey.md).
+
+**Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP is available for the same retrieve / blast / check_sync / list_gaps tools when you want tool-native calls. You are not meant to type those commands.
+
+## Try it
+
+Synthetic example — not a real product, not this repo’s kernel `specs/`.
+
+```bash
+git clone https://github.com/gauravbaruah/SpecPlane.git
 ```
 
-## Quick Start
+Open **`examples/tiny-saas`** as the workspace. Ask Cursor:
 
-**Using SpecPlane in your own app** is the usual path. Copy the **kit** (`specplane/`, skills, rules). Your product repo holds *your* `specs/`. This GitHub repo also has a `specs/` tree for **SpecPlane’s own kernel** — do not copy that into your app.
+> Reset links should expire in 15 minutes instead of 60.
 
-Follow **[Use SpecPlane in your project](./docs/use-in-your-project.md)**:
+Auth, billing, notifications, one open billing change, and `src/auth.py` with a 60-minute reset TTL. Details: [`examples/tiny-saas/README.md`](./examples/tiny-saas/README.md) and [`docs/try.md`](./docs/try.md).
 
-1. From a SpecPlane clone, in the product repo: `python3 /path/to/SpecPlane/tools/specplane/cli.py init`
-2. Open the **product** workspace and ask for a Phase 1 capability (empty `specs/` folders already exist).
-3. After that, speak product language. The agent should follow [`docs/golden-journey.md`](./docs/golden-journey.md) (`specplane-implement`). You should not type `retrieve` or `blast`.
-4. Do not paste the full v9.1.0 prompt into chat. The agent loads one applicable section per task.
+`blast` of a single id (not the whole loop): [docs/blast.gif](./docs/blast.gif).
 
-Human overview of the schema: [`specplane/README.md`](./specplane/README.md) and [`README_v9.1.0.md`](./specplane/core_prompt/README_v9.1.0.md).
+## Use it in your product
 
-### Working in *this* repo (schema maintainers)
+From **your** app repo (not onto SpecPlane itself):
 
-[`AGENTS.md`](./AGENTS.md) is already here. Skills and rules apply to this clone. Use that when changing the schema, not when specifying a product.
-
-### Example specs
-
-Sample YAML from the archived viewer: [`legacy/specplane_viewer/specs/`](./legacy/specplane_viewer/specs/). That viewer is [legacy only](./legacy/README.md).
-
-### A Phase 1 capability (v9.1.0)
-
-```yaml
-meta:
-  id: capability.authentication
-  purpose: "Allow users to prove identity and establish a session"
-  level: capability
-  version: "1.0.0"
-  introduced_in: "1.0.0"
-  review_state: unreviewed
-  status: planned
-
-changelog:
-  - date: "2026-09-15"
-    author: ""
-    summary: "Initial Phase 1 capability"
-    breaking: false
-
-responsibilities:
-  - "Identity verification"
-  - "Session establishment and token lifecycle"
-
-flows:
-  - "Login"
-  - "Logout"
-
-business_value:
-  user_outcome: "Users can securely access their account"
-  objective: "Enable personalized product use"
-  revenue_dependency: high
-  strategic_priority: core
-
-constraints:
-  security:
-    - "PKCE required for OAuth"
+```bash
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 ```
 
-## Core Principles
+That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package.
 
-**Bridges Design and Architecture**: SpecPlane makes spec-to-code relationships more visible and maintainable, reducing drift by evolving alongside applications and keeping design intent aligned with technical reality.
+If `uvx` is not installed: `python3 /path/to/SpecPlane/tools/specplane/cli.py init` from a checkout.
 
-**Implementation-Agnostic**: Specifications focus on *what* and *how well*, not *how*. The same spec can guide web, mobile, and API implementations.
+Then ask for a Phase 1 capability. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
 
-**Git-Native & Developer-Friendly**: Specifications live alongside code, are version-controlled, and integrate with existing development workflows.
+## Not this
 
-**AI-Ready**: Rich, structured specifications become excellent context for AI coding tools, preventing hallucination and resulting in better generated code.
+Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework by 50%.” Not a toy app you deploy. The Docusaurus viewer under `legacy/` is archived — do not resurrect it.
 
-**Compliance-Ready**: Built for regulated industries with automatic audit trails and governance requirements.
+## This repository
 
-**Observable**: Every specification includes monitoring, alerting, and success metrics from day one.
+| Path | What it is |
+|---|---|
+| `specplane/` | Kit — schema, applicable sections, foundation boilerplates |
+| `specs/` | Kernel product — SpecPlane specifying its CLI. **Do not copy into other apps.** |
+| `tools/specplane/` | Local CLI + MCP |
+| `examples/tiny-saas/` | Synthetic overlay + small `src/` for the try path |
+| `.agents/skills/` and `.cursor/skills/` | Same skills (keep identical) |
+| `docs/golden-journey.md` | Intended human+agent loop |
+| `legacy/` | Archived viewer — not the product path |
 
-## Use Cases
-
-### Component Specification
-Document widgets, services, and system components with behavioral contracts, error handling, and performance requirements.
-
-### System Architecture
-Use C4 model integration to specify system context, container relationships, and deployment architecture.
-
-### API Design
-Create OpenAPI-compatible service contracts that stay synchronized with implementation.
-
-### Compliance Documentation
-Generate audit-ready documentation with requirement traceability and security analysis.
-
-### AI Development Context
-Transform specifications into rich prompts that help AI tools generate better, more maintainable code.
-
-## Contributing
-
-SpecPlane is open source and community-driven. We welcome contributions to:
-
-- Core schema improvements
-- Example specifications
-- Integration tools
-- Documentation and guides
-
-See individual component READMEs for specific contribution guidelines.
-
-## Research & Validation
-
-We run ad hoc validation studies in a local `experiments/` directory, which is **not** versioned in this repository. Those runs inform the core schema and documentation; you can use the same layout on your machine if you are reproducing or extending that work.
+Default schema **v9.1.0** (Capability, System, Container, Component, plus Foundations). Agent loading: [`AGENTS.md`](./AGENTS.md). You do not need that ontology to try the loop.
 
 ## License
 
-Apache 2.0 License - see [LICENSE](LICENSE) file for details.
-
-## Learn More
-
-- [Use SpecPlane in your project](./docs/use-in-your-project.md)
-- [Toolkit (validate / drift)](./tools/specplane/README.md)
-- [Agent loading contract (AGENTS.md)](./AGENTS.md)
-- [Applicable schema split](./specplane/core_prompt/applicable/README.md)
-- [v9.1.0 reference prompt](./specplane/core_prompt/specplane_schema_prompt_v9.1.0.md)
-- [Core schema overview](./specplane/README.md)
-- [Example specifications (from legacy viewer)](./legacy/specplane_viewer/specs/)
-- [Legacy Docusaurus viewer (archived)](./legacy/specplane_viewer/) — see [legacy/](./legacy/README.md)
-
----
-
-**Ready to align your design and implementation?**  
-Copy the kit into your product repo — [Use SpecPlane in your project](./docs/use-in-your-project.md).
-
-
-> **🚧 Work in Progress** - This project is actively evolving and we're working to make SpecPlane more featureful and user friendly. We welcome feedback, contributions, and suggestions for improvement! Please share your experiences and help us build better tools for software specification and development.
-
+Apache 2.0 — see [LICENSE](LICENSE).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, init.
+"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, list_gaps, init.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -20,7 +20,9 @@ from kernel import (  # noqa: E402
     check_sync,
     format_blast,
     format_check_sync,
+    format_list_gaps,
     format_retrieve,
+    list_gaps,
     load_kernel,
     map_changed_files,
     retrieve,
@@ -131,6 +133,16 @@ def cmd_check_sync(args: argparse.Namespace) -> int:
     return 1
 
 
+def cmd_list_gaps(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    print(format_list_gaps(list_gaps(kernel)), end="")
+    return 0
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     dest = (args.dest or Path.cwd()).resolve()
     kit_root = (args.kit_root or default_kit_root()).resolve()
@@ -148,7 +160,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / init)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / list_gaps / init)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -179,6 +191,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_sync.add_argument("--repo", type=Path, default=None, help="Git repo for default changed set")
     p_sync.set_defaults(func=cmd_check_sync)
+
+    p_gaps = sub.add_parser(
+        "list_gaps",
+        help="Kernel-generic gap queue (advisory; exit 0)",
+    )
+    add_root_args(p_gaps)
+    p_gaps.set_defaults(func=cmd_list_gaps)
 
     p_init = sub.add_parser(
         "init",

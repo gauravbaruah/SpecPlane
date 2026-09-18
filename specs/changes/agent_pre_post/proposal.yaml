@@ -1,0 +1,15 @@
+id: "agent_pre_post"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-18"
+promise_ids:
+  - "capability.specplane_change_folders"
+  - "capability.specplane_check_sync"
+  - "component.cli_init"
+why: "Codegen agents paste-implement. When a promise might move, skills require retrieve then check_sync — not an optional habit. Typos skip retrieve. No new CLI verb. The kernel does not watch the chat."
+non_goals:
+  - "new kernel command (specplane pre / post)"
+  - "parsing application source in check_sync"
+  - "schema unfreeze"
+  - "git hooks or CI as the gate"
+  - "agent-picker / MCP catalog change"

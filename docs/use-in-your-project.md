@@ -1,8 +1,25 @@
 # Use SpecPlane in your project
 
-This repo is the schema **kit** plus (in this GitHub tree) SpecPlane’s own **kernel product** specs. Your product repo is where *your* `specs/` lives. Do **not** copy SpecPlane’s `specs/` into your app — that tree is SpecPlane specifying its CLI, not a template product.
+If you have not tried the kernel yet, start with [`try.md`](./try.md) (`examples/tiny-saas`, reset links 60 → 15).
 
-There is no npm package or marketplace plugin yet. From a SpecPlane clone, run `init` in your product repo (rsync below is the fallback).
+This page puts the **kit** into *your* product repo. Your `specs/` is your overlay. Do **not** copy SpecPlane’s `specs/` into your app — that tree is SpecPlane specifying its CLI, not a template product.
+
+## Setup (once)
+
+In the **product** repo (must not be the SpecPlane kit root):
+
+```bash
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
+# optional: --kit-only   skip tools/specplane
+#           --force      replace dest/specplane
+#           --dest PATH  if you are not already in the product repo
+```
+
+Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package; `uvx specplane` would fail.
+
+Fallback from a checkout: `python3 /path/to/SpecPlane/tools/specplane/cli.py init`.
+
+That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions. It does not ask which coding agent you use — skills for Cursor, Claude Code, and Codex are copied together.
 
 ## What you are installing
 
@@ -16,22 +33,7 @@ There is no npm package or marketplace plugin yet. From a SpecPlane clone, run `
 | `tools/specplane/` | `tools/specplane/` | Optional: kernel CLI (`cli.py`, `kernel.py`, `validate.py`, `drift.py`) for the agent to run locally |
 | `tools/specplane/specplane.config.json.example` | `specplane.config.json` | Spec root and schema version |
 
-Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPlane git repo, and **not** this repo’s `specs/` folder. Pin the SpecPlane commit or tag you copied from (today: branch `main` / schema **v9.1.0**; kernel specs live on `kernel-first-slice` until merged).
-
-## Setup (once)
-
-From a clone of [SpecPlane](https://github.com/gauravbaruah/SpecPlane), in your **product** repo:
-
-```bash
-python3 /path/to/SpecPlane/tools/specplane/cli.py init
-# optional: --kit-only   skip tools/specplane
-#           --force      replace dest/specplane
-#           --dest PATH  if you are not already in the product repo
-```
-
-That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions.
-
-Then: `pip install -r tools/specplane/requirements.txt` if you want `retrieve` / `blast` / `check_sync` locally.
+Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPlane git repo, and **not** this repo’s `specs/` folder. Pin the SpecPlane commit you copied from (schema **v9.1.0**; default branch `main`).
 
 Manual rsync (fallback):
 
@@ -51,6 +53,8 @@ rsync -a /path/to/SpecPlane/tools/specplane/cli.py \
           /path/to/SpecPlane/tools/specplane/kernel.py \
           /path/to/SpecPlane/tools/specplane/validate.py \
           /path/to/SpecPlane/tools/specplane/drift.py \
+          /path/to/SpecPlane/tools/specplane/initkit.py \
+          /path/to/SpecPlane/tools/specplane/mcp_stdio.py \
           /path/to/SpecPlane/tools/specplane/README.md \
           /path/to/SpecPlane/tools/specplane/requirements.txt \
           tools/specplane/
@@ -81,7 +85,7 @@ Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a c
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-implement, specplane-validate.
-3. Product requests in natural language use **specplane-implement** (retrieve → change folder → blast → decide → code → check_sync). Do not slurp `specs/`.
+3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --changed-ids. Typos skip retrieve. Do not slurp `specs/`.
 4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
 Rules:
@@ -89,7 +93,7 @@ Rules:
 - Capability Phase 1 is valid without architecture.
 - Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
 - Changelog on live 5C files when `meta.version` changes. In-flight work lives in `specs/changes/`.
-- Specs before code when behavior, contracts, events, rollout, or security change. Trivial work: say “no spec impact” and skip the change folder.
+- Specs before code when behavior, contracts, events, rollout, security, or how the product is obtained change. Trivial work (typo/4px/rename): no retrieve. If unsure, retrieve.
 ```
 
 ## First session
@@ -120,8 +124,8 @@ You speak product language. The agent should run the ritual in [`golden-journey.
 
 | You say | Agent should |
 |---|---|
-| “Reminders should trigger from observations” (or any feature/bug/experiment) | `specplane-implement` → retrieve, propose trivial/fix/evolve/learn, open `specs/changes/` if consequential, blast, ask only consequential questions, implement, `check_sync` |
-| Move that button 4px / typo / rename helper | Just do it. “No spec impact.” No change folder. |
+| “Reminders should trigger from observations” (or any feature/bug/experiment) | PRE retrieve → classify → change folder if not trivial → blast → implement → POST `check_sync --changed-ids` |
+| Move that button 4px / typo / rename helper | No retrieve. Just do it. “No spec impact.” |
 | Add a capability / foundation / component (explicit spec work) | `specplane-author` → applicable sections 03 + 04–07. If the thing already exists and behavior is changing, switch to implement. |
 | Review / validate specs | `specplane-validate` → `cli.py validate` / `check_sync`, then sections 08 and 11 |
 | “Ship it” / accept the change | Promote delta into live YAML, archive the change folder |
@@ -134,7 +138,8 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 
 ## Not included yet
 
-- `npx` / `uvx` / marketplace plugin (Cursor / Claude Code / Codex)
+- A PyPI / `npx specplane` package (`uvx --from git+…@main` is the install that works today)
+- An init wizard that picks Cursor vs Claude vs Codex (all three get the same skills)
 - Git hooks or CI/CD wiring for validate/drift in product repos
 - A supported spec viewer (the Docusaurus tool under `legacy/` is archived)
 - Copying this kit into an important product until a real session matches [`golden-journey.md`](./golden-journey.md)

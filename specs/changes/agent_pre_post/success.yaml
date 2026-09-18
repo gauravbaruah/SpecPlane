@@ -1,0 +1,15 @@
+change_id: "agent_pre_post"
+kind: "evolve"
+
+sensors:
+  - id: "pre_retrieve_when_promise_might_move"
+    promise: "capability.specplane_change_folders"
+    must: "Skill requires retrieve before write when a promise might move; typos/renames skip retrieve; if unsure, retrieve; agent waits after a consequential question"
+  - id: "post_check_sync_named_ids"
+    promise: "capability.specplane_check_sync"
+    must: "After implement, the skill requires check_sync --changed-ids for retrieved/blasted/realization ids; default empty changed-set is not treated as a pass"
+  - id: "no_new_cli_verb"
+    promise: "capability.specplane_change_folders"
+    must: "No specplane pre or specplane post command"
+
+looks_fine_is_not_a_sensor: true

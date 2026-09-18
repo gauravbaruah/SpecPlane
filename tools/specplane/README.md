@@ -2,27 +2,33 @@
 
 Optional local commands for v9.1.0 specs. Copy `tools/specplane/` into a product repo alongside `specplane/` and `specs/` if you want the agent (or you) to run checks in a session.
 
-`init` copies the kit into a **product** repo. It does not write Git hooks or CI/CD.
-
-Agents call retrieve / blast / check_sync. Humans should not have to. Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md).
-
-Requires Python 3.10+ and PyYAML:
+Requires Python 3.10+ and PyYAML.
 
 ```bash
-pip install -r tools/specplane/requirements.txt
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init --dest /path/to/product
+# or from a checkout: pip install -e .   then specplane …
+# or: python3 tools/specplane/cli.py …
 ```
+
+Five-minute try: [`docs/try.md`](../../docs/try.md) (`examples/tiny-saas`). Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md).
+
+**Works with your coding agent.** Skills call this kernel today. Local MCP is available for retrieve, blast, check_sync, and list_gaps. Humans should not have to type those commands.
 
 ## Kernel CLI
 
 Simple commands. Agents call them. No model in the loop.
 
 ```bash
-python3 tools/specplane/cli.py init --dest /path/to/product
-python3 tools/specplane/cli.py validate --spec-root specs
-python3 tools/specplane/cli.py retrieve <id> --spec-root specs
-python3 tools/specplane/cli.py blast <id> --spec-root specs
-python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids component.foo
+specplane init --dest /path/to/product
+specplane validate --spec-root specs
+specplane retrieve <id> --spec-root specs
+specplane blast <id> --spec-root specs
+specplane check_sync --spec-root specs --changed-ids component.foo
+specplane list_gaps --spec-root specs
+python3 tools/specplane/mcp_stdio.py
 ```
+
+`python3 tools/specplane/cli.py …` is the same CLI if you did not `pip install -e .`.
 
 | Command | Job | Exit 1 when |
 |---|---|---|
@@ -31,8 +37,11 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 | `retrieve <id>` | One live slice, `replaced` leftovers, open change folders | Unknown id |
 | `blast <id>` | Affects tree. Component deps recurse. **Foundations are terminal** (listed, not exploded via `used_by`). | Unknown id |
 | `check_sync` | Changed ids vs open change `promise_ids`. Linked empty blast fails. Phase 1 (no join edges) is advisory. Does **not** parse app source. | Uncovered linked id, empty blast on a linked id, or unknown id |
+| `list_gaps` | Kernel-generic queue: Phase 1 thin, open changes, replaced leftovers, missing sensors. Advisory. | Spec root missing |
 
 `check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids.
+
+MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps** — same kernel functions. Validate is CLI-only (shell out).
 
 `python3 tools/specplane/validate.py` still works as the validate-only entry point.
 
@@ -54,6 +63,7 @@ The GitHub Action in this repo runs these commands against fixture trees. That w
 python3 tools/specplane/test_validate.py
 python3 tools/specplane/test_kernel.py
 python3 tools/specplane/test_init.py
+python3 tools/specplane/test_mcp.py
 python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/valid/specs
 python3 tools/specplane/cli.py validate --spec-root tools/specplane/testdata/golden/messy_auth/specs
 ```

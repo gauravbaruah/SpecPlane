@@ -1,16 +1,20 @@
 meta:
   id: "capability.specplane_list_gaps"
-  purpose: "Surface unreconciled hotfixes, contradictions, and missing sensors as a queue"
+  purpose: "Surface a kernel-generic gap queue: thin Phase 1, open changes, replaced leftovers, missing sensors"
   level: "capability"
   owner: "SpecPlane"
-  tags: ["kernel", "mcp", "list_gaps"]
-  last_updated: "2026-09-17"
+  tags: ["kernel", "cli", "mcp", "list_gaps"]
+  last_updated: "2026-09-18"
   status: "planned"
-  version: "1.0.1"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-18"
+    author: "kernel-slice"
+    summary: "L37 — CLI is source of truth; MCP wraps it. Kernel-generic gaps only (Q108); advisory exit 0 (Q109). H02 MCP-only superseded"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "H02 — list_gaps stays MCP-only; no CLI this slice"
@@ -21,15 +25,16 @@ changelog:
     breaking: false
 
 responsibilities:
-  - "List unreconciled hotfixes (kind: fix past expiry / still not promoted)"
-  - "List contradictions flagged, not clobbered"
-  - "List missing success sensors on open evolve/fix changes"
-  - "List orphans: public surface with no live id"
-  - "Not an LLM coverage essay; not a sixth infer tool"
+  - "List live capabilities with no join edges (Phase 1 thin)"
+  - "List open change folders"
+  - "List replaced leftovers"
+  - "List open changes that have no success sensor (must: line)"
+  - "Advisory only — not a fail-closed checker and not an LLM coverage essay"
 
 flows:
-  - "Agent calls list_gaps (MCP) to see the queue"
-  - "Weekly habit: what is still unreconciled"
+  - "specplane list_gaps --spec-root specs"
+  - "Agent calls the same function via MCP list_gaps"
+  - "Weekly habit: what is still thin, open, leftover, or unsensored"
 
 business_value:
   user_outcome: "Drift is a queue, not a lifestyle"
@@ -43,24 +48,28 @@ constraints:
     - "Local spec root and changes/ only"
   ux:
     - "Ids and gap kind; no lecture"
-    - "First slice: MCP tool (H02). No CLI command this slice."
+    - "CLI is source of truth; MCP wraps the same kernel functions"
+    - "Stdout is advisory (Q109). Exit 0 unless the command itself errors"
+    - "No --bar=, no HIPAA, no application-source parse"
   data_classification: "internal"
 
 success_metrics:
   primary: "gap_queue_visible"
   targets:
-    gap_queue_visible: "fixture with unreconciled hotfix appears in list_gaps"
+    gap_queue_visible: "open change missing a sensor appears; Phase 1 thin appears as advisory"
   derived_from: {}
 
 roadmap:
-  phase: "first kernel slice"
+  phase: "slice-1 list_gaps + thin MCP"
   priority: "P0"
   depends_on:
     - "capability.specplane_retrieve"
+    - "capability.specplane_change_folders"
   enables: []
 
 realized_by:
   containers:
     - "container.specplane_tools"
   components:
+    - "component.cli_list_gaps"
     - "component.mcp_stdio"

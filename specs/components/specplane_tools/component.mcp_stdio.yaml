@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "mcp"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.1"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-18"
+    author: "kernel-slice"
+    summary: "Thin stdio MCP wraps kernel retrieve/blast/check_sync/list_gaps; validate remains CLI-only"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "H02 — MCP is four tools; validate is CLI only; agents shell out for validate"
@@ -40,8 +44,7 @@ planning:
       - "Agent calls retrieve / blast / check_sync / list_gaps via MCP instead of reading specs/"
       - "Agent shells out for validate — not an MCP tool"
     success:
-      - "Same answers as the CLI for retrieve, blast, and check_sync"
-      - "list_gaps returns the gap queue"
+      - "Same answers as the CLI for retrieve, blast, check_sync, and list_gaps (one kernel)"
     errors:
       - "Do not add specify/implement tools"
       - "Do not add infer as a sixth tool"
@@ -53,14 +56,16 @@ implementation:
       - "component.cli_retrieve"
       - "component.cli_blast"
       - "component.cli_check_sync"
+      - "component.cli_list_gaps"
     external: []
   depended_on_by:
     components: []
     containers: []
   validation:
     acceptance_criteria:
-      - "Catalog is retrieve, blast, check_sync, list_gaps"
+      - "Catalog is exactly retrieve, blast, check_sync, list_gaps"
+      - "Each tool calls the same kernel function as the CLI"
       - "validate is not in the catalog; agents shell out"
       - "Hosted MCP is out of slice"
     open_questions: []
-    readiness: "unknown"
+    readiness: "in-progress"

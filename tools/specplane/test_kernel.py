@@ -189,5 +189,55 @@ class CliSmoke(unittest.TestCase):
         self.assertIn("result: pass", buf.getvalue())
 
 
+class ListGapsTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.kernel = load_kernel(GOLDEN)
+
+    def test_kernel_generic_queue(self) -> None:
+        from kernel import list_gaps
+
+        payload = list_gaps(self.kernel)
+        self.assertTrue(payload["advisory"])
+        self.assertIn("capability.orphan", payload["phase1_no_join"])
+        self.assertNotIn("capability.authentication", payload["phase1_no_join"])
+        self.assertIn("add_passkeys", payload["open_changes"])
+        self.assertIn("no_sensor", payload["open_changes"])
+        self.assertIn("capability.auth_v1", payload["replaced"])
+        self.assertIn("no_sensor", payload["missing_success_sensor"])
+        self.assertNotIn("add_passkeys", payload["missing_success_sensor"])
+
+    def test_cli_exits_zero(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(["list_gaps", "--spec-root", str(GOLDEN)])
+        self.assertEqual(code, 0)
+        text = buf.getvalue()
+        self.assertIn("phase1_no_join", text)
+        self.assertIn("capability.orphan", text)
+        self.assertIn("no_sensor", text)
+        self.assertIn("advisory: true", text)
+
+    def test_archive_folder_is_not_an_open_change(self) -> None:
+        from kernel import list_gaps
+
+        archive = GOLDEN / "changes" / "_archive" / "old_one"
+        archive.mkdir(parents=True)
+        try:
+            (archive / "proposal.yaml").write_text(
+                "id: old_one\nkind: evolve\nstatus: in-flight\npromise_ids: []\n",
+                encoding="utf-8",
+            )
+            payload = list_gaps(load_kernel(GOLDEN))
+            self.assertNotIn("_archive", payload["open_changes"])
+            self.assertNotIn("old_one", payload["open_changes"])
+        finally:
+            (archive / "proposal.yaml").unlink(missing_ok=True)
+            archive.rmdir()
+            (GOLDEN / "changes" / "_archive").rmdir()
+
+
 if __name__ == "__main__":
     unittest.main()

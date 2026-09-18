@@ -13,4 +13,10 @@ For spec authoring, read `specplane/core_prompt/applicable/README.md` and load o
 
 Specs describe what and how well, not how. Keep bidirectional links in sync. Add a changelog entry when bumping `meta.version` on live 5C files.
 
-Product requests in natural language use the change ritual in `specplane-implement` ([`docs/golden-journey.md`](docs/golden-journey.md)): retrieve → classify trivial/fix/evolve/learn → `specs/changes/` → blast → ask only consequential questions → implement → check_sync → promote. Do not slurp `specs/`. Do not edit live YAML for in-flight work.
+Product requests in natural language use the change ritual in `specplane-implement` ([`docs/golden-journey.md`](docs/golden-journey.md)).
+
+**PRE:** If the request could move a promise, `retrieve` before writing, then change folder + blast; ask and **wait** if a decision is unresolved. Typos/renames: no retrieve. If unsure, retrieve.
+
+**POST:** After non-trivial work, `validate` and `check_sync --changed-ids`. Default check_sync (spec YAML in git only) is not a pass if you touched `tools/specplane/` or app code. The kernel does not watch the chat.
+
+Do not slurp `specs/`. Do not edit live YAML for in-flight work.

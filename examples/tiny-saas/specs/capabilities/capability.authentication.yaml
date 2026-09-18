@@ -1,0 +1,42 @@
+meta:
+  id: capability.authentication
+  purpose: "Prove identity, establish a session, and recover access"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: launched
+  owner: "example"
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Synthetic tiny-saas auth capability"
+    breaking: false
+
+responsibilities:
+  - "Identity verification"
+  - "Session establishment"
+  - "Password reset"
+
+flows:
+  - "Login"
+  - "Password reset"
+
+business_value:
+  user_outcome: "Users can sign in and recover their account"
+  objective: "Enable signed-in product use"
+  revenue_dependency: high
+  strategic_priority: core
+
+constraints:
+  security:
+    - "Password reset links expire in 60 minutes"
+    - "PKCE required for OAuth"
+  data_classification: confidential
+
+realized_by:
+  containers:
+    - container.api
+  components:
+    - component.password_reset

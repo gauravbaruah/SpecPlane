@@ -1,0 +1,28 @@
+meta:
+  id: component.billing_api
+  purpose: "Charge the current plan and record the result"
+  level: component
+  type: service
+  domain: backend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Synthetic billing component"
+    breaking: false
+
+implements:
+  - capability.billing
+
+implementation:
+  dependencies:
+    internal:
+      - component.notifier
+    external: []
+  depended_on_by:
+    components: []
+    containers: []

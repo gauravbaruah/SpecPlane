@@ -1,0 +1,40 @@
+meta:
+  id: capability.billing
+  purpose: "Charge customers for the plan they selected"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: launched
+  owner: "example"
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Synthetic tiny-saas billing capability"
+    breaking: false
+
+responsibilities:
+  - "Collect payment for the current plan"
+  - "Record successful and failed charges"
+
+flows:
+  - "Checkout"
+  - "Renewal charge"
+
+business_value:
+  user_outcome: "Customers stay on a paid plan"
+  objective: "Collect revenue"
+  revenue_dependency: high
+  strategic_priority: core
+
+constraints:
+  legal:
+    - "Do not charge after a customer cancels"
+  data_classification: confidential
+
+realized_by:
+  containers:
+    - container.api
+  components:
+    - component.billing_api

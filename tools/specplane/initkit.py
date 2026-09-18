@@ -13,6 +13,7 @@ CLI_FILES = (
     "validate.py",
     "drift.py",
     "initkit.py",
+    "mcp_stdio.py",
     "README.md",
     "requirements.txt",
     "specplane.config.json.example",
@@ -36,7 +37,7 @@ Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a c
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-implement, specplane-validate.
-3. Product requests in natural language use **specplane-implement** (retrieve → change folder → blast → decide → code → check_sync). Do not slurp `specs/`.
+3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --changed-ids. Typos skip retrieve. Do not slurp `specs/`.
 4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
 Rules:
@@ -44,12 +45,19 @@ Rules:
 - Capability Phase 1 is valid without architecture.
 - Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
 - Changelog on live 5C files when `meta.version` changes. In-flight work lives in `specs/changes/`.
-- Specs before code when behavior, contracts, events, rollout, or security change. Trivial work: say “no spec impact” and skip the change folder.
+- Specs before code when behavior, contracts, events, rollout, security, or how the product is obtained change. Trivial work (typo/4px/rename): no retrieve. If unsure, retrieve.
 """
 
 
 def default_kit_root() -> Path:
-    return Path(__file__).resolve().parent.parent.parent
+    here = Path(__file__).resolve().parent
+    checkout = here.parent.parent
+    if is_kit_root(checkout):
+        return checkout
+    bundled = here / "_specplane_kit"
+    if is_kit_root(bundled):
+        return bundled
+    return checkout
 
 
 def kit_commit(kit_root: Path) -> str:

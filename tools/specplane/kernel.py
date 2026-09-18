@@ -51,6 +51,8 @@ def load_changes(spec_root: Path) -> list[Change]:
         return []
     out: list[Change] = []
     for folder in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
+        if folder.name == "_archive":
+            continue
         proposal = folder / "proposal.yaml"
         data: dict[str, Any] = {}
         if proposal.is_file():
@@ -357,6 +359,55 @@ def check_sync(
         "ok": ok,
         "decision_required": decision,
     }
+
+
+def change_has_success_sensor(change: Change) -> bool:
+    path = change.path / "success.yaml"
+    if not path.is_file():
+        return False
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        return False
+    sensors = loaded.get("sensors") or []
+    if not isinstance(sensors, list):
+        return False
+    return any(isinstance(row, dict) and str(row.get("must") or "").strip() for row in sensors)
+
+
+def list_gaps(kernel: Kernel) -> dict[str, Any]:
+    """Kernel-generic gap queue (Q108). Advisory only (Q109)."""
+    phase1_no_join = sorted(
+        doc.spec_id
+        for doc in kernel.docs
+        if doc.level == "capability" and bit_of(doc) == "live" and is_phase1_shaped(doc)
+    )
+    open_changes = sorted(change.change_id for change in kernel.changes if change.open)
+    replaced = sorted(doc.spec_id for doc in kernel.docs if bit_of(doc) == "replaced")
+    missing_success_sensor = sorted(
+        change.change_id
+        for change in kernel.changes
+        if change.open and not change_has_success_sensor(change)
+    )
+    return {
+        "phase1_no_join": phase1_no_join,
+        "open_changes": open_changes,
+        "replaced": replaced,
+        "missing_success_sensor": missing_success_sensor,
+        "advisory": True,
+    }
+
+
+def format_list_gaps(payload: dict[str, Any]) -> str:
+    lines = ["list_gaps"]
+    for key in ("phase1_no_join", "open_changes", "replaced", "missing_success_sensor"):
+        lines.append(f"{key}:")
+        values = payload.get(key) or []
+        if not values:
+            lines.append("  (none)")
+        for item in values:
+            lines.append(f"  - {item}")
+    lines.append("advisory: true")
+    return "\n".join(lines) + "\n"
 
 
 def format_retrieve(payload: dict[str, Any]) -> str:
