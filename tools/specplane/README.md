@@ -2,16 +2,17 @@
 
 Optional local commands for v9.1.0 specs. Copy `tools/specplane/` into a product repo alongside `specplane/` and `specs/` if you want the agent (or you) to run checks in a session.
 
-`init` copies the kit into a **product** repo. It does not write Git hooks or CI/CD.
-
-**Works with your coding agent.** Skills call this kernel today. Local MCP stdio exposes the same `retrieve`, `blast`, `check_sync`, and `list_gaps` functions when you want tool-native calls. Humans should not have to type those commands. Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md). Five-minute try: [`docs/try.md`](../../docs/try.md).
-
-Requires Python 3.10+ and PyYAML. From a SpecPlane checkout:
+Requires Python 3.10+ and PyYAML.
 
 ```bash
-pip install -e .
-# or: pip install -r tools/specplane/requirements.txt
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@kernel-first-slice specplane init --dest /path/to/product
+# or from a checkout: pip install -e .   then specplane …
+# or: python3 tools/specplane/cli.py …
 ```
+
+Five-minute try: [`docs/try.md`](../../docs/try.md) (`examples/tiny-saas`). Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md).
+
+**Works with your coding agent.** Skills call this kernel today. Local MCP is available for retrieve, blast, check_sync, and list_gaps. Humans should not have to type those commands.
 
 ## Kernel CLI
 

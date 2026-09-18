@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-18"
   status: "draft"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-18"
+    author: "kernel-slice"
+    summary: "Kit root is the SpecPlane checkout if present, else bundled _specplane_kit in the wheel"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Planning + implements for cli.py init; no how beyond copy rules"
@@ -27,7 +31,7 @@ uses:
 planning:
   user_flows:
     actions:
-      - "Point init at a destination repo, with kit root defaulting to the SpecPlane clone"
+      - "Point init at a destination repo; kit root is the SpecPlane checkout, or the bundled kit in a wheel install"
     success:
       - "Kit, skills, rules, optional CLI, specplane.config.json, AGENTS.md, empty specs/ dirs"
       - "Kernel specs/ from the clone are absent in dest"

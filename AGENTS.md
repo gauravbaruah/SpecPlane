@@ -42,6 +42,7 @@ Ships the **kit** and, on `kernel-first-slice` and later, the **kernel product s
 specplane/                 # kit: language
 specs/                     # kernel product: overlay of what we are building
 tools/specplane/           # kernel realization (CLI)
+examples/tiny-saas/        # synthetic try-path (not kernel specs, not a private product)
 .agents/skills/specplane-*
 .cursor/skills/specplane-* # keep identical to .agents
 .cursor/rules/

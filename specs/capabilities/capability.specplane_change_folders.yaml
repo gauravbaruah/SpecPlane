@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "changes", "in-flight"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-18"
   status: "planned"
-  version: "1.0.1"
+  version: "1.0.2"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-18"
+    author: "kernel-slice"
+    summary: "retrieve and list_gaps skip specs/changes/_archive/"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "H02 — write path is specs/changes/; pointer field name waits for schema unfreeze"

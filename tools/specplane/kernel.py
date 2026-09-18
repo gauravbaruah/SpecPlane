@@ -51,6 +51,8 @@ def load_changes(spec_root: Path) -> list[Change]:
         return []
     out: list[Change] = []
     for folder in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
+        if folder.name == "_archive":
+            continue
         proposal = folder / "proposal.yaml"
         data: dict[str, Any] = {}
         if proposal.is_file():

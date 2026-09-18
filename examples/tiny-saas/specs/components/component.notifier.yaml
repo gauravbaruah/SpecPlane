@@ -1,0 +1,29 @@
+meta:
+  id: component.notifier
+  purpose: "Send transactional email"
+  level: component
+  type: service
+  domain: backend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Synthetic notifier component"
+    breaking: false
+
+implements:
+  - capability.notifications
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components:
+      - component.password_reset
+      - component.billing_api
+    containers: []

@@ -1,0 +1,38 @@
+meta:
+  id: capability.notifications
+  purpose: "Deliver product messages to the user"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: launched
+  owner: "example"
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Synthetic tiny-saas notifications capability"
+    breaking: false
+
+responsibilities:
+  - "Send email for account and billing events"
+
+flows:
+  - "Transactional email"
+
+business_value:
+  user_outcome: "Users see reset links and payment notices"
+  objective: "Close the loop on auth and billing events"
+  revenue_dependency: medium
+  strategic_priority: core
+
+constraints:
+  ux:
+    - "Transactional mail is not marketing"
+  data_classification: confidential
+
+realized_by:
+  containers:
+    - container.api
+  components:
+    - component.notifier

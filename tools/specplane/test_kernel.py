@@ -220,6 +220,24 @@ class ListGapsTests(unittest.TestCase):
         self.assertIn("no_sensor", text)
         self.assertIn("advisory: true", text)
 
+    def test_archive_folder_is_not_an_open_change(self) -> None:
+        from kernel import list_gaps
+
+        archive = GOLDEN / "changes" / "_archive" / "old_one"
+        archive.mkdir(parents=True)
+        try:
+            (archive / "proposal.yaml").write_text(
+                "id: old_one\nkind: evolve\nstatus: in-flight\npromise_ids: []\n",
+                encoding="utf-8",
+            )
+            payload = list_gaps(load_kernel(GOLDEN))
+            self.assertNotIn("_archive", payload["open_changes"])
+            self.assertNotIn("old_one", payload["open_changes"])
+        finally:
+            (archive / "proposal.yaml").unlink(missing_ok=True)
+            archive.rmdir()
+            (GOLDEN / "changes" / "_archive").rmdir()
+
 
 if __name__ == "__main__":
     unittest.main()

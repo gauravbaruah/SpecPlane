@@ -1,0 +1,15 @@
+id: "uvx_init"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-18"
+promise_ids:
+  - "capability.specplane_init"
+  - "component.cli_init"
+  - "capability.specplane_change_folders"
+why: "Init may run from a git+uvx wheel because the kit is bundled. README may lead with that command. Archived change folders must not look open."
+non_goals:
+  - "PyPI or npx package"
+  - "interactive agent-picker radios"
+  - "schema unfreeze"
+  - "new MCP verbs"
+  - "copying kernel specs/ into dest"

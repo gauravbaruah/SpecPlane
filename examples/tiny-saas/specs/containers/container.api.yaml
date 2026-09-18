@@ -1,0 +1,30 @@
+meta:
+  id: container.api
+  purpose: "HTTP API for auth, billing, and notifications"
+  level: container
+  type: container
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Synthetic example container"
+    breaking: false
+
+implements:
+  - capability.authentication
+  - capability.billing
+  - capability.notifications
+
+uses:
+  - foundation.security_baseline
+
+relationships:
+  contains:
+    - component.password_reset
+    - component.billing_api
+    - component.notifier
+  depends_on: []

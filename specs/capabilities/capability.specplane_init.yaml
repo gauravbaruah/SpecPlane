@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-18"
   status: "planned"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-18"
+    author: "kernel-slice"
+    summary: "Init may run from uvx --from git+ this repo; the wheel bundles the kit. PyPI/npx still unpublished."
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Phase 1 — v0 init is a copier plus empty specs/ dirs, not npx or CI"
@@ -24,7 +28,8 @@ responsibilities:
   - "Refuse dest equal to the kit root; do not write GitHub Actions or hooks"
 
 flows:
-  - "From a SpecPlane clone, in a product repo: python3 .../cli.py init"
+  - "From a product repo: uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@<branch> specplane init"
+  - "From a SpecPlane clone: python3 tools/specplane/cli.py init, or pip install -e . then specplane init"
   - "Re-run without --force when specplane/ already exists → fail"
   - "Ask the agent for a Phase 1 capability after folders exist"
 
@@ -42,7 +47,9 @@ constraints:
     - "Does not copy kernel specs/ into the dest"
     - "Does not write .github/workflows or git hooks"
     - "Does not invent an example capability (bootstrap does that)"
-    - "npx / uvx / marketplace are not this command"
+    - "Published PyPI / npx package is not this command"
+    - "uvx --from git+ this repo may run init because the installed wheel bundles the kit"
+    - "No interactive agent-picker"
   data_classification: "internal"
 
 success_metrics:

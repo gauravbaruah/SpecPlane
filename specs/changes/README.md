@@ -1,5 +1,6 @@
 # Change folders
 
-In-flight write path for the kernel (`kind: learn | fix | evolve`). Not 5C specs. `honest_kernel/` is this slice.
+In-flight write path for the kernel (`kind: learn | fix | evolve`). Not 5C specs.
 
-v9.1.0 `validate.py` loads every `*.yaml` under `specs/` and will flag these files (no `meta.id`). That is expected until schema unfreeze teaches the toolkit to skip or understand this folder. Do not invent a 5C type for them.
+Promote after accept: apply the delta to live YAML, then move the folder to `specs/changes/_archive/<id>/`. `retrieve` / `list_gaps` skip `_archive`.
+

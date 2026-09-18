@@ -201,14 +201,10 @@ python3 tools/specplane/cli.py check_sync --spec-root specs \
 - You becoming a YAML clerk
 - A new 5C type or kernel command
 
-Kernel goldens (`tools/specplane/testdata/golden/messy_auth/`) still prove CLI stdout. **This** file is the human+agent loop.
+## Try it on tiny-saas
 
-Local MCP (`retrieve`, `blast`, `check_sync`, `list_gaps`) is optional plumbing for tool-native agents. It is not a hosted SpecPlane agent, and it is not the chat shape: you still talk product language.
+Five-minute path: [`try.md`](./try.md) and [`examples/tiny-saas`](../examples/tiny-saas/). Sentence that matches the live fixture:
 
-## Try it on the golden tree
+> Reset links should expire in 15 minutes instead of 60.
 
-Five-minute commands: [`try.md`](./try.md). Same twelve beats. Sentence that matches the live fixture (run it in a throwaway overlay, not this repo’s kernel `specs/`):
-
-> Sessions should expire in 15 minutes instead of 30.
-
-(`capability.authentication` currently promises 30 minutes.) Point `retrieve` at a live id you actually have in any other repo. The chat shape must still match: projection, proposed kind, change folder, blast, at most one decision, implement, `check_sync`, promote.
+Open `examples/tiny-saas` as the workspace (not this repo’s kernel `specs/`). Kernel goldens (`tools/specplane/testdata/golden/messy_auth/`) still prove CLI stdout. **This** file is the human+agent loop.

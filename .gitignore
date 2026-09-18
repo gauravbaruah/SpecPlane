@@ -17,3 +17,6 @@ design-docs/
 **/__pycache__/
 node_modules
 *.log
+*.egg-info/
+tools/specplane/_specplane_kit/
+build/

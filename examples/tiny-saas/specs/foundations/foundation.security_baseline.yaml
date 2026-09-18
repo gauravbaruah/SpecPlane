@@ -1,0 +1,23 @@
+meta:
+  id: foundation.security_baseline
+  purpose: "Shared authentication and data-protection rules"
+  level: foundation
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: approved
+  status: active
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Synthetic shared foundation (blast must not explode)"
+    breaking: false
+
+provides:
+  - "Reset-link expiry and PKCE rules"
+
+used_by:
+  containers:
+    - container.api
+  components:
+    - component.password_reset

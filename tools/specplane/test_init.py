@@ -14,7 +14,7 @@ KIT = ROOT.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from cli import main as cli_main  # noqa: E402
-from initkit import init_kit  # noqa: E402
+from initkit import default_kit_root, init_kit  # noqa: E402
 
 
 class InitKitTests(unittest.TestCase):
@@ -82,6 +82,25 @@ class InitKitTests(unittest.TestCase):
         code = cli_main(["init", "--dest", str(self.dest), "--kit-root", str(KIT)])
         self.assertEqual(code, 0)
         self.assertTrue((self.dest / "specplane").is_dir())
+
+    def test_init_from_bundled_layout(self) -> None:
+        sys.path.insert(0, str(KIT / "packaging"))
+        from bundle_kit import populate_bundle
+
+        bundle = Path(self.tmp.name) / "wheel_kit"
+        populate_bundle(dest=bundle)
+        dest = Path(self.tmp.name) / "from_bundle"
+        dest.mkdir()
+        code, notes = init_kit(dest, bundle)
+        self.assertEqual(code, 0, notes)
+        self.assertTrue((dest / "specplane" / "core_prompt").is_dir())
+        self.assertTrue((dest / ".agents" / "skills" / "specplane-implement").is_dir())
+        self.assertFalse(
+            (dest / "specs" / "capabilities" / "capability.specplane_retrieve.yaml").exists()
+        )
+
+    def test_default_kit_root_prefers_checkout(self) -> None:
+        self.assertEqual(default_kit_root().resolve(), KIT.resolve())
 
 
 if __name__ == "__main__":

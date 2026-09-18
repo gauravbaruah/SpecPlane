@@ -50,7 +50,14 @@ Rules:
 
 
 def default_kit_root() -> Path:
-    return Path(__file__).resolve().parent.parent.parent
+    here = Path(__file__).resolve().parent
+    checkout = here.parent.parent
+    if is_kit_root(checkout):
+        return checkout
+    bundled = here / "_specplane_kit"
+    if is_kit_root(bundled):
+        return bundled
+    return checkout
 
 
 def kit_commit(kit_root: Path) -> str:
