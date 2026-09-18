@@ -1,0 +1,18 @@
+meta:
+  id: capability.thin
+  purpose: "Phase 1 advisory fixture"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+  owner: "example"
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Phase 1 thin capability"
+    breaking: false
+
+responsibilities:
+  - "No architecture yet"

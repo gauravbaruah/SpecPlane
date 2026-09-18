@@ -24,7 +24,7 @@ The transcript below is a **scripted example** (a reminders capability). Kernel 
 6. Call `blast`. Translate to “likely affected.”
 7. Ask **only** unresolved consequential questions (prefer one). Record the answer in `decision.md`. Wait.
 8. Give the coding agent a **minimal projection** (live promise + delta + blast + decision). Implement. Add tests that match `success.yaml`.
-9. **POST:** `validate` + `check_sync --changed-ids` on the ids you touched (and whose realization files you edited). The default changed-set is spec YAML only — do not treat an empty default as a pass. Do not silently pick spec vs code.
+9. **POST:** `validate` + `check_sync --change <slug> --changed-ids` on the ids you touched (and whose realization files you edited). The default changed-set is spec YAML only — do not treat an empty default as a pass. Coverage pass is declared coverage, not behavioral agreement. Do not silently pick spec vs code.
 10. **Promote** into live YAML only after the human accepts. Archive the change folder.
 
 You never need a SpecPlane API key. The coding agent already in the editor is the intelligence. The kernel is deterministic.
@@ -166,12 +166,13 @@ Tests (or the sensors in `success.yaml`) cover:
 ```bash
 python3 tools/specplane/cli.py validate --spec-root specs
 python3 tools/specplane/cli.py check_sync --spec-root specs \
+  --change observation_triggered_reminders \
   --changed-ids capability.adaptive_reminders,component.reminder_scheduler,component.observation_pipeline
 ```
 
 </aside>
 
-**Agent:** `check_sync` is clean — the ids we touched are on the open change. Structural validate passed. Ready to promote when you say this is the new live promise.
+**Agent:** Coverage is declared on this change — SpecPlane did not verify behavior. Structural validate passed. Ready to promote when you say this is the new live promise.
 
 ### 12. Promote
 

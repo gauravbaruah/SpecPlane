@@ -1,0 +1,7 @@
+change_id: select_output_folder
+kind: evolve
+sensors:
+  - id: beta_only
+    promise: capability.beta
+    must: "This change only promises beta"
+looks_fine_is_not_a_sensor: true

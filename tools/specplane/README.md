@@ -24,6 +24,7 @@ specplane validate --spec-root specs
 specplane retrieve <id> --spec-root specs
 specplane blast <id> --spec-root specs
 specplane check_sync --spec-root specs --changed-ids component.foo
+specplane check_sync --spec-root specs --change <slug> --changed-ids component.foo
 specplane list_gaps --spec-root specs
 python3 tools/specplane/mcp_stdio.py
 ```
@@ -36,10 +37,10 @@ python3 tools/specplane/mcp_stdio.py
 | `validate` | Structural YAML, names, bidirectional links. Skips `specs/changes/`. | Errors |
 | `retrieve <id>` | One live slice, `replaced` leftovers, open change folders | Unknown id |
 | `blast <id>` | Affects tree. Component deps recurse. **Foundations are terminal** (listed, not exploded via `used_by`). | Unknown id |
-| `check_sync` | Changed ids vs open change `promise_ids`. Linked empty blast fails. Phase 1 (no join edges) is advisory. Does **not** parse app source. | Uncovered linked id, empty blast on a linked id, or unknown id |
+| `check_sync` | Declared coverage vs open change `promise_ids` (pass `--change` after implement). Linked empty blast fails. Phase 1 (no join edges) is advisory. Does **not** parse app source or verify behavior. | Uncovered linked id, empty blast on a linked id, unknown id, or unknown `--change` |
 | `list_gaps` | Kernel-generic queue: Phase 1 thin, open changes, replaced leftovers, missing sensors. Advisory. | Spec root missing |
 
-`check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids.
+`check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids. After implement, pass `--change <slug>` so a broad open change cannot satisfy coverage. A coverage pass is declared coverage, not behavioral agreement.
 
 MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps** — same kernel functions. Validate is CLI-only (shell out).
 

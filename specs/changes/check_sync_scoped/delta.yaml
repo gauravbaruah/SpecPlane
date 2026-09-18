@@ -1,0 +1,18 @@
+change_id: "check_sync_scoped"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_check_sync"
+    summary: "Optional --change scopes coverage to one folder; stdout is coverage/sensors/behavior; a pass is declared coverage, not behavioral agreement"
+  - id: "component.cli_check_sync"
+    summary: "CLI --change <slug>; unknown slug exits non-zero; default remains any-open-change covers"
+  - id: "capability.specplane_retrieve"
+    summary: "bit live is graph membership; stdout prints meta.review_state and meta.status next to bit"
+  - id: "component.cli_retrieve"
+    summary: "format_retrieve prints review_state and status; does not rename live"
+
+REMOVED: []
+
+RENAMED: []

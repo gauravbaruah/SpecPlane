@@ -1,0 +1,22 @@
+meta:
+  id: capability.beta
+  purpose: "Unrelated sibling promise"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+  owner: "example"
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Scoped coverage fixture B"
+    breaking: false
+
+responsibilities:
+  - "Something else"
+
+realized_by:
+  components:
+    - component.other
