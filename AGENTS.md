@@ -36,7 +36,7 @@ Intended chat shape (human never types `retrieve`): [`docs/golden-journey.md`](d
 
 ## This repository
 
-Ships the **kit** and, on `kernel-first-slice` and later, the **kernel product specs**. Other products still copy the kit: [docs/use-in-your-project.md](docs/use-in-your-project.md).
+Ships the **kit** and the **kernel product specs**. Other products still copy the kit: [docs/use-in-your-project.md](docs/use-in-your-project.md).
 
 ```
 specplane/                 # kit: language

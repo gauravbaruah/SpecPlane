@@ -7,7 +7,7 @@ sensors:
     must: "uvx --from a SpecPlane checkout/wheel runs init and dest gets specplane/ and skills, not kernel specs/"
   - id: "no_fake_npx"
     promise: "capability.specplane_init"
-    must: "Docs do not print a PyPI or npx command that 404s"
+    must: "Docs pin uvx --from git+…@main (or a SHA); they do not print a PyPI or npx command that 404s"
   - id: "archive_not_open"
     promise: "capability.specplane_change_folders"
     must: "list_gaps does not list _archive or promoted slugs as open changes"

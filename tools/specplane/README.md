@@ -5,7 +5,7 @@ Optional local commands for v9.1.0 specs. Copy `tools/specplane/` into a product
 Requires Python 3.10+ and PyYAML.
 
 ```bash
-uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@kernel-first-slice specplane init --dest /path/to/product
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init --dest /path/to/product
 # or from a checkout: pip install -e .   then specplane …
 # or: python3 tools/specplane/cli.py …
 ```

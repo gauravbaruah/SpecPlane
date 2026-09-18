@@ -5,7 +5,7 @@ ADDED: []
 
 MODIFIED:
   - id: "capability.specplane_init"
-    summary: "uvx --from git+ this repo may run init; wheel bundles the kit; PyPI/npx still not published"
+    summary: "uvx --from git+ this repo @main may run init; wheel bundles the kit; PyPI/npx still not published"
   - id: "component.cli_init"
     summary: "default kit root is the checkout, else the bundled _specplane_kit in the installed package"
   - id: "capability.specplane_change_folders"

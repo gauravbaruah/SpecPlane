@@ -66,10 +66,10 @@ Auth, billing, notifications, one open billing change, and `src/auth.py` with a 
 From **your** app repo (not onto SpecPlane itself):
 
 ```bash
-uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@kernel-first-slice specplane init
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 ```
 
-That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. Pin `@kernel-first-slice` until this lands on `main`.
+That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package.
 
 If `uvx` is not installed: `python3 /path/to/SpecPlane/tools/specplane/cli.py init` from a checkout.
 

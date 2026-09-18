@@ -39,7 +39,7 @@ specplane check_sync --changed-ids capability.billing
 
 ```bash
 cd /path/to/your-app
-uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@kernel-first-slice specplane init
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 ```
 
 Details: [`use-in-your-project.md`](./use-in-your-project.md). Do not copy this repo’s `specs/` (those YAML files specify SpecPlane’s own CLI).

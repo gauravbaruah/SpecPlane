@@ -9,13 +9,13 @@ This page puts the **kit** into *your* product repo. Your `specs/` is your overl
 In the **product** repo (must not be the SpecPlane kit root):
 
 ```bash
-uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@kernel-first-slice specplane init
+uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 # optional: --kit-only   skip tools/specplane
 #           --force      replace dest/specplane
 #           --dest PATH  if you are not already in the product repo
 ```
 
-Pin `@kernel-first-slice` until this lands on `main`. There is no PyPI / `npx specplane` package; that unpinned command would fail.
+Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package; `uvx specplane` would fail.
 
 Fallback from a checkout: `python3 /path/to/SpecPlane/tools/specplane/cli.py init`.
 
@@ -33,7 +33,7 @@ That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.
 | `tools/specplane/` | `tools/specplane/` | Optional: kernel CLI (`cli.py`, `kernel.py`, `validate.py`, `drift.py`) for the agent to run locally |
 | `tools/specplane/specplane.config.json.example` | `specplane.config.json` | Spec root and schema version |
 
-Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPlane git repo, and **not** this repo’s `specs/` folder. Pin the SpecPlane commit you copied from (schema **v9.1.0**; until merge, branch `kernel-first-slice`).
+Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPlane git repo, and **not** this repo’s `specs/` folder. Pin the SpecPlane commit you copied from (schema **v9.1.0**; default branch `main`).
 
 Manual rsync (fallback):
 
@@ -138,7 +138,7 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 
 ## Not included yet
 
-- A PyPI / `npx specplane` package (`uvx --from git+…@kernel-first-slice` is the install that works today)
+- A PyPI / `npx specplane` package (`uvx --from git+…@main` is the install that works today)
 - An init wizard that picks Cursor vs Claude vs Codex (all three get the same skills)
 - Git hooks or CI/CD wiring for validate/drift in product repos
 - A supported spec viewer (the Docusaurus tool under `legacy/` is archived)
