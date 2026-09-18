@@ -1,0 +1,16 @@
+change_id: "agent_pre_post"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_change_folders"
+    summary: "When a promise might move, agent retrieves before write, asks, and waits; typos skip retrieve; if unsure, retrieve"
+  - id: "capability.specplane_check_sync"
+    summary: "After implement, agent must check_sync with named ids; default git spec-YAML set is not enough when realization files moved"
+  - id: "component.cli_init"
+    summary: "Consuming AGENTS.md template states the pre/post gates"
+
+REMOVED: []
+
+RENAMED: []

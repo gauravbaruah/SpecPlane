@@ -59,15 +59,15 @@ Private and gitignored (do not commit, do not publish): `trial-implementations/`
 - Changelog entry whenever `meta.version` changes **on live 5C files**.
 - In-flight writes go in `specs/changes/<id>/`. Do not turn live YAML into diaries.
 - Call `tools/specplane/cli.py retrieve|blast|check_sync`; do not slurp `specs/`.
-- Ceremony scales with semantic consequence, not diff size. Trivial work: no change folder, say “no spec impact.”
-- Specs before code when behavior, contracts, events, rollout, or security change.
+- **PRE / POST:** retrieve when a promise might move (if unsure, retrieve); `check_sync --changed-ids` after those changes. Typos/renames skip retrieve. Ceremony scales with semantic consequence, not diff size.
+- Specs before code when behavior, contracts, events, rollout, security, **or how the product is obtained** (init/install/README CLI claims) change.
 
 ## Working on SpecPlane itself
 
 Two different jobs — pick one per session:
 
 1. **Kit / schema** — field changes go in the v9.1.0 **reference** first, then the matching applicable section. Do not put schema prose into `specs/`.
-2. **Kernel product** — open a change folder, then implement in `tools/specplane/`. Do not invent CLI behavior that is not in `specs/`.
+2. **Kernel product** — if it could move a kernel promise, PRE retrieve, open a change folder, **wait** on consequential questions, then implement in `tools/specplane/`. That tree is the app: POST must `check_sync --changed-ids` for the matching `component.cli_*`. Do not invent CLI behavior that is not in `specs/`.
 
 Do not resurrect the Docusaurus viewer. Do not copy private consumer toolkits (Bhajami, Progress Flow) into this repo. Do not treat `specplane/foundations/` boilerplates as the kernel product tree.
 

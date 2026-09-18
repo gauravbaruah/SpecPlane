@@ -10,19 +10,21 @@ The transcript below is a **scripted example** (a reminders capability). Kernel 
 
 ## Protocol (what the skill must do)
 
+**PRE** when a promise might move. **POST** before you say you are done. The human pasted a prompt; you still run SpecPlane. The kernel does not watch the chat — Codex/Cursor must call it.
+
 1. Hear a natural-language request. Do **not** ask the human which CLI command to run.
-2. Find the live capability (or say none exists). Call `retrieve`. Paraphrase as a **human projection**, not a YAML dump.
+2. If this could move a promise: find the live capability (or say none exists). Call `retrieve` **before** code or docs that state that promise. Typos/renames skip retrieve. If unsure, retrieve.
 3. Propose a class. Do not make the human memorize these words:
-   - **trivial** — no product promise moved (typo, 4px, rename helper, behavior-free refactor). Just do it. Say “no spec impact.”
+   - **trivial** — cannot reasonably move a promise (typo, 4px, rename helper, behavior-free refactor). Just do it. Say “no spec impact.”
    - **fix** — live spec already promises this; it is broken or incomplete.
-   - **evolve** — the promise itself changes.
+   - **evolve** — the promise itself changes (including install / init / what the README says the CLI does).
    - **learn** — experiment; we do not know yet whether this becomes law.
 4. Ceremony scales with **semantic consequence**, not diff size. A one-line token change can be evolve. A 2,000-line refactor can be trivial.
 5. If not trivial: open `specs/changes/<id>/` (`proposal.yaml`, `delta.yaml`, `success.yaml`; `decision.md` only if a human must choose). Do **not** turn the live capability into a changelog novel.
 6. Call `blast`. Translate to “likely affected.”
 7. Ask **only** unresolved consequential questions (prefer one). Record the answer in `decision.md`. Wait.
 8. Give the coding agent a **minimal projection** (live promise + delta + blast + decision). Implement. Add tests that match `success.yaml`.
-9. `validate` + `check_sync` on the ids you touched. Do not silently pick spec vs code.
+9. **POST:** `validate` + `check_sync --changed-ids` on the ids you touched (and whose realization files you edited). The default changed-set is spec YAML only — do not treat an empty default as a pass. Do not silently pick spec vs code.
 10. **Promote** into live YAML only after the human accepts. Archive the change folder.
 
 You never need a SpecPlane API key. The coding agent already in the editor is the intelligence. The kernel is deterministic.
@@ -186,7 +188,7 @@ python3 tools/specplane/cli.py check_sync --spec-root specs \
 | Move that button 4px down | Just do it. No change folder. “No spec impact.” |
 | Fix this typo | Just do it. |
 | Rename this internal helper | Just do it. |
-| Refactor this class; same behavior | Just do it. If unsure, say so and still skip SpecPlane ceremony. |
+| Refactor this class; same behavior | Just do it. If unsure whether behavior moved, retrieve — do not guess trivial. |
 | Password reset is broken | **fix** — live spec already promises reset. Thin change folder if the path is non-trivial; then implement. No new promise. |
 | Reset links expire in 15 minutes, not 60 | **evolve** — same shape as the journey above. |
 | Try an AI-generated recovery flow and see if completion rises | **learn** — hypothesis + success sensor; may not promote to live. |
@@ -197,6 +199,7 @@ python3 tools/specplane/cli.py check_sync --spec-root specs \
 ## What this journey is not
 
 - A SpecPlane-hosted agent or API key
+- SpecPlane watching the chat or tapping Codex — leftover/uncovered ids surface only if the agent calls retrieve / blast / list_gaps / check_sync. Clarifying questions are the agent following the skill
 - A GitHub App, viewer, or a separate coach product
 - You becoming a YAML clerk
 - A new 5C type or kernel command

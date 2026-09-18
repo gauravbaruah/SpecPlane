@@ -85,7 +85,7 @@ Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a c
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-implement, specplane-validate.
-3. Product requests in natural language use **specplane-implement** (retrieve → change folder → blast → decide → code → check_sync). Do not slurp `specs/`.
+3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --changed-ids. Typos skip retrieve. Do not slurp `specs/`.
 4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
 Rules:
@@ -93,7 +93,7 @@ Rules:
 - Capability Phase 1 is valid without architecture.
 - Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
 - Changelog on live 5C files when `meta.version` changes. In-flight work lives in `specs/changes/`.
-- Specs before code when behavior, contracts, events, rollout, or security change. Trivial work: say “no spec impact” and skip the change folder.
+- Specs before code when behavior, contracts, events, rollout, security, or how the product is obtained change. Trivial work (typo/4px/rename): no retrieve. If unsure, retrieve.
 ```
 
 ## First session
@@ -124,8 +124,8 @@ You speak product language. The agent should run the ritual in [`golden-journey.
 
 | You say | Agent should |
 |---|---|
-| “Reminders should trigger from observations” (or any feature/bug/experiment) | `specplane-implement` → retrieve, propose trivial/fix/evolve/learn, open `specs/changes/` if consequential, blast, ask only consequential questions, implement, `check_sync` |
-| Move that button 4px / typo / rename helper | Just do it. “No spec impact.” No change folder. |
+| “Reminders should trigger from observations” (or any feature/bug/experiment) | PRE retrieve → classify → change folder if not trivial → blast → implement → POST `check_sync --changed-ids` |
+| Move that button 4px / typo / rename helper | No retrieve. Just do it. “No spec impact.” |
 | Add a capability / foundation / component (explicit spec work) | `specplane-author` → applicable sections 03 + 04–07. If the thing already exists and behavior is changing, switch to implement. |
 | Review / validate specs | `specplane-validate` → `cli.py validate` / `check_sync`, then sections 08 and 11 |
 | “Ship it” / accept the change | Promote delta into live YAML, archive the change folder |
