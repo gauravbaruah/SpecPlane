@@ -1,8 +1,10 @@
 # Use SpecPlane in your project
 
-This repo is the schema **kit** plus (in this GitHub tree) SpecPlane’s own **kernel product** specs. Your product repo is where *your* `specs/` lives. Do **not** copy SpecPlane’s `specs/` into your app — that tree is SpecPlane specifying its CLI, not a template product.
+If you have not tried the kernel yet, start with [`try.md`](./try.md) (five minutes, this repo, no second clone).
 
-There is no npm package or marketplace plugin yet. From a SpecPlane clone, run `init` in your product repo (rsync below is the fallback).
+This page is the next step: put the **kit** into *your* product repo. Your `specs/` is your overlay. Do **not** copy SpecPlane’s `specs/` into your app — that tree is SpecPlane specifying its CLI, not a template product.
+
+There is no npm / PyPI / marketplace plugin yet. `init` copies kit files from a SpecPlane checkout (rsync below is the fallback). We will not advertise `npx specplane init` or `uvx specplane init` until that command can actually copy `specplane/` and skills.
 
 ## What you are installing
 
@@ -23,15 +25,18 @@ Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPla
 From a clone of [SpecPlane](https://github.com/gauravbaruah/SpecPlane), in your **product** repo:
 
 ```bash
-python3 /path/to/SpecPlane/tools/specplane/cli.py init
+pip install -e /path/to/SpecPlane   # gives the `specplane` command
+specplane init
 # optional: --kit-only   skip tools/specplane
 #           --force      replace dest/specplane
 #           --dest PATH  if you are not already in the product repo
 ```
 
-That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions.
+Or without an editable install: `python3 /path/to/SpecPlane/tools/specplane/cli.py init`.
 
-Then: `pip install -r tools/specplane/requirements.txt` if you want `retrieve` / `blast` / `check_sync` locally.
+That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions. It does not ask which coding agent you use — skills for Cursor, Claude Code, and Codex are copied together.
+
+Then: `pip install -r tools/specplane/requirements.txt` in the product repo if you skipped `pip install -e` and still want `retrieve` / `blast` / `check_sync` locally.
 
 Manual rsync (fallback):
 
@@ -51,6 +56,8 @@ rsync -a /path/to/SpecPlane/tools/specplane/cli.py \
           /path/to/SpecPlane/tools/specplane/kernel.py \
           /path/to/SpecPlane/tools/specplane/validate.py \
           /path/to/SpecPlane/tools/specplane/drift.py \
+          /path/to/SpecPlane/tools/specplane/initkit.py \
+          /path/to/SpecPlane/tools/specplane/mcp_stdio.py \
           /path/to/SpecPlane/tools/specplane/README.md \
           /path/to/SpecPlane/tools/specplane/requirements.txt \
           tools/specplane/
@@ -134,7 +141,9 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 
 ## Not included yet
 
-- `npx` / `uvx` / marketplace plugin (Cursor / Claude Code / Codex)
+- A published `npx` / `uvx` package that can `init` without a SpecPlane checkout
+- An init wizard that picks Cursor vs Claude vs Codex (all three get the same skills)
 - Git hooks or CI/CD wiring for validate/drift in product repos
 - A supported spec viewer (the Docusaurus tool under `legacy/` is archived)
+- A fake `examples/tiny-saas` app — the sandbox is `messy_auth` ([`try.md`](./try.md))
 - Copying this kit into an important product until a real session matches [`golden-journey.md`](./golden-journey.md)

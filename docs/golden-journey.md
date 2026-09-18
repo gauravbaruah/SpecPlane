@@ -197,12 +197,18 @@ python3 tools/specplane/cli.py check_sync --spec-root specs \
 ## What this journey is not
 
 - A SpecPlane-hosted agent or API key
-- MCP, GitHub App, installer, viewer, or a separate coach product
+- A GitHub App, viewer, or a separate coach product
 - You becoming a YAML clerk
 - A new 5C type or kernel command
 
 Kernel goldens (`tools/specplane/testdata/golden/messy_auth/`) still prove CLI stdout. **This** file is the human+agent loop.
 
-## Try it on a real tree
+Local MCP (`retrieve`, `blast`, `check_sync`, `list_gaps`) is optional plumbing for tool-native agents. It is not a hosted SpecPlane agent, and it is not the chat shape: you still talk product language.
 
-The same twelve beats apply to any repo that already has a `specs/` tree. Point `retrieve` at a live capability id you actually have. The chat shape must still match: projection, proposed kind, change folder, blast, at most one decision, implement, `check_sync`, promote.
+## Try it on the golden tree
+
+Five-minute commands: [`try.md`](./try.md). Same twelve beats. Sentence that matches the live fixture (run it in a throwaway overlay, not this repo’s kernel `specs/`):
+
+> Sessions should expire in 15 minutes instead of 30.
+
+(`capability.authentication` currently promises 30 minutes.) Point `retrieve` at a live id you actually have in any other repo. The chat shape must still match: projection, proposed kind, change folder, blast, at most one decision, implement, `check_sync`, promote.

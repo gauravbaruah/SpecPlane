@@ -4,12 +4,13 @@ Optional local commands for v9.1.0 specs. Copy `tools/specplane/` into a product
 
 `init` copies the kit into a **product** repo. It does not write Git hooks or CI/CD.
 
-Agents call retrieve / blast / check_sync. Humans should not have to. Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md).
+**Works with your coding agent.** Skills call this kernel today. Local MCP stdio exposes the same `retrieve`, `blast`, `check_sync`, and `list_gaps` functions when you want tool-native calls. Humans should not have to type those commands. Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md). Five-minute try: [`docs/try.md`](../../docs/try.md).
 
-Requires Python 3.10+ and PyYAML:
+Requires Python 3.10+ and PyYAML. From a SpecPlane checkout:
 
 ```bash
-pip install -r tools/specplane/requirements.txt
+pip install -e .
+# or: pip install -r tools/specplane/requirements.txt
 ```
 
 ## Kernel CLI
@@ -17,14 +18,16 @@ pip install -r tools/specplane/requirements.txt
 Simple commands. Agents call them. No model in the loop.
 
 ```bash
-python3 tools/specplane/cli.py init --dest /path/to/product
-python3 tools/specplane/cli.py validate --spec-root specs
-python3 tools/specplane/cli.py retrieve <id> --spec-root specs
-python3 tools/specplane/cli.py blast <id> --spec-root specs
-python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids component.foo
-python3 tools/specplane/cli.py list_gaps --spec-root specs
+specplane init --dest /path/to/product
+specplane validate --spec-root specs
+specplane retrieve <id> --spec-root specs
+specplane blast <id> --spec-root specs
+specplane check_sync --spec-root specs --changed-ids component.foo
+specplane list_gaps --spec-root specs
 python3 tools/specplane/mcp_stdio.py
 ```
+
+`python3 tools/specplane/cli.py …` is the same CLI if you did not `pip install -e .`.
 
 | Command | Job | Exit 1 when |
 |---|---|---|

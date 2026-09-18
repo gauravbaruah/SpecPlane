@@ -7,11 +7,13 @@ on:
     paths:
       - "tools/specplane/**"
       - "specs/**"
+      - "pyproject.toml"
       - ".github/workflows/specplane-toolkit.yml"
   pull_request:
     paths:
       - "tools/specplane/**"
       - "specs/**"
+      - "pyproject.toml"
       - ".github/workflows/specplane-toolkit.yml"
 
 jobs:
@@ -23,6 +25,8 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r tools/specplane/requirements.txt
+      - run: pip install -e .
+      - run: specplane --help
       - run: python3 tools/specplane/test_validate.py
       - run: python3 tools/specplane/test_kernel.py
       - run: python3 tools/specplane/test_init.py
