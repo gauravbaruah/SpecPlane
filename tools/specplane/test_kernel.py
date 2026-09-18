@@ -189,5 +189,37 @@ class CliSmoke(unittest.TestCase):
         self.assertIn("result: pass", buf.getvalue())
 
 
+class ListGapsTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.kernel = load_kernel(GOLDEN)
+
+    def test_kernel_generic_queue(self) -> None:
+        from kernel import list_gaps
+
+        payload = list_gaps(self.kernel)
+        self.assertTrue(payload["advisory"])
+        self.assertIn("capability.orphan", payload["phase1_no_join"])
+        self.assertNotIn("capability.authentication", payload["phase1_no_join"])
+        self.assertIn("add_passkeys", payload["open_changes"])
+        self.assertIn("no_sensor", payload["open_changes"])
+        self.assertIn("capability.auth_v1", payload["replaced"])
+        self.assertIn("no_sensor", payload["missing_success_sensor"])
+        self.assertNotIn("add_passkeys", payload["missing_success_sensor"])
+
+    def test_cli_exits_zero(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(["list_gaps", "--spec-root", str(GOLDEN)])
+        self.assertEqual(code, 0)
+        text = buf.getvalue()
+        self.assertIn("phase1_no_join", text)
+        self.assertIn("capability.orphan", text)
+        self.assertIn("no_sensor", text)
+        self.assertIn("advisory: true", text)
+
+
 if __name__ == "__main__":
     unittest.main()

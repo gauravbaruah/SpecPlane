@@ -8,7 +8,7 @@
 
 `design-docs/` is gitignored strategy, not specs. H01’s location is superseded; YAML lives here and is committed. Schema v9.1.0. Branch: `kernel-first-slice`. Handoff: [`../design-docs/handoffs/H02-relocate-specs.md`](../design-docs/handoffs/H02-relocate-specs.md) (local).
 
-This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.1.0 is still unfrozen for the four-value bit field; v1 maps `deprecated`/`replaced_by` → replaced. MCP is not built yet. Skills/`AGENTS.md` now follow [`docs/golden-journey.md`](../docs/golden-journey.md) (change ritual); they no longer teach “edit live YAML in the same task.”
+This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.1.0 is still unfrozen for the four-value bit field; v1 maps `deprecated`/`replaced_by` → replaced. `list_gaps` is a CLI command; MCP stdio wraps retrieve / blast / check_sync / list_gaps. Skills/`AGENTS.md` follow [`docs/golden-journey.md`](../docs/golden-journey.md).
 
 ---
 
@@ -20,7 +20,9 @@ specs/
 ├── system.specplane_kernel.yaml
 ├── changes/
 │   ├── honest_kernel/                 ← first-slice kernel (kind: evolve)
-│   └── kit_init/                      ← v0 copier + empty specs/ dirs
+│   ├── kit_init/                      ← v0 copier + empty specs/ dirs
+│   ├── check_sync_honesty/
+│   └── list_gaps_mcp/
 ├── capabilities/
 │   ├── capability.specplane_validate.yaml
 │   ├── capability.specplane_retrieve.yaml
@@ -42,6 +44,7 @@ specs/
     ├── component.cli_blast.yaml
     ├── component.cli_check_sync.yaml
     ├── component.cli_init.yaml
+    ├── component.cli_list_gaps.yaml
     └── component.mcp_stdio.yaml
 ```
 
@@ -61,10 +64,10 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 | Join key | `foundation.join_key` | graph walk uses these ids |
 | CLI `validate` / `retrieve` / `blast` / `check_sync` | matching capabilities + `component.cli_*` | `tools/specplane/cli.py` |
 | CLI `init` | `capability.specplane_init` + `component.cli_init` | `tools/specplane/initkit.py` — copy kit, empty `specs/` dirs, no kernel `specs/` |
-| MCP `retrieve` / `blast` / `check_sync` / `list_gaps` | `component.mcp_stdio` | not built this pass |
+| CLI `list_gaps` + MCP stdio | `capability.specplane_list_gaps` + `component.cli_list_gaps` + `component.mcp_stdio` | same kernel; catalog retrieve/blast/check_sync/list_gaps; validate CLI-only |
 | Change folders | `capability.specplane_change_folders` + `specs/changes/` | loaded by retrieve/check_sync; skipped by structural validate |
 
-**Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `npx`/`uvx`/`scan`, QA agent, Figma ingest, hosted MCP, MCP stdio, `list_gaps` CLI.
+**Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `npx`/`uvx`/`scan`, QA agent, Figma ingest, hosted MCP.
 
 **Still later / schema**
 
@@ -85,9 +88,9 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 
 | Topic | Default |
 |---|---|
-| CLI | `validate`, `retrieve`, `blast`, `check_sync`, `init` |
+| CLI | `validate`, `retrieve`, `blast`, `check_sync`, `list_gaps`, `init` |
 | MCP | `retrieve`, `blast`, `check_sync`, `list_gaps` — validate is **not** an MCP tool |
-| `list_gaps` CLI | Not this slice |
+| `list_gaps` CLI | Source of truth; MCP wraps the same kernel (H02 MCP-only superseded) |
 | `container.specplane_tools` | Keep — 5C layout, not a SKU |
 | `check_sync` heuristic | v1: `--changed-ids` or git diff **plus untracked** `specs/**/*.yaml` (not `changes/`). Phase 1 (no join edges) is advisory. Linked empty blast still fails. |
 | Live-id pointer field | Q71 recorded; field name waits for schema unfreeze |
@@ -101,7 +104,7 @@ Older Qs still used: 53 four-value bit; 43 retrieve+check_sync together; 54 infe
 
 Follow [`docs/golden-journey.md`](../docs/golden-journey.md) and `specplane-implement`. Do not slurp `specs/`.
 
-1. Call `tools/specplane/cli.py retrieve|blast|check_sync` (and `validate`).
+1. Call `tools/specplane/cli.py retrieve|blast|check_sync|list_gaps` (and `validate`). MCP stdio wraps those four; not validate.
 2. Overlay, not Tessl: the CLI does not compile specs into the product.
 3. Copy-the-kit via `cli.py init` (or rsync). Never copy this `specs/` folder.
 4. `validate.py` skips `specs/changes/` (convention, not 5C).

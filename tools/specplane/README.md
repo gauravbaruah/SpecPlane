@@ -22,6 +22,8 @@ python3 tools/specplane/cli.py validate --spec-root specs
 python3 tools/specplane/cli.py retrieve <id> --spec-root specs
 python3 tools/specplane/cli.py blast <id> --spec-root specs
 python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids component.foo
+python3 tools/specplane/cli.py list_gaps --spec-root specs
+python3 tools/specplane/mcp_stdio.py
 ```
 
 | Command | Job | Exit 1 when |
@@ -31,8 +33,11 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 | `retrieve <id>` | One live slice, `replaced` leftovers, open change folders | Unknown id |
 | `blast <id>` | Affects tree. Component deps recurse. **Foundations are terminal** (listed, not exploded via `used_by`). | Unknown id |
 | `check_sync` | Changed ids vs open change `promise_ids`. Linked empty blast fails. Phase 1 (no join edges) is advisory. Does **not** parse app source. | Uncovered linked id, empty blast on a linked id, or unknown id |
+| `list_gaps` | Kernel-generic queue: Phase 1 thin, open changes, replaced leftovers, missing sensors. Advisory. | Spec root missing |
 
 `check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids.
+
+MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps** — same kernel functions. Validate is CLI-only (shell out).
 
 `python3 tools/specplane/validate.py` still works as the validate-only entry point.
 
@@ -54,6 +59,7 @@ The GitHub Action in this repo runs these commands against fixture trees. That w
 python3 tools/specplane/test_validate.py
 python3 tools/specplane/test_kernel.py
 python3 tools/specplane/test_init.py
+python3 tools/specplane/test_mcp.py
 python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/valid/specs
 python3 tools/specplane/cli.py validate --spec-root tools/specplane/testdata/golden/messy_auth/specs
 ```

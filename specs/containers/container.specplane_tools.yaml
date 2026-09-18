@@ -7,11 +7,15 @@ meta:
   tags: ["kernel", "cli", "mcp"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.2"
+  version: "1.0.3"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-18"
+    author: "kernel-slice"
+    summary: "list_gaps_mcp — contains component.cli_list_gaps; CLI is source of truth for list_gaps"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "kit_init — implements capability.specplane_init; contains component.cli_init"
@@ -58,6 +62,7 @@ relationships:
     - "component.cli_check_sync"
     - "component.mcp_stdio"
     - "component.cli_init"
+    - "component.cli_list_gaps"
   depends_on: []
   used_by: []
   integrates_with: []

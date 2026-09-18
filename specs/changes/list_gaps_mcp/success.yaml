@@ -1,0 +1,18 @@
+change_id: "list_gaps_mcp"
+kind: "evolve"
+
+sensors:
+  - id: "missing_sensor_appears"
+    promise: "capability.specplane_list_gaps"
+    must: "Open change without a success sensor is listed under missing_success_sensor"
+  - id: "phase1_advisory"
+    promise: "capability.specplane_list_gaps"
+    must: "Phase 1 capability with no join edges appears under phase1_no_join"
+  - id: "exit_zero"
+    promise: "capability.specplane_list_gaps"
+    must: "CLI list_gaps exits 0 when the command runs (gaps are advisory)"
+  - id: "mcp_four_tools"
+    promise: "component.mcp_stdio"
+    must: "MCP catalog is retrieve, blast, check_sync, list_gaps — not validate"
+
+looks_fine_is_not_a_sensor: true

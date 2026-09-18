@@ -13,6 +13,7 @@ CLI_FILES = (
     "validate.py",
     "drift.py",
     "initkit.py",
+    "mcp_stdio.py",
     "README.md",
     "requirements.txt",
     "specplane.config.json.example",

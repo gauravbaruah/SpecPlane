@@ -1,0 +1,22 @@
+change_id: "list_gaps_mcp"
+kind: "evolve"
+
+ADDED:
+  components:
+    - "component.cli_list_gaps"
+
+MODIFIED:
+  - id: "capability.specplane_list_gaps"
+    summary: "CLI + MCP; kernel-generic four gap kinds; advisory stdout; H02 MCP-only superseded"
+  - id: "component.mcp_stdio"
+    summary: "Wraps kernel retrieve/blast/check_sync/list_gaps; catalog exactly those four"
+  - id: "container.specplane_tools"
+    summary: "contains component.cli_list_gaps"
+  - id: "system.specplane_kernel"
+    summary: "list_gaps is a CLI command; MCP wraps it"
+  - id: "foundation.error_handling"
+    summary: "used_by component.cli_list_gaps"
+
+REMOVED: []
+
+RENAMED: []
