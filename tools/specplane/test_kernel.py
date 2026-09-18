@@ -11,10 +11,11 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from cli import git_changed_files, main as cli_main  # noqa: E402
-from kernel import blast, check_sync, load_kernel, map_changed_files, retrieve  # noqa: E402
+from kernel import blast, check_sync, format_check_sync, format_retrieve, load_kernel, map_changed_files, retrieve  # noqa: E402
 from validate import validate  # noqa: E402
 
 GOLDEN = ROOT / "testdata" / "golden" / "messy_auth" / "specs"
+SCOPED = ROOT / "testdata" / "golden" / "scoped_coverage" / "specs"
 
 
 class GoldenValidate(unittest.TestCase):
@@ -37,6 +38,10 @@ class RetrieveTests(unittest.TestCase):
         self.assertEqual(payload["replaced"], ["capability.auth_v1"])
         self.assertEqual(payload["in_flight"][0]["id"], "add_passkeys")
         self.assertFalse(payload["inferred_as_live"])
+        text = format_retrieve(payload)
+        self.assertIn("review_state: unreviewed", text)
+        self.assertIn("status: launched", text)
+        self.assertIn("bit: live", text)
 
     def test_unknown_id_is_none(self) -> None:
         self.assertIsNone(retrieve(self.kernel, "capability.does_not_exist"))
@@ -126,6 +131,84 @@ class CheckSyncTests(unittest.TestCase):
             self.assertNotIn("demo", ids2)
 
 
+class ScopedCoverageTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.kernel = load_kernel(SCOPED)
+
+    def test_other_change_does_not_cover_when_scoped(self) -> None:
+        payload = check_sync(
+            self.kernel,
+            ["capability.alpha", "component.widget"],
+            change_slug="select_output_folder",
+        )
+        self.assertFalse(payload["ok"], payload)
+        self.assertEqual(payload["coverage"], "fail")
+        self.assertIn("capability.alpha", payload["uncovered"])
+        self.assertIn("component.widget", payload["uncovered"])
+        self.assertEqual(payload["behavior"], "unverified")
+        text = format_check_sync(payload)
+        self.assertIn("coverage: fail", text)
+        self.assertIn("behavior: unverified", text)
+        self.assertIn("not covered by change select_output_folder", text)
+        self.assertIn("SpecPlane checked declared coverage. It did not verify behavior.", text)
+        self.assertNotIn("result: pass", text)
+        self.assertNotIn("sensors: executed", text)
+
+    def test_same_ids_pass_on_listing_change(self) -> None:
+        payload = check_sync(
+            self.kernel,
+            ["capability.alpha", "component.widget"],
+            change_slug="baseline_review",
+        )
+        self.assertTrue(payload["ok"], payload)
+        self.assertEqual(payload["coverage"], "pass")
+        self.assertEqual(payload["sensors"], "declared")
+        self.assertEqual(payload["behavior"], "unverified")
+        text = format_check_sync(payload)
+        self.assertIn("sensors: declared", text)
+        self.assertIn("not_executed", text)
+        self.assertIn("behavior: unverified", text)
+        self.assertNotIn("result: pass", text)
+
+    def test_unknown_change_slug_fails(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        buf = StringIO()
+        err = StringIO()
+        with patch("sys.stdout", buf), patch("sys.stderr", err):
+            code = cli_main(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(SCOPED),
+                    "--change",
+                    "does_not_exist",
+                    "--changed-ids",
+                    "capability.alpha",
+                ]
+            )
+        self.assertEqual(code, 1)
+        self.assertIn("unknown change: does_not_exist", err.getvalue())
+        self.assertIn("unknown_change: does_not_exist", buf.getvalue())
+        self.assertIn("coverage: fail", buf.getvalue())
+
+    def test_phase1_advisory_does_not_fail_when_scoped(self) -> None:
+        payload = check_sync(
+            self.kernel,
+            ["capability.thin"],
+            change_slug="select_output_folder",
+        )
+        self.assertTrue(payload["ok"], payload)
+        self.assertIn("capability.thin", payload["phase1_advisory"])
+        self.assertNotIn("capability.thin", payload["uncovered"])
+        self.assertFalse(payload["decision_required"])
+
+    def test_default_any_open_change_still_covers(self) -> None:
+        payload = check_sync(self.kernel, ["capability.alpha", "component.widget"])
+        self.assertTrue(payload["ok"], payload)
+
+
 class CliSmoke(unittest.TestCase):
     def test_retrieve_stdout(self) -> None:
         from io import StringIO
@@ -186,7 +269,10 @@ class CliSmoke(unittest.TestCase):
             )
         self.assertEqual(code, 0)
         self.assertIn("phase1_advisory", buf.getvalue())
-        self.assertIn("result: pass", buf.getvalue())
+        self.assertIn("coverage: pass", buf.getvalue())
+        self.assertIn("behavior: unverified", buf.getvalue())
+        self.assertNotIn("result: pass", buf.getvalue())
+        self.assertNotIn("sensors: executed", buf.getvalue())
 
 
 class ListGapsTests(unittest.TestCase):

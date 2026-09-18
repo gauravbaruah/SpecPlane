@@ -85,7 +85,7 @@ Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a c
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-implement, specplane-validate.
-3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --changed-ids. Typos skip retrieve. Do not slurp `specs/`.
+3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --change --changed-ids. Typos skip retrieve. Do not slurp `specs/`.
 4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
 Rules:
@@ -124,7 +124,7 @@ You speak product language. The agent should run the ritual in [`golden-journey.
 
 | You say | Agent should |
 |---|---|
-| “Reminders should trigger from observations” (or any feature/bug/experiment) | PRE retrieve → classify → change folder if not trivial → blast → implement → POST `check_sync --changed-ids` |
+| “Reminders should trigger from observations” (or any feature/bug/experiment) | PRE retrieve → classify → change folder if not trivial → blast → implement → POST `check_sync --change <slug> --changed-ids` |
 | Move that button 4px / typo / rename helper | No retrieve. Just do it. “No spec impact.” |
 | Add a capability / foundation / component (explicit spec work) | `specplane-author` → applicable sections 03 + 04–07. If the thing already exists and behavior is changing, switch to implement. |
 | Review / validate specs | `specplane-validate` → `cli.py validate` / `check_sync`, then sections 08 and 11 |

@@ -1,0 +1,18 @@
+change_id: "check_sync_scoped"
+kind: "evolve"
+
+sensors:
+  - id: "scoped_coverage_rejects_other_change"
+    promise: "capability.specplane_check_sync"
+    must: "check_sync --change select_output_folder fails when changed-ids are only listed on baseline_review; the same ids pass with --change baseline_review"
+  - id: "stdout_is_declared_coverage_not_behavior"
+    promise: "capability.specplane_check_sync"
+    must: "SpecPlane checked declared coverage. It did not verify behavior. stdout has coverage, sensors declared|missing, behavior unverified, not_executed on each must line; never sensors executed; never a bare result: pass"
+  - id: "retrieve_review_state_beside_bit"
+    promise: "capability.specplane_retrieve"
+    must: "format_retrieve prints meta.review_state (and meta.status if present) next to bit; live still means graph membership, not approval"
+  - id: "unknown_change_slug"
+    promise: "component.cli_check_sync"
+    must: "Unknown --change slug exits non-zero with a clear error"
+
+looks_fine_is_not_a_sensor: true

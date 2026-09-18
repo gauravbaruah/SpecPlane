@@ -1,0 +1,8 @@
+id: baseline_review
+kind: evolve
+status: in-flight
+opened: "2026-09-18"
+promise_ids:
+  - capability.alpha
+  - component.widget
+why: "Broad unreviewed baseline that already lists most ids."

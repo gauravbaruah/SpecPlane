@@ -126,8 +126,10 @@ def cmd_check_sync(args: argparse.Namespace) -> int:
         repo = (args.repo or Path.cwd()).resolve()
         files = git_changed_files(repo)
         changed_ids = map_changed_files(kernel, files)
-    payload = check_sync(kernel, changed_ids)
+    payload = check_sync(kernel, changed_ids, change_slug=args.change or None)
     print(format_check_sync(payload), end="")
+    if payload.get("unknown_change"):
+        sys.stderr.write(f"unknown change: {payload['unknown_change']}\n")
     if payload["ok"]:
         return 0
     return 1
@@ -181,13 +183,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_sync = sub.add_parser(
         "check_sync",
-        help="Fail if changed ids are not covered by an open change, or blast is empty",
+        help="Declared coverage vs an open change; not behavioral agreement",
     )
     add_root_args(p_sync)
     p_sync.add_argument(
         "--changed-ids",
         default="",
         help="Comma-separated SpecPlane ids (default: spec YAML in git diff)",
+    )
+    p_sync.add_argument(
+        "--change",
+        default="",
+        help="Scope coverage to this specs/changes/<slug> folder (not _archive)",
     )
     p_sync.add_argument("--repo", type=Path, default=None, help="Git repo for default changed set")
     p_sync.set_defaults(func=cmd_check_sync)

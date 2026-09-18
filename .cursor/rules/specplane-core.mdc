@@ -17,6 +17,6 @@ Product requests in natural language use the change ritual in `specplane-impleme
 
 **PRE:** If the request could move a promise, `retrieve` before writing, then change folder + blast; ask and **wait** if a decision is unresolved. Typos/renames: no retrieve. If unsure, retrieve.
 
-**POST:** After non-trivial work, `validate` and `check_sync --changed-ids`. Default check_sync (spec YAML in git only) is not a pass if you touched `tools/specplane/` or app code. The kernel does not watch the chat.
+**POST:** After non-trivial work, `validate` and `check_sync --change <slug> --changed-ids`. Default check_sync (spec YAML in git only) is not a pass if you touched `tools/specplane/` or app code. Coverage pass is not behavioral agreement. The kernel does not watch the chat.
 
 Do not slurp `specs/`. Do not edit live YAML for in-flight work.

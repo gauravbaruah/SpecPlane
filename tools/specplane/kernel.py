@@ -152,6 +152,8 @@ def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
     return {
         "id": spec_id,
         "bit": bit,
+        "review_state": str(doc.meta.get("review_state") or ""),
+        "status": str(doc.meta.get("status") or ""),
         "live": live_slice,
         "replaced": leftovers_for(kernel, spec_id)
         + ([replaced_self] if replaced_self else []),
@@ -286,8 +288,55 @@ def change_covers(kernel: Kernel, change: Change, spec_id: str) -> bool:
     return False
 
 
-def id_covered(kernel: Kernel, spec_id: str) -> bool:
+def id_covered(
+    kernel: Kernel, spec_id: str, only: Change | None = None
+) -> bool:
+    if only is not None:
+        return change_covers(kernel, only, spec_id)
     return any(change_covers(kernel, change, spec_id) for change in kernel.changes if change.open)
+
+
+def resolve_open_change(kernel: Kernel, slug: str) -> Change | None:
+    for change in kernel.changes:
+        if change.open and change.path.name == slug:
+            return change
+    return None
+
+
+def success_must_lines(change: Change) -> list[str]:
+    path = change.path / "success.yaml"
+    if not path.is_file():
+        return []
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        return []
+    sensors = loaded.get("sensors") or []
+    if not isinstance(sensors, list):
+        return []
+    out: list[str] = []
+    for row in sensors:
+        if isinstance(row, dict):
+            must = str(row.get("must") or "").strip()
+            if must:
+                out.append(must)
+    return out
+
+
+def covering_changes(
+    kernel: Kernel, changed_ids: list[str], scoped: Change | None
+) -> list[Change]:
+    if scoped is not None:
+        return [scoped]
+    found: list[Change] = []
+    seen: set[str] = set()
+    for cid in changed_ids:
+        for change in kernel.changes:
+            if not change.open or change.path.name in seen:
+                continue
+            if change_covers(kernel, change, cid):
+                seen.add(change.path.name)
+                found.append(change)
+    return found
 
 
 def is_phase1_shaped(doc: SpecDoc) -> bool:
@@ -325,8 +374,16 @@ def map_changed_files(kernel: Kernel, files: list[str]) -> list[str]:
 def check_sync(
     kernel: Kernel,
     changed_ids: list[str],
+    change_slug: str | None = None,
 ) -> dict[str, Any]:
     changed_ids = sorted({cid for cid in changed_ids if cid})
+    scoped: Change | None = None
+    unknown_change = ""
+    if change_slug:
+        scoped = resolve_open_change(kernel, change_slug)
+        if scoped is None:
+            unknown_change = change_slug
+
     phase1_advisory: list[str] = []
     linked: list[str] = []
     unknown = [cid for cid in changed_ids if cid not in kernel.by_id]
@@ -339,24 +396,48 @@ def check_sync(
         else:
             linked.append(cid)
 
-    uncovered = [cid for cid in linked if not id_covered(kernel, cid)]
+    uncovered: list[str] = []
     empty_blasts: list[str] = []
-    for cid in linked:
-        result = blast(kernel, cid)
-        if result and result["empty"]:
-            empty_blasts.append(cid)
+    if not unknown_change:
+        uncovered = [cid for cid in linked if not id_covered(kernel, cid, only=scoped)]
+        for cid in linked:
+            result = blast(kernel, cid)
+            if result and result["empty"]:
+                empty_blasts.append(cid)
 
     fail_uncovered = bool(uncovered)
     fail_empty = bool(empty_blasts)
     decision = fail_uncovered or fail_empty
-    ok = not fail_uncovered and not fail_empty and not unknown
+    ok = not fail_uncovered and not fail_empty and not unknown and not unknown_change
+
+    contributors = covering_changes(kernel, changed_ids, scoped) if not unknown_change else []
+    sensor_rows: list[dict[str, str]] = []
+    missing_slugs: list[str] = []
+    for change in contributors:
+        musts = success_must_lines(change)
+        if not musts:
+            missing_slugs.append(change.path.name)
+        for must in musts:
+            sensor_rows.append({"change": change.path.name, "must": must})
+    if unknown_change or not contributors or missing_slugs:
+        sensors = "missing"
+    else:
+        sensors = "declared"
+
     return {
         "changed_ids": changed_ids,
+        "change": change_slug or "",
+        "unknown_change": unknown_change,
         "uncovered": uncovered,
         "unknown": unknown,
         "empty_blast": empty_blasts,
         "phase1_advisory": phase1_advisory,
         "ok": ok,
+        "coverage": "pass" if ok else "fail",
+        "sensors": sensors,
+        "sensor_rows": sensor_rows,
+        "missing_sensor_changes": missing_slugs,
+        "behavior": "unverified",
         "decision_required": decision,
     }
 
@@ -412,6 +493,12 @@ def format_list_gaps(payload: dict[str, Any]) -> str:
 
 def format_retrieve(payload: dict[str, Any]) -> str:
     lines = [f"retrieve {payload['id']}", f"bit: {payload['bit']}"]
+    review_state = str(payload.get("review_state") or "")
+    if review_state:
+        lines.append(f"review_state: {review_state}")
+    status = str(payload.get("status") or "")
+    if status:
+        lines.append(f"status: {status}")
     live = payload.get("live")
     if live and payload["bit"] != "inferred":
         lines.append("live:")
@@ -474,28 +561,33 @@ def format_blast(payload: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+COVERAGE_NOTE = (
+    "SpecPlane checked declared coverage. It did not verify behavior."
+)
+
+
 def format_check_sync(payload: dict[str, Any]) -> str:
     lines = ["check_sync"]
+    if payload.get("change"):
+        lines.append(f"change: {payload['change']}")
     lines.append("changed_ids:")
     if payload["changed_ids"]:
         for item in payload["changed_ids"]:
             lines.append(f"  - {item}")
     else:
         lines.append("  (none)")
-    if payload["ok"]:
-        lines.append("result: pass")
-        if payload.get("phase1_advisory"):
-            lines.append("phase1_advisory:")
-            for item in payload["phase1_advisory"]:
-                lines.append(f"  - {item}")
-            lines.append("  Phase 1 ids have no join edges; uncovered / empty blast do not fail.")
-        return "\n".join(lines) + "\n"
-    lines.append("result: fail")
-    if payload["uncovered"]:
-        lines.append("uncovered (no open change covers id):")
+    lines.append(f"coverage: {payload.get('coverage') or ('pass' if payload.get('ok') else 'fail')}")
+    if payload.get("unknown_change"):
+        lines.append(f"unknown_change: {payload['unknown_change']}")
+    if payload.get("uncovered"):
+        slug = payload.get("change") or ""
+        if slug:
+            lines.append(f"uncovered (not covered by change {slug}):")
+        else:
+            lines.append("uncovered (no open change covers id):")
         for item in payload["uncovered"]:
             lines.append(f"  - {item}")
-    if payload["empty_blast"]:
+    if payload.get("empty_blast"):
         lines.append("empty_blast:")
         for item in payload["empty_blast"]:
             lines.append(f"  - {item}")
@@ -503,14 +595,30 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         lines.append("phase1_advisory:")
         for item in payload["phase1_advisory"]:
             lines.append(f"  - {item}")
-    if payload["unknown"]:
+        lines.append("  Phase 1 ids have no join edges; uncovered / empty blast do not fail.")
+    if payload.get("unknown"):
         lines.append("unknown_ids:")
         for item in payload["unknown"]:
             lines.append(f"  - {item}")
+    sensors = payload.get("sensors") or "missing"
+    lines.append(f"sensors: {sensors}")
+    if sensors == "declared":
+        for row in payload.get("sensor_rows") or []:
+            must = str(row.get("must") or "")
+            if not must:
+                continue
+            lines.append(f"  - change: {row.get('change')}")
+            lines.append(f"    must: {must}")
+            lines.append("    not_executed")
+    elif payload.get("missing_sensor_changes"):
+        for slug in payload["missing_sensor_changes"]:
+            lines.append(f"  - change: {slug}")
+    lines.append("behavior: unverified")
     if payload.get("decision_required"):
         lines.append("DECISION REQUIRED")
         lines.append("  Named behavior moved and live spec / open change did not cover it.")
         lines.append("  SpecPlane does not stamp live.")
+    lines.append(f"note: {COVERAGE_NOTE}")
     return "\n".join(lines) + "\n"
 
 

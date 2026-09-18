@@ -1,0 +1,22 @@
+meta:
+  id: capability.alpha
+  purpose: "Select an output folder"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+  owner: "example"
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Scoped coverage fixture A"
+    breaking: false
+
+responsibilities:
+  - "Choose where output goes"
+
+realized_by:
+  components:
+    - component.widget

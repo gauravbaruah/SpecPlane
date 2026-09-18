@@ -1,0 +1,20 @@
+meta:
+  id: component.widget
+  purpose: "Realize alpha"
+  level: component
+  type: service
+  domain: backend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+  owner: "example"
+
+changelog:
+  - date: "2026-09-18"
+    author: "specplane"
+    summary: "Scoped coverage fixture X"
+    breaking: false
+
+implements:
+  - capability.alpha
