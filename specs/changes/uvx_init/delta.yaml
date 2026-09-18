@@ -7,7 +7,7 @@ MODIFIED:
   - id: "capability.specplane_init"
     summary: "uvx --from git+ this repo @main may run init; wheel bundles the kit; PyPI/npx still not published"
   - id: "component.cli_init"
-    summary: "default kit root is the checkout, else the bundled _specplane_kit in the installed package"
+    summary: "default kit root is the checkout, else the bundled _specplane_kit in the installed package; editable pip install stubs that package so egg_info succeeds"
   - id: "capability.specplane_change_folders"
     summary: "retrieve/list_gaps skip specs/changes/_archive/"
 

@@ -102,6 +102,28 @@ class InitKitTests(unittest.TestCase):
     def test_default_kit_root_prefers_checkout(self) -> None:
         self.assertEqual(default_kit_root().resolve(), KIT.resolve())
 
+    def test_editable_metadata_without_prebuilt_bundle(self) -> None:
+        import os
+        import shutil
+
+        sys.path.insert(0, str(KIT / "packaging"))
+        from bundle_kit import BUNDLE
+        from build_backend import prepare_metadata_for_build_editable
+
+        stub_text = "# bundled kit root for wheel installs\n"
+        if BUNDLE.exists():
+            shutil.rmtree(BUNDLE)
+        old_cwd = Path.cwd()
+        try:
+            os.chdir(KIT)
+            with tempfile.TemporaryDirectory() as meta:
+                prepare_metadata_for_build_editable(meta)
+            self.assertTrue((BUNDLE / "__init__.py").is_file())
+        finally:
+            os.chdir(old_cwd)
+            BUNDLE.mkdir(parents=True, exist_ok=True)
+            (BUNDLE / "__init__.py").write_text(stub_text, encoding="utf-8")
+
 
 if __name__ == "__main__":
     unittest.main()
