@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-09-17"
   status: "draft"
-  version: "1.0.1"
+  version: "1.0.2"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Q115+Q116 — untracked specs YAML in default set; Phase 1 advisory; linked empty blast still fails"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "v1 check_sync: changed ids vs open change coverage; empty blast fails; does not parse source"
@@ -38,7 +42,7 @@ planning:
     success:
       - "In sync: exit 0"
       - "Named behavior moved, live spec unchanged: fail"
-      - "Empty blast on a behavior-changing diff: fail"
+      - "Empty blast on a linked id: fail; Phase 1 (no join edges): advisory, exit 0"
     errors:
       - "Must not auto-write live"
       - "Must not be invoked as self-grade by the same maker session as the only check"
@@ -57,7 +61,9 @@ implementation:
     acceptance_criteria:
       - "Pass when each changed id is named in an open change promise_ids or implements a promised capability"
       - "Fail + DECISION REQUIRED when a changed id has no covering open change"
-      - "Fail when a changed id has an empty blast"
+      - "Fail when a changed id has join edges and an empty blast"
+      - "Phase-1-shaped id: phase1_advisory, exit 0 (not uncovered / empty_blast fail)"
+      - "Default changed-set includes untracked specs/**/*.yaml; skips specs/changes/"
       - "Never auto-write live. v1 does not parse source to learn values (e.g. timeout 60)"
     open_questions:
       - "Optional realization.paths file map — later"

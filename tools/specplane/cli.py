@@ -30,17 +30,22 @@ from initkit import default_kit_root, init_kit  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
 
-def git_changed_files(repo: Path) -> list[str]:
+def _git_lines(repo: Path, args: list[str]) -> list[str]:
     try:
-        staged = subprocess.check_output(
-            ["git", "diff", "--name-only", "--cached"], cwd=repo, text=True
-        ).splitlines()
-        unstaged = subprocess.check_output(
-            ["git", "diff", "--name-only", "HEAD"], cwd=repo, text=True
-        ).splitlines()
+        out = subprocess.check_output(["git", *args], cwd=repo, text=True, stderr=subprocess.DEVNULL)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return []
-    return sorted({line.strip() for line in staged + unstaged if line.strip()})
+    return [line.strip() for line in out.splitlines() if line.strip()]
+
+
+def git_changed_files(repo: Path) -> list[str]:
+    """Staged + unstaged + untracked (Q115). Untracked specs are visible even with no HEAD."""
+    names = set(_git_lines(repo, ["diff", "--name-only", "--cached"]))
+    names.update(_git_lines(repo, ["diff", "--name-only", "HEAD"]))
+    if not names:
+        names.update(_git_lines(repo, ["diff", "--name-only"]))
+    names.update(_git_lines(repo, ["ls-files", "--others", "--exclude-standard"]))
+    return sorted(names)
 
 
 def add_root_args(parser: argparse.ArgumentParser) -> None:

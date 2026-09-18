@@ -1,0 +1,15 @@
+id: "check_sync_honesty"
+kind: "fix"
+status: "in-flight"
+opened: "2026-09-17"
+promise_ids:
+  - "capability.specplane_check_sync"
+  - "component.cli_check_sync"
+why: "v1 check_sync lied on Codex dogfood: untracked specs were invisible; Phase 1 ids failed empty_blast/uncovered. Still does not parse application source."
+non_goals:
+  - "parsing application source"
+  - "MCP"
+  - "infer"
+  - "schema unfreeze"
+  - "merging drift.py into check_sync"
+  - "CI / hooks"

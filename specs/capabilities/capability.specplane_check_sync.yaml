@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "check_sync"]
   last_updated: "2026-09-17"
   status: "planned"
-  version: "1.0.1"
+  version: "1.0.2"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-17"
+    author: "kernel-slice"
+    summary: "Q115+Q116 — default changed-set includes untracked specs YAML; Phase 1 (no join edges) is advisory, not fail"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "v1 checker: id coverage vs open change; does not parse application source"
@@ -44,7 +48,10 @@ constraints:
     - "Local comparison of specs, changes/, and named behavior claims — no hosted check in this slice"
   ux:
     - "Fail closed on moved named behavior and on empty blast"
-    - "v1: a change is detected as SpecPlane ids (--changed-ids or spec YAML in git). Coverage = open change promise_ids (or a component that implements a promised capability). Does not parse application source."
+    - "v1: default changed-set = git diff (staged+unstaged) plus untracked specs/**/*.yaml, excluding specs/changes/. Or --changed-ids."
+    - "Phase-1-shaped id (no realized_by, uses, or component implements): do not fail empty_blast or uncovered; print phase1_advisory; exit 0 if those are the only issues."
+    - "Ids that have join edges still need an open change covering the id; empty blast still fails."
+    - "Coverage = open change promise_ids (or a component that implements a promised capability). Does not parse application source."
     - "Do not silently pick spec vs code"
     - "GitHub App / required check is out of slice; this is the local command that later wraps"
   data_classification: "internal"
@@ -53,7 +60,7 @@ success_metrics:
   primary: "moved_behavior_fails"
   targets:
     moved_behavior_fails: "named behavior moved, live spec unchanged → non-zero exit"
-    empty_blast_fails: "behavior-changing diff with empty blast → non-zero exit"
+    empty_blast_fails: "linked id (has join edges) with empty blast → non-zero exit; Phase 1 empty blast is advisory"
     no_autowrite_live: "check_sync never stamps live"
   derived_from: {}
 
