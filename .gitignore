@@ -18,5 +18,6 @@ design-docs/
 node_modules
 *.log
 *.egg-info/
-tools/specplane/_specplane_kit/
+tools/specplane/_specplane_kit/*
+!tools/specplane/_specplane_kit/__init__.py
 build/
