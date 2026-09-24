@@ -130,9 +130,11 @@ relationships:
 # ============================================
 planning:
   user_flows:
+    flow_ref: ""   # optional capability flow id this realization sliver belongs to
     actions: []
     success: []
     errors: []
+    # Do not copy capability journey/lifecycle tables here. Components realize pieces.
 
   analytics:
     # ── ANALYTICS vs OBSERVABILITY — where does an event belong? ───────
@@ -248,6 +250,11 @@ implementation:
     assumptions: []
     readiness: "ready|blocked|unknown"
     open_questions: []
+    # Items may be strings (legacy) or mappings. Do not add a second key.
+    # - id: oq_invite_expiry
+    #   question: "Do invitations expire?"
+    #   raised_from: "flow.invite_member"
+    #   status: "open|deferred|resolved|rejected"
     test_strategy:
       unit: ""          # Key behaviors to cover (e.g., ">90% on business logic, all error branches")
                         # Presence implies required — CI treats non-empty as "run unit tests"

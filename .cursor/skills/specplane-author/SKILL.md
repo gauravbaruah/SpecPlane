@@ -15,6 +15,7 @@ description: Create or expand SpecPlane YAML specs (capability, foundation, syst
    - system / container / component → `06-system-container-component.md`
    - agent / tool / workflow / evaluator / tool_registry / state_store → `06` then `07-ai-native.md`
 4. Skim the matching example in `10-worked-examples.md` if the type is capability or component.
+5. If the user wants journey / lifecycle / information-flow richness or “what’s missing on this flow,” also load `specplane-flows`. String `flows` remain valid; mappings are optional.
 
 Do not load `specplane_schema_prompt_v9.1.0.md` unless a field is missing from those sections.
 

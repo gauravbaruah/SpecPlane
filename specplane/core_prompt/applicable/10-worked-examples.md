@@ -40,6 +40,17 @@ flows:
   - "Token refresh"
   - "Logout"
   - "Password reset"
+  - id: invite_member
+    kinds: [journey, lifecycle]
+    goal: "Add another person to a workspace"
+    actors:
+      primary: workspace_owner
+      secondary: [invited_user]
+    lifecycle:
+      creates: [invitation, membership]
+      terminates: [invitation]
+      states: [pending, accepted, declined, expired, revoked]
+      terminal_states: [accepted, declined, expired, revoked]
 
 business_value:
   user_outcome: "Users can securely access their personalized account from any device"
@@ -179,6 +190,7 @@ refs:
 
 planning:
   user_flows:
+    flow_ref: "login"
     actions:
       - "User enters email and password"
       - "User clicks login button"

@@ -1,0 +1,22 @@
+id: "optional_rich_flows"
+ADDED:
+  kit:
+    - "capability.flows items may be a string (index) or a mapping (optional journey / lifecycle / information keys)"
+    - "optional capability.open_questions with the same item shape as component validation.open_questions"
+    - "validation.open_questions items may be strings or {id, question, raised_from, status}"
+    - "skill specplane-flows (journey/lifecycle/information review; do not invent answers)"
+MODIFIED:
+  kit:
+    - "specplane/core_prompt/specplane_schema_prompt_v9.1.0.md"
+    - "specplane/core_prompt/applicable/01-philosophy-and-5c.md"
+    - "specplane/core_prompt/applicable/04-capability.md"
+    - "specplane/core_prompt/applicable/06-system-container-component.md"
+    - "specplane/core_prompt/applicable/10-worked-examples.md"
+    - "specplane/core_prompt/applicable/11-guidance-and-checklists.md"
+    - ".cursor/skills/specplane-author/SKILL.md"
+    - ".agents/skills/specplane-author/SKILL.md"
+    - "tools/specplane/initkit.py (consuming AGENTS skill list includes specplane-flows)"
+REMOVED: []
+notes:
+  - "String-only flows remain valid. Existing kernel YAML does not need a rewrite."
+  - "No live 5C kernel promise fields change this change."

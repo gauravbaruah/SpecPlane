@@ -1,0 +1,16 @@
+id: "init_journey"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-24"
+promise_ids:
+  - "capability.specplane_init"
+  - "component.cli_init"
+why: >-
+  Dogfood specplane-flows on one kernel capability. One journey mapping for
+  init. Lifecycle and information stay open questions. Neighbor capabilities
+  stay string-only.
+non_goals:
+  - "promote this mapping into live YAML in this turn"
+  - "lifecycle and information tables"
+  - "rewrite every init flow into a mapping"
+  - "list_gaps sensors for missing terminate/recover"

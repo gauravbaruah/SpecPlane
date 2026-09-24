@@ -1,0 +1,50 @@
+id: "init_journey"
+ADDED: []
+MODIFIED:
+  - id: "capability.specplane_init"
+    summary: "Promote the init path to one journey mapping. Leave the re-run failure and the Phase 1 follow-on as strings."
+    flows:
+      - id: init_product_repo
+        kinds: [journey]
+        goal: "A product repo has the kit and an empty specs/ tree"
+        actors:
+          primary: developer
+        entry:
+          trigger: "developer runs specplane init from uvx --from git+ this repo, or from a SpecPlane clone"
+          preconditions:
+            - "destination is not the kit root"
+        stages:
+          - choose_destination
+          - copy_kit
+          - create_empty_specs_dirs
+          - write_or_append_agents
+        outcomes:
+          success:
+            - "dest has specplane/, skills, rules, and empty specs/ folders"
+            - "kernel specs/ from this repo are not copied"
+        exceptions:
+          - "dest already contains specplane/ and --force was not passed"
+      - "Re-run without --force when specplane/ already exists → fail"
+      - "Ask the agent for a Phase 1 capability after folders exist"
+    open_questions:
+      - id: oq_init_partial_copy
+        question: "If init fails after copying some files, what remains on disk and how does the developer recover?"
+        raised_from: "flow.init_product_repo"
+        status: open
+      - id: oq_init_force
+        question: "When --force is passed and specplane/ already exists, what is replaced, and is anything from the previous kit retained?"
+        raised_from: "flow.init_product_repo"
+        status: open
+      - id: oq_init_terminate
+        question: "Is there a supported way to remove the copied kit and empty specs/ tree, or does termination stay outside this capability?"
+        raised_from: "flow.init_product_repo"
+        status: open
+  - id: "component.cli_init"
+    summary: "Point the existing user_flows sliver at the capability flow. Do not copy journey or lifecycle tables onto the component."
+    planning:
+      user_flows:
+        flow_ref: init_product_repo
+REMOVED: []
+notes:
+  - "Live capability.specplane_init.yaml and component.cli_init.yaml are unchanged until promote."
+  - "kinds is journey only. capability.specplane_change_folders stays string-only."

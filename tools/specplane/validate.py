@@ -572,6 +572,42 @@ def check_analytics(docs: list[SpecDoc], by_id: dict[str, SpecDoc], report: Repo
             )
 
 
+def check_capability_flows(doc: SpecDoc, report: Report) -> None:
+    """Rule 22: a flow mapping needs a non-empty id. Strings stay valid. goal is optional."""
+    if doc.level != "capability":
+        return
+    flows = doc.data.get("flows")
+    if not isinstance(flows, list):
+        return
+    for index, item in enumerate(flows):
+        if isinstance(item, str):
+            if not item.strip():
+                report.findings.append(
+                    Finding("error", "22", doc.path, f"flows[{index}] string must be non-empty")
+                )
+            continue
+        if isinstance(item, dict):
+            ident = item.get("id")
+            if not isinstance(ident, str) or not ident.strip():
+                report.findings.append(
+                    Finding(
+                        "error",
+                        "22",
+                        doc.path,
+                        f"flows[{index}] mapping requires a non-empty id",
+                    )
+                )
+            continue
+        report.findings.append(
+            Finding(
+                "error",
+                "22",
+                doc.path,
+                f"flows[{index}] must be a string or a mapping",
+            )
+        )
+
+
 def check_refs_and_names(doc: SpecDoc, report: Report) -> None:
     refs = doc.data.get("refs")
     refs_by_id: dict[str, dict[str, Any]] = {}
@@ -656,6 +692,7 @@ def validate(spec_root: Path) -> Report:
 
     for doc in docs:
         check_meta_and_layout(doc, spec_root, report)
+        check_capability_flows(doc, report)
         check_references(doc, by_id, report)
         check_rollout_and_tests(doc, report)
         check_refs_and_names(doc, report)

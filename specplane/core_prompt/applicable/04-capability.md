@@ -33,9 +33,53 @@ responsibilities:
           # e.g., "Consent capture and legal record"
           # e.g., "Logout and revocation"
 
-# What user flows this capability covers
+# What user flows this capability covers.
+# Each item may be a string (an index name) or a mapping. Strings remain valid.
+# A mapping requires a non-empty id. goal and the other keys are optional.
+# Mappings are optional richness — not every file needs journey + lifecycle + information.
+# A complete user journey may cross capabilities; this file holds the pieces it owns.
+# Use skill specplane-flows to enhance mappings and raise open_questions (do not invent answers).
 flows:
-  - ""    # e.g., "Sign-up", "Login", "Token refresh", "Logout", "Password reset"
+  - ""    # e.g., "Sign-up" — string index is enough for Phase 1
+  # - id: invite_member
+  #   kinds: [journey, lifecycle]   # omit any kind this file does not need
+  #   goal: "Add another person to a workspace"
+  #   actors:
+  #     primary: workspace_owner
+  #     secondary: [invited_user]
+  #   stories:                      # lens / evidence — not a Jira list
+  #     - actor: workspace_owner
+  #       intent: "invite a colleague"
+  #       outcome: "invitation is issued"
+  #   entry:
+  #     trigger: "owner chooses to invite"
+  #     preconditions: ["authenticated"]
+  #   stages: [discover, invite, pending, accept_or_decline]
+  #   outcomes:
+  #     success: ["membership established"]
+  #     abandonment: ["invite cancelled"]
+  #   lifecycle:
+  #     creates: [invitation, membership]
+  #     mutates: [invitation]
+  #     terminates: [invitation]
+  #     states: [pending, accepted, declined, expired, revoked]
+  #     terminal_states: [accepted, declined, expired, revoked]
+  #   information:
+  #     collected: [invitee_email]
+  #     moved: [invitation_email]
+  #     retained_until: "membership established or invite terminal"
+  #     destroyed_when: "invitation terminal and not accepted"
+  #   exceptions: [existing_member, invalid_address, inviter_loses_permission]
+  #   recovery: [resend, revoke, reinvite]
+
+# Optional product-level uncertainty (same item shape as component validation.open_questions).
+# Prefer generated questions from specplane-flows over silently filling gaps.
+open_questions: []
+  # - "Do invitations expire?"
+  # - id: oq_invite_expiry
+  #   question: "Do invitations expire?"
+  #   raised_from: "flow.invite_member"
+  #   status: "open|deferred|resolved|rejected"
 
 # Business value — why this capability exists
 business_value:

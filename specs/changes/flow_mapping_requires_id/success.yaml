@@ -1,0 +1,11 @@
+id: "flow_mapping_requires_id"
+sensors:
+  - id: "string_flows_still_valid"
+    promise: "capability.specplane_validate"
+    must: "A capability whose flows are only strings still validates"
+  - id: "mapping_without_id_fails"
+    promise: "capability.specplane_validate"
+    must: "A flow item that is a mapping without a non-empty id is rule 22"
+  - id: "mapping_id_without_goal_passes"
+    promise: "capability.specplane_validate"
+    must: "A flow mapping with id and no goal still validates"

@@ -85,3 +85,5 @@ capability.authentication          capability.data_analytics
 
 **C4 answers:** Where does this run? What contains what? What depends on what?
 **Capability answers:** What product outcome does this enable? What user value is unlocked? What business objective does this serve? Which components together realize a capability?
+
+Optional flow richness (additive, not a sixth C): a capability may describe how a person progresses (journey), what happens to objects it creates (lifecycle), and how information moves (information). Not every file needs all three. Cross-capability journeys are composed from those pieces, not copied into every spec.
