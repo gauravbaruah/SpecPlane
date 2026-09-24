@@ -307,3 +307,15 @@ Canonical source: `../specplane_schema_prompt_v9.1.0.md` (same content, one file
 20. **Ref resolution** — All refs used in diagrams (`{{refs.<id>.<field>}}`) must have a resolvable `url` or `path`. At least one of `url` or `path` must be non-empty for each ref that is interpolated into diagrams or descriptions.
 
 21. **No conflicting property names** — Property names used in analytics events, observability metrics, and contracts must not conflict (e.g. `invited_count` in one section and `invitedCount` in another for the same concept). Use consistent identifiers across sections; prefer snake_case.
+
+22. **Capability `flows` item shape** — Each item is a non-empty string or a mapping. A mapping requires a non-empty `id`. `goal` and journey / lifecycle / information keys are optional. String items stay valid.
+    ```yaml
+    # ✅ Valid
+    flows:
+      - "Sign-up"
+      - id: invite_member
+
+    # ❌ Invalid — mapping without id
+    flows:
+      - goal: "Add a member"
+    ```

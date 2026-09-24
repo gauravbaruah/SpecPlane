@@ -1,0 +1,18 @@
+id: "flow_mapping_requires_id"
+ADDED:
+  kit:
+    - "Validation rule 22: a capability flows item is a non-empty string or a mapping with a non-empty id"
+  kernel:
+    - "validate.py check_capability_flows reports rule 22"
+MODIFIED:
+  kit:
+    - "specplane/core_prompt/specplane_schema_prompt_v9.1.0.md"
+    - "specplane/core_prompt/applicable/04-capability.md"
+    - "specplane/core_prompt/applicable/08-validation-rules.md"
+    - "specplane/core_prompt/applicable/11-guidance-and-checklists.md"
+  kernel:
+    - "tools/specplane/validate.py"
+    - "tools/specplane/test_validate.py"
+REMOVED: []
+notes:
+  - "goal is not required. Live capability YAML is unchanged."

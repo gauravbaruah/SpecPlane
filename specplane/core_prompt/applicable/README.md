@@ -34,6 +34,7 @@ Always start from this table. Read **only** the listed sections unless a field y
 | New `specs/` tree / naming | [`02-file-layout.md`](02-file-layout.md) |
 | Any new spec (required meta) | [`03-shared-meta.md`](03-shared-meta.md) |
 | Capability spec | `03`, [`04-capability.md`](04-capability.md), capability example in [`10-worked-examples.md`](10-worked-examples.md) |
+| Enhance flows / journeys / lifecycles | skill `specplane-flows`; then `04` (and `06` if touching a component sliver) |
 | Foundation spec | `03`, [`05-foundation.md`](05-foundation.md), boilerplate in `specplane/foundations/` |
 | System / container / component | `03`, [`06-system-container-component.md`](06-system-container-component.md), component example in `10` |
 | Agent, tool, workflow, evaluator | `06`, then [`07-ai-native.md`](07-ai-native.md) |

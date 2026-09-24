@@ -30,6 +30,7 @@ Do **not** ingest the full master prompt into a coding session.
 | Init a `specs/` tree | `specplane-bootstrap` | 02, 03 |
 | Product request in natural language (feature, bug, experiment) | `specplane-implement` | retrieve/blast first; 06 when coding; 08 at promote |
 | Create or expand YAML (user asked to spec) | `specplane-author` | 03 + the matching type (04–07), example in 10 |
+| Enhance journeys / lifecycles / info flows | `specplane-flows` | 04 (and 06 if a component sliver); do not invent answers |
 | Review or check a spec | `specplane-validate` | 08, 11; `cli.py validate` / `check_sync` |
 
 Intended chat shape (human never types `retrieve`): [`docs/golden-journey.md`](docs/golden-journey.md).

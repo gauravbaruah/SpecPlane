@@ -1,0 +1,16 @@
+id: "flow_mapping_requires_id"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-24"
+promise_ids:
+  - "capability.specplane_validate"
+  - "component.cli_validate"
+why: >-
+  A capability flow item that is a mapping must carry a non-empty id so
+  flow_ref and open_questions can point at it. String items stay valid.
+  goal stays optional.
+non_goals:
+  - "require goal on a mapping"
+  - "require journey, lifecycle, and information"
+  - "list_gaps sensors for missing terminate/recover"
+  - "promote this check into live capability YAML in this turn"

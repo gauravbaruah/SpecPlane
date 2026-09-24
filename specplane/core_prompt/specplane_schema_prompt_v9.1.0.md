@@ -75,6 +75,8 @@ capability.authentication          capability.data_analytics
 **C4 answers:** Where does this run? What contains what? What depends on what?
 **Capability answers:** What product outcome does this enable? What user value is unlocked? What business objective does this serve? Which components together realize a capability?
 
+Optional flow richness (additive, not a sixth C): a capability may describe how a person progresses (journey), what happens to objects it creates (lifecycle), and how information moves (information). Not every file needs all three. Cross-capability journeys are composed from those pieces, not copied into every spec.
+
 ## 📁 File Organization and Naming Conventions
 
 ### **Hierarchical Folder Structure**
@@ -304,9 +306,54 @@ responsibilities:
           # e.g., "Consent capture and legal record"
           # e.g., "Logout and revocation"
 
-# What user flows this capability covers
+# What user flows this capability covers.
+# Each item may be a string (an index name) or a mapping. Strings remain valid.
+# A mapping requires a non-empty id. goal and the other keys are optional.
+# Mappings are optional richness — not every file needs journey + lifecycle + information.
+# A complete user journey may cross capabilities; this file holds the pieces it owns.
+# Use skill specplane-flows to enhance mappings and raise open_questions (do not invent answers).
 flows:
-  - ""    # e.g., "Sign-up", "Login", "Token refresh", "Logout", "Password reset"
+  - ""    # e.g., "Sign-up" — string index is enough for Phase 1
+  # - id: invite_member
+  #   kinds: [journey, lifecycle]   # omit any kind this file does not need
+  #   goal: "Add another person to a workspace"
+  #   actors:
+  #     primary: workspace_owner
+  #     secondary: [invited_user]
+  #   stories:                      # lens / evidence — not a Jira list
+  #     - actor: workspace_owner
+  #       intent: "invite a colleague"
+  #       outcome: "invitation is issued"
+  #   entry:
+  #     trigger: "owner chooses to invite"
+  #     preconditions: ["authenticated"]
+  #   stages: [discover, invite, pending, accept_or_decline]
+  #   outcomes:
+  #     success: ["membership established"]
+  #     abandonment: ["invite cancelled"]
+  #   lifecycle:                    # malloc → use → free for objects this flow creates
+  #     creates: [invitation, membership]
+  #     mutates: [invitation]
+  #     terminates: [invitation]
+  #     states: [pending, accepted, declined, expired, revoked]
+  #     terminal_states: [accepted, declined, expired, revoked]
+  #   information:                  # only when this file needs an info flow
+  #     collected: [invitee_email]
+  #     moved: [invitation_email]
+  #     retained_until: "membership established or invite terminal"
+  #     destroyed_when: "invitation terminal and not accepted"
+  #   exceptions: [existing_member, invalid_address, inviter_loses_permission]
+  #   recovery: [resend, revoke, reinvite]
+
+# Optional product-level uncertainty (same item shape as component validation.open_questions).
+# Prefer generated questions from specplane-flows over silently filling gaps.
+# Strings remain valid.
+open_questions: []
+  # - "Do invitations expire?"
+  # - id: oq_invite_expiry
+  #   question: "Do invitations expire?"
+  #   raised_from: "flow.invite_member"
+  #   status: "open|deferred|resolved|rejected"
 
 # Business value — why this capability exists
 business_value:
@@ -538,9 +585,11 @@ relationships:
 # ============================================
 planning:
   user_flows:
+    flow_ref: ""   # optional capability flow id this realization sliver belongs to
     actions: []
     success: []
     errors: []
+    # Do not copy capability journey/lifecycle tables here. Components realize pieces.
 
   analytics:
     # ── ANALYTICS vs OBSERVABILITY — where does an event belong? ───────
@@ -656,6 +705,12 @@ implementation:
     assumptions: []
     readiness: "ready|blocked|unknown"
     open_questions: []
+    # Items may be strings (legacy) or mappings. Do not add a second key.
+    # - "Pointer field name from live id to change object"
+    # - id: oq_invite_expiry
+    #   question: "Do invitations expire?"
+    #   raised_from: "flow.invite_member"
+    #   status: "open|deferred|resolved|rejected"
     test_strategy:
       unit: ""          # Key behaviors to cover (e.g., ">90% on business logic, all error branches")
                         # Presence implies required — CI treats non-empty as "run unit tests"
@@ -1113,6 +1168,18 @@ diagrams:
 
 21. **No conflicting property names** — Property names used in analytics events, observability metrics, and contracts must not conflict (e.g. `invited_count` in one section and `invitedCount` in another for the same concept). Use consistent identifiers across sections; prefer snake_case.
 
+22. **Capability `flows` item shape** — Each item is a non-empty string or a mapping. A mapping requires a non-empty `id`. `goal` and journey / lifecycle / information keys are optional. String items stay valid.
+    ```yaml
+    # ✅ Valid
+    flows:
+      - "Sign-up"
+      - id: invite_member
+
+    # ❌ Invalid — mapping without id
+    flows:
+      - goal: "Add a member"
+    ```
+
 ---
 
 ## 🤖 NodeContext Pattern (AI-Native Best Practice)
@@ -1219,6 +1286,17 @@ flows:
   - "Token refresh"
   - "Logout"
   - "Password reset"
+  - id: invite_member
+    kinds: [journey, lifecycle]
+    goal: "Add another person to a workspace"
+    actors:
+      primary: workspace_owner
+      secondary: [invited_user]
+    lifecycle:
+      creates: [invitation, membership]
+      terminates: [invitation]
+      states: [pending, accepted, declined, expired, revoked]
+      terminal_states: [accepted, declined, expired, revoked]
 
 business_value:
   user_outcome: "Users can securely access their personalized account from any device"
@@ -1358,6 +1436,7 @@ refs:
 
 planning:
   user_flows:
+    flow_ref: "login"   # optional; capability flow this sliver realizes
     actions:
       - "User enters email and password"
       - "User clicks login button"
@@ -1565,7 +1644,7 @@ Before marking a **capability** spec as `status: "launched"`:
 - [ ] `meta.introduced_in` set to the version when this spec was first created
 - [ ] `meta.review_state` is `pm_approved` at minimum; `legal_reviewed` if legal/security constraints present
 - [ ] `responsibilities` clearly list what this capability owns end-to-end
-- [ ] `flows` named (not just "login" but the full set: sign-up, refresh, logout, reset)
+- [ ] `flows` named (not just "login" but the full set: sign-up, refresh, logout, reset). A mapping requires a non-empty `id`.
 - [ ] `business_value` has user_outcome AND objective
 - [ ] `constraints` cover legal, security, and UX
 - [ ] `success_metrics` has a primary metric (Phase 2)

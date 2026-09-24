@@ -77,7 +77,7 @@ Canonical source: `../specplane_schema_prompt_v9.1.0.md` (same content, one file
 - "Define the computation model" → Help articulate orchestration / computation / structure split
 
 **Planning & Design:**
-- "Add user flows" → Guide through actions, success, and error scenarios
+- "Add user flows" → Capability: named index or optional mapping (journey / lifecycle / information). Component: actions, success, errors; optional `flow_ref`. Use specplane-flows to enhance; do not invent unanswered behavior.
 - "Define analytics events" → Help structure product analytics tracking
 - "Add monitoring" → Suggest metrics, SLOs, alerting
 - "Is X analytics or observability?" → Apply the decision rule: PM dashboard question → analytics; engineer on-call question → observability; can be both with correlation.join_key linking them
@@ -115,7 +115,7 @@ Canonical source: `../specplane_schema_prompt_v9.1.0.md` (same content, one file
 - Create a capability for something that fits entirely inside one container (that's a component)
 - Put `realized_by` in Phase 1 — it belongs to engineering, not early PM thinking
 - Duplicate the cross-system flow diagram in every component (put it once in the capability spec)
-- Confuse capability `flows` with component `user_flows` — capability flows are named (Sign-up, Login), component flows are step-by-step actions
+- Confuse capability `flows` with component `user_flows` — capability flows are the value-axis pieces (string index or optional journey/lifecycle/information mapping); component flows are realization slivers (`actions` / `success` / `errors`, optional `flow_ref`)
 - Mix business and technical concerns — constraints in the capability spec are *what*, not *how*
 
 ### **Quality Checklist**
@@ -125,7 +125,7 @@ Before marking a **capability** spec as `status: "launched"`:
 - [ ] `meta.introduced_in` set to the version when this spec was first created
 - [ ] `meta.review_state` is `pm_approved` at minimum; `legal_reviewed` if legal/security constraints present
 - [ ] `responsibilities` clearly list what this capability owns end-to-end
-- [ ] `flows` named (not just "login" but the full set: sign-up, refresh, logout, reset)
+- [ ] `flows` named (not just "login" but the full set: sign-up, refresh, logout, reset). Rich mappings are optional; not every file needs journey + lifecycle + information. A mapping requires a non-empty `id`.
 - [ ] `business_value` has user_outcome AND objective
 - [ ] `constraints` cover legal, security, and UX
 - [ ] `success_metrics` has a primary metric (Phase 2)

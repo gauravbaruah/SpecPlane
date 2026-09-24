@@ -1,0 +1,11 @@
+id: "init_journey"
+sensors:
+  - id: "one_journey_mapping"
+    promise: "capability.specplane_init"
+    must: "Init has one journey mapping (init_product_repo) and the other flow items stay strings"
+  - id: "gaps_are_questions"
+    promise: "capability.specplane_init"
+    must: "Partial copy, --force retention, and termination are open_questions, not filled lifecycle fields"
+  - id: "neighbor_unchanged"
+    promise: "capability.specplane_change_folders"
+    must: "A string-only neighbor capability was left string-only"

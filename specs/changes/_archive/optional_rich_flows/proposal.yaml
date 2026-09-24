@@ -1,0 +1,19 @@
+id: "optional_rich_flows"
+kind: "evolve"
+status: "archived"
+opened: "2026-09-24"
+promise_ids:
+  - "capability.specplane_list_gaps"
+  - "capability.specplane_init"
+why: >-
+  PMs need optional journey / object-lifecycle / information-flow richness on
+  capability.flows, plus a skill that notices missing terminate/recover paths
+  and writes open questions instead of inventing behavior. Kit schema + skill.
+  Kernel list_gaps CLI contract unchanged this change.
+non_goals:
+  - "sixth C or new spec type"
+  - "require journey+lifecycle+information on every file"
+  - "v10 / restack of Phase 1 required keys"
+  - "list_gaps CLI sensors for lifecycle holes (later)"
+  - "parse application source"
+  - "promote this folder in the same turn"
