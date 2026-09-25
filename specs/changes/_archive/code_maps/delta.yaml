@@ -1,0 +1,19 @@
+change_id: "code_maps"
+kind: "evolve"
+
+ADDED:
+  capabilities:
+    - "capability.specplane_reconcile"
+  components:
+    - "component.cli_reconcile"
+
+MODIFIED:
+  - id: "capability.specplane_check_sync"
+    summary: "Default changed-set may include component ids from declared path matches; still does not parse source bodies"
+  - id: "component.cli_check_sync"
+    summary: "Closes realization.paths open question: optional maps; unmapped app file advisory"
+  - id: "component.mcp_stdio"
+    summary: "No reconcile tool this slice (CLI-only)"
+
+REMOVED: []
+RENAMED: []

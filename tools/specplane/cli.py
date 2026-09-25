@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, list_gaps, run, promote, init.
+"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, reconcile, list_gaps, run, promote, init.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -18,17 +18,19 @@ if str(ROOT) not in sys.path:
 from kernel import (  # noqa: E402
     blast,
     check_sync,
+    default_changed_ids,
     format_blast,
     format_check_sync,
     format_list_gaps,
     format_promote,
+    format_reconcile,
     format_retrieve,
     format_run,
     list_gaps,
     load_kernel,
     promote_ids,
+    reconcile,
     run_sensors,
-    map_changed_files,
     retrieve,
     structural_validate,
 )
@@ -124,19 +126,33 @@ def cmd_check_sync(args: argparse.Namespace) -> int:
         sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
         return 1
     kernel = load_kernel(spec_root)
-    changed_ids = [part for part in (args.changed_ids or "").split(",") if part.strip()]
-    changed_ids = [part.strip() for part in changed_ids]
+    changed_ids = [part.strip() for part in (args.changed_ids or "").split(",") if part.strip()]
+    unmapped: list[str] = []
     if not changed_ids:
         repo = (args.repo or Path.cwd()).resolve()
         files = git_changed_files(repo)
-        changed_ids = map_changed_files(kernel, files)
+        changed_ids, unmapped = default_changed_ids(kernel, files, repo)
     payload = check_sync(kernel, changed_ids, change_slug=args.change or None)
+    if unmapped:
+        payload["unmapped_changed"] = unmapped
     print(format_check_sync(payload), end="")
     if payload.get("unknown_change"):
         sys.stderr.write(f"unknown change: {payload['unknown_change']}\n")
     if payload["ok"]:
         return 0
     return 1
+
+
+def cmd_reconcile(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    repo = (args.repo or Path.cwd()).resolve()
+    payload = reconcile(kernel, git_changed_files(repo), repo=repo)
+    print(format_reconcile(payload), end="")
+    return 0
 
 
 def cmd_list_gaps(args: argparse.Namespace) -> int:
@@ -198,7 +214,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / list_gaps / run / promote / init)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / reconcile / list_gaps / run / promote / init)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -225,7 +241,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync.add_argument(
         "--changed-ids",
         default="",
-        help="Comma-separated SpecPlane ids (default: spec YAML in git diff)",
+        help="Comma-separated SpecPlane ids (default: spec YAML plus declared path matches)",
     )
     p_sync.add_argument(
         "--change",
@@ -234,6 +250,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_sync.add_argument("--repo", type=Path, default=None, help="Git repo for default changed set")
     p_sync.set_defaults(func=cmd_check_sync)
+
+    p_rec = sub.add_parser(
+        "reconcile",
+        help="Declared realization.paths vs the tree and changed files; advisory",
+    )
+    add_root_args(p_rec)
+    p_rec.add_argument(
+        "--repo",
+        type=Path,
+        default=None,
+        help="Git repo whose changed files are compared to declared paths",
+    )
+    p_rec.set_defaults(func=cmd_reconcile)
 
     p_gaps = sub.add_parser(
         "list_gaps",

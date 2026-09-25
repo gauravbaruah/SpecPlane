@@ -1,0 +1,10 @@
+change_id: "code_maps"
+kind: "evolve"
+promise_ids:
+  - "capability.specplane_reconcile"
+  - "component.cli_reconcile"
+  - "capability.specplane_check_sync"
+  - "component.cli_check_sync"
+why: >
+  Declared realization.paths + reconcile. Mapped files join check_sync
+  default ids. Unmapped changed app files are advisory. Not infer, not grep.

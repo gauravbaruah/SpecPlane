@@ -7,11 +7,15 @@ meta:
   tags: ["kernel", "first-slice"]
   last_updated: "2026-09-24"
   status: "draft"
-  version: "1.2.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "reconcile is a CLI command for declared realization paths. MCP does not expose it. Greenfield does not need infer."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "promote --ids is a CLI command. Brownfield infer is a skill. MCP does not infer or promote."
@@ -43,7 +47,7 @@ system_context:
     - "Human / checker (promotes live, decides DECISION REQUIRED, merges change folders)"
   external_systems: []
   system_boundaries:
-    - "This repo: YAML in specs/, CLI in tools/specplane/, stdio MCP (retrieve / blast / check_sync / list_gaps / run). validate and promote are CLI only. Brownfield infer is a skill, not a scan."
+    - "This repo: YAML in specs/, CLI in tools/specplane/, stdio MCP (retrieve / blast / check_sync / list_gaps / run). validate, promote, and reconcile are CLI only. Brownfield infer is a skill, not a scan. Declared realization paths do not require infer."
   capabilities:
     - "capability.specplane_validate"
     - "capability.specplane_retrieve"
@@ -54,6 +58,7 @@ system_context:
     - "capability.specplane_init"
     - "capability.specplane_run"
     - "capability.specplane_promote"
+    - "capability.specplane_reconcile"
 
 relationships:
   contains:

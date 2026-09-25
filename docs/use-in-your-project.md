@@ -93,7 +93,7 @@ Rules:
 - Capability Phase 1 is valid without architecture.
 - Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
 - Changelog on live 5C files when `meta.version` changes. In-flight work lives in `specs/changes/`.
-- Brownfield (an existing repo): use specplane-infer. The coding agent walks one named root and writes Phase 1 YAML tagged inferred. Greenfield stays specplane-bootstrap. There is no scan CLI and no infer CLI. `promote --ids` makes named inferred ids live.
+- Brownfield (an existing repo): use specplane-infer. The coding agent walks one named root and writes Phase 1 YAML tagged inferred. Greenfield stays specplane-bootstrap. There is no scan CLI and no infer CLI. `promote --ids` makes named inferred ids live. Greenfield can declare `implementation.realization.paths` without infer. `reconcile` checks that join; it does not write code or parse source. It is CLI-only.
 - Specs before code when behavior, contracts, events, rollout, security, or how the product is obtained change. Trivial work (typo/4px/rename): no retrieve. If unsure, retrieve.
 ```
 

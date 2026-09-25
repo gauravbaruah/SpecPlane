@@ -376,6 +376,180 @@ def map_changed_files(kernel: Kernel, files: list[str]) -> list[str]:
     return sorted(set(ids))
 
 
+_NON_APP_DIR_PREFIXES = (
+    "specs/",
+    "docs/",
+    "design-docs/",
+    "legacy/",
+    ".github/",
+    ".cursor/",
+    ".agents/",
+)
+_NON_APP_SUFFIXES = (".md", ".png", ".gif", ".svg", ".jpg", ".jpeg", ".webp", ".ico")
+
+RECONCILE_NOTE = (
+    "SpecPlane compared declared paths to the tree. "
+    "It did not parse source or pick spec vs code."
+)
+
+
+def _norm_rel(path: str) -> str:
+    text = str(path).strip().replace("\\", "/")
+    while text.startswith("./"):
+        text = text[2:]
+    return text
+
+
+def _escapes_repo(path: str) -> bool:
+    if not path or path.startswith("/") or path.startswith("~"):
+        return True
+    return any(part == ".." for part in path.split("/"))
+
+
+def _is_app_file(path: str) -> bool:
+    rel = _norm_rel(path)
+    if not rel or rel.endswith("/"):
+        return False
+    first = rel.split("/", 1)[0]
+    if first.startswith("."):
+        return False
+    if any(rel.startswith(prefix) for prefix in _NON_APP_DIR_PREFIXES):
+        return False
+    return not rel.endswith(_NON_APP_SUFFIXES)
+
+
+def _declared_matches(declared: str, changed: str) -> bool:
+    dec = _norm_rel(declared)
+    ch = _norm_rel(changed)
+    if not dec or not ch or _escapes_repo(dec) or _escapes_repo(ch):
+        return False
+    if dec.endswith("/"):
+        return ch.startswith(dec)
+    return ch == dec
+
+
+def _declared_present(repo: Path, declared: str) -> bool:
+    dec = _norm_rel(declared)
+    if not dec or _escapes_repo(dec):
+        return False
+    rel = dec[:-1] if dec.endswith("/") else dec
+    target = repo.joinpath(*[part for part in rel.split("/") if part])
+    try:
+        target.resolve().relative_to(repo.resolve())
+    except ValueError:
+        return False
+    if dec.endswith("/"):
+        return target.is_dir()
+    return target.is_file()
+
+
+def component_realization_paths(kernel: Kernel) -> list[tuple[str, str]]:
+    """(component id, declared path) from implementation.realization.paths.
+
+    Components only. Replaced specs are skipped. Paths are not rewritten.
+    """
+    rows: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for doc in kernel.docs:
+        if doc.level != "component" or bit_of(doc) == "replaced":
+            continue
+        raw = dig(doc.data, "implementation", "realization", "paths")
+        for path in as_str_list(raw):
+            key = (doc.spec_id, path)
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(key)
+    return rows
+
+
+def reconcile(
+    kernel: Kernel,
+    changed_files: list[str],
+    *,
+    repo: Path,
+) -> dict[str, Any]:
+    """Compare declared paths to the tree and to changed paths.
+
+    Does not read file bodies and does not write.
+    """
+    repo = repo.resolve()
+    declared = component_realization_paths(kernel)
+    changed = []
+    seen_changed: set[str] = set()
+    for raw in changed_files:
+        rel = _norm_rel(raw)
+        if not rel or rel in seen_changed:
+            continue
+        seen_changed.add(rel)
+        changed.append(rel)
+
+    missing: list[dict[str, str]] = []
+    for spec_id, path in declared:
+        if not _declared_present(repo, path):
+            missing.append({"id": spec_id, "path": _norm_rel(path) or path})
+    missing.sort(key=lambda row: (row["id"], row["path"]))
+
+    mapped: list[dict[str, str]] = []
+    mapped_paths: set[str] = set()
+    for rel in changed:
+        for spec_id, path in declared:
+            if _declared_matches(path, rel):
+                mapped.append({"path": rel, "id": spec_id})
+                mapped_paths.add(rel)
+    mapped.sort(key=lambda row: (row["path"], row["id"]))
+
+    unmapped = sorted(
+        rel for rel in changed if rel not in mapped_paths and _is_app_file(rel)
+    )
+    return {
+        "missing": missing,
+        "unmapped_changed": unmapped,
+        "mapped_changed": mapped,
+        "ok": not missing and not unmapped,
+    }
+
+
+def default_changed_ids(
+    kernel: Kernel, files: list[str], repo: Path
+) -> tuple[list[str], list[str]]:
+    """Spec-YAML ids plus component ids for declared path hits.
+
+    The second list is unmapped changed app files (advisory).
+    """
+    report = reconcile(kernel, files, repo=repo)
+    ids = set(map_changed_files(kernel, files))
+    for row in report["mapped_changed"]:
+        ids.add(row["id"])
+    return sorted(ids), list(report["unmapped_changed"])
+
+
+def format_reconcile(payload: dict[str, Any]) -> str:
+    lines = ["reconcile", "missing:"]
+    missing = payload.get("missing") or []
+    if not missing:
+        lines.append("  (none)")
+    for row in missing:
+        lines.append(f"  - id: {row.get('id')}")
+        lines.append(f"    path: {row.get('path')}")
+    lines.append("unmapped_changed:")
+    unmapped = payload.get("unmapped_changed") or []
+    if not unmapped:
+        lines.append("  (none)")
+    for item in unmapped:
+        lines.append(f"  - {item}")
+    lines.append("mapped_changed:")
+    mapped = payload.get("mapped_changed") or []
+    if not mapped:
+        lines.append("  (none)")
+    for row in mapped:
+        lines.append(f"  - path: {row.get('path')}")
+        lines.append(f"    id: {row.get('id')}")
+    lines.append(f"ok: {'true' if payload.get('ok') else 'false'}")
+    lines.append(f"note: {RECONCILE_NOTE}")
+    return "\n".join(lines) + "\n"
+
+
 def check_sync(
     kernel: Kernel,
     changed_ids: list[str],
@@ -741,6 +915,12 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         lines.append("DECISION REQUIRED")
         lines.append("  Named behavior moved and live spec / open change did not cover it.")
         lines.append("  SpecPlane does not stamp live.")
+    unmapped = payload.get("unmapped_changed") or []
+    if unmapped:
+        lines.append("unmapped_changed:")
+        for item in unmapped:
+            lines.append(f"  - {item}")
+        lines.append("  advisory: unmapped app file; not a coverage failure")
     lines.append(f"note: {COVERAGE_NOTE}")
     return "\n".join(lines) + "\n"
 

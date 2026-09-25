@@ -1,0 +1,68 @@
+meta:
+  id: "capability.specplane_reconcile"
+  purpose: "Compare declared realization paths to the tree and to changed files"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "reconcile"]
+  last_updated: "2026-09-24"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Declared realization.paths and reconcile. Not infer. Not a source parser. CLI only. Realized by component.cli_reconcile and container.specplane_tools."
+    breaking: false
+
+responsibilities:
+  - "A component may declare repo-relative files or directory prefixes that realize it"
+  - "reconcile reports missing declared paths, unmapped changed app files, and mapped changed files"
+  - "A path ending in / matches that directory; any other declared path is an exact file"
+  - "Do not delete a missing path, do not rewrite the list, and do not parse file bodies"
+  - "Do not copy inferred cites into realization.paths"
+  - "Greenfield can declare maps with no infer step"
+  - "CLI only. No MCP reconcile tool"
+
+flows:
+  - "Someone declares implementation.realization.paths on a component"
+  - "reconcile compares those paths to the tree and to git-changed files"
+
+business_value:
+  user_outcome: "A declared file-to-promise join stays honest after the next edit"
+  objective: "Show missing paths and unmapped app files without guessing or rewriting"
+  revenue_dependency: "low"
+  strategic_priority: "foundation"
+
+constraints:
+  legal: []
+  security:
+    - "Path existence and git path names only. Do not read application source."
+  ux:
+    - "Stdout bands: missing, unmapped_changed, mapped_changed, ok. Advisory. Do not print verified."
+    - "Note that SpecPlane compared declared paths and did not pick spec vs code."
+    - "Maps are optional. Phase 1 does not require them."
+    - "Works without infer. An inferred refs path is not a map."
+  data_classification: "internal"
+
+success_metrics:
+  primary: "declared_join_reported"
+  targets:
+    declared_join_reported: "missing, unmapped changed app files, and mapped changed files are visible"
+    no_autowrite: "reconcile never rewrites paths or spec files"
+  derived_from: {}
+
+roadmap:
+  phase: "declared code maps"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_check_sync"
+    - "capability.specplane_change_folders"
+  enables: []
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_reconcile"

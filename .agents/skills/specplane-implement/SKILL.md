@@ -24,7 +24,7 @@ Developers paste a prompt and expect codegen. You still run SpecPlane **when a p
 **POST — after a non-trivial implement, before claiming done:**
 
 1. `validate`.
-2. `check_sync --change <slug> --changed-ids` with every id you retrieved, blasted, or whose realization files you edited. `<slug>` is this request’s `specs/changes/<slug>/` folder. The default changed-set is **spec YAML in git only**. An empty default is not a pass if you touched app code or `tools/specplane/`. A coverage pass is declared coverage, not behavioral agreement.
+2. `check_sync --change <slug> --changed-ids` with every id you retrieved, blasted, or whose realization files you edited. `<slug>` is this request’s `specs/changes/<slug>/` folder. The default changed-set is spec YAML in git, plus component ids whose declared `implementation.realization.paths` match a changed file. `--changed-ids` is an explicit override. An empty default is not a pass if you touched app code or `tools/specplane/`. If a map exists, run `reconcile` or report missing and unmapped paths. Maps are optional: do not require one to implement, and do not copy inferred cites into `realization.paths`. A coverage pass is declared coverage, not behavioral agreement.
 3. `run --change <slug>`. This invokes binds already on that change (`run.argv` or `run.unittest` / `test:`). It does not create tests, exec English `must:` lines, or certify that the implementation satisfies the spec. No bind → `not_run` (exit 0 when nothing failed or errored).
 4. Do not silently pick spec vs code. Do not edit live 5C YAML until the user accepts (promote).
 
@@ -47,6 +47,7 @@ python3 tools/specplane/cli.py retrieve <id> --spec-root specs
 python3 tools/specplane/cli.py blast <id> --spec-root specs
 python3 tools/specplane/cli.py validate --spec-root specs
 python3 tools/specplane/cli.py check_sync --spec-root specs --change <slug> --changed-ids id1,id2
+python3 tools/specplane/cli.py reconcile --spec-root specs
 python3 tools/specplane/cli.py run --spec-root specs --change <slug>
 ```
 
@@ -80,7 +81,7 @@ Do not invent a graph by reading the whole tree. You may open files the CLI alre
 
 6. **Implement** from the projection: live promise + delta + blast + decisions. Match capabilities, errors, events, and `success.yaml`. Keep bidirectional links if you touch `implements` / `uses` (on files in the change, or at promote).
 
-7. **POST reconcile.** Run `validate`, `check_sync --change <slug> --changed-ids` for ids you touched (including realization files), then `run --change <slug>`. Coverage pass is declared coverage, not behavioral agreement. A `run` pass means bound checks exited 0, not that the implementation satisfies the spec. Optionally `python3 tools/specplane/drift.py --scope changed` as a reminder. Do not pick spec vs code when they disagree — report it.
+7. **POST reconcile.** Run `validate`, `check_sync --change <slug> --changed-ids` for ids you touched (including realization files), then `run --change <slug>`. When a component already declares `realization.paths`, also run `reconcile` or report missing / unmapped_changed. Maps are optional. Do not invent one by copying inferred cites. Coverage pass is declared coverage, not behavioral agreement. A `run` pass means bound checks exited 0, not that the implementation satisfies the spec. Optionally `python3 tools/specplane/drift.py --scope changed` as a coarse reminder; `reconcile` is the declared-path check. Do not pick spec vs code when they disagree — report it.
 
 8. **Promote only after the user accepts.** Then: apply the delta to live YAML, bump `meta.version` + changelog on those live files, move the folder to `specs/changes/_archive/<slug>/`. Retrieve should then show one live graph.
 

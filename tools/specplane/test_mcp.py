@@ -38,6 +38,7 @@ class McpCatalogTests(unittest.TestCase):
         self.assertNotIn("infer", names)
         self.assertNotIn("specify", names)
         self.assertNotIn("implement", names)
+        self.assertNotIn("reconcile", names)
 
     def test_tools_list_rpc(self) -> None:
         reply = handle_message({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
@@ -96,6 +97,7 @@ class McpCatalogTests(unittest.TestCase):
         self.assertNotIn("infer", names)
         self.assertNotIn("specify", names)
         self.assertNotIn("implement", names)
+        self.assertNotIn("reconcile", names)
         repo = Path.cwd()
         text = dispatch(
             "run",
