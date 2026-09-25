@@ -27,6 +27,7 @@ specplane check_sync --spec-root specs --changed-ids component.foo
 specplane check_sync --spec-root specs --change <slug> --changed-ids component.foo
 specplane list_gaps --spec-root specs
 specplane run --spec-root specs --change <slug>
+specplane promote --ids capability.a,capability.b --spec-root specs
 python3 tools/specplane/mcp_stdio.py
 ```
 
@@ -39,12 +40,13 @@ python3 tools/specplane/mcp_stdio.py
 | `retrieve <id>` | One live slice, `replaced` leftovers, open change folders | Unknown id |
 | `blast <id>` | Affects tree. Component deps recurse. **Foundations are terminal** (listed, not exploded via `used_by`). | Unknown id |
 | `check_sync` | Declared coverage vs open change `promise_ids` (pass `--change` after implement). Linked empty blast fails. Phase 1 (no join edges) is advisory. Does **not** parse app source or verify behavior. | Uncovered linked id, empty blast on a linked id, unknown id, or unknown `--change` |
-| `list_gaps` | Kernel-generic queue: Phase 1 thin, open changes, replaced leftovers, missing sensors. Advisory. | Spec root missing |
+| `list_gaps` | Kernel-generic queue: Phase 1 thin, open changes, replaced leftovers, missing sensors, unpromoted inferred ids. Advisory. | Spec root missing |
 | `run --change <slug>` | Join + invoke of a check already bound on that change (`run.argv` as a list, no shell, and/or `run.unittest` / `test:`). English `must:` is not a command (`not_run`). `evaluator:` with no bind is `not_run`. | Unknown or archived change, any sensor `fail`, or any sensor `error`. Exit 0 when every runnable bind passed, including when every row is `not_run`. |
+| `promote --ids a,b` | Drop `inferred` on those ids and append a changelog row. The coding agent writes the inferred YAML via the `specplane-infer` skill. This command does not read application source. | No ids, unknown id, or an id that is not inferred. Writes nothing in those cases. |
 
 `check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids. After implement, pass `--change <slug>` so a broad open change cannot satisfy coverage. A coverage pass is declared coverage, not behavioral agreement.
 
-MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps, run** — same kernel functions. `check_sync` accepts `change` and `changed_ids` like the CLI. `run` requires `change`. Validate is CLI-only (shell out). There is no infer, specify, or implement tool. `run` does not replace pytest, Playwright, an eval harness, or CI.
+MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps, run** — same kernel functions. `check_sync` accepts `change` and `changed_ids` like the CLI. `run` requires `change`. Validate and promote are CLI-only. There is no infer, specify, or implement tool. `run` does not replace pytest, Playwright, an eval harness, or CI. Brownfield mapping is the `specplane-infer` skill, not a kernel scan.
 
 `python3 tools/specplane/validate.py` still works as the validate-only entry point.
 

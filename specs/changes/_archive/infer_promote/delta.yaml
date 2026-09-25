@@ -1,0 +1,23 @@
+change_id: "infer_promote"
+kind: "evolve"
+
+ADDED:
+  capabilities:
+    - "capability.specplane_promote"
+  components:
+    - "component.cli_promote"
+
+MODIFIED:
+  - id: "capability.specplane_list_gaps"
+    summary: "Advisory bucket inferred_unpromoted"
+  - id: "capability.specplane_retrieve"
+    summary: "Unchanged honesty: inferred never presented as live"
+  - id: "foundation.epistemic_status"
+    summary: "Writer still one-shot infer job (skill/agent); promote is the live writer"
+  - id: "capability.specplane_init"
+    summary: "Consuming AGENTS.md points brownfield at specplane-infer, not at a scan CLI"
+  - id: "component.mcp_stdio"
+    summary: "Still no infer tool (Q54). promote is CLI-only, like validate"
+
+REMOVED: []
+RENAMED: []

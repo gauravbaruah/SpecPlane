@@ -1,0 +1,65 @@
+meta:
+  id: "capability.specplane_promote"
+  purpose: "Promote named inferred ids to live"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "promote"]
+  last_updated: "2026-09-24"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Brownfield promote — named inferred ids become live. No source-parsing infer CLI."
+    breaking: false
+
+responsibilities:
+  - "promote --ids drops the inferred tag on only those ids, bumps the patch version, and appends a changelog row"
+  - "Refuse when no ids are named. Never promote the whole inventory"
+  - "An unknown id or an id that is not inferred exits non-zero and writes nothing"
+  - "Do not read application source to invent ids"
+  - "Inferred stays not live until this command"
+  - "No infer CLI. promote is CLI-only, like validate. No MCP infer or promote"
+
+flows:
+  - "After specplane-infer, the human names ids"
+  - "promote --ids a,b --spec-root specs"
+
+business_value:
+  user_outcome: "A handful of guessed capabilities become promises the human chose"
+  objective: "Keep inferred honest until a person promotes named ids"
+  revenue_dependency: "low"
+  strategic_priority: "foundation"
+
+constraints:
+  legal: []
+  security:
+    - "Rewrite only the named spec files. Do not parse application source."
+  ux:
+    - "Explicit ids. No promote-all flag."
+    - "CLI is source of truth. MCP does not expose promote or infer."
+  data_classification: "internal"
+
+success_metrics:
+  primary: "named_inferred_becomes_live"
+  targets:
+    named_inferred_becomes_live: "promote --ids drops inferred on those files and retrieve then shows bit live"
+    refuse_without_ids: "no --ids exits non-zero and leaves every inferred file tagged"
+  derived_from: {}
+
+roadmap:
+  phase: "brownfield on-ramp"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_retrieve"
+    - "foundation.epistemic_status"
+  enables: []
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_promote"

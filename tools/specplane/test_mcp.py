@@ -34,6 +34,7 @@ class McpCatalogTests(unittest.TestCase):
         names = [row["name"] for row in tool_descriptors()]
         self.assertEqual(names, list(MCP_TOOLS))
         self.assertNotIn("validate", names)
+        self.assertNotIn("promote", names)
         self.assertNotIn("infer", names)
         self.assertNotIn("specify", names)
         self.assertNotIn("implement", names)
@@ -91,6 +92,7 @@ class McpCatalogTests(unittest.TestCase):
         self.assertEqual(MCP_TOOLS, ("retrieve", "blast", "check_sync", "list_gaps", "run"))
         names = [row["name"] for row in tool_descriptors()]
         self.assertNotIn("validate", names)
+        self.assertNotIn("promote", names)
         self.assertNotIn("infer", names)
         self.assertNotIn("specify", names)
         self.assertNotIn("implement", names)

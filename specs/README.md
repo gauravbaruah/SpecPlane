@@ -31,7 +31,8 @@ specs/
 │   ├── capability.specplane_list_gaps.yaml
 │   ├── capability.specplane_change_folders.yaml
 │   ├── capability.specplane_init.yaml
-│   └── capability.specplane_run.yaml
+│   ├── capability.specplane_run.yaml
+│   └── capability.specplane_promote.yaml
 ├── foundations/
 │   ├── foundation.epistemic_status.yaml    ← live | inferred | in-flight | replaced
 │   ├── foundation.join_key.yaml
@@ -68,9 +69,12 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 | CLI `init` | `capability.specplane_init` + `component.cli_init` | `tools/specplane/initkit.py` — copy kit, empty `specs/` dirs, no kernel `specs/` |
 | CLI `list_gaps` + MCP stdio | `capability.specplane_list_gaps` + `component.cli_list_gaps` + `component.mcp_stdio` | same kernel; catalog retrieve/blast/check_sync/list_gaps/run; validate CLI-only |
 | CLI `run` | `capability.specplane_run` + `component.cli_run` + `component.mcp_stdio` | join + invoke of a bound check; not a test runner |
+| CLI `promote --ids` | `capability.specplane_promote` + `component.cli_promote` | named inferred ids become live; the agent walks via `specplane-infer` |
 | Change folders | `capability.specplane_change_folders` + `specs/changes/` | loaded by retrieve/check_sync; skipped by structural validate |
 
-**Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `npx`/`uvx`/`scan`, QA agent, Figma ingest, hosted MCP.
+**Brownfield:** skill `specplane-infer` writes Phase 1 YAML tagged `inferred`. CLI `promote --ids` makes named ids live. No source-parsing infer CLI. No MCP infer.
+
+**Explicitly later:** YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `npx`/`uvx`/`scan`, QA agent, Figma ingest, hosted MCP.
 
 **Still later / schema**
 
@@ -91,8 +95,8 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 
 | Topic | Default |
 |---|---|
-| CLI | `validate`, `retrieve`, `blast`, `check_sync`, `list_gaps`, `run`, `init` |
-| MCP | `retrieve`, `blast`, `check_sync`, `list_gaps`, `run` — validate is **not** an MCP tool. `run` joins a bound check; it is not a test runner. |
+| CLI | `validate`, `retrieve`, `blast`, `check_sync`, `list_gaps`, `run`, `promote`, `init` |
+| MCP | `retrieve`, `blast`, `check_sync`, `list_gaps`, `run` — validate and promote are **not** MCP tools. `run` joins a bound check; it is not a test runner. No infer tool. |
 | `list_gaps` CLI | Source of truth; MCP wraps the same kernel (H02 MCP-only superseded) |
 | `container.specplane_tools` | Keep — 5C layout, not a SKU |
 | `check_sync` heuristic | v1: `--changed-ids` or git diff **plus untracked** `specs/**/*.yaml` (not `changes/`). Phase 1 (no join edges) is advisory. Linked empty blast still fails. |

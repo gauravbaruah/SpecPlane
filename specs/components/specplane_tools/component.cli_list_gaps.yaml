@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "list_gaps"]
-  last_updated: "2026-09-18"
+  last_updated: "2026-09-24"
   status: "draft"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Print inferred_unpromoted. Still advisory exit 0. Do not parse application source."
+    breaking: false
   - date: "2026-09-18"
     author: "kernel-slice"
     summary: "list_gaps CLI personality; same kernel as MCP; advisory exit 0"
@@ -29,7 +33,7 @@ planning:
     actions:
       - "list_gaps --spec-root specs"
     success:
-      - "Prints phase1_no_join, open_changes, replaced, missing_success_sensor"
+      - "Prints phase1_no_join, open_changes, replaced, missing_success_sensor, inferred_unpromoted"
       - "Exit 0 when the spec root exists"
     errors:
       - "Missing spec root → exit 1"

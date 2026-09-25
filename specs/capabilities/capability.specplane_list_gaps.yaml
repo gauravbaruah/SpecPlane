@@ -1,16 +1,20 @@
 meta:
   id: "capability.specplane_list_gaps"
-  purpose: "Surface a kernel-generic gap queue: thin Phase 1, open changes, replaced leftovers, missing sensors"
+  purpose: "Surface a kernel-generic gap queue: thin Phase 1, open changes, replaced leftovers, missing sensors, unpromoted inferred ids"
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "mcp", "list_gaps"]
-  last_updated: "2026-09-18"
+  last_updated: "2026-09-24"
   status: "planned"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Advisory bucket inferred_unpromoted. Exit stays 0."
+    breaking: false
   - date: "2026-09-18"
     author: "kernel-slice"
     summary: "L37 — CLI is source of truth; MCP wraps it. Kernel-generic gaps only (Q108); advisory exit 0 (Q109). H02 MCP-only superseded"
@@ -29,12 +33,13 @@ responsibilities:
   - "List open change folders"
   - "List replaced leftovers"
   - "List open changes that have no success sensor (must: line)"
+  - "List inferred ids that have not been promoted"
   - "Advisory only — not a fail-closed checker and not an LLM coverage essay"
 
 flows:
   - "specplane list_gaps --spec-root specs"
   - "Agent calls the same function via MCP list_gaps"
-  - "Weekly habit: what is still thin, open, leftover, or unsensored"
+  - "Weekly habit: what is still thin, open, leftover, unsensored, or inferred and unpromoted"
 
 business_value:
   user_outcome: "Drift is a queue, not a lifestyle"

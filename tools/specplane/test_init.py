@@ -52,7 +52,11 @@ class InitKitTests(unittest.TestCase):
         config = json.loads((self.dest / "specplane.config.json").read_text(encoding="utf-8"))
         self.assertEqual(config["schemaVersion"], "9.1.0")
         self.assertIn("kitCommit", config)
-        self.assertIn("SpecPlane (this product)", (self.dest / "AGENTS.md").read_text(encoding="utf-8"))
+        agents = (self.dest / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("SpecPlane (this product)", agents)
+        self.assertIn("specplane-infer", agents)
+        self.assertIn("Brownfield", agents)
+        self.assertIn("promote --ids", agents)
         self.assertEqual((self.dest / "CLAUDE.md").read_text(encoding="utf-8").strip(), "@AGENTS.md")
 
     def test_appends_existing_agents(self) -> None:

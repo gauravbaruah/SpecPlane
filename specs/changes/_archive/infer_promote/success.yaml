@@ -1,0 +1,41 @@
+change_id: "infer_promote"
+kind: "evolve"
+
+sensors:
+  - id: "retrieve_marks_inferred"
+    promise: "capability.specplane_retrieve"
+    must: "retrieve of an inferred id prints bit inferred and stderr inferred (not live), with no live slice"
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_retrieve_inferred_not_live"
+  - id: "promote_named_ids"
+    promise: "capability.specplane_promote"
+    must: "promote --ids drops inferred, bumps the changelog, and retrieve then shows live"
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_promote_named_ids_become_live"
+  - id: "unknown_or_already_live"
+    promise: "component.cli_promote"
+    must: "An unknown id or an id that is not inferred writes nothing"
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_unknown_or_already_live_writes_nothing"
+  - id: "refuse_without_ids"
+    promise: "capability.specplane_promote"
+    must: "promote with no ids exits non-zero and does not promote the inventory"
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_refuse_without_ids"
+  - id: "does_not_read_source"
+    promise: "capability.specplane_promote"
+    must: "promote does not read application source to invent ids"
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_does_not_read_source_to_invent_ids"
+  - id: "list_gaps_inferred_unpromoted"
+    promise: "capability.specplane_list_gaps"
+    must: "list_gaps prints inferred_unpromoted and stays advisory exit 0"
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_does_not_read_source_to_invent_ids"
+  - id: "mcp_has_no_infer_or_promote"
+    promise: "component.mcp_stdio"
+    must: "MCP catalog still omits infer and promote; promote is CLI-only"
+    run:
+      unittest: "tools.specplane.test_mcp.McpCatalogTests.test_catalog_is_five_tools"
+
+looks_fine_is_not_a_sensor: true
