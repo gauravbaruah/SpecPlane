@@ -67,6 +67,7 @@
   --inferred-bg: #fff8ec;
   --future: #7a4fa0;
   --future-bg: #f6f1fa;
+  color-scheme: light;
   color: var(--ink-1);
   background: var(--bg-surface);
   font-family: "Schibsted Grotesk", sans-serif;
@@ -75,8 +76,38 @@
   line-height: 1.5;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-canvas: #111214;
+  --bg-surface: #18191c;
+  --bg-raised: #1f2024;
+  --bg-sunken: #141517;
+  --bg-hover: #25272b;
+  --border: #2b2d32;
+  --border-strong: #393c42;
+  --divider: #232529;
+  --dashed: #4a4d54;
+  --ink-1: #ecebe7;
+  --ink-2: #c6c5c0;
+  --ink-3: #9c9da2;
+  --ink-4: #6f7177;
+  --accent: #7ea3f5;
+  --accent-subtle: #1a2440;
+  --accent-border: #2e4277;
+  --sel-bg: #ecebe7;
+  --sel-ink: #111214;
+  --sel-ink-2: #55575d;
+  --success: #5dc28b;
+  --warning: #e2a755;
+  --danger: #f08a82;
+  --inferred-bg: #2a2114;
+  --future: #bf9ae0;
+  --future-bg: #241c2d;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg-canvas: #111214;
     --bg-surface: #18191c;
     --bg-raised: #1f2024;
@@ -122,6 +153,24 @@ a:hover { text-decoration: underline; }
 }
 .brand { font-weight: 600; font-size: 16px; line-height: 1.3; letter-spacing: -0.02em; }
 .nav { display: flex; gap: 16px; margin: 0 auto; }
+.top-end { display: flex; align-items: center; gap: 16px; }
+.theme { display: flex; gap: 6px; }
+.theme button {
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-raised);
+  color: var(--ink-3);
+  padding: 4px 10px;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.theme button.on {
+  color: var(--ink-1);
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+}
 .nav a, .tabs button, .filters button {
   border: 0;
   border-bottom: 2px solid transparent;

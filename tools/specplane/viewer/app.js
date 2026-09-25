@@ -35,6 +35,32 @@
   ];
   let findText = "";
   let expanded = {};
+  const THEME_KEY = "specplane-view-theme";
+
+  function systemTheme() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function savedTheme() {
+    try {
+      const value = localStorage.getItem(THEME_KEY);
+      return value === "light" || value === "dark" ? value : "";
+    } catch (err) {
+      return "";
+    }
+  }
+
+  function applyTheme(name) {
+    if (name === "light" || name === "dark") document.documentElement.setAttribute("data-theme", name);
+    else document.documentElement.removeAttribute("data-theme");
+  }
+
+  function setTheme(name) {
+    applyTheme(name);
+    try { localStorage.setItem(THEME_KEY, name); } catch (err) { /* the page still switches */ }
+  }
+
+  applyTheme(savedTheme());
 
   function h(tag, props, children) {
     const node = document.createElement(tag);
@@ -108,10 +134,18 @@
     const nav = h("nav", { class: "nav" }, lenses.map(function (pair) {
       return h("a", { href: href(pair[0]), class: route.kind === pair[0] || (pair[0] === "live" && route.kind === "id") || (pair[0] === "changes" && route.kind === "change") ? "on" : "" }, [pair[1]]);
     }));
+    const chosen = document.documentElement.getAttribute("data-theme") || systemTheme();
+    const theme = h("div", { class: "theme" }, ["light", "dark"].map(function (name) {
+      return h("button", {
+        type: "button",
+        class: chosen === name ? "on" : "",
+        on: { click: function () { setTheme(name); rerender(false); } },
+      }, [name[0].toUpperCase() + name.slice(1)]);
+    }));
     const top = h("header", { class: "top" }, [
       h("div", { class: "brand" }, ["SpecPlane"]),
       nav,
-      h("div", { class: "quiet" }, ["read-only"]),
+      h("div", { class: "top-end" }, [theme, h("div", { class: "quiet" }, ["read-only"])]),
     ]);
     return h("div", {}, [top, honesty(route), h("main", { class: "page" }, [body, footer()])]);
   }
