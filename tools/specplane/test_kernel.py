@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+import shutil
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -19,10 +21,14 @@ from kernel import (  # noqa: E402
     blast,
     check_sync,
     format_check_sync,
+    format_list_gaps,
+    format_promote,
     format_retrieve,
     format_run,
+    list_gaps,
     load_kernel,
     map_changed_files,
+    promote_ids,
     retrieve,
     run_sensors,
 )
@@ -308,7 +314,13 @@ class ListGapsTests(unittest.TestCase):
         self.assertNotIn("add_passkeys", payload["missing_success_sensor"])
         self.assertEqual(
             [key for key in payload if key != "advisory"],
-            ["phase1_no_join", "open_changes", "replaced", "missing_success_sensor"],
+            [
+                "phase1_no_join",
+                "open_changes",
+                "replaced",
+                "missing_success_sensor",
+                "inferred_unpromoted",
+            ],
         )
         self.assertNotIn("missing_runnable", payload)
 
@@ -324,6 +336,7 @@ class ListGapsTests(unittest.TestCase):
         self.assertIn("phase1_no_join", text)
         self.assertIn("capability.orphan", text)
         self.assertIn("no_sensor", text)
+        self.assertIn("inferred_unpromoted", text)
         self.assertIn("advisory: true", text)
 
     def test_archive_folder_is_not_an_open_change(self) -> None:
@@ -647,6 +660,215 @@ class TestRun(unittest.TestCase):
         self.assertIn("timed out", payload["sensors"][0]["detail"])
         self.assertIn("result: error", text)
         self.assertNotIn("verified satisfies the spec", text)
+
+
+INFERRED = ROOT / "testdata" / "inferred"
+
+
+def _copy_inferred_product(tmp: Path) -> Path:
+    dest = tmp / "product"
+    shutil.copytree(INFERRED, dest)
+    return dest
+
+
+class TestPromote(unittest.TestCase):
+    def test_retrieve_inferred_not_live(self) -> None:
+        spec_root = INFERRED / "specs"
+        report = validate(spec_root)
+        self.assertEqual([f.format() for f in report.errors], [])
+        payload = retrieve(load_kernel(spec_root), "capability.billing_checkout")
+        assert payload is not None
+        self.assertEqual(payload["bit"], "inferred")
+        self.assertIsNone(payload["live"])
+        self.assertFalse(payload["inferred_as_live"])
+        text = format_retrieve(payload)
+        self.assertIn("bit: inferred", text)
+        self.assertNotIn("\nlive:", text)
+
+        from io import StringIO
+        from unittest.mock import patch
+
+        out, err = StringIO(), StringIO()
+        with patch("sys.stdout", out), patch("sys.stderr", err):
+            code = cli_main(
+                ["retrieve", "capability.billing_checkout", "--spec-root", str(spec_root)]
+            )
+        self.assertEqual(code, 0)
+        self.assertIn("inferred (not live): capability.billing_checkout", err.getvalue())
+        self.assertIn("bit: inferred", out.getvalue())
+        self.assertNotIn("bit: live", out.getvalue())
+
+    def test_promote_named_ids_become_live(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            product = _copy_inferred_product(Path(tmp))
+            spec_root = product / "specs"
+            before = (spec_root / "capabilities" / "capability.billing_checkout.yaml").read_text(
+                encoding="utf-8"
+            )
+            payload = promote_ids(
+                load_kernel(spec_root),
+                ["capability.billing_checkout"],
+                today="2026-09-24",
+            )
+            self.assertTrue(payload["ok"], payload)
+            self.assertEqual(payload["promoted"], ["capability.billing_checkout"])
+            text = format_promote(payload)
+            self.assertIn("capability.billing_checkout", text)
+            path = spec_root / "capabilities" / "capability.billing_checkout.yaml"
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            tags = [str(tag).lower() for tag in data["meta"]["tags"]]
+            self.assertNotIn("inferred", tags)
+            self.assertIn("billing", tags)
+            self.assertEqual(data["meta"]["version"], "1.0.1")
+            self.assertEqual(data["changelog"][0]["date"], "2026-09-24")
+            self.assertEqual(data["changelog"][0]["summary"], "Promoted from inferred to live")
+            self.assertIn("cite_checkout", before)
+            self.assertEqual(
+                data["refs"][0]["path"],
+                "src/billing/checkout.py",
+            )
+            again = retrieve(load_kernel(spec_root), "capability.billing_checkout")
+            assert again is not None
+            self.assertEqual(again["bit"], "live")
+            self.assertIsNotNone(again["live"])
+            second = promote_ids(
+                load_kernel(spec_root),
+                ["capability.billing_checkout"],
+                today="2026-09-24",
+            )
+            self.assertFalse(second["ok"])
+            self.assertEqual(second["problems"], ["not inferred: capability.billing_checkout"])
+            self.assertEqual(
+                yaml.safe_load(path.read_text(encoding="utf-8"))["meta"]["version"],
+                "1.0.1",
+            )
+
+    def test_unknown_or_already_live_writes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            product = _copy_inferred_product(Path(tmp))
+            spec_root = product / "specs"
+            path = spec_root / "capabilities" / "capability.billing_checkout.yaml"
+            original = path.read_bytes()
+            live = spec_root / "capabilities" / "capability.already.yaml"
+            live_doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+            live_doc["meta"]["id"] = "capability.already"
+            live_doc["meta"]["tags"] = ["billing"]
+            live.write_text(
+                yaml.safe_dump(live_doc, sort_keys=False),
+                encoding="utf-8",
+            )
+            live_before = live.read_bytes()
+            missing = promote_ids(
+                load_kernel(spec_root),
+                ["capability.billing_checkout", "capability.missing"],
+            )
+            self.assertFalse(missing["ok"])
+            self.assertEqual(missing["promoted"], [])
+            self.assertIn("not found: capability.missing", missing["problems"])
+            self.assertEqual(path.read_bytes(), original)
+            already = promote_ids(load_kernel(spec_root), ["capability.already"])
+            self.assertFalse(already["ok"])
+            self.assertEqual(already["problems"], ["not inferred: capability.already"])
+            self.assertEqual(live.read_bytes(), live_before)
+            self.assertEqual(path.read_bytes(), original)
+
+    def test_refuse_without_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            product = _copy_inferred_product(Path(tmp))
+            spec_root = product / "specs"
+            path = spec_root / "capabilities" / "capability.billing_checkout.yaml"
+            original = path.read_bytes()
+            payload = promote_ids(load_kernel(spec_root), [])
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["problems"], ["promote requires named ids"])
+            self.assertEqual(path.read_bytes(), original)
+
+            from io import StringIO
+            from unittest.mock import patch
+
+            err = StringIO()
+            with patch("sys.stderr", err):
+                code = cli_main(["promote", "--spec-root", str(spec_root)])
+            self.assertEqual(code, 1)
+            self.assertIn("promote requires named ids", err.getvalue())
+            self.assertEqual(path.read_bytes(), original)
+
+    def test_does_not_read_source_to_invent_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            product = _copy_inferred_product(Path(tmp))
+            spec_root = product / "specs"
+            source = (product / "src" / "checkout.py").read_text(encoding="utf-8")
+            self.assertIn("capability.parsed_from_checkout", source)
+            payload = list_gaps(load_kernel(spec_root))
+            self.assertEqual(payload["inferred_unpromoted"], ["capability.billing_checkout"])
+            self.assertNotIn("capability.parsed_from_checkout", payload["inferred_unpromoted"])
+            self.assertTrue(payload["advisory"])
+            invented = promote_ids(
+                load_kernel(spec_root),
+                ["capability.parsed_from_checkout"],
+            )
+            self.assertFalse(invented["ok"])
+            self.assertEqual(
+                invented["problems"],
+                ["not found: capability.parsed_from_checkout"],
+            )
+            self.assertFalse(
+                (spec_root / "capabilities" / "capability.parsed_from_checkout.yaml").exists()
+            )
+            text = format_list_gaps(payload)
+            self.assertIn("inferred_unpromoted:", text)
+            self.assertIn("capability.billing_checkout", text)
+
+            from io import StringIO
+            from unittest.mock import patch
+
+            out = StringIO()
+            with patch("sys.stdout", out):
+                code = cli_main(["list_gaps", "--spec-root", str(spec_root)])
+            self.assertEqual(code, 0)
+            self.assertIn("inferred_unpromoted:", out.getvalue())
+            self.assertIn("advisory: true", out.getvalue())
+
+    def test_promote_cli_then_retrieve_is_live(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            product = _copy_inferred_product(Path(tmp))
+            spec_root = product / "specs"
+            from io import StringIO
+            from unittest.mock import patch
+
+            out, err = StringIO(), StringIO()
+            with patch("sys.stdout", out), patch("sys.stderr", err):
+                code = cli_main(
+                    [
+                        "promote",
+                        "--ids",
+                        "capability.billing_checkout",
+                        "--spec-root",
+                        str(spec_root),
+                    ]
+                )
+            self.assertEqual(code, 0, err.getvalue())
+            self.assertIn("capability.billing_checkout", out.getvalue())
+            self.assertEqual(err.getvalue(), "")
+            out2, err2 = StringIO(), StringIO()
+            with patch("sys.stdout", out2), patch("sys.stderr", err2):
+                code = cli_main(
+                    [
+                        "retrieve",
+                        "capability.billing_checkout",
+                        "--spec-root",
+                        str(spec_root),
+                    ]
+                )
+            self.assertEqual(code, 0)
+            self.assertIn("bit: live", out2.getvalue())
+            self.assertNotIn("inferred (not live)", err2.getvalue())
+            promoted = yaml.safe_load(
+                (spec_root / "capabilities" / "capability.billing_checkout.yaml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(promoted["changelog"][0]["date"], date.today().isoformat())
 
 
 if __name__ == "__main__":

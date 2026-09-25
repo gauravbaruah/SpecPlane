@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-18"
+  last_updated: "2026-09-24"
   status: "planned"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Consuming AGENTS.md points brownfield at specplane-infer, not at a scan CLI"
+    breaking: false
   - date: "2026-09-18"
     author: "kernel-slice"
     summary: "Init may run from uvx --from git+ this repo; the wheel bundles the kit. PyPI/npx still unpublished."
@@ -26,6 +30,7 @@ responsibilities:
   - "Create empty specs/capabilities, foundations, containers, components, changes"
   - "Write or append a consuming AGENTS.md; do not replace an existing project AGENTS.md"
   - "Refuse dest equal to the kit root; do not write GitHub Actions or hooks"
+  - "Consuming AGENTS.md points an existing repo at specplane-infer. Greenfield stays bootstrap. There is no scan CLI."
 
 flows:
   - "From a product repo: uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@<branch> specplane init"
@@ -47,6 +52,7 @@ constraints:
     - "Does not copy kernel specs/ into the dest"
     - "Does not write .github/workflows or git hooks"
     - "Does not invent an example capability (bootstrap does that)"
+    - "Does not infer or scan the destination. Brownfield mapping is the specplane-infer skill."
     - "Published PyPI / npx package is not this command"
     - "uvx --from git+ this repo may run init because the installed wheel bundles the kit"
     - "No interactive agent-picker"

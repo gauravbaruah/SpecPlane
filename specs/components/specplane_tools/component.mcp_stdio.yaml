@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "mcp"]
   last_updated: "2026-09-24"
   status: "draft"
-  version: "1.2.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Still no infer tool. promote is CLI-only, like validate."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "Catalog adds run; same kernel as CLI; still no infer, specify, or implement; validate stays CLI-only"
@@ -47,12 +51,13 @@ planning:
   user_flows:
     actions:
       - "Agent calls retrieve / blast / check_sync / list_gaps / run via MCP instead of reading specs/"
-      - "Agent shells out for validate — not an MCP tool"
+      - "Agent shells out for validate and promote — not MCP tools"
     success:
       - "Same answers as the CLI for retrieve, blast, check_sync, list_gaps, and run (one kernel)"
     errors:
       - "Do not add specify/implement tools"
       - "Do not add infer"
+      - "Do not add promote"
       - "Do not add open_delta as a personality — the folder is the write path"
 
 implementation:
@@ -72,6 +77,7 @@ implementation:
       - "Catalog is exactly retrieve, blast, check_sync, list_gaps, run"
       - "Each tool calls the same kernel function as the CLI"
       - "validate is not in the catalog; agents shell out"
+      - "promote is not in the catalog; agents shell out"
       - "Hosted MCP is out of slice"
     open_questions: []
     readiness: "in-progress"

@@ -36,7 +36,7 @@ This project uses SpecPlane v9.1.0. Specs live in `specs/`. Schema files live in
 Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a coding session.
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
-2. Skills: specplane-bootstrap, specplane-author, specplane-flows, specplane-implement, specplane-validate.
+2. Skills: specplane-bootstrap, specplane-author, specplane-flows, specplane-implement, specplane-validate, specplane-infer.
 3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --change <slug> --changed-ids, then run --change <slug>. `run` invokes bound checks only; it does not create tests or certify behavior. Typos skip retrieve. Do not slurp `specs/`.
 4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
@@ -45,6 +45,7 @@ Rules:
 - Capability Phase 1 is valid without architecture.
 - Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
 - Changelog on live 5C files when `meta.version` changes. In-flight work lives in `specs/changes/`.
+- Brownfield (an existing repo): use specplane-infer. The coding agent walks one named root and writes Phase 1 YAML tagged inferred. Greenfield stays specplane-bootstrap. There is no scan CLI and no infer CLI. `promote --ids` makes named inferred ids live.
 - Specs before code when behavior, contracts, events, rollout, security, or how the product is obtained change. Trivial work (typo/4px/rename): no retrieve. If unsure, retrieve.
 """
 

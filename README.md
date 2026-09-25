@@ -40,6 +40,7 @@ You do not operate the CLI. The coding agent does.
 | “Rename this helper” | Agent just does it |
 | “Reset links expire in 15m, not 60m” | SpecPlane tracks the product change |
 | “Make destructive actions green” | SpecPlane warns if this changes a shared design rule |
+| “Map what’s already in this repo” | The agent uses **specplane-infer**, writes a handful of inferred capabilities, and waits for you to name which ids to promote |
 
 Ceremony scales with **semantic consequence**, not diff size. Full transcript: [`docs/golden-journey.md`](./docs/golden-journey.md).
 
@@ -74,6 +75,8 @@ That command copies the kit and creates empty `specs/` folders. It does not copy
 If `uvx` is not installed: `python3 /path/to/SpecPlane/tools/specplane/cli.py init` from a checkout.
 
 Then ask for a Phase 1 capability. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
+
+Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `promote --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
 
 ## Not this
 

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -473,18 +474,28 @@ def list_gaps(kernel: Kernel) -> dict[str, Any]:
         for change in kernel.changes
         if change.open and not change_has_success_sensor(change)
     )
+    inferred_unpromoted = sorted(
+        doc.spec_id for doc in kernel.docs if bit_of(doc) == "inferred"
+    )
     return {
         "phase1_no_join": phase1_no_join,
         "open_changes": open_changes,
         "replaced": replaced,
         "missing_success_sensor": missing_success_sensor,
+        "inferred_unpromoted": inferred_unpromoted,
         "advisory": True,
     }
 
 
 def format_list_gaps(payload: dict[str, Any]) -> str:
     lines = ["list_gaps"]
-    for key in ("phase1_no_join", "open_changes", "replaced", "missing_success_sensor"):
+    for key in (
+        "phase1_no_join",
+        "open_changes",
+        "replaced",
+        "missing_success_sensor",
+        "inferred_unpromoted",
+    ):
         lines.append(f"{key}:")
         values = payload.get(key) or []
         if not values:
@@ -492,6 +503,114 @@ def format_list_gaps(payload: dict[str, Any]) -> str:
         for item in values:
             lines.append(f"  - {item}")
     lines.append("advisory: true")
+    return "\n".join(lines) + "\n"
+
+
+def _bump_patch(version: str) -> str:
+    parts = version.strip().split(".")
+    if len(parts) != 3 or not all(part.isdigit() for part in parts):
+        return version.strip() or "1.0.0"
+    return f"{parts[0]}.{parts[1]}.{int(parts[2]) + 1}"
+
+
+def _document_without_inferred(data: dict[str, Any], today: str) -> dict[str, Any]:
+    meta = data.get("meta")
+    if not isinstance(meta, dict):
+        meta = {}
+        data["meta"] = meta
+    tags = meta.get("tags") or []
+    if isinstance(tags, str):
+        tags = [tags]
+    if not isinstance(tags, list):
+        tags = []
+    meta["tags"] = [tag for tag in tags if str(tag).lower() != "inferred"]
+    meta["last_updated"] = today
+    meta["version"] = _bump_patch(str(meta.get("version") or "1.0.0"))
+    changelog = data.get("changelog")
+    if not isinstance(changelog, list):
+        changelog = []
+    data["changelog"] = [
+        {
+            "date": today,
+            "author": "promote",
+            "summary": "Promoted from inferred to live",
+            "breaking": False,
+        },
+        *changelog,
+    ]
+    return data
+
+
+def promote_ids(
+    kernel: Kernel,
+    spec_ids: list[str],
+    *,
+    today: str | None = None,
+) -> dict[str, Any]:
+    """Drop ``inferred`` on named ids only. Never scans application source."""
+    named = []
+    seen: set[str] = set()
+    for raw in spec_ids:
+        spec_id = str(raw).strip()
+        if not spec_id or spec_id in seen:
+            continue
+        seen.add(spec_id)
+        named.append(spec_id)
+    if not named:
+        return {
+            "ok": False,
+            "promoted": [],
+            "problems": ["promote requires named ids"],
+        }
+
+    problems: list[str] = []
+    docs: list[SpecDoc] = []
+    for spec_id in named:
+        doc = kernel.by_id.get(spec_id)
+        if doc is None:
+            problems.append(f"not found: {spec_id}")
+            continue
+        if bit_of(doc) != "inferred":
+            problems.append(f"not inferred: {spec_id}")
+            continue
+        docs.append(doc)
+    if problems:
+        return {"ok": False, "promoted": [], "problems": problems}
+
+    stamp = today or date.today().isoformat()
+    pending: list[tuple[SpecDoc, str]] = []
+    for doc in docs:
+        loaded = yaml.safe_load(doc.path.read_text(encoding="utf-8"))
+        if not isinstance(loaded, dict):
+            return {
+                "ok": False,
+                "promoted": [],
+                "problems": [f"not a mapping: {doc.spec_id}"],
+            }
+        text = yaml.safe_dump(
+            _document_without_inferred(loaded, stamp),
+            sort_keys=False,
+            allow_unicode=True,
+        )
+        if not text.endswith("\n"):
+            text += "\n"
+        pending.append((doc, text))
+    for doc, text in pending:
+        doc.path.write_text(text, encoding="utf-8")
+    return {
+        "ok": True,
+        "promoted": [doc.spec_id for doc, _text in pending],
+        "problems": [],
+    }
+
+
+def format_promote(payload: dict[str, Any]) -> str:
+    lines = ["promote", "promoted:"]
+    promoted = payload.get("promoted") or []
+    if not promoted:
+        lines.append("  (none)")
+    for item in promoted:
+        lines.append(f"  - {item}")
     return "\n".join(lines) + "\n"
 
 

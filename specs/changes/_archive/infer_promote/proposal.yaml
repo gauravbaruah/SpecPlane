@@ -1,0 +1,14 @@
+change_id: "infer_promote"
+kind: "evolve"
+promise_ids:
+  - "capability.specplane_promote"
+  - "component.cli_promote"
+  - "capability.specplane_list_gaps"
+  - "capability.specplane_retrieve"
+  - "foundation.epistemic_status"
+  - "capability.specplane_init"
+  - "component.mcp_stdio"
+why: >
+  Brownfield: agent+skill infer once into tagged inferred YAML;
+  kernel promote named ids to live. No source-parsing infer CLI.
+  No weekly re-infer. No auto-write live.

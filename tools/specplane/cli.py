@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, list_gaps, run, init.
+"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, list_gaps, run, promote, init.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -21,10 +21,12 @@ from kernel import (  # noqa: E402
     format_blast,
     format_check_sync,
     format_list_gaps,
+    format_promote,
     format_retrieve,
     format_run,
     list_gaps,
     load_kernel,
+    promote_ids,
     run_sensors,
     map_changed_files,
     retrieve,
@@ -163,6 +165,22 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 1
 
 
+def cmd_promote(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    spec_ids = [part.strip() for part in (args.ids or "").split(",")]
+    payload = promote_ids(kernel, spec_ids)
+    if not payload["ok"]:
+        for problem in payload["problems"]:
+            sys.stderr.write(problem + "\n")
+        return 1
+    print(format_promote(payload), end="")
+    return 0
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     dest = (args.dest or Path.cwd()).resolve()
     kit_root = (args.kit_root or default_kit_root()).resolve()
@@ -180,7 +198,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / list_gaps / run / init)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / list_gaps / run / promote / init)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -241,6 +259,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Working directory for bound checks (default: cwd). Env is inherited.",
     )
     p_run.set_defaults(func=cmd_run)
+
+    p_promote = sub.add_parser(
+        "promote",
+        help="Drop inferred on named ids and append a changelog row. CLI only.",
+    )
+    add_root_args(p_promote)
+    p_promote.add_argument(
+        "--ids",
+        default="",
+        help="Comma-separated inferred ids to promote. Required. Never promotes the whole inventory.",
+    )
+    p_promote.set_defaults(func=cmd_promote)
 
     p_init = sub.add_parser(
         "init",

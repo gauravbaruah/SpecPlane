@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "retrieve"]
   last_updated: "2026-09-24"
   status: "planned"
-  version: "1.1.0"
+  version: "1.1.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "infer_promote — inferred is still never presented as live"
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "A — bit live is graph membership, not approval; stdout prints meta.review_state and meta.status next to bit"
@@ -47,6 +51,7 @@ constraints:
     - "Default answer is the live graph; leftovers and open delta are labeled, not mixed in as live"
     - "Stdout prints meta.review_state and meta.status next to bit; live still means graph membership, not approval"
     - "Skills and AGENTS.md call retrieve, not read specs/"
+    - "An inferred id prints inferred (not live) on stderr and omits the live slice"
   data_classification: "internal"
 
 success_metrics:

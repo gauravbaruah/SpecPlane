@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "epistemic", "status"]
   last_updated: "2026-09-24"
   status: "draft"
-  version: "1.0.1"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Inferred writer is the one-shot skill/agent. promote --ids is the live writer. used_by lists component.cli_promote."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "used_by lists component.cli_run"
@@ -34,6 +38,7 @@ used_by:
     - "component.cli_blast"
     - "component.cli_check_sync"
     - "component.cli_run"
+    - "component.cli_promote"
     - "component.mcp_stdio"
 
 extends: []
@@ -51,10 +56,10 @@ bit:
   values:
     live:
       meaning: "Promised now; retrieve's default graph"
-      writer: "Human or CI promote"
+      writer: "Human promote of named ids (promote --ids), or CI"
     inferred:
       meaning: "Inventory from code or docs; never looks as live"
-      writer: "One-shot infer job (not first-slice CLI)"
+      writer: "One-shot infer job (skill/agent, not a kernel CLI)"
     in-flight:
       meaning: "Open change object. Live id gets a pointer, not a second status (Q71)"
       writer: "Change folder"
@@ -64,6 +69,7 @@ bit:
   forbidden:
     - "Infer writes live"
     - "Weekly re-infer"
+    - "Source-parsing infer CLI or MCP infer"
     - "Claude reconstructed enum live | intended | superseded | archived"
     - "Fifth value archived in this slice (Q70 default: collapse to four)"
     - "Coach or coding agent auto-writing live to match code"

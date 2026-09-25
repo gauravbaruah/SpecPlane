@@ -1,0 +1,42 @@
+meta:
+  id: "capability.billing_checkout"
+  purpose: "Customer completes paid checkout"
+  level: "capability"
+  owner: "example"
+  tags: ["inferred", "billing"]
+  last_updated: "2026-09-24"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-24"
+    author: "infer"
+    summary: "Inferred Phase 1 from the named root"
+    breaking: false
+
+responsibilities:
+  - "Accept payment and record the order"
+
+flows:
+  - "Checkout"
+
+business_value:
+  user_outcome: "Customer completes paid checkout"
+  objective: "Take payment"
+  revenue_dependency: "high"
+  strategic_priority: "core"
+
+constraints:
+  legal: []
+  security: []
+  ux:
+    - "Do not confirm the order when payment fails"
+  data_classification: "confidential"
+
+refs:
+  - id: "cite_checkout"
+    type: "other"
+    path: "src/billing/checkout.py"
+    title: "Why this guess"
