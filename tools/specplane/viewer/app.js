@@ -161,21 +161,47 @@
     return h("div", {}, [top, honesty(route), h("main", { class: "page" }, [body, footer()])]);
   }
 
+  let trail = [];
+
+  function noteVisit(id) {
+    const at = trail.lastIndexOf(id);
+    if (at === trail.length - 1) return;
+    if (at >= 0) trail = trail.slice(0, at + 1);
+    else trail.push(id);
+  }
+
+  function crumb(id) {
+    return h("span", { class: "crumb" }, [
+      h("span", { class: "sep" }, ["›"]),
+      h("a", { class: "mono", href: href("id/" + encodeURIComponent(id)) }, [breakable(id)]),
+    ]);
+  }
+
   function honesty(route) {
     if (route.kind === "id") {
       const rec = record(route.arg);
       if (!rec) return null;
+      noteVisit(rec.id);
+      const back = trail.length > 1 ? trail[trail.length - 2] : "";
       return h("div", { class: "bar" }, [
-        h("div", {}, [h("a", { href: href("live") }, ["Live"]), "  ›  ", idLink(rec.id)]),
-        h("div", { class: "row" }, [bitMark(rec.bit), h("span", { class: "bit " + rec.bit }, [rec.bit === "inferred" ? "inferred · not live" : rec.bit]), rec.review_state ? " · " + rec.review_state : ""]),
+        h("div", { class: "trail" }, [
+          h("a", { href: back ? href("id/" + encodeURIComponent(back)) : href("live") }, [back ? "← Back" : "← Live"]),
+          ...trail.slice(0, -1).map(crumb),
+          crumb(rec.id),
+        ]),
+        h("div", { class: "quiet mono" }, [rec.bit === "inferred" ? "inferred · not live" : (rec.bit || "live")]),
       ]);
     }
     if (route.kind === "change") {
       return h("div", { class: "bar" }, [
-        h("div", {}, [h("a", { href: href("changes") }, ["Changes"]), "  ›  ", route.arg]),
-        h("div", { class: "inflight" }, ["change · " + route.arg + " · in-flight"]),
+        h("div", { class: "trail" }, [
+          h("a", { href: href("changes") }, ["← Changes"]),
+          h("span", { class: "crumb" }, [h("span", { class: "sep" }, ["›"]), h("span", { class: "mono inflight" }, [breakable(route.arg)])]),
+        ]),
+        h("div", { class: "inflight" }, ["in-flight"]),
       ]);
     }
+    if (route.kind === "live" || route.kind === "changes" || route.kind === "gaps") trail = [];
     return null;
   }
 
@@ -427,7 +453,7 @@
   }
 
   function drawProjection(rec, graph, proj, selected, persp, onselect) {
-    if (proj === "map") return graphBlock(mapColumns(rec), selected, onselect, null, "derived · from declared links");
+    if (proj === "map") return graphBlock(mapColumns(rec), selected, onselect, mapWhy(rec, selected), "derived · from declared links");
     if (proj === "layers") return graphBlock(layerColumns(rec), selected, onselect, null, "derived · 5C placement");
     if (proj === "journey") return journeyBlock(rec, graph);
     if (proj === "diagrams") return diagramBlock(rec);
@@ -552,8 +578,20 @@
     return h("div", {}, [
       h("div", { class: "quiet" }, [prov || ""]),
       viewportCanvas(graph),
+      legend(),
       extra || null,
     ]);
+  }
+
+  function legend() {
+    return h("div", { class: "legend" }, [
+      ["declared", "declared link"],
+      ["derived", "derived reach"],
+      ["inferred", "inferred link"],
+      ["unknown", "not represented"],
+    ].map(function (pair) {
+      return h("span", {}, [h("span", { class: "swatch " + pair[0] }), pair[1]]);
+    }));
   }
 
   function visibleNodes(col, selected, onselect) {
@@ -571,9 +609,13 @@
   function nodeButton(node, selected, onselect) {
     const on = node.id === selected || node.selectedId && !selected;
     const cls = ["node", node.epistemic || "declared", node.bit || "", node.change ? "change" : "", node.dim ? "dim" : "", on ? "is-selected" : ""].filter(Boolean).join(" ");
+    const lines = node.lines && node.lines.length ? node.lines : ["", ""];
     return h("button", { class: cls, on: { click: function () { onselect(node.id); } } }, [
+      h("div", { class: "pre" }, [node.epistemic || "declared"]),
       h("div", { class: "id" }, [breakable(node.id)]),
       h("div", { class: "sub" }, [node.sub || " "]),
+      h("div", { class: "line", title: lines[0] || "" }, [lines[0] || " "]),
+      h("div", { class: "line", title: lines[1] || "" }, [lines[1] || " "]),
     ]);
   }
 
@@ -589,7 +631,8 @@
         id: node.id,
         bit: (record(node.id) || {}).bit || "",
         epistemic: node.epistemic_state || "declared",
-        sub: annotation(graph, node, persp, inSet),
+        sub: node.relationship || " ",
+        lines: perspectiveLines(graph, node, persp, inSet),
         change: node.level === "change" || String(node.id).indexOf("change.") === 0,
         dim: known && !inSet,
       });
@@ -618,6 +661,20 @@
     if (persp === "governance") return new Set(((p.governance || {}).concerns || []).map(function (item) { return item.subject; }));
     if (persp === "ownership") return new Set(((p.ownership || {}).associations || []).map(function (item) { return item.subject; }));
     return null;
+  }
+
+  function perspectiveLines(graph, node, persp, inSet) {
+    if (persp === "system") return [node.epistemic_state || "declared", ""];
+    if (!inSet) {
+      if (persp === "governance") return ["not represented", "No governance relationship identified in the current model."];
+      if (persp === "ownership") return ["not represented", "No ownership information represented."];
+      if (persp === "quality") return ["not represented", "Quality evidence not represented."];
+      return ["not represented", ""];
+    }
+    const text = annotation(graph, node, persp, inSet);
+    const cut = text.indexOf(" · ");
+    if (cut < 0) return [text, ""];
+    return [text.slice(0, cut), text.slice(cut + 3)];
   }
 
   function annotation(graph, node, persp, inSet) {
@@ -668,18 +725,36 @@
     return null;
   }
 
+  function whyBox(id, text, prov, extra) {
+    return h("div", { class: "why" }, [
+      h("div", { class: "acc-sub" }, ["Why this is here"]),
+      h("div", { class: "mono" }, [breakable(id)]),
+      h("div", {}, [text]),
+      h("div", { class: "src" }, [prov]),
+      h("a", { href: href(String(id).indexOf("change.") === 0 ? "change/" + String(id).replace(/^change\./, "") : "id/" + encodeURIComponent(id)) }, ["Open " + id + " →"]),
+      extra || null,
+    ]);
+  }
+
+  function mapWhy(rec, selected) {
+    if (!selected) return h("p", { class: "quiet" }, ["Select an id to see why it is on this map."]);
+    if (selected === rec.id) return whyBox(selected, "The selected id.", "declared · this record");
+    const link = (rec.links || []).filter(function (item) { return item.id === selected; })[0];
+    const rel = link ? (REL[link.rel] || link.rel) : "Linked";
+    return whyBox(selected, rel + " from " + rec.id + ".", (link ? rec.id + " · " + link.rel : "declared link"));
+  }
+
   function whyPanel(node, graph, persp) {
     const steps = node.path || [];
     const chain = steps.length
       ? steps.map(function (step) { return step.from + " —" + step.relationship + "→ " + step.to; }).join("  ·  ")
-      : "This is the selected id.";
-    return h("div", { class: "why" }, [
-      h("div", {}, [chain]),
-      node.note ? h("div", { class: "note" }, [node.note]) : null,
-      h("div", { class: "src" }, [node.epistemic_state || "declared", node.relationship ? " · " + node.relationship : "", " · impact.affected.path"]),
-      h("div", {}, [idLink(node.id)]),
-      perspectiveDetail(graph, node.id, persp),
-    ]);
+      : "The selected id.";
+    return whyBox(
+      node.id,
+      chain,
+      (node.epistemic_state || "declared") + (node.relationship ? " · " + node.relationship : "") + " · impact.affected.path",
+      h("div", {}, [node.note ? h("div", { class: "note" }, [node.note]) : null, perspectiveDetail(graph, node.id, persp)])
+    );
   }
 
   function perspectiveDetail(graph, id, persp) {
