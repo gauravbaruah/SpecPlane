@@ -75,6 +75,8 @@ class ViewerModelTests(unittest.TestCase):
         frame = css.split(".diagram-frame {", 1)[1].split("}", 1)[0]
         self.assertIn("overflow-x: auto", frame)
         self.assertIn("max-width: 100%", frame)
+        self.assertNotIn("viewportCanvas", src)
+        self.assertNotIn("touch-action: none", css)
 
     def test_blast_hop_copy_is_in_the_viewer(self) -> None:
         src = (ASSETS / "app.js").read_text(encoding="utf-8")

@@ -294,19 +294,6 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .persp button { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 8px 0; cursor: pointer; color: var(--ink-3); font-weight: 600; font-size: 12px; line-height: 1.3; }
 .persp button.on { color: var(--ink-1); border-bottom-color: var(--accent); }
 
-.canvas {
-  overflow: hidden;
-  min-height: 420px;
-  margin-top: 8px;
-  background: var(--bg-sunken);
-  border-radius: 8px;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  box-sizing: border-box;
-}
-.canvas:active { cursor: grabbing; }
-.canvas-layer { transform-origin: 0 0; padding: 16px; min-width: 100%; box-sizing: border-box; }
 .graph {
   display: grid;
   grid-auto-flow: column;
@@ -314,6 +301,9 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   gap: 18px;
   align-items: start;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 8px;
 }
 .graph.blast { gap: 28px; }
 .graph.blast .col { position: relative; }

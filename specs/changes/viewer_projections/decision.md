@@ -42,7 +42,7 @@ specplane view --spec-root R   same as other kernel commands
 - **Vendor** a pinned Mermaid build under `tools/specplane/viewer/vendor/` — Mermaid **10.9.3** (`mermaid.min.js`). The page does not load it from a CDN. Diagrams stay off the switcher until the kernel returns diagram source.
 - No CDN. Offline / no-account / no-key is a Community property.
 - Rendering must not change because a CDN moved.
-- A flowchart or sequence is drawn in the column at its layout size. The page scrolls. A picture wider than the column scrolls inside the column. It does not capture the wheel to zoom, and it does not run to the screen edge. Map and Blast keep pan and zoom.
+- Every picture stays in the column, including Map, Blast, Layers, and Diagrams. The page scrolls. A picture wider than the column scrolls inside the column. Nothing captures the wheel to zoom, and nothing runs to the screen edge.
 
 ## Data (do not slurp)
 

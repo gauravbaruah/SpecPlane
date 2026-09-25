@@ -6,11 +6,15 @@ meta:
   tags: ["design", "viewer", "tokens"]
   last_updated: "2026-09-25"
   status: "draft"
-  version: "1.2.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Map, Blast, Layers, and Diagrams stay in the column. The page scrolls. Nothing captures the wheel to zoom."
+    breaking: false
   - date: "2026-09-25"
     author: "specplane"
     summary: "Spacing, radius, focus, and the control recipes from the viewer design system. Projection tabs are a filled control. Perspectives stay an underline. Accordions say Open and Close."
@@ -29,7 +33,7 @@ provides:
   - "Two families and nine text styles: Schibsted Grotesk for prose, JetBrains Mono for ids and provenance"
   - "Provenance strokes: declared, derived, inferred, future, unknown"
   - "Fonts ship with the viewer. The page does not load a font service"
-  - "A 1440px frame with a clamped side gutter. Diagram and map canvases may leave that frame"
+  - "A 1440px frame with a clamped side gutter. Pictures stay inside that frame"
 
 used_by:
   containers: []
@@ -136,7 +140,7 @@ layout:
   reading_measure: "72ch"
   name_breaks: [".", "_", "/"]
   name_overflow: "overflow-wrap: anywhere"
-  canvases: "Diagrams and maps may run to the viewport edge. They pan and zoom. Other text stays in the frame."
+  canvases: "Map, Blast, Layers, and Diagrams stay in the column. The page scrolls. A picture wider than the column scrolls inside the column."
 
 principles:
   - "Every viewer color and text style maps to one of these tokens"
@@ -145,7 +149,7 @@ principles:
   - "Absence stays not represented. It does not become a success or danger color"
   - "The page is a 1440px frame with a clamped gutter, not a percentage margin"
   - "Names wrap in full. They are never cut off with an ellipsis"
-  - "Diagram and map canvases may run edge to edge and pan and zoom"
+  - "Pictures stay in the column. The page scrolls. Nothing captures the wheel to zoom"
   - "Live, Changes, and Gaps, and the projection switcher, use a filled selected state"
   - "Blast perspectives stay an underlined text row, so they never look like the projection switcher"
   - "A closed section says Open. An open section says Close. The summary stays visible either way"

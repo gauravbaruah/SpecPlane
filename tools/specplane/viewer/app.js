@@ -501,76 +501,6 @@
     };
   }
 
-  let placeCanvas = null;
-  window.addEventListener("resize", function () { if (placeCanvas) placeCanvas(); });
-
-  function viewportCanvas(content) {
-    const layer = h("div", { class: "canvas-layer" });
-    layer.append(content);
-    const view = h("div", { class: "canvas" });
-    view.append(layer);
-    let x = 0;
-    let y = 0;
-    let scale = 1;
-    let drag = null;
-    let moved = false;
-    function paint() {
-      layer.style.transform = "translate(" + x + "px," + y + "px) scale(" + scale + ")";
-    }
-    function place() {
-      const parent = view.parentElement;
-      if (!parent) return;
-      const left = parent.getBoundingClientRect().left;
-      const width = document.documentElement.clientWidth;
-      const stacked = window.matchMedia("(max-width: 1100px)").matches;
-      if (stacked) {
-        view.style.marginLeft = (-left) + "px";
-        view.style.width = width + "px";
-      } else {
-        view.style.marginLeft = "0px";
-        view.style.width = Math.max(0, width - left) + "px";
-      }
-    }
-    placeCanvas = place;
-    view.addEventListener("wheel", function (ev) {
-      ev.preventDefault();
-      const next = Math.min(2.5, Math.max(0.35, scale * (ev.deltaY < 0 ? 1.08 : 0.92)));
-      const rect = view.getBoundingClientRect();
-      const ox = ev.clientX - rect.left;
-      const oy = ev.clientY - rect.top;
-      x = ox - (ox - x) * (next / scale);
-      y = oy - (oy - y) * (next / scale);
-      scale = next;
-      paint();
-    }, { passive: false });
-    view.addEventListener("pointerdown", function (ev) {
-      if (ev.button !== 0) return;
-      drag = { x: ev.clientX, y: ev.clientY, ox: x, oy: y };
-      moved = false;
-    });
-    view.addEventListener("pointermove", function (ev) {
-      if (!drag) return;
-      const dx = ev.clientX - drag.x;
-      const dy = ev.clientY - drag.y;
-      if (!moved && Math.hypot(dx, dy) < 4) return;
-      moved = true;
-      x = drag.ox + dx;
-      y = drag.oy + dy;
-      paint();
-    });
-    function endDrag() { drag = null; }
-    view.addEventListener("pointerup", endDrag);
-    view.addEventListener("pointercancel", endDrag);
-    view.addEventListener("click", function (ev) {
-      if (!moved) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      moved = false;
-    }, true);
-    requestAnimationFrame(place);
-    return view;
-  }
-
   function graphBlock(cols, selected, onselect, extra, prov, kind) {
     const graph = h("div", { class: "graph" + (kind ? " " + kind : "") }, cols.map(function (col) {
       return h("div", { class: "col" }, [
@@ -580,7 +510,7 @@
     }));
     return h("div", {}, [
       h("div", { class: "quiet" }, [prov || ""]),
-      viewportCanvas(graph),
+      graph,
       legend(),
       extra || null,
     ]);
