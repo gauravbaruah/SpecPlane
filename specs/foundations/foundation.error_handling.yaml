@@ -4,13 +4,17 @@ meta:
   level: "foundation"
   owner: "SpecPlane"
   tags: ["errors", "cli", "kernel"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-24"
   status: "draft"
-  version: "1.0.2"
+  version: "1.0.3"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "used_by lists component.cli_run; run exit is fail-closed on unknown change, fail, or error"
+    breaking: false
   - date: "2026-09-18"
     author: "kernel-slice"
     summary: "list_gaps_mcp — used_by component.cli_list_gaps"
@@ -37,6 +41,7 @@ used_by:
     - "component.cli_retrieve"
     - "component.cli_blast"
     - "component.cli_check_sync"
+    - "component.cli_run"
     - "component.mcp_stdio"
     - "component.cli_init"
     - "component.cli_list_gaps"
@@ -74,5 +79,6 @@ fallback_patterns:
   - "Missing spec root: exit non-zero and say how to pass --spec-root"
   - "Empty blast on a behavior-changing diff: check_sync fails (no silent pass)"
   - "Unknown id: retrieve says not found; does not invent a live graph"
+  - "run: unknown or archived change, sensor fail, or sensor error exits 1; all not_run exits 0; must: is never executed"
 
 refs: []

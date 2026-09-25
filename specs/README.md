@@ -1,6 +1,6 @@
 # Kernel product specs
 
-`specs/` is the **kernel product** — SpecPlane specifying its own CLI (first slice: epistemic bit, retrieve, blast, check_sync, change folders).
+`specs/` is the **kernel product** — SpecPlane specifying its own CLI (first slice: epistemic bit, retrieve, blast, check_sync, change folders, run).
 
 `specplane/` is the **kit** — schema, applicable sections, foundation boilerplates. Copy the kit into other apps.
 
@@ -30,7 +30,8 @@ specs/
 │   ├── capability.specplane_check_sync.yaml
 │   ├── capability.specplane_list_gaps.yaml
 │   ├── capability.specplane_change_folders.yaml
-│   └── capability.specplane_init.yaml
+│   ├── capability.specplane_init.yaml
+│   └── capability.specplane_run.yaml
 ├── foundations/
 │   ├── foundation.epistemic_status.yaml    ← live | inferred | in-flight | replaced
 │   ├── foundation.join_key.yaml
@@ -45,6 +46,7 @@ specs/
     ├── component.cli_check_sync.yaml
     ├── component.cli_init.yaml
     ├── component.cli_list_gaps.yaml
+    ├── component.cli_run.yaml
     └── component.mcp_stdio.yaml
 ```
 
@@ -64,7 +66,8 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 | Join key | `foundation.join_key` | graph walk uses these ids |
 | CLI `validate` / `retrieve` / `blast` / `check_sync` | matching capabilities + `component.cli_*` | `tools/specplane/cli.py` |
 | CLI `init` | `capability.specplane_init` + `component.cli_init` | `tools/specplane/initkit.py` — copy kit, empty `specs/` dirs, no kernel `specs/` |
-| CLI `list_gaps` + MCP stdio | `capability.specplane_list_gaps` + `component.cli_list_gaps` + `component.mcp_stdio` | same kernel; catalog retrieve/blast/check_sync/list_gaps; validate CLI-only |
+| CLI `list_gaps` + MCP stdio | `capability.specplane_list_gaps` + `component.cli_list_gaps` + `component.mcp_stdio` | same kernel; catalog retrieve/blast/check_sync/list_gaps/run; validate CLI-only |
+| CLI `run` | `capability.specplane_run` + `component.cli_run` + `component.mcp_stdio` | join + invoke of a bound check; not a test runner |
 | Change folders | `capability.specplane_change_folders` + `specs/changes/` | loaded by retrieve/check_sync; skipped by structural validate |
 
 **Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `npx`/`uvx`/`scan`, QA agent, Figma ingest, hosted MCP.
@@ -73,7 +76,7 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 
 - Pointer field from live id → change object (Q71).
 - Four-value bit as a real `meta` field (v1 maps deprecated/replaced_by).
-- check_sync does not parse application source (timeout 30 vs 60). Sensors as runnable tests come next.
+- check_sync does not parse application source (timeout 30 vs 60). `run` invokes a check already bound on a change; it does not become the test runner.
 
 ```bash
 python3 tools/specplane/cli.py validate --spec-root specs

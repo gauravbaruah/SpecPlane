@@ -4,13 +4,17 @@ meta:
   level: "foundation"
   owner: "SpecPlane"
   tags: ["kernel", "join-key", "identity"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-24"
   status: "draft"
-  version: "1.0.0"
+  version: "1.0.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "used_by lists component.cli_run"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Join key capability.* / component.* / foundation.* as assignment, not extra folders"
@@ -29,6 +33,7 @@ used_by:
     - "component.cli_retrieve"
     - "component.cli_blast"
     - "component.cli_check_sync"
+    - "component.cli_run"
     - "component.mcp_stdio"
 
 extends: []

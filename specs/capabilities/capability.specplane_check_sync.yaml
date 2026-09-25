@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "check_sync"]
   last_updated: "2026-09-24"
   status: "planned"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Does not execute sensors. Compose with run; do not absorb it or add --run-sensors."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "A — optional --change scopes coverage; stdout is coverage/sensors/behavior; a pass is declared coverage, not behavioral agreement. After implement, named --changed-ids when realization files moved."
@@ -37,6 +41,7 @@ responsibilities:
   - "Optional --change scopes coverage to that folder; another open change listing the same ids does not satisfy"
   - "A coverage pass is declared coverage, not behavioral agreement"
   - "After implement, check_sync with named ids; default git spec-YAML set is not enough when realization files moved"
+  - "Does not execute sensors. Compose with capability.specplane_run; do not absorb it."
 
 flows:
   - "After implement: check_sync --change <slug> --changed-ids against live + that open delta"
@@ -61,6 +66,7 @@ constraints:
     - "Coverage = open change promise_ids (or a component that implements a promised capability). Does not parse application source."
     - "Optional --change <slug> scopes coverage to that folder. Default without --change remains any-open-change."
     - "Stdout bands: coverage / sensors declared|missing (must lines not executed) / behavior unverified. Never sensors executed. Never a bare result: pass that sounds like behavior."
+    - "Do not execute run binds. Do not add --run-sensors. Evidence of a bound check is the run command."
     - "Do not silently pick spec vs code"
     - "GitHub App / required check is out of slice; this is the local command that later wraps"
   data_classification: "internal"

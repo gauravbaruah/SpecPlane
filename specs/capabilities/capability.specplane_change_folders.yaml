@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "changes", "in-flight"]
   last_updated: "2026-09-24"
   status: "planned"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "success.yaml sensors may bind run.argv / run.unittest / evaluator; must: remains the claim and is never the command"
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "A — when a promise might move, agent retrieves before write, asks, and waits; typos skip retrieve; if unsure, retrieve. retrieve/list_gaps skip _archive."
@@ -36,6 +40,7 @@ responsibilities:
   - "Hotfixes allowed and not invisible: unreconciled fix stays on retrieve / list_gaps"
   - "When a promise might move, the agent retrieves before write, asks, and waits; typos skip retrieve; if unsure, retrieve"
   - "retrieve and list_gaps skip specs/changes/_archive/"
+  - "success.yaml sensors may bind run.argv (a list, no shell), run.unittest or test:, and an optional evaluator id. must: stays the claim and is never the command."
 
 flows:
   - "Open specs/changes/<id>/ for a signal (bug, eval fail, this kernel slice)"
@@ -57,6 +62,7 @@ constraints:
     - "in-flight lives on the change object; live id gets a pointer, not a second status (Q71). Field name waits for schema unfreeze — no new v9.1.0 meta key"
     - "Do not fork OpenSpec; do not stuff 5C into spec.md; native specs/changes/ this slice"
     - "No dedicated CLI personality named open_delta — the folder is the write path"
+    - "A sensor bind is optional. English must: is not a shell command. evaluator without run: is not a harness."
   data_classification: "internal"
 
 success_metrics:
@@ -73,6 +79,7 @@ roadmap:
   enables:
     - "capability.specplane_retrieve"
     - "capability.specplane_check_sync"
+    - "capability.specplane_run"
 
 realized_by:
   containers: []

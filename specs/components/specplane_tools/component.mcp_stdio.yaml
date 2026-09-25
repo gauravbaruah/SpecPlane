@@ -1,18 +1,22 @@
 meta:
   id: "component.mcp_stdio"
-  purpose: "Local stdio MCP: retrieve, blast, check_sync, list_gaps — not a product SKU"
+  purpose: "Local stdio MCP: retrieve, blast, check_sync, list_gaps, run — not a product SKU"
   level: "component"
   type: "service"
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "mcp"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-24"
   status: "draft"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Catalog adds run; same kernel as CLI; still no infer, specify, or implement; validate stays CLI-only"
+    breaking: false
   - date: "2026-09-18"
     author: "kernel-slice"
     summary: "Thin stdio MCP wraps kernel retrieve/blast/check_sync/list_gaps; validate remains CLI-only"
@@ -31,6 +35,7 @@ implements:
   - "capability.specplane_blast"
   - "capability.specplane_check_sync"
   - "capability.specplane_list_gaps"
+  - "capability.specplane_run"
 
 uses:
   - "foundation.epistemic_status"
@@ -41,13 +46,13 @@ uses:
 planning:
   user_flows:
     actions:
-      - "Agent calls retrieve / blast / check_sync / list_gaps via MCP instead of reading specs/"
+      - "Agent calls retrieve / blast / check_sync / list_gaps / run via MCP instead of reading specs/"
       - "Agent shells out for validate — not an MCP tool"
     success:
-      - "Same answers as the CLI for retrieve, blast, check_sync, and list_gaps (one kernel)"
+      - "Same answers as the CLI for retrieve, blast, check_sync, list_gaps, and run (one kernel)"
     errors:
       - "Do not add specify/implement tools"
-      - "Do not add infer as a sixth tool"
+      - "Do not add infer"
       - "Do not add open_delta as a personality — the folder is the write path"
 
 implementation:
@@ -57,13 +62,14 @@ implementation:
       - "component.cli_blast"
       - "component.cli_check_sync"
       - "component.cli_list_gaps"
+      - "component.cli_run"
     external: []
   depended_on_by:
     components: []
     containers: []
   validation:
     acceptance_criteria:
-      - "Catalog is exactly retrieve, blast, check_sync, list_gaps"
+      - "Catalog is exactly retrieve, blast, check_sync, list_gaps, run"
       - "Each tool calls the same kernel function as the CLI"
       - "validate is not in the catalog; agents shell out"
       - "Hosted MCP is out of slice"
