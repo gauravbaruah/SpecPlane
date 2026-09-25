@@ -1,0 +1,25 @@
+meta:
+  id: component.unrelated_mailer
+  purpose: "Contained by the billing container but not linked by join keys from the change"
+  level: component
+  type: service
+  domain: backend
+  owner: "Mail Team"
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Deliberately unlinked neighbor"
+    breaking: false
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components: []
+    containers: []

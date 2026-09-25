@@ -1,18 +1,22 @@
 meta:
   id: "component.mcp_stdio"
-  purpose: "Local stdio MCP: retrieve, blast, check_sync, list_gaps, run — not a product SKU"
+  purpose: "Local stdio MCP: retrieve, blast, impact, check_sync, list_gaps, run — not a product SKU"
   level: "component"
   type: "service"
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "mcp"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-09-25"
   status: "draft"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "kernel-slice"
+    summary: "Catalog adds impact. Same kernel function as the CLI. No infer, specify, or implement tool."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "No reconcile tool. reconcile is CLI-only, like validate and promote."
@@ -54,10 +58,10 @@ uses:
 planning:
   user_flows:
     actions:
-      - "Agent calls retrieve / blast / check_sync / list_gaps / run via MCP instead of reading specs/"
+      - "Agent calls retrieve / blast / impact / check_sync / list_gaps / run via MCP instead of reading specs/"
       - "Agent shells out for validate, promote, and reconcile — not MCP tools"
     success:
-      - "Same answers as the CLI for retrieve, blast, check_sync, list_gaps, and run (one kernel)"
+      - "Same answers as the CLI for retrieve, blast, impact, check_sync, list_gaps, and run (one kernel)"
     errors:
       - "Do not add specify/implement tools"
       - "Do not add infer"
@@ -79,7 +83,7 @@ implementation:
     containers: []
   validation:
     acceptance_criteria:
-      - "Catalog is exactly retrieve, blast, check_sync, list_gaps, run"
+      - "Catalog is exactly retrieve, blast, impact, check_sync, list_gaps, run"
       - "Each tool calls the same kernel function as the CLI"
       - "validate is not in the catalog; agents shell out"
       - "promote is not in the catalog; agents shell out"

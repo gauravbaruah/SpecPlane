@@ -1,0 +1,23 @@
+meta:
+  id: foundation.privacy_consent
+  purpose: "Consent and retention rules shared by billing"
+  level: foundation
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: active
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Foundation with no governed-concern classification"
+    breaking: false
+
+provides:
+  - "Consent copy and retention period"
+
+used_by:
+  containers:
+    - container.billing
+  components:
+    - component.billing_api

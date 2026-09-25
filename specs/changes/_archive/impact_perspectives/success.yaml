@@ -1,0 +1,26 @@
+change_id: "impact_perspectives"
+kind: "evolve"
+
+sensors:
+  - id: "impact_explains_path"
+    promise: "capability.specplane_blast"
+    must: "A change with no git diff names invoice_worker and the promises, realized_by, and dependencies path"
+    run:
+      unittest: "tools.specplane.test_impact.ImpactTests.test_change_path_explains_worker"
+  - id: "impact_does_not_invent_absence"
+    promise: "capability.specplane_blast"
+    must: "Missing ownership or governance stays not represented and is not a negative claim"
+    run:
+      unittest: "tools.specplane.test_impact.ImpactTests.test_absence_is_not_a_negative_claim"
+  - id: "impact_matches_blast_membership"
+    promise: "capability.specplane_blast"
+    must: "For a spec id, non-derived capability, component, and foundation ids match blast"
+    run:
+      unittest: "tools.specplane.test_impact.ImpactTests.test_golden_membership_matches_blast"
+  - id: "impact_mcp_matches_kernel"
+    promise: "component.mcp_stdio"
+    must: "MCP impact returns the same payload as the kernel formatter"
+    run:
+      unittest: "tools.specplane.test_impact.ImpactTests.test_mcp_dispatch_matches_format"
+
+looks_fine_is_not_a_sensor: true

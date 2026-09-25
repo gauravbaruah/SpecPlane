@@ -11,6 +11,7 @@ BUNDLE = ROOT / "tools" / "specplane" / "_specplane_kit"
 CLI_FILES = (
     "cli.py",
     "kernel.py",
+    "impact.py",
     "validate.py",
     "drift.py",
     "initkit.py",

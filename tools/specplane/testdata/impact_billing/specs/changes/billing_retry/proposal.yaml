@@ -1,0 +1,6 @@
+id: billing_retry
+kind: evolve
+status: in-flight
+promise_ids:
+  - capability.billing
+why: "Design-time change with no implementation diff."

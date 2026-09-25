@@ -1,0 +1,28 @@
+meta:
+  id: capability.ledger
+  purpose: "A capability with no governed fields and no join edges"
+  level: capability
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Absence fixture"
+    breaking: false
+
+responsibilities:
+  - "Record a posted amount"
+
+flows:
+  - "Post entry"
+
+business_value:
+  user_outcome: "Finance can see a posted amount"
+  objective: "Keep a ledger"
+  revenue_dependency: low
+  strategic_priority: efficiency
+
+constraints: {}

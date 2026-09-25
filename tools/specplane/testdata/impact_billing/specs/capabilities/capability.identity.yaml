@@ -1,0 +1,32 @@
+meta:
+  id: capability.identity
+  purpose: "Identify the patient. Not join-key-linked to billing."
+  level: capability
+  owner: "Identity"
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Roadmap neighbor that blast must not expand"
+    breaking: false
+
+responsibilities:
+  - "Identify the patient"
+
+flows:
+  - "Sign in"
+
+business_value:
+  user_outcome: "A patient can be recognized"
+  objective: "Know who is paying"
+  revenue_dependency: medium
+  strategic_priority: core
+
+constraints:
+  legal:
+    - "Identity documents are regulated"
+  data_classification: regulated

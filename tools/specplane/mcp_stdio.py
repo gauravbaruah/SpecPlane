@@ -1,6 +1,6 @@
 """Thin stdio MCP wrapping the same kernel as the CLI.
 
-Catalog: retrieve, blast, check_sync, list_gaps, run. Validate, promote, and reconcile are CLI-only.
+Catalog: retrieve, blast, impact, check_sync, list_gaps, run. Validate, promote, and reconcile are CLI-only.
 No infer, specify, or implement tools.
 """
 
@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from impact import format_impact, impact  # noqa: E402
 from kernel import (  # noqa: E402
     blast,
     check_sync,
@@ -30,7 +31,7 @@ from kernel import (  # noqa: E402
 )
 from validate import resolve_spec_root  # noqa: E402
 
-MCP_TOOLS = ("retrieve", "blast", "check_sync", "list_gaps", "run")
+MCP_TOOLS = ("retrieve", "blast", "impact", "check_sync", "list_gaps", "run")
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
     "retrieve": {
@@ -45,6 +46,17 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "type": "object",
         "properties": {
             "id": {"type": "string"},
+            "spec_root": {"type": "string"},
+        },
+        "required": ["id"],
+    },
+    "impact": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "description": "SpecPlane id or open change folder. No git diff required.",
+            },
             "spec_root": {"type": "string"},
         },
         "required": ["id"],
@@ -122,6 +134,11 @@ def dispatch(name: str, arguments: dict[str, Any] | None) -> str:
         if payload is None:
             raise KeyError(f"not found: {arguments.get('id')}")
         return format_blast(payload)
+    if name == "impact":
+        payload = impact(kernel, str(arguments.get("id") or ""))
+        if payload is None:
+            raise KeyError(f"not found: {arguments.get('id')}")
+        return format_impact(payload)
     if name == "check_sync":
         raw_ids = str(arguments.get("changed_ids") or "")
         changed_ids = [part.strip() for part in raw_ids.split(",") if part.strip()]

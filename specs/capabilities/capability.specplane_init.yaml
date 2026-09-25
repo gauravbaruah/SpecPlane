@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-09-25"
   status: "planned"
-  version: "1.2.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "kernel-slice"
+    summary: "Copied CLI siblings include impact.py"
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "Consuming AGENTS.md points brownfield at specplane-infer, not at a scan CLI"
@@ -55,6 +59,7 @@ constraints:
     - "Does not infer or scan the destination. Brownfield mapping is the specplane-infer skill."
     - "Published PyPI / npx package is not this command"
     - "uvx --from git+ this repo may run init because the installed wheel bundles the kit"
+    - "Copied CLI siblings include impact.py"
     - "No interactive agent-picker"
   data_classification: "internal"
 

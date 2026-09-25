@@ -1,18 +1,22 @@
 meta:
   id: "component.cli_blast"
-  purpose: "Local blast command: computed affects tree and DECISION REQUIRED"
+  purpose: "Local blast and impact commands: affects tree, and one explainable subgraph with projections"
   level: "component"
   type: "service"
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-25"
   status: "draft"
-  version: "1.0.1"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "kernel-slice"
+    summary: "CLI impact prints one subgraph, paths, and five projections. blast text is unchanged."
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "v1 blast: recursive component deps; foundations terminal (do not follow used_by)"
@@ -35,8 +39,10 @@ planning:
   user_flows:
     actions:
       - "blast a change or id"
+      - "impact a spec id or an open change folder"
     success:
       - "Output names the change, the affects tree, and DECISION REQUIRED when intent vs code disagree"
+      - "impact names each affected id and the path that included it"
       - "Readable in about five seconds"
     errors:
       - "Empty blast on a behavior-changing diff is not success — check_sync must fail it"
@@ -58,5 +64,9 @@ implementation:
       - "Traverse implements/realized_by and recursive component depends_on/depended_on_by"
       - "uses → foundation is listed then STOP; do not fan out through used_by"
       - "Empty blast (no other components, extra capabilities, or foundations) is flagged for check_sync"
+      - "impact <id> prints one affected subgraph with paths and projections for system, product, quality, governance, and ownership"
+      - "impact of an open change folder does not require a git diff"
+      - "blast text and bucket membership stay the same"
+      - "Missing ownership, governance, or verification is not represented, not a negative claim"
     open_questions: []
     readiness: "ready"

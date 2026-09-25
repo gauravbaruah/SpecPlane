@@ -1,0 +1,33 @@
+meta:
+  id: component.invoice_worker
+  purpose: "Apply a retry to an invoice"
+  level: component
+  type: service
+  domain: backend
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Reached only through a dependency; acceptance has no strategy"
+    breaking: false
+
+planning:
+  user_flows:
+    flow_ref: missing_flow
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components:
+      - component.billing_api
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "A failed invoice is retried without duplicating a paid invoice"
+    readiness: unknown

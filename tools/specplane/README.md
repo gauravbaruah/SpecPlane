@@ -12,7 +12,7 @@ uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 
 Five-minute try: [`docs/try.md`](../../docs/try.md) (`examples/tiny-saas`). Intended loop: [`docs/golden-journey.md`](../../docs/golden-journey.md).
 
-**Works with your coding agent.** Skills call this kernel today. Local MCP is available for retrieve, blast, check_sync, list_gaps, and run. Humans should not have to type those commands.
+**Works with your coding agent.** Skills call this kernel today. Local MCP is available for retrieve, blast, impact, check_sync, list_gaps, and run. Humans should not have to type those commands.
 
 ## Kernel CLI
 
@@ -23,6 +23,7 @@ specplane init --dest /path/to/product
 specplane validate --spec-root specs
 specplane retrieve <id> --spec-root specs
 specplane blast <id> --spec-root specs
+specplane impact <id> --spec-root specs
 specplane check_sync --spec-root specs --changed-ids component.foo
 specplane check_sync --spec-root specs --change <slug> --changed-ids component.foo
 specplane reconcile --spec-root specs
@@ -40,6 +41,7 @@ python3 tools/specplane/mcp_stdio.py
 | `validate` | Structural YAML, names, bidirectional links. Skips `specs/changes/`. | Errors |
 | `retrieve <id>` | One live slice, `replaced` leftovers, open change folders | Unknown id |
 | `blast <id>` | Affects tree. Component deps recurse. **Foundations are terminal** (listed, not exploded via `used_by`). | Unknown id |
+| `impact <id>` | One affected subgraph for a spec id or an open change folder, plus system, product, quality, governance, and ownership projections. Same join-key membership as `blast` for a spec id. Does not read a git diff. Absence of a field stays "not represented". | Unknown id |
 | `check_sync` | Declared coverage vs open change `promise_ids` (pass `--change` after implement). Linked empty blast fails. Phase 1 (no join edges) is advisory. Does **not** parse app source or verify behavior. Default changed-set also includes a component id when a changed file matches `implementation.realization.paths`. | Uncovered linked id, empty blast on a linked id, unknown id, or unknown `--change`. A missing path or an unmapped app file does not fail coverage. |
 | `reconcile` | Declared `implementation.realization.paths` vs the tree and git-changed files. Reports missing, unmapped_changed, mapped_changed. Optional maps. Greenfield can declare them without infer. Does **not** parse source, write paths, or pick spec vs code. | Spec root missing. Missing paths and unmapped app files stay advisory (exit 0). |
 | `list_gaps` | Kernel-generic queue: Phase 1 thin, open changes, replaced leftovers, missing sensors, unpromoted inferred ids. Advisory. | Spec root missing |
@@ -50,7 +52,7 @@ python3 tools/specplane/mcp_stdio.py
 
 `reconcile` is the named file-to-promise check. Maps are optional declared joins. SpecPlane does not write your code. A directory prefix ends with `/`; any other path is an exact file. This works for greenfield with no infer step. Infer cites are not maps.
 
-MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps, run** — same kernel functions. `check_sync` accepts `change` and `changed_ids` like the CLI. `run` requires `change`. Validate, promote, and reconcile are CLI-only. There is no infer, specify, or implement tool. `run` does not replace pytest, Playwright, an eval harness, or CI. Brownfield mapping is the `specplane-infer` skill, not a kernel scan.
+MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, impact, check_sync, list_gaps, run** — same kernel functions. `impact` takes an id or open change folder and does not require a git diff. `check_sync` accepts `change` and `changed_ids` like the CLI. `run` requires `change`. Validate, promote, and reconcile are CLI-only. There is no infer, specify, or implement tool. `run` does not replace pytest, Playwright, an eval harness, or CI. Brownfield mapping is the `specplane-infer` skill, not a kernel scan.
 
 `python3 tools/specplane/validate.py` still works as the validate-only entry point.
 

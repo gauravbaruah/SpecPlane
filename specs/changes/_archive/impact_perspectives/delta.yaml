@@ -1,0 +1,29 @@
+change_id: "impact_perspectives"
+kind: "evolve"
+
+ADDED:
+  - "impact command and MCP tool: one affected subgraph plus five projections"
+  - "docs/impact-perspectives.md"
+  - "tools/specplane/impact.py, copied by init and the wheel bundle"
+  - "fixture tools/specplane/testdata/impact_billing"
+
+MODIFIED:
+  - id: "capability.specplane_blast"
+    summary: "Same join-key closure. impact explains paths and projects existing fields. A change folder id works with no git diff. blast text and bucket membership stay."
+  - id: "component.cli_blast"
+    summary: "CLI impact <id> prints the viewer payload. blast output is unchanged."
+  - id: "component.mcp_stdio"
+    summary: "Catalog adds impact. Same kernel function as the CLI."
+  - id: "capability.specplane_init"
+    summary: "Copied CLI siblings include impact.py."
+  - id: "component.cli_init"
+    summary: "CLI_FILES includes impact.py."
+
+REMOVED: []
+
+NOT_IN_THIS_PASS:
+  - "Schema fields for foundation concern class, reviewer, stakeholder, or team"
+  - "Classifying a foundation as governance because of its id"
+  - "Writing CODEOWNERS matches back into meta.owner"
+  - "Expanding roadmap.depends_on through the join-key walk"
+  - "Negative claims such as no security impact or no QA required"
