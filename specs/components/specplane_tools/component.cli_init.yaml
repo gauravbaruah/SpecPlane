@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-18"
+  last_updated: "2026-09-24"
   status: "draft"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "A — consuming AGENTS.md template states PRE retrieve / POST check_sync --change --changed-ids"
+    breaking: false
   - date: "2026-09-18"
     author: "kernel-slice"
     summary: "Kit root is the SpecPlane checkout if present, else bundled _specplane_kit in the wheel"
@@ -41,6 +45,7 @@ planning:
   validation:
     acceptance_criteria:
       - "Tests assert kit copied, kernel specs not copied, empty dirs, AGENTS append, no .github/workflows"
+      - "Consuming AGENTS.md template states PRE retrieve / POST check_sync --change --changed-ids"
       - "Does not stamp epistemic live"
     open_questions: []
     readiness: "in-progress"

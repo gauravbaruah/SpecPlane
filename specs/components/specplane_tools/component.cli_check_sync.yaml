@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-24"
   status: "draft"
-  version: "1.0.2"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "A — CLI --change <slug>; unknown slug exits non-zero; default remains any-open-change covers"
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "Q115+Q116 — untracked specs YAML in default set; Phase 1 advisory; linked empty blast still fails"
@@ -38,7 +42,7 @@ uses:
 planning:
   user_flows:
     actions:
-      - "check_sync after an agent edits code against live + open deltas"
+      - "check_sync --change after an agent edits code against live + that open delta"
     success:
       - "In sync: exit 0"
       - "Named behavior moved, live spec unchanged: fail"
@@ -64,6 +68,7 @@ implementation:
       - "Fail when a changed id has join edges and an empty blast"
       - "Phase-1-shaped id: phase1_advisory, exit 0 (not uncovered / empty_blast fail)"
       - "Default changed-set includes untracked specs/**/*.yaml; skips specs/changes/"
+      - "Optional --change <slug> scopes coverage to that folder; unknown slug exits non-zero; default without --change remains any-open-change"
       - "Never auto-write live. v1 does not parse source to learn values (e.g. timeout 60)"
     open_questions:
       - "Optional realization.paths file map — later"
