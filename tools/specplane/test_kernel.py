@@ -27,8 +27,12 @@ from kernel import (  # noqa: E402
     format_run,
     list_gaps,
     load_kernel,
+    RECONCILE_NOTE,
+    default_changed_ids,
+    format_reconcile,
     map_changed_files,
     promote_ids,
+    reconcile,
     retrieve,
     run_sensors,
 )
@@ -869,6 +873,230 @@ class TestPromote(unittest.TestCase):
                 )
             )
             self.assertEqual(promoted["changelog"][0]["date"], date.today().isoformat())
+
+
+class TestReconcile(unittest.TestCase):
+    def _repo(self) -> tuple[Path, Path]:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        repo = Path(tmp.name)
+        spec = repo / "specs"
+        (spec / "capabilities").mkdir(parents=True)
+        (spec / "components").mkdir()
+        (spec / "changes" / "demo").mkdir(parents=True)
+        (spec / "capabilities" / "capability.alpha.yaml").write_text(
+            "\n".join(
+                [
+                    "meta:",
+                    "  id: capability.alpha",
+                    "  level: capability",
+                    "realized_by:",
+                    "  components:",
+                    "    - component.widget",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (spec / "components" / "component.widget.yaml").write_text(
+            "\n".join(
+                [
+                    "meta:",
+                    "  id: component.widget",
+                    "  level: component",
+                    "implements:",
+                    "  - capability.alpha",
+                    "implementation:",
+                    "  realization:",
+                    "    paths:",
+                    "      - src/widget.py",
+                    "      - src/pkg/",
+                    "      - src/gone.py",
+                    "      - src/missing_dir/",
+                    "      - /etc/passwd",
+                    "      - ../etc/passwd",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (spec / "changes" / "demo" / "proposal.yaml").write_text(
+            "\n".join(
+                [
+                    "change_id: demo",
+                    "kind: evolve",
+                    "promise_ids:",
+                    "  - capability.alpha",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (repo / "src" / "pkg").mkdir(parents=True)
+        (repo / "src" / "pkg2").mkdir()
+        (repo / "src" / "widget.py").write_text("RESET_TTL = 60\n", encoding="utf-8")
+        (repo / "src" / "pkg" / "a.py").write_text("x = 1\n", encoding="utf-8")
+        (repo / "src" / "other.py").write_text("y = 2\n", encoding="utf-8")
+        (repo / "src" / "pkg2" / "nope.py").write_text("z = 3\n", encoding="utf-8")
+        (repo / "README.md").write_text("readme\n", encoding="utf-8")
+        return repo, spec
+
+    def _changed(self) -> list[str]:
+        return [
+            "src/widget.py",
+            "src/pkg/a.py",
+            "src/other.py",
+            "src/pkg2/nope.py",
+            "README.md",
+            "specs/capabilities/capability.alpha.yaml",
+        ]
+
+    def test_missing_prefix_and_exact(self) -> None:
+        repo, spec = self._repo()
+        before = (spec / "components" / "component.widget.yaml").read_bytes()
+        payload = reconcile(load_kernel(spec), self._changed(), repo=repo)
+        text = format_reconcile(payload)
+        missing = {(row["id"], row["path"]) for row in payload["missing"]}
+        self.assertIn(("component.widget", "src/gone.py"), missing)
+        self.assertIn(("component.widget", "src/missing_dir/"), missing)
+        self.assertIn(("component.widget", "/etc/passwd"), missing)
+        self.assertIn(("component.widget", "../etc/passwd"), missing)
+        self.assertNotIn(("component.widget", "src/widget.py"), missing)
+        self.assertNotIn(("component.widget", "src/pkg/"), missing)
+        mapped = {(row["path"], row["id"]) for row in payload["mapped_changed"]}
+        self.assertIn(("src/widget.py", "component.widget"), mapped)
+        self.assertIn(("src/pkg/a.py", "component.widget"), mapped)
+        self.assertNotIn(("src/pkg2/nope.py", "component.widget"), mapped)
+        self.assertIn("id: component.widget", text)
+        self.assertIn("path: src/gone.py", text)
+        self.assertIn("path: src/widget.py", text)
+        self.assertIn(RECONCILE_NOTE, text)
+        self.assertNotIn("verified", text)
+        self.assertNotIn("RESET_TTL", text)
+        self.assertEqual((spec / "components" / "component.widget.yaml").read_bytes(), before)
+
+    def test_unmapped_changed_app_file(self) -> None:
+        repo, spec = self._repo()
+        payload = reconcile(load_kernel(spec), self._changed(), repo=repo)
+        self.assertEqual(payload["unmapped_changed"], ["src/other.py", "src/pkg2/nope.py"])
+        self.assertNotIn("README.md", payload["unmapped_changed"])
+        self.assertNotIn(
+            "specs/capabilities/capability.alpha.yaml", payload["unmapped_changed"]
+        )
+        text = format_reconcile(payload)
+        self.assertIn("unmapped_changed:", text)
+        self.assertIn("- src/other.py", text)
+        self.assertFalse(payload["ok"])
+
+    def test_does_not_parse_or_rewrite(self) -> None:
+        repo, spec = self._repo()
+        spec_path = spec / "components" / "component.widget.yaml"
+        before = spec_path.read_text(encoding="utf-8")
+        body = (repo / "src" / "widget.py").read_text(encoding="utf-8")
+        payload = reconcile(load_kernel(spec), ["src/widget.py"], repo=repo)
+        text = format_reconcile(payload)
+        self.assertIn("RESET_TTL", body)
+        self.assertNotIn("RESET_TTL", text)
+        self.assertEqual(spec_path.read_text(encoding="utf-8"), before)
+        self.assertIn("src/gone.py", before)
+
+    def _git_repo(self) -> tuple[Path, Path]:
+        import os
+        import subprocess
+
+        repo, spec = self._repo()
+        env = os.environ.copy()
+        env.update(
+            {
+                "GIT_AUTHOR_NAME": "specplane-test",
+                "GIT_AUTHOR_EMAIL": "specplane-test@example.com",
+                "GIT_COMMITTER_NAME": "specplane-test",
+                "GIT_COMMITTER_EMAIL": "specplane-test@example.com",
+            }
+        )
+        subprocess.check_call(["git", "init"], cwd=repo, env=env, stdout=subprocess.DEVNULL)
+        subprocess.check_call(["git", "add", "specs"], cwd=repo, env=env)
+        subprocess.check_call(["git", "commit", "-m", "specs"], cwd=repo, env=env, stdout=subprocess.DEVNULL)
+        return repo, spec
+
+    def test_check_sync_default_includes_mapped_id(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        repo, spec = self._git_repo()
+        buf = StringIO()
+        err = StringIO()
+        with patch("sys.stdout", buf), patch("sys.stderr", err):
+            code = cli_main(
+                ["check_sync", "--spec-root", str(spec), "--repo", str(repo)]
+            )
+        text = buf.getvalue()
+        self.assertEqual(code, 0, text + err.getvalue())
+        self.assertIn("component.widget", text)
+        self.assertIn("unmapped_changed:", text)
+        self.assertIn("src/other.py", text)
+        self.assertIn("advisory: unmapped app file; not a coverage failure", text)
+        self.assertIn("coverage: pass", text)
+        self.assertIn("behavior: unverified", text)
+        self.assertNotIn("behavior: verified", text)
+        self.assertNotIn("RESET_TTL", text)
+
+    def test_changed_ids_override(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        repo, spec = self._git_repo()
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(spec),
+                    "--repo",
+                    str(repo),
+                    "--changed-ids",
+                    "capability.alpha",
+                ]
+            )
+        text = buf.getvalue()
+        self.assertEqual(code, 0, text)
+        self.assertIn("- capability.alpha", text)
+        self.assertNotIn("component.widget", text)
+        self.assertNotIn("unmapped_changed", text)
+        self.assertNotIn("src/other.py", text)
+
+    def test_reconcile_cli_stdout(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        repo, spec = self._git_repo()
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(
+                ["reconcile", "--spec-root", str(spec), "--repo", str(repo)]
+            )
+        text = buf.getvalue()
+        self.assertEqual(code, 0, text)
+        self.assertTrue(text.startswith("reconcile\n"))
+        self.assertIn("path: src/gone.py", text)
+        self.assertIn("path: src/pkg/a.py", text)
+        self.assertIn("note: " + RECONCILE_NOTE, text)
+        self.assertNotIn("RESET_TTL", text)
+
+    def test_docs_greenfield_without_infer(self) -> None:
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Greenfield can declare maps without infer", readme)
+
+    def test_default_changed_ids_union(self) -> None:
+        repo, spec = self._repo()
+        kernel = load_kernel(spec)
+        ids, unmapped = default_changed_ids(
+            kernel, ["src/widget.py", "specs/capabilities/capability.alpha.yaml"], repo
+        )
+        self.assertIn("component.widget", ids)
+        self.assertIn("capability.alpha", ids)
+        self.assertEqual(unmapped, [])
 
 
 if __name__ == "__main__":

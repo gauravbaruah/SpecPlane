@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "check_sync"]
   last_updated: "2026-09-24"
   status: "planned"
-  version: "1.2.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "Default changed-set includes component ids from declared realization.paths. Unmapped app files are advisory. Still does not parse source or print verified."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "Does not execute sensors. Compose with run; do not absorb it or add --run-sensors."
@@ -40,7 +44,8 @@ responsibilities:
   - "Same coding session must not grade itself"
   - "Optional --change scopes coverage to that folder; another open change listing the same ids does not satisfy"
   - "A coverage pass is declared coverage, not behavioral agreement"
-  - "After implement, check_sync with named ids; default git spec-YAML set is not enough when realization files moved"
+  - "Default changed-set is spec YAML plus component ids whose declared realization.paths match a changed file. --changed-ids overrides that set."
+  - "An unmapped changed app file is advisory and does not fail coverage. A missing declared path does not fail coverage."
   - "Does not execute sensors. Compose with capability.specplane_run; do not absorb it."
 
 flows:
@@ -60,7 +65,8 @@ constraints:
     - "Local comparison of specs, changes/, and named behavior claims — no hosted check in this slice"
   ux:
     - "Fail closed on moved named behavior and on empty blast"
-    - "v1: default changed-set = git diff (staged+unstaged) plus untracked specs/**/*.yaml, excluding specs/changes/. Or --changed-ids."
+    - "Default changed-set = git diff (staged+unstaged) plus untracked specs/**/*.yaml, excluding specs/changes/, plus component ids for declared realization.paths hits. --changed-ids is an explicit override and does not add mapped ids."
+    - "Unmapped changed app files print as advisory and do not fail coverage. Missing declared paths do not fail coverage."
     - "Phase-1-shaped id (no realized_by, uses, or component implements): do not fail empty_blast or uncovered; print phase1_advisory; exit 0 if those are the only issues."
     - "Ids that have join edges still need an open change covering the id; empty blast still fails."
     - "Coverage = open change promise_ids (or a component that implements a promised capability). Does not parse application source."

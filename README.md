@@ -78,6 +78,8 @@ Then ask for a Phase 1 capability. Schema **v9.1.0**. More: [`docs/use-in-your-p
 
 Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `promote --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
 
+Already know which files realize a component? Declare them as `implementation.realization.paths` (a repo-relative file, or a directory prefix ending in `/`). Maps are optional. Greenfield can declare maps without infer. `reconcile` reports a missing declared path and an unmapped changed app file. SpecPlane does not write your code, does not parse source to learn values, and does not turn an infer cite into a map. When a mapped file changes, `check_sync`'s default changed-set can include that component id. `--changed-ids` still overrides. A coverage pass is still declared coverage, not behavioral agreement. `reconcile` is a CLI command, not an MCP tool.
+
 ## Not this
 
 Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework by 50%.” Not a toy app you deploy. The Docusaurus viewer under `legacy/` is archived — do not resurrect it.

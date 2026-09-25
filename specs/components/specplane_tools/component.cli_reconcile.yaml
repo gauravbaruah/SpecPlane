@@ -1,0 +1,57 @@
+meta:
+  id: "component.cli_reconcile"
+  purpose: "Local reconcile command: declared paths versus the tree and changed files"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "reconcile"]
+  last_updated: "2026-09-24"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "CLI reconcile. Optional realization.paths. Does not parse source or write paths. Not an MCP tool."
+    breaking: false
+
+implements:
+  - "capability.specplane_reconcile"
+
+planning:
+  user_flows:
+    actions:
+      - "reconcile --spec-root specs"
+    success:
+      - "missing lists a declared path that is not in the tree, with its component id"
+      - "mapped_changed lists a changed file that matches a declared file or a directory prefix"
+      - "unmapped_changed lists a changed app file that matches no declared path"
+    errors:
+      - "Must not read file bodies to learn values"
+      - "Must not delete or rewrite realization.paths"
+      - "Must not add an MCP reconcile tool"
+
+implementation:
+  realization:
+    paths: []
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components: []
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "Optional implementation.realization.paths on components: repo-relative file paths, or a directory prefix ending in /"
+      - "Absolute paths and paths that contain .. are missing; they are not resolved outside the repo"
+      - "Stdout: missing, unmapped_changed, mapped_changed, ok, and a note that source was not parsed"
+      - "Exit 0 when the spec root exists. Missing paths and unmapped app files are advisory"
+      - "check_sync without --changed-ids adds a component id when a changed file matches one of its paths"
+      - "--changed-ids does not add mapped ids and does not print the unmapped advisory"
+      - "An unmapped app file does not by itself fail check_sync coverage"
+      - "Not on the MCP catalog"
+    open_questions: []
+    readiness: "ready"

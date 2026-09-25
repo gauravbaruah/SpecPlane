@@ -1,0 +1,46 @@
+change_id: "code_maps"
+kind: "evolve"
+
+sensors:
+  - id: "missing_and_mapped"
+    promise: "capability.specplane_reconcile"
+    must: "reconcile reports missing declared paths and mapped_changed for an exact file and a directory prefix; a prefix does not match a sibling directory"
+    run:
+      unittest: "tools.specplane.test_kernel.TestReconcile.test_missing_prefix_and_exact"
+  - id: "unmapped_advisory"
+    promise: "capability.specplane_reconcile"
+    must: "A changed app file with no declared path is listed under unmapped_changed; markdown and spec YAML are not"
+    run:
+      unittest: "tools.specplane.test_kernel.TestReconcile.test_unmapped_changed_app_file"
+  - id: "no_body_parse_no_write"
+    promise: "component.cli_reconcile"
+    must: "reconcile does not echo source bodies and does not rewrite declared paths or spec files"
+    run:
+      unittest: "tools.specplane.test_kernel.TestReconcile.test_does_not_parse_or_rewrite"
+  - id: "reconcile_cli"
+    promise: "component.cli_reconcile"
+    must: "reconcile stdout has missing, unmapped_changed, mapped_changed, and a note that SpecPlane did not parse source or pick spec vs code"
+    run:
+      unittest: "tools.specplane.test_kernel.TestReconcile.test_reconcile_cli_stdout"
+  - id: "check_sync_default_join"
+    promise: "capability.specplane_check_sync"
+    must: "Default check_sync includes the component id when a changed file matches a declared path, prints unmapped app files as advisory, and still exits 0 when coverage holds"
+    run:
+      unittest: "tools.specplane.test_kernel.TestReconcile.test_check_sync_default_includes_mapped_id"
+  - id: "changed_ids_override"
+    promise: "component.cli_check_sync"
+    must: "--changed-ids stays an explicit override and does not add mapped ids or unmapped advisory"
+    run:
+      unittest: "tools.specplane.test_kernel.TestReconcile.test_changed_ids_override"
+  - id: "mcp_omits_reconcile"
+    promise: "component.mcp_stdio"
+    must: "MCP catalog stays retrieve, blast, check_sync, list_gaps, run; reconcile is CLI-only"
+    run:
+      unittest: "tools.specplane.test_mcp.McpCatalogTests.test_catalog_is_five_tools"
+  - id: "greenfield_without_infer"
+    promise: "capability.specplane_reconcile"
+    must: "Docs say declared maps work for greenfield without infer"
+    run:
+      unittest: "tools.specplane.test_kernel.TestReconcile.test_docs_greenfield_without_infer"
+
+looks_fine_is_not_a_sensor: true

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Flag code changes that landed without spec updates (and the reverse)."""
+"""Flag code changes that landed without spec updates (and the reverse).
+
+Coarse path-name reminder. The declared file↔promise check is ``reconcile``.
+This script does not read source bodies and does not replace that command.
+"""
 
 from __future__ import annotations
 
@@ -72,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         warnings.append("Specs changed without code changes; confirm that is intentional.")
 
     print("Spec drift report")
+    print("- named join: reconcile (this report does not compare declared paths)")
     print(f"- scope: {args.scope}")
     print(f"- spec_files: {len(specs)}")
     print(f"- code_files: {len(code)}")
