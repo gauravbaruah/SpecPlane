@@ -6,11 +6,15 @@ meta:
   tags: ["design", "viewer", "tokens"]
   last_updated: "2026-09-25"
   status: "draft"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Spacing, radius, focus, and the control recipes from the viewer design system. Projection tabs are a filled control. Perspectives stay an underline. Accordions say Open and Close."
+    breaking: false
   - date: "2026-09-25"
     author: "specplane"
     summary: "Frame the page at 1440px with a clamped gutter. Names wrap on separators. Diagram and map canvases may run to the viewport edge."
@@ -54,8 +58,11 @@ tokens:
       selection_ink: "#fbfaf7"
       selection_ink_2: "#b9bcc4"
       success: "#1d7a45"
+      success_bg: "#eaf5ee"
       warning: "#9a5b00"
+      warning_bg: "#fff8ec"
       danger: "#b3261e"
+      danger_bg: "#fbeceb"
     dark:
       canvas: "#111214"
       surface: "#18191c"
@@ -77,8 +84,11 @@ tokens:
       selection_ink: "#111214"
       selection_ink_2: "#55575d"
       success: "#5dc28b"
+      success_bg: "#14261c"
       warning: "#e2a755"
+      warning_bg: "#2a2114"
       danger: "#f08a82"
+      danger_bg: "#2d1716"
   typography:
     font_family_sans: "Schibsted Grotesk"
     font_family_mono: "JetBrains Mono"
@@ -98,16 +108,31 @@ tokens:
     - { name: inferred, dash: "5 4", light_ink: "#9a5b00", light_bg: "#fff8ec", dark_ink: "#e2a755", dark_bg: "#2a2114" }
     - { name: future, dash: "5 4", light_ink: "#7a4fa0", light_bg: "#f6f1fa", dark_ink: "#bf9ae0", dark_bg: "#241c2d" }
     - { name: unknown, dash: "4 4" }
+  spacing:
+    - { token: space_1, px: 2 }
+    - { token: space_2, px: 4 }
+    - { token: space_3, px: 6 }
+    - { token: space_4, px: 8 }
+    - { token: space_5, px: 12 }
+    - { token: space_6, px: 16 }
+    - { token: space_7, px: 24 }
+    - { token: space_8, px: 32 }
+    - { token: space_9, px: 48 }
+    - { token: space_10, px: 64 }
   radius:
-    node: 8
-    control: 6
-    chip: 4
+    xs: 4
+    sm: 6
+    md: 8
+    lg: 12
+    full: 999
 
 layout:
   content_max_width: "1440px"
   gutter: "clamp(24px, 4vw, 64px)"
   split: "minmax(420px, 5fr) minmax(0, 7fr)"
   stack_below: "1100px"
+  narrow_gutter_below: "720px"
+  narrow_gutter: "16px"
   reading_measure: "72ch"
   name_breaks: [".", "_", "/"]
   name_overflow: "overflow-wrap: anywhere"
@@ -121,6 +146,17 @@ principles:
   - "The page is a 1440px frame with a clamped gutter, not a percentage margin"
   - "Names wrap in full. They are never cut off with an ellipsis"
   - "Diagram and map canvases may run edge to edge and pan and zoom"
+  - "Live, Changes, and Gaps, and the projection switcher, use a filled selected state"
+  - "Blast perspectives stay an underlined text row, so they never look like the projection switcher"
+  - "A closed section says Open. An open section says Close. The summary stays visible either way"
+  - "Rows and nodes show a hover fill. Focus is a 2px accent outline"
+
+components:
+  - "Lens and projection switcher: selected fill is the selection background, label is the selection ink"
+  - "Perspective row: label weight, ink, 2px accent underline on the active name"
+  - "Index row: hover fill, the whole row opens the record, names wrap"
+  - "Accordion: heading, one-line summary, Open or Close"
+  - "In-flight change: accent border, accent-subtle fill, link to the change"
 
 refs: []
 diagrams: []

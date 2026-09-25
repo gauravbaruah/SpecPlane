@@ -148,6 +148,11 @@ class ViewerModelTests(unittest.TestCase):
         self.assertNotIn("text-overflow: ellipsis", css)
         self.assertNotIn("break-all", css)
         self.assertIn("[._/]", script)
+        self.assertIn("Open ↓", script)
+        self.assertIn("Close ↑", script)
+        self.assertIn("background: var(--bg-canvas)", css)
+        self.assertIn("720px", css)
+        self.assertIn("--bg-hover", css)
         self.assertTrue((ASSETS / "fonts" / "schibsted-grotesk-600.woff2").is_file())
         self.assertTrue((ASSETS / "fonts" / "jetbrains-mono-500.woff2").is_file())
 

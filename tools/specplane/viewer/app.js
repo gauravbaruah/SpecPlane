@@ -35,6 +35,7 @@
   ];
   let findText = "";
   let expanded = {};
+  let openSections = {};
   const THEME_KEY = "specplane-view-theme";
 
   function systemTheme() {
@@ -198,11 +199,11 @@
       const b = DATA.records[id].bit || "live";
       if (counts[b] != null) counts[b] += 1;
     });
-    const filters = h("div", { class: "filters" }, ["live", "inferred", "replaced"].map(function (name) {
+    const filters = h("div", { class: "seg" }, ["live", "inferred", "replaced"].map(function (name) {
       return h("button", {
         class: bit === name ? "on" : "",
         on: { click: function () { go("live", { bit: name }); } },
-      }, [name[0].toUpperCase() + name.slice(1) + " " + counts[name]]);
+      }, [name[0].toUpperCase() + name.slice(1) + " ", h("span", { class: "count" }, [String(counts[name])])]);
     }));
     const find = h("input", {
       id: "find",
@@ -216,11 +217,15 @@
       h("thead", {}, [h("tr", {}, [h("th", {}, ["id"]), h("th", {}, ["purpose"]), h("th", {}, ["bit"]), h("th", {}, [""])])]),
       h("tbody", {}, rows.map(function (rec) {
         const n = (rec.in_flight || []).length;
-        return h("tr", {}, [
+        return h("tr", { on: { click: function () { go("id/" + encodeURIComponent(rec.id)); } } }, [
           h("td", {}, [bitMark(rec.bit), " ", idLink(rec.id)]),
           h("td", {}, [rec.purpose || ""]),
           h("td", { class: "quiet" }, [(rec.bit || "live") + (rec.review_state ? " · " + rec.review_state : "")]),
-          h("td", {}, [n ? h("a", { class: "inflight", href: href("change/" + rec.in_flight[0].id) }, [n === 1 ? "1 open change" : n + " open changes"]) : ""]),
+          h("td", {}, [n ? h("a", {
+            class: "inflight",
+            href: href("change/" + rec.in_flight[0].id),
+            on: { click: function (ev) { ev.stopPropagation(); } },
+          }, [n === 1 ? "1 open change" : n + " open changes"]) : ""]),
         ]);
       })),
     ]);
@@ -250,7 +255,7 @@
           const sensor = c.check_sync && c.check_sync.sensors === "declared"
             ? (c.check_sync.sensor_rows || []).length + " sensors declared · not run"
             : "No success sensor declared";
-          return h("tr", {}, [
+          return h("tr", { on: { click: function () { go("change/" + c.id); } } }, [
             h("td", {}, [h("a", { class: "mono inflight", href: href("change/" + c.id) }, [breakable(c.id)])]),
             h("td", { class: "quiet" }, [c.kind || ""]),
             h("td", {}, [(c.promise_ids || []).map(function (id, i) { return h("span", {}, [i ? ", " : "", idLink(id)]); })]),
@@ -317,8 +322,30 @@
   function flight(rec) {
     if (!rec.in_flight || !rec.in_flight.length) return null;
     return h("div", {}, rec.in_flight.map(function (c) {
-      return h("p", {}, [h("span", { class: "inflight" }, ["In flight "]), idLink(c.id), c.kind ? " · " + c.kind : ""]);
+      return h("div", { class: "strip" }, [
+        h("div", {}, [h("span", { class: "acc-sub" }, ["In flight"]), " ", idLink(c.id), c.kind ? h("span", { class: "quiet" }, [" " + c.kind]) : ""]),
+        c.why ? h("div", {}, [c.why]) : null,
+        h("a", { href: href("change/" + c.id) }, ["Open change →"]),
+      ]);
     }));
+  }
+
+  function plural(n, one, many) {
+    return n + " " + (n === 1 ? one : (many || one + "s"));
+  }
+
+  function section(key, title, sub, summary, body) {
+    const open = !!openSections[key];
+    return h("div", { class: "acc" }, [
+      h("button", { class: "acc-head", type: "button", on: { click: function () { openSections[key] = !open; rerender(false); } } }, [
+        h("span", { class: "acc-text" }, [
+          h("span", {}, [h("span", { class: "acc-title" }, [title + " "]), h("span", { class: "acc-sub" }, [sub])]),
+          summary ? h("span", { class: "acc-sum" }, [summary]) : null,
+        ]),
+        h("span", { class: "acc-chev" }, [open ? "Close ↑" : "Open ↓"]),
+      ]),
+      open ? h("div", { class: "acc-body" }, body) : null,
+    ]);
   }
 
   function productItems(graph, id) {
@@ -335,8 +362,8 @@
       return true;
     });
     if (!duties.length && !items.length) return null;
-    return h("details", {}, [
-      h("summary", {}, ["Definition ", h("span", {}, ["what is promised"])]),
+    const summary = [duties.length ? plural(duties.length, "responsibility", "responsibilities") : "", items.length ? plural(items.length, "declared line") : ""].filter(Boolean).join(" · ");
+    return section("def:" + rec.id, "Definition", "what is promised", summary, [
       ...duties.map(function (line) { return h("div", { class: "item" }, [line, h("div", { class: "src" }, ["responsibilities"])]); }),
       ...items.map(itemRow),
     ]);
@@ -358,8 +385,7 @@
       }
       return null;
     }
-    return h("details", {}, [
-      h("summary", {}, ["Realization ", h("span", {}, ["how it is built and checked"])]),
+    return section("real:" + rec.id, "Realization", "how it is built and checked", [realized.length ? plural(realized.length, "realizing id") : "", rows.length ? plural(rows.length, "check") : ""].filter(Boolean).join(" · "), [
       ...realized.map(function (id) {
         return h("div", { class: "item" }, [idLink(id), h("div", { class: "src" }, [rec.id + " · realized_by"])]);
       }),
@@ -375,10 +401,7 @@
   function questions(rec, graph) {
     const items = productItems(graph, rec.id).filter(function (item) { return item.kind === "open_question"; });
     if (!items.length) return null;
-    return h("details", {}, [
-      h("summary", {}, ["Open questions ", h("span", {}, ["declared unknowns"])]),
-      ...items.map(itemRow),
-    ]);
+    return section("ask:" + rec.id, "Open questions", "declared unknowns", plural(items.length, "question"), items.map(itemRow));
   }
 
   function itemRow(item) {
@@ -389,7 +412,7 @@
   }
 
   function switcher(names, current, onclick) {
-    return h("div", { class: "tabs" }, names.map(function (name) {
+    return h("div", { class: "tabs seg" }, names.map(function (name) {
       return h("button", { class: name === current ? "on" : "", on: { click: function () { onclick(name); } } }, [LABELS[name] || name]);
     }));
   }
