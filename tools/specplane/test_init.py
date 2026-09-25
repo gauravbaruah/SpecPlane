@@ -39,6 +39,8 @@ class InitKitTests(unittest.TestCase):
         self.assertTrue((self.dest / ".cursor" / "skills" / "specplane-implement").is_dir())
         self.assertTrue((self.dest / ".cursor" / "rules" / "specplane-core.mdc").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "cli.py").is_file())
+        self.assertTrue((self.dest / "tools" / "specplane" / "view.py").is_file())
+        self.assertTrue((self.dest / "tools" / "specplane" / "viewer" / "app.js").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "initkit.py").is_file())
         self.assertFalse((self.dest / "tools" / "specplane" / "testdata").exists())
         self.assertFalse(
@@ -81,6 +83,7 @@ class InitKitTests(unittest.TestCase):
         self.assertEqual(code, 0, notes)
         self.assertTrue((self.dest / "specplane").is_dir())
         self.assertFalse((self.dest / "tools" / "specplane" / "cli.py").exists())
+        self.assertFalse((self.dest / "tools" / "specplane" / "view.py").exists())
 
     def test_cli_init_dest(self) -> None:
         code = cli_main(["init", "--dest", str(self.dest), "--kit-root", str(KIT)])

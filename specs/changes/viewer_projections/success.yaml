@@ -1,0 +1,34 @@
+change_id: "viewer_projections"
+kind: "learn"
+
+sensors:
+  - id: "inferred_not_live"
+    promise: "capability.specplane_viewer"
+    must: "An inferred id stays inferred and is not given a live slice"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_inferred_is_not_live"
+  - id: "affected_path"
+    promise: "capability.specplane_viewer"
+    must: "An affected id carries the kernel path that included it"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_affected_path_comes_from_impact"
+  - id: "gaps_match"
+    promise: "capability.specplane_list_gaps"
+    must: "The gaps lens matches list_gaps"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_gaps_match_list_gaps"
+  - id: "no_negative_claim"
+    promise: "capability.specplane_viewer"
+    must: "The viewer does not say no security impact, no QA required, no compliance impact, or no owner required"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_no_negative_security_claim"
+  - id: "projection_switcher"
+    promise: "capability.specplane_viewer"
+    must: "Map, Blast, Layers, and Journey appear when the payload has them. Sequence, Diagrams, and Data are omitted until the kernel returns that material"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_projection_switcher"
+  - id: "design_time_change"
+    promise: "capability.specplane_viewer"
+    must: "A change with why and promise ids and no delta still has an impact path"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_design_time_change"

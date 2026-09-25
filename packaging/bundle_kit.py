@@ -19,6 +19,7 @@ CLI_FILES = (
     "README.md",
     "requirements.txt",
     "specplane.config.json.example",
+    "view.py",
 )
 
 
@@ -55,4 +56,7 @@ def populate_bundle(kit_root: Path | None = None, dest: Path | None = None) -> P
         src = tools_src / name
         if src.is_file():
             shutil.copy2(src, tools_dest / name)
+    viewer_src = tools_src / "viewer"
+    if viewer_src.is_dir():
+        shutil.copytree(viewer_src, tools_dest / "viewer")
     return dest

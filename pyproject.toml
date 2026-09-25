@@ -27,7 +27,7 @@ specplane = "cli:main"
 [tool.setuptools]
 include-package-data = true
 package-dir = { "" = "tools/specplane" }
-py-modules = ["cli", "kernel", "impact", "validate", "initkit", "mcp_stdio", "drift"]
+py-modules = ["cli", "kernel", "impact", "validate", "initkit", "mcp_stdio", "drift", "view"]
 packages = ["_specplane_kit"]
 
 [tool.setuptools.package-data]

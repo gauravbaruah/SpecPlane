@@ -212,6 +212,19 @@ def cmd_promote(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_view(args: argparse.Namespace) -> int:
+    from view import build_payload, serve, write_site
+
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    out = args.out if args.out is not None else args.config_dir / ".specplane" / "view"
+    kernel = load_kernel(spec_root)
+    write_site(build_payload(kernel), out)
+    return serve(out, args.open_browser)
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     dest = (args.dest or Path.cwd()).resolve()
     kit_root = (args.kit_root or default_kit_root()).resolve()
@@ -229,7 +242,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / impact / check_sync / reconcile / list_gaps / run / promote / init)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -351,6 +364,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Replace dest/specplane if it already exists",
     )
     p_init.set_defaults(func=cmd_init)
+
+    p_view = sub.add_parser(
+        "view",
+        help="Human readout of retrieve. Generate .specplane/view and serve 127.0.0.1",
+    )
+    add_root_args(p_view)
+    p_view.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="Output directory (default: .specplane/view). Still serves.",
+    )
+    p_view.add_argument(
+        "--open",
+        action="store_true",
+        dest="open_browser",
+        help="Also launch the browser",
+    )
+    p_view.set_defaults(func=cmd_view)
 
     return parser
 

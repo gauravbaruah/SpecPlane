@@ -30,6 +30,7 @@ specplane reconcile --spec-root specs
 specplane list_gaps --spec-root specs
 specplane run --spec-root specs --change <slug>
 specplane promote --ids capability.a,capability.b --spec-root specs
+specplane view --spec-root specs
 python3 tools/specplane/mcp_stdio.py
 ```
 
@@ -47,6 +48,7 @@ python3 tools/specplane/mcp_stdio.py
 | `list_gaps` | Kernel-generic queue: Phase 1 thin, open changes, replaced leftovers, missing sensors, unpromoted inferred ids. Advisory. | Spec root missing |
 | `run --change <slug>` | Join + invoke of a check already bound on that change (`run.argv` as a list, no shell, and/or `run.unittest` / `test:`). English `must:` is not a command (`not_run`). `evaluator:` with no bind is `not_run`. | Unknown or archived change, any sensor `fail`, or any sensor `error`. Exit 0 when every runnable bind passed, including when every row is `not_run`. |
 | `promote --ids a,b` | Drop `inferred` on those ids and append a changelog row. The coding agent writes the inferred YAML via the `specplane-infer` skill. This command does not read application source. | No ids, unknown id, or an id that is not inferred. Writes nothing in those cases. |
+| `view` | Human readout of retrieve, impact, list_gaps, and check_sync. Generates `.specplane/view/` and serves `127.0.0.1`. `--open` also launches the browser. `--out` chooses the directory and still serves. Read-only. No API key. | Spec root missing |
 
 `check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids, and a changed file that matches a declared `implementation.realization.paths` entry adds that component id. Unmapped changed app files print as advisory and do not fail coverage. After implement, pass `--change <slug>` so a broad open change cannot satisfy coverage. A coverage pass is declared coverage, not behavioral agreement.
 
@@ -75,6 +77,7 @@ python3 tools/specplane/test_validate.py
 python3 tools/specplane/test_kernel.py
 python3 tools/specplane/test_init.py
 python3 tools/specplane/test_mcp.py
+python3 tools/specplane/test_view.py
 python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/valid/specs
 python3 tools/specplane/cli.py validate --spec-root tools/specplane/testdata/golden/messy_auth/specs
 ```

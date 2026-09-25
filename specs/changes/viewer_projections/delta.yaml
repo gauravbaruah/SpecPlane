@@ -3,7 +3,8 @@ kind: "learn"
 
 ADDED:
   - "decision.md locks install, serve, Mermaid, and chrome table"
-  - "intent: tools/specplane/view.py + tools/specplane/viewer/ (not implemented in this pass)"
+  - "viewer2-amendment.md is the presentation reference"
+  - "tools/specplane/view.py and tools/specplane/viewer/ generate and serve the local readout"
 
 MODIFIED: []
 
@@ -11,8 +12,6 @@ REMOVED: []
 
 NOT_IN_THIS_PASS:
   - "Live capability.specplane_viewer YAML (promote later)"
-  - "view.py generator, 127.0.0.1 server, vendored Mermaid"
-  - "Growing CLI_FILES / init / wheel until the generator exists"
-  - "Viewer pages (presentation is viewer2-amendment.md; not built yet)"
+  - "Diagrams and Data projections until retrieve or impact returns that material"
   - "specplane view --static / export viewer"
   - "H-F Cloud share"

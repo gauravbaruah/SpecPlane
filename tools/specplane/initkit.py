@@ -18,6 +18,7 @@ CLI_FILES = (
     "README.md",
     "requirements.txt",
     "specplane.config.json.example",
+    "view.py",
 )
 
 SPEC_DIR_NAMES = (
@@ -180,6 +181,9 @@ def init_kit(
             src = tools_src / name
             if src.is_file():
                 shutil.copy2(src, tools_dest / name)
+        viewer_src = tools_src / "viewer"
+        if viewer_src.is_dir():
+            shutil.copytree(viewer_src, tools_dest / "viewer")
         notes.append("copied tools/specplane CLI (not testdata)")
     else:
         notes.append("skipped CLI (--kit-only)")

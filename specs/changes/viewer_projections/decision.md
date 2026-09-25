@@ -39,7 +39,7 @@ specplane view --spec-root R   same as other kernel commands
 
 ## Mermaid
 
-- **Vendor** a pinned Mermaid build under `tools/specplane/viewer/` (exact version recorded here when added).
+- **Vendor** a pinned Mermaid build under `tools/specplane/viewer/vendor/` — Mermaid **10.9.3** (`mermaid.min.js`). The page does not load it from a CDN. Diagrams stay off the switcher until the kernel returns diagram source.
 - No CDN. Offline / no-account / no-key is a Community property.
 - Rendering must not change because a CDN moved.
 
