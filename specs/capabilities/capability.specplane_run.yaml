@@ -1,0 +1,70 @@
+meta:
+  id: "capability.specplane_run"
+  purpose: "Invoke a check already bound to a how-well claim and record the exit as evidence"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "mcp", "run"]
+  last_updated: "2026-09-24"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "L3 join — run binds a success.yaml claim to an existing argv or unittest id and records the exit. Not a test runner. check_sync stays L1."
+    breaking: false
+
+responsibilities:
+  - "run --change <slug> invokes only binds the user already owns: run.argv (a list of strings, no shell) and/or a unittest id (run.unittest, run.test, or test:)"
+  - "English must: is the claim. No bind prints not_run. The sentence is never executed."
+  - "evaluator: is a join. No run: prints not_run. Do not load a harness from that id."
+  - "Exit 1 on an unknown or archived change, any fail, or any error. Exit 0 when every runnable bind passed, including when every row is not_run."
+  - "Speech is evidence. Never certify that the implementation satisfies the spec."
+  - "check_sync does not absorb this command. Compose with it; do not execute sensors there."
+
+flows:
+  - "After check_sync --change <slug>: run --change <slug>"
+  - "Agent calls the same function via MCP run"
+  - "A sensor with only must: prints not_run"
+
+business_value:
+  user_outcome: "A bound check's exit sits next to the claim, without SpecPlane becoming the test platform"
+  objective: "Record evidence of checks the product already owns"
+  revenue_dependency: "low"
+  strategic_priority: "core"
+
+constraints:
+  legal: []
+  security:
+    - "cwd is the repo root (--repo or the process cwd). Inherit env. shell is false. Default timeout 120s per sensor."
+    - "Do not execute English must: text. Do not parse application source. Do not infer a test."
+  ux:
+    - "Not a test runner, not a second CI, and not a replacement for pytest, Playwright, eval harnesses, cron, or GitHub Actions"
+    - "Stdout is per-sensor pass | fail | not_run | error, then behavior: evidence. No bare result: pass as a certificate."
+    - "Unknown or archived --change exits non-zero and invokes nothing"
+    - "Do not measure capability success_metrics. Do not parse test_strategy into a command."
+  data_classification: "internal"
+
+success_metrics:
+  primary: "bound_check_exit_recorded"
+  targets:
+    bound_check_exit_recorded: "a bound argv or unittest that exits 0 prints result: pass; a non-zero exit prints fail and the command exits 1"
+    english_must_not_run: "a sensor with only must: prints not_run and does not execute the sentence"
+  derived_from: {}
+
+roadmap:
+  phase: "how-well join"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_change_folders"
+    - "capability.specplane_check_sync"
+  enables: []
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_run"
+    - "component.mcp_stdio"

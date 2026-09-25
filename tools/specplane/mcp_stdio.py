@@ -1,6 +1,7 @@
 """Thin stdio MCP wrapping the same kernel as the CLI.
 
-Catalog: retrieve, blast, check_sync, list_gaps. Validate is CLI-only.
+Catalog: retrieve, blast, check_sync, list_gaps, run. Validate is CLI-only.
+No infer, specify, or implement tools.
 """
 
 from __future__ import annotations
@@ -21,13 +22,15 @@ from kernel import (  # noqa: E402
     format_check_sync,
     format_list_gaps,
     format_retrieve,
+    format_run,
     list_gaps,
     load_kernel,
     retrieve,
+    run_sensors,
 )
 from validate import resolve_spec_root  # noqa: E402
 
-MCP_TOOLS = ("retrieve", "blast", "check_sync", "list_gaps")
+MCP_TOOLS = ("retrieve", "blast", "check_sync", "list_gaps", "run")
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
     "retrieve": {
@@ -65,6 +68,21 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
         "type": "object",
         "properties": {"spec_root": {"type": "string"}},
         "required": [],
+    },
+    "run": {
+        "type": "object",
+        "properties": {
+            "change": {
+                "type": "string",
+                "description": "Open specs/changes/<slug> (same as CLI --change). Required.",
+            },
+            "spec_root": {"type": "string"},
+            "repo": {
+                "type": "string",
+                "description": "Working directory for bound checks (default: cwd)",
+            },
+        },
+        "required": ["change"],
     },
 }
 
@@ -111,6 +129,13 @@ def dispatch(name: str, arguments: dict[str, Any] | None) -> str:
         return format_check_sync(
             check_sync(kernel, changed_ids, change_slug=change_slug)
         )
+    if name == "run":
+        change = str(arguments.get("change") or "").strip()
+        if not change:
+            raise ValueError("change is required")
+        raw_repo = str(arguments.get("repo") or "").strip()
+        repo = Path(raw_repo).resolve() if raw_repo else Path.cwd().resolve()
+        return format_run(run_sensors(kernel, change, repo=repo))
     return format_list_gaps(list_gaps(kernel))
 
 

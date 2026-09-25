@@ -1,17 +1,21 @@
 meta:
   id: "system.specplane_kernel"
-  purpose: "Git-native overlay of living product intent with a retrieve / blast / check loop"
+  purpose: "Git-native overlay of living product intent with a retrieve / blast / check / run loop"
   level: "system"
   type: "system"
   owner: "SpecPlane"
   tags: ["kernel", "first-slice"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-24"
   status: "draft"
-  version: "1.0.3"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "run is a CLI command; MCP wraps the same kernel"
+    breaking: false
   - date: "2026-09-18"
     author: "kernel-slice"
     summary: "list_gaps_mcp — list_gaps is a CLI command; MCP wraps the same kernel"
@@ -35,7 +39,7 @@ system_context:
     - "Human / checker (promotes live, decides DECISION REQUIRED, merges change folders)"
   external_systems: []
   system_boundaries:
-    - "This repo: YAML in specs/, CLI in tools/specplane/, stdio MCP (retrieve / blast / check_sync / list_gaps). validate is CLI only."
+    - "This repo: YAML in specs/, CLI in tools/specplane/, stdio MCP (retrieve / blast / check_sync / list_gaps / run). validate is CLI only."
   capabilities:
     - "capability.specplane_validate"
     - "capability.specplane_retrieve"
@@ -44,6 +48,7 @@ system_context:
     - "capability.specplane_list_gaps"
     - "capability.specplane_change_folders"
     - "capability.specplane_init"
+    - "capability.specplane_run"
 
 relationships:
   contains:

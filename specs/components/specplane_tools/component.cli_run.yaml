@@ -1,0 +1,59 @@
+meta:
+  id: "component.cli_run"
+  purpose: "Local run command: invoke checks already bound on one change and record the exit"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "run"]
+  last_updated: "2026-09-24"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-24"
+    author: "kernel-slice"
+    summary: "CLI run --change; same kernel as MCP; not a test runner"
+    breaking: false
+
+implements:
+  - "capability.specplane_run"
+
+uses:
+  - "foundation.epistemic_status"
+  - "foundation.join_key"
+  - "foundation.error_handling"
+  - "foundation.observability_standards"
+
+planning:
+  user_flows:
+    actions:
+      - "run --change <slug> after check_sync --change on that folder"
+    success:
+      - "Each bound check prints pass, fail, not_run, or error"
+      - "Exit 0 when every runnable bind passed, including when every row is not_run"
+    errors:
+      - "Unknown or archived slug exits 1 and invokes nothing"
+      - "Any fail or error exits 1"
+      - "A string argv is an error and is not passed to a shell"
+      - "must: is never executed"
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components:
+      - "component.mcp_stdio"
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "run.argv is a list of strings invoked with shell false; cwd is --repo or the process cwd; env is inherited; timeout is 120s per sensor"
+      - "run.unittest, run.test, or test: invokes that unittest id and does not write the test"
+      - "No bind, including evaluator without run:, prints not_run"
+      - "Stdout says behavior: evidence and does not certify that the implementation satisfies the spec"
+      - "Does not replace pytest, Playwright, an eval harness, or CI"
+    open_questions: []
+    readiness: "ready"

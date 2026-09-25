@@ -1,0 +1,51 @@
+change_id: "how_well_runner"
+kind: "evolve"
+
+sensors:
+  - id: "run_executes_unittest"
+    promise: "capability.specplane_run"
+    must: "run --change how_well_runner executes the bound unittest and prints result: pass"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_executes_bound_unittest"
+  - id: "english_must_is_not_a_command"
+    promise: "capability.specplane_run"
+    must: "A sensor with only must: is not_run; the kernel does not exec the sentence"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_english_must_not_executed"
+  - id: "evaluator_without_run_is_not_run"
+    promise: "capability.specplane_run"
+    must: "evaluator: id with no run: prints not_run; does not load a harness"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_evaluator_attach_not_run"
+  - id: "argv_invoked_without_shell"
+    promise: "capability.specplane_run"
+    must: "run.argv is a list of strings invoked with no shell; a string argv is error and is not executed"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_argv_invoked_without_shell"
+  - id: "unknown_or_archived_change"
+    promise: "component.cli_run"
+    must: "Unknown or archived --change exits non-zero and does not invoke binds"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_unknown_and_archived_change"
+  - id: "sensor_fail_exits_nonzero"
+    promise: "capability.specplane_run"
+    must: "A bound check that exits non-zero prints result: fail and the command exits 1"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_sensor_fail_exits_nonzero"
+  - id: "check_sync_does_not_execute"
+    promise: "capability.specplane_check_sync"
+    must: "check_sync still prints not_executed and behavior: unverified; never sensors: executed; never a bare result: pass"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_check_sync_still_not_executed"
+  - id: "timeout_is_error"
+    promise: "capability.specplane_run"
+    must: "A bind that exceeds the per-sensor timeout prints result: error"
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_timeout_is_error"
+  - id: "mcp_run_matches_cli"
+    promise: "component.mcp_stdio"
+    must: "MCP run is the same kernel as the CLI; catalog adds run and still omits validate, infer, specify, and implement"
+    run:
+      unittest: "tools.specplane.test_mcp.McpCatalogTests.test_run_dispatch_matches_kernel"
+
+looks_fine_is_not_a_sensor: true

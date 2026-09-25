@@ -1,6 +1,6 @@
 # Kernel product specs
 
-`specs/` is the **kernel product** — SpecPlane specifying its own CLI (first slice: epistemic bit, retrieve, blast, check_sync, change folders).
+`specs/` is the **kernel product** — SpecPlane specifying its own CLI (first slice: epistemic bit, retrieve, blast, check_sync, change folders, run).
 
 `specplane/` is the **kit** — schema, applicable sections, foundation boilerplates. Copy the kit into other apps.
 
@@ -8,7 +8,7 @@
 
 `design-docs/` is gitignored strategy, not specs. H01’s location is superseded; YAML lives here and is committed. Schema v9.1.0. Default branch: `main`. Handoff: [`../design-docs/handoffs/H02-relocate-specs.md`](../design-docs/handoffs/H02-relocate-specs.md) (local).
 
-This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.1.0 is still unfrozen for the four-value bit field; v1 maps `deprecated`/`replaced_by` → replaced. `list_gaps` is a CLI command; MCP stdio wraps retrieve / blast / check_sync / list_gaps. Skills/`AGENTS.md` follow [`docs/golden-journey.md`](../docs/golden-journey.md).
+This pass **implemented the simple CLI** in `tools/specplane/cli.py`. Schema v9.1.0 is still unfrozen for the four-value bit field; v1 maps `deprecated`/`replaced_by` → replaced. `list_gaps` is a CLI command; MCP stdio wraps retrieve / blast / check_sync / list_gaps / run. `run` joins a bound check; it is not a test runner. Skills/`AGENTS.md` follow [`docs/golden-journey.md`](../docs/golden-journey.md).
 
 ---
 
@@ -30,7 +30,8 @@ specs/
 │   ├── capability.specplane_check_sync.yaml
 │   ├── capability.specplane_list_gaps.yaml
 │   ├── capability.specplane_change_folders.yaml
-│   └── capability.specplane_init.yaml
+│   ├── capability.specplane_init.yaml
+│   └── capability.specplane_run.yaml
 ├── foundations/
 │   ├── foundation.epistemic_status.yaml    ← live | inferred | in-flight | replaced
 │   ├── foundation.join_key.yaml
@@ -45,6 +46,7 @@ specs/
     ├── component.cli_check_sync.yaml
     ├── component.cli_init.yaml
     ├── component.cli_list_gaps.yaml
+    ├── component.cli_run.yaml
     └── component.mcp_stdio.yaml
 ```
 
@@ -64,7 +66,8 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 | Join key | `foundation.join_key` | graph walk uses these ids |
 | CLI `validate` / `retrieve` / `blast` / `check_sync` | matching capabilities + `component.cli_*` | `tools/specplane/cli.py` |
 | CLI `init` | `capability.specplane_init` + `component.cli_init` | `tools/specplane/initkit.py` — copy kit, empty `specs/` dirs, no kernel `specs/` |
-| CLI `list_gaps` + MCP stdio | `capability.specplane_list_gaps` + `component.cli_list_gaps` + `component.mcp_stdio` | same kernel; catalog retrieve/blast/check_sync/list_gaps; validate CLI-only |
+| CLI `list_gaps` + MCP stdio | `capability.specplane_list_gaps` + `component.cli_list_gaps` + `component.mcp_stdio` | same kernel; catalog retrieve/blast/check_sync/list_gaps/run; validate CLI-only |
+| CLI `run` | `capability.specplane_run` + `component.cli_run` + `component.mcp_stdio` | join + invoke of a bound check; not a test runner |
 | Change folders | `capability.specplane_change_folders` + `specs/changes/` | loaded by retrieve/check_sync; skipped by structural validate |
 
 **Explicitly later:** infer CLI, YAML→MD, PR comment, hints, viewer, GitHub App, coach, OpenSpec pack, `npx`/`uvx`/`scan`, QA agent, Figma ingest, hosted MCP.
@@ -73,7 +76,7 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 
 - Pointer field from live id → change object (Q71).
 - Four-value bit as a real `meta` field (v1 maps deprecated/replaced_by).
-- check_sync does not parse application source (timeout 30 vs 60). Sensors as runnable tests come next.
+- check_sync does not parse application source (timeout 30 vs 60). `run` invokes a check already bound on a change; it does not become the test runner.
 
 ```bash
 python3 tools/specplane/cli.py validate --spec-root specs
@@ -88,8 +91,8 @@ python3 tools/specplane/cli.py check_sync --spec-root specs --changed-ids compon
 
 | Topic | Default |
 |---|---|
-| CLI | `validate`, `retrieve`, `blast`, `check_sync`, `list_gaps`, `init` |
-| MCP | `retrieve`, `blast`, `check_sync`, `list_gaps` — validate is **not** an MCP tool |
+| CLI | `validate`, `retrieve`, `blast`, `check_sync`, `list_gaps`, `run`, `init` |
+| MCP | `retrieve`, `blast`, `check_sync`, `list_gaps`, `run` — validate is **not** an MCP tool. `run` joins a bound check; it is not a test runner. |
 | `list_gaps` CLI | Source of truth; MCP wraps the same kernel (H02 MCP-only superseded) |
 | `container.specplane_tools` | Keep — 5C layout, not a SKU |
 | `check_sync` heuristic | v1: `--changed-ids` or git diff **plus untracked** `specs/**/*.yaml` (not `changes/`). Phase 1 (no join edges) is advisory. Linked empty blast still fails. |
@@ -104,7 +107,7 @@ Older Qs still used: 53 four-value bit; 43 retrieve+check_sync together; 54 infe
 
 Follow [`docs/golden-journey.md`](../docs/golden-journey.md) and `specplane-implement`. Do not slurp `specs/`.
 
-1. Call `tools/specplane/cli.py retrieve|blast|check_sync|list_gaps` (and `validate`). MCP stdio wraps those four; not validate.
+1. Call `tools/specplane/cli.py retrieve|blast|check_sync|list_gaps|run` (and `validate`). MCP stdio wraps those five; not validate. `run` invokes bound checks only.
 2. Overlay, not Tessl: the CLI does not compile specs into the product.
 3. Copy-the-kit via `cli.py init` (or rsync). Never copy this `specs/` folder.
 4. `validate.py` skips `specs/changes/` (convention, not 5C).

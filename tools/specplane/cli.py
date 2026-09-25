@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, list_gaps, init.
+"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, list_gaps, run, init.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -22,8 +22,10 @@ from kernel import (  # noqa: E402
     format_check_sync,
     format_list_gaps,
     format_retrieve,
+    format_run,
     list_gaps,
     load_kernel,
+    run_sensors,
     map_changed_files,
     retrieve,
     structural_validate,
@@ -145,6 +147,22 @@ def cmd_list_gaps(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    repo = (args.repo or Path.cwd()).resolve()
+    payload = run_sensors(kernel, args.change, repo=repo)
+    print(format_run(payload), end="")
+    if payload.get("unknown_change"):
+        sys.stderr.write(f"unknown change: {payload['unknown_change']}\n")
+    if payload["ok"]:
+        return 0
+    return 1
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     dest = (args.dest or Path.cwd()).resolve()
     kit_root = (args.kit_root or default_kit_root()).resolve()
@@ -162,7 +180,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / list_gaps / init)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / list_gaps / run / init)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -205,6 +223,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_root_args(p_gaps)
     p_gaps.set_defaults(func=cmd_list_gaps)
+
+    p_run = sub.add_parser(
+        "run",
+        help="Invoke checks already bound on one change; not a test runner",
+    )
+    add_root_args(p_run)
+    p_run.add_argument(
+        "--change",
+        required=True,
+        help="Open specs/changes/<slug> whose success.yaml binds the checks (not _archive)",
+    )
+    p_run.add_argument(
+        "--repo",
+        type=Path,
+        default=None,
+        help="Working directory for bound checks (default: cwd). Env is inherited.",
+    )
+    p_run.set_defaults(func=cmd_run)
 
     p_init = sub.add_parser(
         "init",

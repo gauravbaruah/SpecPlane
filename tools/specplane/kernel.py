@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -619,6 +623,233 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         lines.append("  Named behavior moved and live spec / open change did not cover it.")
         lines.append("  SpecPlane does not stamp live.")
     lines.append(f"note: {COVERAGE_NOTE}")
+    return "\n".join(lines) + "\n"
+
+
+# Per sensor, shared across that sensor's binds. Not a product timeout knob.
+SENSOR_TIMEOUT_S = 120
+
+RUN_INVOKED_NOTE = (
+    "SpecPlane invoked bound checks. It did not certify the implementation satisfies the spec."
+)
+RUN_IDLE_NOTE = (
+    "SpecPlane did not invoke a check. It did not certify the implementation satisfies the spec."
+)
+
+_RESULT_RANK = {"pass": 0, "not_run": 0, "fail": 1, "error": 2}
+
+
+def _read_success_sensors(change: Change) -> tuple[list[dict[str, Any]], str]:
+    path = change.path / "success.yaml"
+    if not path.is_file():
+        return [], ""
+    try:
+        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        return [], f"success.yaml: {exc}"
+    if loaded is None:
+        return [], ""
+    if not isinstance(loaded, dict):
+        return [], "success.yaml: document must be a mapping"
+    sensors = loaded.get("sensors") or []
+    if not isinstance(sensors, list):
+        return [], "success.yaml: sensors must be a list"
+    rows: list[dict[str, Any]] = []
+    for row in sensors:
+        if not isinstance(row, dict):
+            return [], "success.yaml: each sensor must be a mapping"
+        rows.append(row)
+    return rows, ""
+
+
+def _unittest_id(value: Any) -> tuple[str | None, str | None]:
+    if value is None:
+        return None, None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None, None
+        return text, None
+    return None, "must be a string"
+
+
+def _plan_binds(row: dict[str, Any]) -> tuple[list[list[str]], str, str]:
+    """Argvs to invoke. early result is not_run or error when nothing should run.
+
+    English ``must:`` is never turned into a command. ``evaluator:`` is not a harness.
+    """
+    errors: list[str] = []
+    unittest_ids: list[str] = []
+    argvs: list[list[str]] = []
+
+    if "test" in row:
+        uid, err = _unittest_id(row.get("test"))
+        if err:
+            errors.append(f"test: {err}")
+        elif uid:
+            unittest_ids.append(uid)
+
+    if "run" in row:
+        run = row.get("run")
+        if run is None:
+            pass
+        elif not isinstance(run, dict):
+            errors.append("run: must be a mapping with argv and/or unittest")
+        else:
+            if "argv" in run:
+                argv = run.get("argv")
+                if (
+                    isinstance(argv, list)
+                    and len(argv) > 0
+                    and all(isinstance(part, str) for part in argv)
+                ):
+                    argvs.append(list(argv))
+                else:
+                    errors.append("run.argv must be a list of strings (no shell)")
+            for key in ("unittest", "test"):
+                if key not in run:
+                    continue
+                uid, err = _unittest_id(run.get(key))
+                if err:
+                    errors.append(f"run.{key} {err}")
+                elif uid:
+                    unittest_ids.append(uid)
+
+    if errors:
+        return [], "error", "; ".join(errors)
+
+    seen: set[str] = set()
+    for uid in unittest_ids:
+        if uid in seen:
+            continue
+        seen.add(uid)
+        argvs.append([sys.executable, "-m", "unittest", uid])
+    if not argvs:
+        return [], "not_run", ""
+    return argvs, "", ""
+
+
+def _worst_result(outcomes: list[tuple[str, str]]) -> tuple[str, str]:
+    worst = max(_RESULT_RANK[status] for status, _detail in outcomes)
+    details = [
+        detail
+        for status, detail in outcomes
+        if _RESULT_RANK[status] == worst and detail
+    ]
+    name = next(key for key, rank in _RESULT_RANK.items() if rank == worst and key != "not_run")
+    return name, "; ".join(details)
+
+
+def _invoke_argv(argv: list[str], repo: Path, timeout: float) -> tuple[str, str]:
+    if timeout <= 0:
+        return "error", f"timed out after {timeout:g}s"
+    try:
+        proc = subprocess.run(
+            argv,
+            cwd=repo,
+            env=os.environ.copy(),
+            shell=False,
+            timeout=timeout,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.TimeoutExpired:
+        return "error", f"timed out after {timeout:g}s"
+    except OSError as exc:
+        return "error", str(exc)
+    if proc.returncode == 0:
+        return "pass", ""
+    return "fail", f"exit {proc.returncode}"
+
+
+def _execute_binds(
+    argvs: list[list[str]], repo: Path, timeout: float
+) -> tuple[str, str]:
+    deadline = time.monotonic() + timeout
+    outcomes: list[tuple[str, str]] = []
+    for argv in argvs:
+        remaining = deadline - time.monotonic()
+        outcomes.append(_invoke_argv(argv, repo, remaining))
+    return _worst_result(outcomes)
+
+
+def run_sensors(
+    kernel: Kernel,
+    change_slug: str,
+    *,
+    repo: Path,
+    timeout: float = SENSOR_TIMEOUT_S,
+) -> dict[str, Any]:
+    """Invoke bound checks on one open change. Does not execute ``must:`` text."""
+    slug = (change_slug or "").strip()
+    repo = repo.resolve()
+    change = resolve_open_change(kernel, slug) if slug else None
+    if change is None:
+        return {
+            "change": slug,
+            "unknown_change": slug,
+            "sensors": [],
+            "invoked": False,
+            "ok": False,
+            "behavior": "evidence",
+        }
+
+    rows, parse_error = _read_success_sensors(change)
+    sensor_rows: list[dict[str, str]] = []
+    invoked = False
+    worst = "pass"
+    if parse_error:
+        sensor_rows.append({"id": "", "must": "", "result": "error", "detail": parse_error})
+        worst = "error"
+    else:
+        for row in rows:
+            argvs, early, detail = _plan_binds(row)
+            if early:
+                result = early
+            else:
+                result, detail = _execute_binds(argvs, repo, timeout)
+                invoked = True
+            if _RESULT_RANK[result] > _RESULT_RANK[worst]:
+                worst = result
+            sensor_rows.append(
+                {
+                    "id": str(row.get("id") or "").strip(),
+                    "must": str(row.get("must") or "").strip(),
+                    "result": result,
+                    "detail": detail,
+                }
+            )
+
+    return {
+        "change": slug,
+        "unknown_change": "",
+        "sensors": sensor_rows,
+        "invoked": invoked,
+        "ok": _RESULT_RANK[worst] < _RESULT_RANK["fail"],
+        "behavior": "evidence",
+    }
+
+
+def format_run(payload: dict[str, Any]) -> str:
+    lines = ["run", f"change: {payload.get('change') or ''}"]
+    if payload.get("unknown_change"):
+        lines.append(f"unknown_change: {payload['unknown_change']}")
+    lines.append("sensors:")
+    rows = payload.get("sensors") or []
+    if not rows:
+        lines.append("  (none)")
+    for row in rows:
+        lines.append(f"  - id: {row.get('id') or ''}")
+        must = str(row.get("must") or "")
+        if must:
+            lines.append(f"    must: {must}")
+        lines.append(f"    result: {row.get('result') or ''}")
+        detail = str(row.get("detail") or "")
+        if detail and row.get("result") in {"fail", "error"}:
+            lines.append(f"    detail: {detail}")
+    lines.append("behavior: evidence")
+    note = RUN_INVOKED_NOTE if payload.get("invoked") else RUN_IDLE_NOTE
+    lines.append(f"note: {note}")
     return "\n".join(lines) + "\n"
 
 
