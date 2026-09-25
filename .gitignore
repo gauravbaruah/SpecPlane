@@ -21,3 +21,6 @@ node_modules
 tools/specplane/_specplane_kit/*
 !tools/specplane/_specplane_kit/__init__.py
 build/
+
+# Generated local viewer (`specplane view`). Regenerable. Not tooling source.
+.specplane/view/

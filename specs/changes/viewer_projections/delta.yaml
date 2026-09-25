@@ -1,0 +1,18 @@
+change_id: "viewer_projections"
+kind: "learn"
+
+ADDED:
+  - "decision.md locks install, serve, Mermaid, and chrome table"
+  - "intent: tools/specplane/view.py + tools/specplane/viewer/ (not implemented in this pass)"
+
+MODIFIED: []
+
+REMOVED: []
+
+NOT_IN_THIS_PASS:
+  - "Live capability.specplane_viewer YAML (promote later)"
+  - "view.py generator, 127.0.0.1 server, vendored Mermaid"
+  - "Growing CLI_FILES / init / wheel until the generator exists"
+  - "Viewer pages (direction is Viewer v2; not built yet)"
+  - "specplane view --static / export viewer"
+  - "H-F Cloud share"
