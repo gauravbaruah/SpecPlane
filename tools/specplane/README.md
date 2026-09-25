@@ -42,7 +42,7 @@ python3 tools/specplane/mcp_stdio.py
 
 `check_sync --changed-ids` is explicit. If omitted, spec YAML in git diff **plus untracked** `specs/**/*.yaml` (not `specs/changes/`) are mapped to ids. After implement, pass `--change <slug>` so a broad open change cannot satisfy coverage. A coverage pass is declared coverage, not behavioral agreement.
 
-MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps** — same kernel functions. Validate is CLI-only (shell out).
+MCP stdio (`mcp_stdio.py`) exposes **retrieve, blast, check_sync, list_gaps** — same kernel functions. `check_sync` accepts `change` and `changed_ids` like the CLI. Validate is CLI-only (shell out).
 
 `python3 tools/specplane/validate.py` still works as the validate-only entry point.
 

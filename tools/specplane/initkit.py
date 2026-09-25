@@ -37,7 +37,7 @@ Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a c
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-flows, specplane-implement, specplane-validate.
-3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --change --changed-ids. Typos skip retrieve. Do not slurp `specs/`.
+3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --change <slug> --changed-ids. Typos skip retrieve. Do not slurp `specs/`.
 4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
 Rules:
