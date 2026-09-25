@@ -51,10 +51,10 @@ Call `retrieve`, `impact`, `list_gaps`, `check_sync`. `blast` is coverage bucket
 
 Provisional. Viewer v2 is the working design (`design-docs/design-references/SpecPlane viewer design (5).zip`, canvas `Viewer v2.dc.html`). Build toward those frames. They are the surface GB would actually use. Runtime may omit or reshape a block when the payload has no field for it. That is expected, and it is not a reason to shrink the design back to the earlier wireframe.
 
-Unlocked:
+Unlocked. Full text: `viewer2-amendment.md` in this folder (also in `design-docs/handoffs/H-E-viewer.md`, which is gitignored).
 
-- The projection control may offer **Map, Blast, Layers, Journey, Diagrams, and Data** when the record has that data. One slot: the selected projection replaces the picture. A projection with nothing to draw is omitted.
-- Blast may be read five ways (System, Product, Quality, Governance, Ownership) on that same drawing, as in the turn-3 frames. Nodes stay put. An empty reading says the relationship is not represented.
+- The projection control may offer **Map, Blast, Layers, Journey, Diagrams, and Data** when the record has that data. One slot: the selected projection replaces the picture. A projection with nothing to draw is omitted. Sequence is a diagram type inside Diagrams, not its own tab. Diagrams is where a record shows the diagrams it holds.
+- Blast may be read five ways (System, Product, Quality, Governance, Ownership) on that same drawing. The perspective control is subordinate to the projection switcher. Nodes stay put. Empty speech is “not represented,” “No governance relationship identified in the current model,” or “Ownership not represented,” depending on the reading.
 
 Still in force:
 
@@ -81,7 +81,7 @@ Read-only. No YAML edit. PR markdown remains the free review path. Threads / sha
 |---|---|
 | Purpose, bit, review_state | Full responsibilities / changelog |
 | Open changes for this id | Foundations list |
-| One projection (Map, Blast, Layers, Journey, Diagrams, or Data — whichever this payload has) | The other projections, via the control |
+| One projection (Map, Blast, Layers, Journey, Diagrams, or Data — whichever this payload has). Sequence is inside Diagrams | The other projections, via the control |
 | Coverage / sensors band on a change | How-well `success_metrics` targets |
 
 Clickable: spec ids, change slugs, `refs[].url`.  
