@@ -6,11 +6,15 @@ meta:
   tags: ["design", "viewer", "tokens"]
   last_updated: "2026-09-25"
   status: "draft"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Frame the page at 1440px with a clamped gutter. Names wrap on separators. Diagram and map canvases may run to the viewport edge."
+    breaking: false
   - date: "2026-09-25"
     author: "specplane"
     summary: "Light and dark tokens, nine text styles, and provenance strokes from the viewer design system."
@@ -21,6 +25,7 @@ provides:
   - "Two families and nine text styles: Schibsted Grotesk for prose, JetBrains Mono for ids and provenance"
   - "Provenance strokes: declared, derived, inferred, future, unknown"
   - "Fonts ship with the viewer. The page does not load a font service"
+  - "A 1440px frame with a clamped side gutter. Diagram and map canvases may leave that frame"
 
 used_by:
   containers: []
@@ -98,11 +103,24 @@ tokens:
     control: 6
     chip: 4
 
+layout:
+  content_max_width: "1440px"
+  gutter: "clamp(24px, 4vw, 64px)"
+  split: "minmax(420px, 5fr) minmax(0, 7fr)"
+  stack_below: "1100px"
+  reading_measure: "72ch"
+  name_breaks: [".", "_", "/"]
+  name_overflow: "overflow-wrap: anywhere"
+  canvases: "Diagrams and maps may run to the viewport edge. They pan and zoom. Other text stays in the frame."
+
 principles:
   - "Every viewer color and text style maps to one of these tokens"
   - "Light and dark carry the same roles"
   - "Inferred is a warning stroke, never a live fill"
   - "Absence stays not represented. It does not become a success or danger color"
+  - "The page is a 1440px frame with a clamped gutter, not a percentage margin"
+  - "Names wrap in full. They are never cut off with an ellipsis"
+  - "Diagram and map canvases may run edge to edge and pan and zoom"
 
 refs: []
 diagrams: []

@@ -114,15 +114,25 @@
     return h("span", { class: "mark " + (bit || "live") });
   }
 
+  function breakable(text) {
+    const frag = document.createDocumentFragment();
+    String(text).split(/([._/])/).forEach(function (part) {
+      if (!part) return;
+      frag.append(document.createTextNode(part));
+      if (part === "." || part === "_" || part === "/") frag.append(document.createElement("wbr"));
+    });
+    return frag;
+  }
+
   function idLink(id) {
     if (!id) return document.createTextNode("");
     if (String(id).indexOf("change.") === 0 || (DATA.changes || []).some(function (c) { return c.id === id; })) {
       const slug = String(id).replace(/^change:/, "").replace(/^change\./, "");
-      return h("a", { class: "mono inflight", href: href("change/" + slug) }, [slug]);
+      return h("a", { class: "mono inflight", href: href("change/" + slug) }, [breakable(slug)]);
     }
     const rec = record(id);
     const cls = "mono" + (rec && rec.bit === "inferred" ? " bit inferred" : "");
-    return h("a", { class: cls, href: href("id/" + encodeURIComponent(id)) }, [id]);
+    return h("a", { class: cls, href: href("id/" + encodeURIComponent(id)) }, [breakable(id)]);
   }
 
   function shell(route, body) {
@@ -241,7 +251,7 @@
             ? (c.check_sync.sensor_rows || []).length + " sensors declared · not run"
             : "No success sensor declared";
           return h("tr", {}, [
-            h("td", {}, [h("a", { class: "mono inflight", href: href("change/" + c.id) }, [c.id])]),
+            h("td", {}, [h("a", { class: "mono inflight", href: href("change/" + c.id) }, [breakable(c.id)])]),
             h("td", { class: "quiet" }, [c.kind || ""]),
             h("td", {}, [(c.promise_ids || []).map(function (id, i) { return h("span", {}, [i ? ", " : "", idLink(id)]); })]),
             h("td", { class: "quiet" }, [sensor]),
@@ -276,15 +286,15 @@
     const node = route.query.get("node") || "";
     const persp = route.query.get("persp") || "system";
     return h("div", { class: "split" }, [
-      h("div", {}, [
+      h("div", { class: "copy" }, [
         h("div", { class: "kicker" }, [rec.level || "record"]),
-        h("div", { class: "row" }, [bitMark(rec.bit), h("span", { class: "mono" }, [rec.id])]),
+        h("div", { class: "row" }, [bitMark(rec.bit), h("span", { class: "mono" }, [breakable(rec.id)])]),
         h("div", { class: "quiet" }, [
           rec.bit === "inferred" ? "inferred · not live" : rec.bit,
           rec.review_state ? " · " + rec.review_state : "",
           rec.status ? " · status " + rec.status : "",
         ]),
-        rec.path ? h("div", { class: "quiet mono" }, [rec.path]) : null,
+        rec.path ? h("div", { class: "quiet mono" }, [breakable(rec.path)]) : null,
         h("div", { class: "kicker" }, ["Promise"]),
         h("p", { class: "purpose" }, [rec.purpose || (rec.bit === "inferred" ? "retrieve returns no live slice for an inferred id." : "")]),
         flight(rec),
@@ -439,15 +449,86 @@
     };
   }
 
+  let placeCanvas = null;
+  window.addEventListener("resize", function () { if (placeCanvas) placeCanvas(); });
+
+  function viewportCanvas(content) {
+    const layer = h("div", { class: "canvas-layer" });
+    layer.append(content);
+    const view = h("div", { class: "canvas" });
+    view.append(layer);
+    let x = 0;
+    let y = 0;
+    let scale = 1;
+    let drag = null;
+    let moved = false;
+    function paint() {
+      layer.style.transform = "translate(" + x + "px," + y + "px) scale(" + scale + ")";
+    }
+    function place() {
+      const parent = view.parentElement;
+      if (!parent) return;
+      const left = parent.getBoundingClientRect().left;
+      const width = document.documentElement.clientWidth;
+      const stacked = window.matchMedia("(max-width: 1100px)").matches;
+      if (stacked) {
+        view.style.marginLeft = (-left) + "px";
+        view.style.width = width + "px";
+      } else {
+        view.style.marginLeft = "0px";
+        view.style.width = Math.max(0, width - left) + "px";
+      }
+    }
+    placeCanvas = place;
+    view.addEventListener("wheel", function (ev) {
+      ev.preventDefault();
+      const next = Math.min(2.5, Math.max(0.35, scale * (ev.deltaY < 0 ? 1.08 : 0.92)));
+      const rect = view.getBoundingClientRect();
+      const ox = ev.clientX - rect.left;
+      const oy = ev.clientY - rect.top;
+      x = ox - (ox - x) * (next / scale);
+      y = oy - (oy - y) * (next / scale);
+      scale = next;
+      paint();
+    }, { passive: false });
+    view.addEventListener("pointerdown", function (ev) {
+      if (ev.button !== 0) return;
+      drag = { x: ev.clientX, y: ev.clientY, ox: x, oy: y };
+      moved = false;
+    });
+    view.addEventListener("pointermove", function (ev) {
+      if (!drag) return;
+      const dx = ev.clientX - drag.x;
+      const dy = ev.clientY - drag.y;
+      if (!moved && Math.hypot(dx, dy) < 4) return;
+      moved = true;
+      x = drag.ox + dx;
+      y = drag.oy + dy;
+      paint();
+    });
+    function endDrag() { drag = null; }
+    view.addEventListener("pointerup", endDrag);
+    view.addEventListener("pointercancel", endDrag);
+    view.addEventListener("click", function (ev) {
+      if (!moved) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      moved = false;
+    }, true);
+    requestAnimationFrame(place);
+    return view;
+  }
+
   function graphBlock(cols, selected, onselect, extra, prov) {
+    const graph = h("div", { class: "graph" }, cols.map(function (col) {
+      return h("div", { class: "col" }, [
+        h("div", { class: "colhead" }, [col.head]),
+        ...visibleNodes(col, selected, onselect),
+      ]);
+    }));
     return h("div", {}, [
       h("div", { class: "quiet" }, [prov || ""]),
-      h("div", { class: "graph" }, cols.map(function (col) {
-        return h("div", { class: "col" }, [
-          h("div", { class: "colhead" }, [col.head]),
-          ...visibleNodes(col, selected, onselect),
-        ]);
-      })),
+      viewportCanvas(graph),
       extra || null,
     ]);
   }
@@ -468,7 +549,7 @@
     const on = node.id === selected || node.selectedId && !selected;
     const cls = ["node", node.epistemic || "declared", node.bit || "", node.change ? "change" : "", node.dim ? "dim" : "", on ? "is-selected" : ""].filter(Boolean).join(" ");
     return h("button", { class: cls, on: { click: function () { onselect(node.id); } } }, [
-      h("div", { class: "id" }, [node.id]),
+      h("div", { class: "id" }, [breakable(node.id)]),
       h("div", { class: "sub" }, [node.sub || " "]),
     ]);
   }
@@ -614,7 +695,7 @@
     if (!diagrams.length) return h("p", { class: "note" }, ["No diagram declared on this id."]);
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · diagrams on this id"]),
-      ...diagrams.map(function (diagram) { return diagramCard(diagram); }),
+      viewportCanvas(h("div", { class: "diagrams" }, diagrams.map(function (diagram) { return diagramCard(diagram); }))),
     ]);
   }
 
@@ -710,9 +791,9 @@
     const persp = route.query.get("persp") || "system";
     const sync = change.check_sync || {};
     return h("div", { class: "split" }, [
-      h("div", {}, [
+      h("div", { class: "copy" }, [
         h("div", { class: "kicker" }, ["Change"]),
-        h("div", { class: "row" }, [h("span", { class: "mono inflight" }, [change.id])]),
+        h("div", { class: "row" }, [h("span", { class: "mono inflight" }, [breakable(change.id)])]),
         h("div", { class: "quiet" }, ["in-flight", change.kind ? " · kind " + change.kind : ""]),
         h("div", { class: "kicker" }, ["Why"]),
         h("p", { class: "purpose" }, [change.why || ""]),
