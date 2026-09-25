@@ -12,6 +12,12 @@ requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 dependencies = ["pyyaml>=6.0"]
 
+[dependency-groups]
+dev = ["setuptools>=68"]
+
+[tool.uv]
+default-groups = ["dev"]
+
 [project.urls]
 Homepage = "https://github.com/gauravbaruah/SpecPlane"
 

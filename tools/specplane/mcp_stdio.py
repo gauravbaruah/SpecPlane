@@ -54,6 +54,10 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
                 "type": "string",
                 "description": "Comma-separated SpecPlane ids",
             },
+            "change": {
+                "type": "string",
+                "description": "Scope coverage to specs/changes/<slug> (same as CLI --change)",
+            },
         },
         "required": [],
     },
@@ -103,7 +107,10 @@ def dispatch(name: str, arguments: dict[str, Any] | None) -> str:
     if name == "check_sync":
         raw_ids = str(arguments.get("changed_ids") or "")
         changed_ids = [part.strip() for part in raw_ids.split(",") if part.strip()]
-        return format_check_sync(check_sync(kernel, changed_ids))
+        change_slug = str(arguments.get("change") or "").strip() or None
+        return format_check_sync(
+            check_sync(kernel, changed_ids, change_slug=change_slug)
+        )
     return format_list_gaps(list_gaps(kernel))
 
 
