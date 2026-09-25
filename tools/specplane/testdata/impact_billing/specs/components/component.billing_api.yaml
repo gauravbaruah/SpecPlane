@@ -38,6 +38,11 @@ implementation:
   contracts:
     apis:
       - "POST /v1/billing/retry"
+    data_models:
+      RetryRequest:
+        fields: [invoice_id, instrument_id]
+      PaymentResult:
+        fields: [status, invoice_id]
   dependencies:
     internal:
       - component.invoice_worker

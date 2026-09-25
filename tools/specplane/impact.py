@@ -544,6 +544,18 @@ def project_quality(kernel: Kernel, affected: list[dict[str, Any]]) -> dict[str,
                                 "detail": detail,
                             }
                         )
+                models = _jsonish(contract_block.get("data_models"))
+                if isinstance(models, dict) and models:
+                    saw_quality = True
+                    contracts.append(
+                        {
+                            "subject": subject,
+                            "kind": "data_models",
+                            "epistemic_state": "declared",
+                            "source": "contracts.data_models",
+                            "models": models,
+                        }
+                    )
             roll = dig(doc.data, "implementation", "rollout")
             if isinstance(roll, dict) and (
                 _filled(roll.get("strategy")) or _filled(roll.get("rollback_trigger"))
@@ -931,6 +943,18 @@ def _flow_item(subject: str, flow: Any) -> dict[str, Any]:
         kinds = flow.get("kinds")
         if isinstance(kinds, list) and kinds:
             item["kinds"] = [str(kind) for kind in kinds]
+        stages = _texts(flow.get("stages"))
+        if stages:
+            item["stages"] = stages
+        outcomes = flow.get("outcomes")
+        if isinstance(outcomes, dict):
+            cleaned = {
+                str(key): _texts(value)
+                for key, value in outcomes.items()
+                if _texts(value)
+            }
+            if cleaned:
+                item["outcomes"] = cleaned
         return item
     return _item(subject, "flow", "flows", str(flow))
 
@@ -965,6 +989,16 @@ def _constraint_entries(constraints: dict[str, Any]) -> list[tuple[str, list[str
             if texts:
                 entries.append((str(key), texts))
     return entries
+
+
+def _jsonish(value: Any) -> Any:
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    if isinstance(value, list):
+        return [_jsonish(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): _jsonish(item) for key, item in value.items() if item not in ("", [], {})}
+    return str(value)
 
 
 def _texts(value: Any) -> list[str]:

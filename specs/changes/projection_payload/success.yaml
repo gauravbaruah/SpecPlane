@@ -1,0 +1,24 @@
+change_id: "projection_payload"
+kind: "evolve"
+
+sensors:
+  - id: "diagrams_and_path"
+    promise: "capability.specplane_retrieve"
+    must: "A live id returns its spec path and declared diagrams, including sequence mermaid, and does not label that slice declared"
+    run:
+      unittest: "tools.specplane.test_kernel.RetrieveTests.test_declared_diagrams_and_spec_path"
+  - id: "inferred_declared_not_live"
+    promise: "capability.specplane_retrieve"
+    must: "An inferred id returns purpose, responsibilities, and path under declared. live stays empty and the readout does not say live"
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_retrieve_inferred_not_live"
+  - id: "stages_and_data_models"
+    promise: "capability.specplane_blast"
+    must: "Impact flow items include declared stages and outcomes, and quality contracts include data_models as a declared map"
+    run:
+      unittest: "tools.specplane.test_impact.ImpactTests.test_stages_outcomes_and_data_models"
+  - id: "viewer_shows_material"
+    promise: "capability.specplane_blast"
+    must: "Diagrams and Data appear only on records whose payload contains them. Sequence is not its own tab. Journey stages come from the impact flow item"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_projection_switcher"

@@ -68,6 +68,24 @@ class RetrieveTests(unittest.TestCase):
         self.assertIn("status: launched", text)
         self.assertIn("bit: live", text)
 
+    def test_declared_diagrams_and_spec_path(self) -> None:
+        kernel = load_kernel(ROOT / "testdata" / "impact_billing" / "specs")
+        payload = retrieve(kernel, "capability.billing")
+        assert payload is not None
+        assert payload["live"] is not None
+        self.assertEqual(
+            payload["live"]["path"],
+            "capabilities/capability.billing.yaml",
+        )
+        diagrams = payload["live"]["diagrams"]
+        self.assertEqual(diagrams[0]["type"], "sequence")
+        self.assertIn("sequenceDiagram", diagrams[0]["mermaid"])
+        self.assertNotIn("declared", payload)
+        text = format_retrieve(payload)
+        self.assertIn("path: capabilities/capability.billing.yaml", text)
+        self.assertIn("sequence — Retry after decline", text)
+        self.assertIn("sequenceDiagram", text)
+
     def test_unknown_id_is_none(self) -> None:
         self.assertIsNone(retrieve(self.kernel, "capability.does_not_exist"))
 
@@ -685,8 +703,15 @@ class TestPromote(unittest.TestCase):
         self.assertEqual(payload["bit"], "inferred")
         self.assertIsNone(payload["live"])
         self.assertFalse(payload["inferred_as_live"])
+        declared = payload["declared"]
+        self.assertEqual(declared["purpose"], "Customer completes paid checkout")
+        self.assertIn("Accept payment and record the order", declared["responsibilities"])
+        self.assertEqual(declared["path"], "capabilities/capability.billing_checkout.yaml")
+        self.assertEqual(declared["bit"], "inferred")
         text = format_retrieve(payload)
         self.assertIn("bit: inferred", text)
+        self.assertIn("declared:", text)
+        self.assertIn("Customer completes paid checkout", text)
         self.assertNotIn("\nlive:", text)
 
         from io import StringIO

@@ -1,0 +1,108 @@
+meta:
+  id: "foundation.design_system"
+  purpose: "Semantic color, type, and provenance strokes for the SpecPlane viewer"
+  level: "foundation"
+  owner: "SpecPlane"
+  tags: ["design", "viewer", "tokens"]
+  last_updated: "2026-09-25"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Light and dark tokens, nine text styles, and provenance strokes from the viewer design system."
+    breaking: false
+
+provides:
+  - "Light and dark semantic colors: canvas, surface, raised, sunken, border, ink, accent, selection, success, warning, danger"
+  - "Two families and nine text styles: Schibsted Grotesk for prose, JetBrains Mono for ids and provenance"
+  - "Provenance strokes: declared, derived, inferred, future, unknown"
+  - "Fonts ship with the viewer. The page does not load a font service"
+
+used_by:
+  containers: []
+  components: []
+
+tokens:
+  color:
+    light:
+      canvas: "#e6e3dc"
+      surface: "#fbfaf7"
+      raised: "#ffffff"
+      sunken: "#f3f1ec"
+      hover: "#f1efe9"
+      border: "#e4e1da"
+      border_strong: "#d6d3cb"
+      divider: "#ece9e2"
+      dashed: "#b9b6ae"
+      ink_1: "#1d1f24"
+      ink_2: "#3d4048"
+      ink_3: "#62656d"
+      ink_4: "#8a8c92"
+      accent: "#1f55c9"
+      accent_subtle: "#edf2fc"
+      accent_border: "#c9d6f3"
+      selection_bg: "#1d1f24"
+      selection_ink: "#fbfaf7"
+      selection_ink_2: "#b9bcc4"
+      success: "#1d7a45"
+      warning: "#9a5b00"
+      danger: "#b3261e"
+    dark:
+      canvas: "#111214"
+      surface: "#18191c"
+      raised: "#1f2024"
+      sunken: "#141517"
+      hover: "#25272b"
+      border: "#2b2d32"
+      border_strong: "#393c42"
+      divider: "#232529"
+      dashed: "#4a4d54"
+      ink_1: "#ecebe7"
+      ink_2: "#c6c5c0"
+      ink_3: "#9c9da2"
+      ink_4: "#6f7177"
+      accent: "#7ea3f5"
+      accent_subtle: "#1a2440"
+      accent_border: "#2e4277"
+      selection_bg: "#ecebe7"
+      selection_ink: "#111214"
+      selection_ink_2: "#55575d"
+      success: "#5dc28b"
+      warning: "#e2a755"
+      danger: "#f08a82"
+  typography:
+    font_family_sans: "Schibsted Grotesk"
+    font_family_mono: "JetBrains Mono"
+    styles:
+      - { name: display, family: sans, weight: 600, size: 32, line_height: 1.15 }
+      - { name: title, family: sans, weight: 600, size: 22, line_height: 1.25 }
+      - { name: heading, family: sans, weight: 600, size: 16, line_height: 1.3 }
+      - { name: body, family: sans, weight: 400, size: 14, line_height: 1.5 }
+      - { name: body_sm, family: sans, weight: 400, size: 13, line_height: 1.45 }
+      - { name: label, family: sans, weight: 600, size: 12, line_height: 1.3 }
+      - { name: mono, family: mono, weight: 500, size: 13, line_height: 1.4 }
+      - { name: mono_sm, family: mono, weight: 500, size: 12, line_height: 1.4 }
+      - { name: mono_xs, family: mono, weight: 500, size: 11, line_height: 1.35 }
+  provenance:
+    - { name: declared, dash: solid }
+    - { name: derived, dash: "2 4" }
+    - { name: inferred, dash: "5 4", light_ink: "#9a5b00", light_bg: "#fff8ec", dark_ink: "#e2a755", dark_bg: "#2a2114" }
+    - { name: future, dash: "5 4", light_ink: "#7a4fa0", light_bg: "#f6f1fa", dark_ink: "#bf9ae0", dark_bg: "#241c2d" }
+    - { name: unknown, dash: "4 4" }
+  radius:
+    node: 8
+    control: 6
+    chip: 4
+
+principles:
+  - "Every viewer color and text style maps to one of these tokens"
+  - "Light and dark carry the same roles"
+  - "Inferred is a warning stroke, never a live fill"
+  - "Absence stays not represented. It does not become a success or danger color"
+
+refs: []
+diagrams: []

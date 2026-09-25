@@ -128,11 +128,36 @@ def open_changes_for(kernel: Kernel, spec_id: str) -> list[Change]:
     ]
 
 
-def slice_fields(doc: SpecDoc) -> dict[str, Any]:
+def _relative_spec_path(spec_root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(spec_root.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _declared_diagrams(doc: SpecDoc) -> list[dict[str, str]]:
+    raw = doc.data.get("diagrams")
+    if not isinstance(raw, list):
+        return []
+    diagrams: list[dict[str, str]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        row: dict[str, str] = {}
+        for key in ("type", "title", "description", "mermaid"):
+            value = item.get(key)
+            if isinstance(value, str) and value.strip():
+                row[key] = value.strip()
+        if row.get("type") or row.get("mermaid"):
+            diagrams.append(row)
+    return diagrams
+
+
+def slice_fields(doc: SpecDoc, spec_root: Path | None = None) -> dict[str, Any]:
     realized = doc.data.get("realized_by") if isinstance(doc.data.get("realized_by"), dict) else {}
     deps = dig(doc.data, "implementation", "dependencies", "internal")
     depended = dig(doc.data, "implementation", "depended_on_by", "components")
-    return {
+    fields: dict[str, Any] = {
         "id": doc.spec_id,
         "purpose": doc.meta.get("purpose") or "",
         "level": doc.level,
@@ -145,6 +170,12 @@ def slice_fields(doc: SpecDoc) -> dict[str, Any]:
         "depends_on": as_str_list(deps),
         "depended_on_by": as_str_list(depended),
     }
+    if spec_root is not None:
+        fields["path"] = _relative_spec_path(spec_root, doc.path)
+    diagrams = _declared_diagrams(doc)
+    if diagrams:
+        fields["diagrams"] = diagrams
+    return fields
 
 
 def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
@@ -152,9 +183,11 @@ def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
     if not doc:
         return None
     bit = bit_of(doc)
-    live_slice = slice_fields(doc) if bit == "live" else None
+    fields = slice_fields(doc, kernel.spec_root)
+    live_slice = fields if bit == "live" else None
+    declared = fields if bit == "inferred" else None
     replaced_self = spec_id if bit == "replaced" else None
-    return {
+    payload: dict[str, Any] = {
         "id": spec_id,
         "bit": bit,
         "review_state": str(doc.meta.get("review_state") or ""),
@@ -168,6 +201,9 @@ def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
         ],
         "inferred_as_live": False,
     }
+    if declared is not None:
+        payload["declared"] = declared
+    return payload
 
 
 def _component_edges(doc: SpecDoc) -> tuple[list[str], list[str], list[str]]:
@@ -788,6 +824,42 @@ def format_promote(payload: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _format_slice(lines: list[str], label: str, fields: dict[str, Any]) -> None:
+    lines.append(f"{label}:")
+    lines.append(f"  id: {fields['id']}")
+    if fields.get("path"):
+        lines.append(f"  path: {fields['path']}")
+    if fields.get("purpose"):
+        lines.append(f"  purpose: {fields['purpose']}")
+    for key in (
+        "responsibilities",
+        "implements",
+        "realized_by_components",
+        "realized_by_containers",
+        "uses",
+        "depends_on",
+        "depended_on_by",
+    ):
+        values = fields.get(key) or []
+        if values:
+            lines.append(f"  {key}:")
+            for item in values:
+                lines.append(f"    - {item}")
+    diagrams = fields.get("diagrams") or []
+    if diagrams:
+        lines.append("  diagrams:")
+        for diagram in diagrams:
+            dtype = str(diagram.get("type") or "").strip() or "diagram"
+            title = str(diagram.get("title") or "").strip()
+            head = f"{dtype} — {title}" if title else dtype
+            lines.append(f"    - {head}")
+            mermaid = str(diagram.get("mermaid") or "")
+            if mermaid:
+                lines.append("      mermaid: |")
+                for line in mermaid.splitlines():
+                    lines.append(f"        {line}")
+
+
 def format_retrieve(payload: dict[str, Any]) -> str:
     lines = [f"retrieve {payload['id']}", f"bit: {payload['bit']}"]
     review_state = str(payload.get("review_state") or "")
@@ -798,24 +870,10 @@ def format_retrieve(payload: dict[str, Any]) -> str:
         lines.append(f"status: {status}")
     live = payload.get("live")
     if live and payload["bit"] != "inferred":
-        lines.append("live:")
-        lines.append(f"  id: {live['id']}")
-        if live.get("purpose"):
-            lines.append(f"  purpose: {live['purpose']}")
-        for key in (
-            "responsibilities",
-            "implements",
-            "realized_by_components",
-            "realized_by_containers",
-            "uses",
-            "depends_on",
-            "depended_on_by",
-        ):
-            values = live.get(key) or []
-            if values:
-                lines.append(f"  {key}:")
-                for item in values:
-                    lines.append(f"    - {item}")
+        _format_slice(lines, "live", live)
+    declared = payload.get("declared")
+    if declared and payload["bit"] == "inferred":
+        _format_slice(lines, "declared", declared)
     replaced = payload.get("replaced") or []
     if replaced:
         lines.append("replaced:")

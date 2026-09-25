@@ -5,6 +5,7 @@ ADDED:
   - "decision.md locks install, serve, Mermaid, and chrome table"
   - "viewer2-amendment.md is the presentation reference"
   - "tools/specplane/view.py and tools/specplane/viewer/ generate and serve the local readout"
+  - "foundation.design_system: viewer color, type, and provenance tokens"
 
 MODIFIED: []
 
@@ -12,6 +13,5 @@ REMOVED: []
 
 NOT_IN_THIS_PASS:
   - "Live capability.specplane_viewer YAML (promote later)"
-  - "Diagrams and Data projections until retrieve or impact returns that material"
   - "specplane view --static / export viewer"
   - "H-F Cloud share"

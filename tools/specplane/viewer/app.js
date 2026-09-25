@@ -12,7 +12,13 @@
     blast: "Blast",
     layers: "Layers",
     journey: "Journey",
+    diagrams: "Diagrams",
+    data: "Data",
   };
+  let diagramSeq = 0;
+  if (window.mermaid && window.mermaid.initialize) {
+    window.mermaid.initialize({ startOnLoad: false, securityLevel: "strict" });
+  }
   const REL = {
     realized_by: "Realized by",
     implements: "Implements",
@@ -244,6 +250,7 @@
           rec.review_state ? " · " + rec.review_state : "",
           rec.status ? " · status " + rec.status : "",
         ]),
+        rec.path ? h("div", { class: "quiet mono" }, [rec.path]) : null,
         h("div", { class: "kicker" }, ["Promise"]),
         h("p", { class: "purpose" }, [rec.purpose || (rec.bit === "inferred" ? "retrieve returns no live slice for an inferred id." : "")]),
         flight(rec),
@@ -277,10 +284,12 @@
   }
 
   function definition(rec, graph) {
-    const items = productItems(graph, rec.id).filter(function (item) {
-      return item.kind !== "flow" && item.kind !== "open_question";
-    });
     const duties = rec.responsibilities || [];
+    const items = productItems(graph, rec.id).filter(function (item) {
+      if (item.kind === "flow" || item.kind === "open_question") return false;
+      if (item.kind === "responsibility" && duties.length) return false;
+      return true;
+    });
     if (!duties.length && !items.length) return null;
     return h("details", {}, [
       h("summary", {}, ["Definition ", h("span", {}, ["what is promised"])]),
@@ -295,6 +304,7 @@
     const rows = [];
     ["criteria", "verification", "contracts", "sensors", "rollout"].forEach(function (key) {
       (quality[key] || []).forEach(function (item) {
+        if (item.kind === "data_models") return;
         if (realized.indexOf(item.subject) >= 0) rows.push(item);
       });
     });
@@ -353,6 +363,8 @@
     if (proj === "map") return graphBlock(mapColumns(rec), selected, onselect, null, "derived · from declared links");
     if (proj === "layers") return graphBlock(layerColumns(rec), selected, onselect, null, "derived · 5C placement");
     if (proj === "journey") return journeyBlock(rec, graph);
+    if (proj === "diagrams") return diagramBlock(rec);
+    if (proj === "data") return dataBlock(rec, graph);
     if (proj === "blast") return blastBlock(graph, rec.id, selected, persp, onselect);
     return null;
   }
@@ -554,6 +566,78 @@
     return null;
   }
 
+  function outcomeLines(outcomes) {
+    if (!outcomes || typeof outcomes !== "object") return [];
+    return Object.keys(outcomes).map(function (key) {
+      const value = outcomes[key];
+      const text = Array.isArray(value) ? value.join(", ") : String(value);
+      return key + ": " + text;
+    });
+  }
+
+  function diagramBlock(rec) {
+    const diagrams = rec.diagrams || [];
+    if (!diagrams.length) return h("p", { class: "note" }, ["No diagram declared on this id."]);
+    return h("div", {}, [
+      h("div", { class: "quiet" }, ["declared · diagrams on this id"]),
+      ...diagrams.map(function (diagram) { return diagramCard(diagram); }),
+    ]);
+  }
+
+  function diagramCard(diagram) {
+    const host = h("div", { class: "diagram" });
+    const title = diagram.title || diagram.type || "diagram";
+    const source = diagram.mermaid || "";
+    if (source && window.mermaid && window.mermaid.render) {
+      const id = "spdiag" + (++diagramSeq);
+      window.mermaid.render(id, source).then(function (result) {
+        const holder = document.createElement("div");
+        holder.innerHTML = result.svg;
+        host.replaceChildren();
+        while (holder.firstChild) host.append(holder.firstChild);
+      }).catch(function () {
+        host.replaceChildren(h("pre", {}, [source]));
+      });
+    } else if (source) {
+      host.append(h("pre", {}, [source]));
+    }
+    return h("div", { class: "item" }, [
+      title,
+      diagram.type ? h("div", { class: "src" }, [diagram.type + " · diagrams"]) : null,
+      diagram.description ? h("div", {}, [diagram.description]) : null,
+      host,
+    ]);
+  }
+
+  function dataBlock(rec, graph) {
+    const contracts = ((((graph || {}).perspectives || {}).quality || {}).contracts) || [];
+    const mine = contracts.filter(function (item) {
+      return item.subject === rec.id && item.kind === "data_models" && item.models;
+    });
+    if (!mine.length) return h("p", { class: "note" }, ["No data model declared on this id."]);
+    return h("div", {}, [
+      h("div", { class: "quiet" }, ["declared · implementation.contracts.data_models"]),
+      ...mine.map(function (item) {
+        return h("div", {}, Object.keys(item.models).map(function (name) {
+          return h("div", { class: "item" }, [
+            modelLine(name, item.models[name]),
+            h("div", { class: "src" }, [item.subject + " · " + (item.source || "contracts.data_models")]),
+          ]);
+        }));
+      }),
+    ]);
+  }
+
+  function modelLine(name, value) {
+    let extra = "";
+    if (Array.isArray(value)) extra = value.join(", ");
+    else if (value && typeof value === "object") {
+      const fields = value.fields;
+      extra = Array.isArray(fields) ? fields.join(", ") : Object.keys(value).join(", ");
+    } else if (value != null && value !== "") extra = String(value);
+    return extra ? name + " — " + extra : name;
+  }
+
   function journeyBlock(rec, graph) {
     const flows = productItems(graph, rec.id).filter(function (item) { return item.kind === "flow"; });
     const journeys = (((graph || {}).perspectives || {}).quality || {}).journeys || [];
@@ -561,9 +645,13 @@
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · flows on this id"]),
       ...flows.map(function (item) {
+        const stages = (item.stages || []).length ? item.stages.join(" → ") : "";
+        const endings = outcomeLines(item.outcomes);
         return h("div", { class: "item" }, [
           item.detail || item.flow_id || item.goal || "flow",
           item.goal ? h("div", {}, [item.goal]) : null,
+          stages ? h("div", {}, [stages]) : null,
+          ...endings.map(function (line) { return h("div", {}, [line]); }),
           h("div", { class: "src" }, [(item.subject || rec.id) + " · " + (item.source || "flows")]),
         ]);
       }),

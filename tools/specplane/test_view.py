@@ -36,6 +36,9 @@ class ViewerModelTests(unittest.TestCase):
         self.assertEqual(rec["bit"], "inferred")
         self.assertFalse(rec["live_slice"])
         self.assertFalse(rec["inferred_as_live"])
+        self.assertEqual(rec["purpose"], "Customer completes paid checkout")
+        self.assertIn("Accept payment and record the order", rec["responsibilities"])
+        self.assertEqual(rec["path"], "capabilities/capability.billing_checkout.yaml")
         self.assertNotIn("sequence", rec["projections"])
 
     def test_affected_path_comes_from_impact(self) -> None:
@@ -68,15 +71,29 @@ class ViewerModelTests(unittest.TestCase):
 
     def test_projection_switcher(self) -> None:
         rec = self.payload["records"]["capability.billing"]
-        self.assertEqual(
-            [name for name in rec["projections"] if name in {"sequence", "diagrams", "data"}],
-            [],
-        )
         self.assertIn("map", rec["projections"])
         self.assertIn("blast", rec["projections"])
         self.assertIn("layers", rec["projections"])
         self.assertIn("journey", rec["projections"])
+        self.assertIn("diagrams", rec["projections"])
         self.assertNotIn("sequence", rec["projections"])
+        self.assertNotIn("data", rec["projections"])
+        self.assertEqual(rec["diagrams"][0]["type"], "sequence")
+        self.assertEqual(rec["path"], "capabilities/capability.billing.yaml")
+        graph = self.payload["impacts"]["capability.billing"]
+        flow = next(
+            item
+            for item in graph["perspectives"]["product"]["items"]
+            if item.get("flow_id") == "patient_payment"
+        )
+        self.assertEqual(flow["stages"], ["charge", "decline", "retry", "completed"])
+        api = self.payload["records"]["component.billing_api"]
+        self.assertIn("data", api["projections"])
+        self.assertNotIn("diagrams", api["projections"])
+        identity = self.payload["records"]["capability.identity"]
+        self.assertNotIn("diagrams", identity["projections"])
+        self.assertNotIn("data", identity["projections"])
+        self.assertNotIn("sequence", identity["projections"])
 
     def test_design_time_change(self) -> None:
         change = next(item for item in self.payload["changes"] if item["id"] == "billing_retry")
@@ -98,10 +115,25 @@ class ViewerModelTests(unittest.TestCase):
             self.assertNotIn("http://", html)
             self.assertNotIn("https://", html)
             self.assertTrue((out / "vendor" / "mermaid.min.js").is_file())
+            self.assertTrue((out / "fonts" / "schibsted-grotesk-400.woff2").is_file())
+            self.assertTrue((out / "fonts" / "jetbrains-mono-500.woff2").is_file())
             self.assertTrue((out / "payload.js").read_text(encoding="utf-8").startswith("window.SPECPLANE_VIEW"))
         server = (ROOT / "view.py").read_text(encoding="utf-8")
         self.assertIn('("127.0.0.1", 0)', server)
         self.assertNotIn("0.0.0.0", server)
+
+    def test_design_system_tokens_are_local(self) -> None:
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
+        self.assertIn("Schibsted Grotesk", css)
+        self.assertIn("JetBrains Mono", css)
+        self.assertIn("--bg-surface: #fbfaf7", css)
+        self.assertIn("--bg-surface: #18191c", css)
+        self.assertIn("--warning: #9a5b00", css)
+        self.assertIn("prefers-color-scheme: dark", css)
+        self.assertNotIn("fonts.googleapis.com", css)
+        self.assertNotIn("cdn.", css)
+        self.assertTrue((ASSETS / "fonts" / "schibsted-grotesk-600.woff2").is_file())
+        self.assertTrue((ASSETS / "fonts" / "jetbrains-mono-500.woff2").is_file())
 
 
 if __name__ == "__main__":

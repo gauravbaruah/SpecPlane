@@ -9,6 +9,7 @@ promise_ids:
   - "capability.specplane_list_gaps"
   - "capability.specplane_init"
   - "component.cli_init"
+  - "foundation.design_system"
 why: >
   Human projection of retrieve / impact / gaps. Same install as the kernel.
   Generate into .specplane/view/. Serve 127.0.0.1 by default. Vendor Mermaid.

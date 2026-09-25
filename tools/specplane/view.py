@@ -37,33 +37,7 @@ MERMAID_VERSION = "10.9.3"
 LEVELS = ("system", "capability", "container", "component", "foundation", "change")
 DELTA_KEYS = ("ADDED", "MODIFIED", "REMOVED")
 
-PAYLOAD_GAPS = [
-    {
-        "desired": "Diagrams projection, including sequence diagrams the record holds",
-        "missing": "retrieve and impact do not return declared diagram source (Mermaid text, type, or flow_ref on a diagram)",
-        "smallest": "Add declared diagrams to the retrieve or impact payload for the selected id",
-    },
-    {
-        "desired": "Data projection of entity and schema relationships",
-        "missing": "impact quality contracts do not include data_models",
-        "smallest": "Project implementation.contracts.data_models on the quality or a dedicated impact field",
-    },
-    {
-        "desired": "Journey with branches, loops, and endings taken from a declared flowchart",
-        "missing": "impact flow items carry id, goal, and kinds; quality journeys carry exceptions and recovery text, not stages or a graph",
-        "smallest": "Return flow stages and any declared flowchart on the product projection",
-    },
-    {
-        "desired": "Source fold naming the spec file",
-        "missing": "retrieve does not include the file path",
-        "smallest": "Add the spec path to retrieve",
-    },
-    {
-        "desired": "Purpose and responsibilities on an inferred id",
-        "missing": "retrieve returns no live slice when bit is inferred",
-        "smallest": "Return a non-live slice for inferred ids, still marked inferred",
-    },
-]
+PAYLOAD_GAPS: list[dict[str, str]] = []
 
 
 def build_payload(kernel: Any) -> dict[str, Any]:
@@ -130,6 +104,10 @@ def projections_for(record: dict[str, Any], graph: dict[str, Any] | None) -> lis
         names.append("layers")
     if _journey(graph, record["id"]):
         names.append("journey")
+    if record.get("diagrams"):
+        names.append("diagrams")
+    if _data(graph, record["id"]):
+        names.append("data")
     return names
 
 
@@ -141,29 +119,33 @@ def change_projections(graph: dict[str, Any] | None) -> list[str]:
 
 def _record(row: dict[str, Any]) -> dict[str, Any]:
     live = row.get("live") if isinstance(row.get("live"), dict) else None
+    declared = row.get("declared") if isinstance(row.get("declared"), dict) else None
+    shown = live if live is not None else declared
     links: list[dict[str, str]] = []
-    if live:
-        for spec_id in live.get("realized_by_components") or []:
+    if shown:
+        for spec_id in shown.get("realized_by_components") or []:
             links.append({"rel": "realized_by", "id": spec_id})
-        for spec_id in live.get("realized_by_containers") or []:
+        for spec_id in shown.get("realized_by_containers") or []:
             links.append({"rel": "realized_by", "id": spec_id})
-        for spec_id in live.get("implements") or []:
+        for spec_id in shown.get("implements") or []:
             links.append({"rel": "implements", "id": spec_id})
-        for spec_id in live.get("uses") or []:
+        for spec_id in shown.get("uses") or []:
             links.append({"rel": "uses", "id": spec_id})
-        for spec_id in live.get("depends_on") or []:
+        for spec_id in shown.get("depends_on") or []:
             links.append({"rel": "depends_on", "id": spec_id})
-        for spec_id in live.get("depended_on_by") or []:
+        for spec_id in shown.get("depended_on_by") or []:
             links.append({"rel": "depended_on_by", "id": spec_id})
     return {
         "id": row["id"],
         "bit": row.get("bit") or "",
         "review_state": row.get("review_state") or "",
         "status": row.get("status") or "",
-        "purpose": (live or {}).get("purpose") or "",
-        "level": (live or {}).get("level") or _level_name(row["id"]),
-        "responsibilities": list((live or {}).get("responsibilities") or []),
+        "purpose": (shown or {}).get("purpose") or "",
+        "level": (shown or {}).get("level") or _level_name(row["id"]),
+        "responsibilities": list((shown or {}).get("responsibilities") or []),
         "links": links,
+        "diagrams": list((shown or {}).get("diagrams") or []),
+        "path": (shown or {}).get("path") or "",
         "in_flight": [
             {"id": item.get("id"), "kind": item.get("kind") or ""}
             for item in (row.get("in_flight") or [])
@@ -192,6 +174,16 @@ def _others(graph: dict[str, Any] | None, spec_id: str) -> bool:
     return any(str(node.get("id")) != spec_id for node in graph.get("affected") or [])
 
 
+def _data(graph: dict[str, Any] | None, spec_id: str) -> bool:
+    if not graph:
+        return False
+    contracts = ((graph.get("perspectives") or {}).get("quality") or {}).get("contracts") or []
+    return any(
+        item.get("subject") == spec_id and item.get("kind") == "data_models" and item.get("models")
+        for item in contracts
+    )
+
+
 def _journey(graph: dict[str, Any] | None, spec_id: str) -> bool:
     if not graph:
         return False
@@ -214,12 +206,14 @@ def write_site(payload: dict[str, Any], out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
     for name in ("index.html", "app.js", "app.css"):
         shutil.copy2(assets_dir() / name, out / name)
-    vendor_src = assets_dir() / "vendor"
-    if vendor_src.is_dir():
-        dest = out / "vendor"
+    for folder in ("vendor", "fonts"):
+        src = assets_dir() / folder
+        if not src.is_dir():
+            continue
+        dest = out / folder
         if dest.exists():
             shutil.rmtree(dest)
-        shutil.copytree(vendor_src, dest)
+        shutil.copytree(src, dest)
     (out / "payload.js").write_text(
         "window.SPECPLANE_VIEW = " + json.dumps(payload, ensure_ascii=False) + ";\n",
         encoding="utf-8",

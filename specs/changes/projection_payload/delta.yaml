@@ -1,0 +1,20 @@
+change_id: "projection_payload"
+kind: "evolve"
+
+ADDED:
+  - "retrieve returns declared diagrams (type, title, description, mermaid) and the spec path"
+  - "retrieve returns a declared slice for an inferred id; live stays empty"
+  - "impact product flow items include stages and outcomes when declared"
+  - "impact quality contracts include data_models as a declared map"
+
+MODIFIED:
+  - "capability.specplane_retrieve: the readout includes path, diagrams, and the inferred declared slice"
+  - "capability.specplane_blast: impact projects stages, outcomes, and data_models already written on the spec"
+  - "the viewer shows Diagrams, Data, journey stages, the spec path, and inferred purpose when those fields are present"
+
+REMOVED: []
+
+NOT_IN_THIS_PASS:
+  - "Live capability.specplane_viewer YAML"
+  - "Gap rows for a diagram step that is not a stage"
+  - "A single trace from a success target through an event to an emitting component"

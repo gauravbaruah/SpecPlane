@@ -24,9 +24,14 @@ sensors:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_no_negative_security_claim"
   - id: "projection_switcher"
     promise: "capability.specplane_viewer"
-    must: "Map, Blast, Layers, and Journey appear when the payload has them. Sequence, Diagrams, and Data are omitted until the kernel returns that material"
+    must: "Sequence is not its own tab. Diagrams and Data appear when that record's payload contains them, and stay absent when it does not"
     run:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_projection_switcher"
+  - id: "design_system_tokens"
+    promise: "foundation.design_system"
+    must: "The viewer uses the design-system families and semantic colors, and ships the font files instead of calling a font service"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_design_system_tokens_are_local"
   - id: "design_time_change"
     promise: "capability.specplane_viewer"
     must: "A change with why and promise ids and no delta still has an impact path"
