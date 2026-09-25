@@ -7,6 +7,11 @@ sensors:
     must: "An inferred id stays inferred and is not given a live slice"
     run:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_inferred_is_not_live"
+  - id: "diagram_scroll"
+    promise: "capability.specplane_viewer"
+    must: "A declared diagram stays in the column and scrolls. It does not capture the wheel to zoom."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_diagrams_scroll_in_the_column"
   - id: "blast_hops"
     promise: "capability.specplane_viewer"
     must: "Blast columns follow impact distance. Distance 3 and beyond stays collapsed until expand."

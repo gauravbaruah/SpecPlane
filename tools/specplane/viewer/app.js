@@ -1187,8 +1187,8 @@
       go("id/" + encodeURIComponent(rec.id), { proj: "diagrams", dg: String(i) });
     }
     let picture = null;
-    if (flow) picture = viewportCanvas(flowStage(flow, selected, onselect));
-    else if (sequence) picture = viewportCanvas(sequenceStage(sequence, selected, onselect));
+    if (flow) picture = diagramFrame(flowStage(flow, selected, onselect));
+    else if (sequence) picture = diagramFrame(sequenceStage(sequence, selected, onselect));
     else picture = diagramCard(diagram);
     const why = selected
       ? whyBox(selected, "Declared in “" + (diagram.title || diagram.type || "diagram") + "”.", "declared · diagrams")
@@ -1200,6 +1200,10 @@
       picture,
       flow || sequence ? why : null,
     ]);
+  }
+
+  function diagramFrame(picture) {
+    return h("div", { class: "diagram-frame" }, [picture]);
   }
 
   function diagramCard(diagram) {
@@ -1223,7 +1227,7 @@
       title,
       diagram.type ? h("div", { class: "src" }, [diagram.type + " · diagrams"]) : null,
       diagram.description ? h("div", {}, [diagram.description]) : null,
-      host,
+      diagramFrame(host),
     ]);
   }
 

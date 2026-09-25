@@ -66,6 +66,16 @@ class ViewerModelTests(unittest.TestCase):
     def test_gaps_match_list_gaps(self) -> None:
         self.assertEqual(self.payload["gaps"], list_gaps(self.kernel))
 
+    def test_diagrams_scroll_in_the_column(self) -> None:
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
+        self.assertIn("diagram-frame", src)
+        self.assertNotIn("viewportCanvas(flowStage", src)
+        self.assertNotIn("viewportCanvas(sequenceStage", src)
+        frame = css.split(".diagram-frame {", 1)[1].split("}", 1)[0]
+        self.assertIn("overflow-x: auto", frame)
+        self.assertIn("max-width: 100%", frame)
+
     def test_blast_hop_copy_is_in_the_viewer(self) -> None:
         src = (ASSETS / "app.js").read_text(encoding="utf-8")
         self.assertIn("1 hop · direct", src)
