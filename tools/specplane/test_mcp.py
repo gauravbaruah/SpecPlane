@@ -29,8 +29,8 @@ SCOPED = ROOT / "testdata" / "golden" / "scoped_coverage" / "specs"
 
 
 class McpCatalogTests(unittest.TestCase):
-    def test_catalog_is_five_tools(self) -> None:
-        self.assertEqual(MCP_TOOLS, ("retrieve", "blast", "check_sync", "list_gaps", "run"))
+    def test_catalog_lists_kernel_tools(self) -> None:
+        self.assertEqual(MCP_TOOLS, ("retrieve", "blast", "impact", "check_sync", "list_gaps", "run"))
         names = [row["name"] for row in tool_descriptors()]
         self.assertEqual(names, list(MCP_TOOLS))
         self.assertNotIn("validate", names)
@@ -44,7 +44,7 @@ class McpCatalogTests(unittest.TestCase):
         reply = handle_message({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
         assert reply is not None
         names = [row["name"] for row in reply["result"]["tools"]]
-        self.assertEqual(names, ["retrieve", "blast", "check_sync", "list_gaps", "run"])
+        self.assertEqual(names, ["retrieve", "blast", "impact", "check_sync", "list_gaps", "run"])
 
     def test_list_gaps_dispatch_matches_kernel(self) -> None:
         text = dispatch("list_gaps", {"spec_root": str(GOLDEN)})
@@ -90,7 +90,7 @@ class McpCatalogTests(unittest.TestCase):
             dispatch("run", {"spec_root": str(GOLDEN)})
 
     def test_run_dispatch_matches_kernel(self) -> None:
-        self.assertEqual(MCP_TOOLS, ("retrieve", "blast", "check_sync", "list_gaps", "run"))
+        self.assertEqual(MCP_TOOLS, ("retrieve", "blast", "impact", "check_sync", "list_gaps", "run"))
         names = [row["name"] for row in tool_descriptors()]
         self.assertNotIn("validate", names)
         self.assertNotIn("promote", names)

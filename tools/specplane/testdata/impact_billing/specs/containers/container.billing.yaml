@@ -1,0 +1,29 @@
+meta:
+  id: container.billing
+  purpose: "Billing service container"
+  level: container
+  type: container
+  owner: "Billing Engineering"
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Impact fixture container"
+    breaking: false
+
+implements:
+  - capability.billing
+
+uses:
+  - foundation.privacy_consent
+
+relationships:
+  contains:
+    - component.billing_api
+    - component.invoice_worker
+    - component.payment_store
+    - component.unrelated_mailer

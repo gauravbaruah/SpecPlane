@@ -1,0 +1,26 @@
+meta:
+  id: component.payment_store
+  purpose: "Inferred store the API depends on"
+  level: component
+  type: service
+  domain: backend
+  tags: [inferred]
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: draft
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Inferred dependency"
+    breaking: false
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components:
+      - component.billing_api
+    containers: []

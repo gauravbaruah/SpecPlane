@@ -10,6 +10,7 @@ from pathlib import Path
 CLI_FILES = (
     "cli.py",
     "kernel.py",
+    "impact.py",
     "validate.py",
     "drift.py",
     "initkit.py",

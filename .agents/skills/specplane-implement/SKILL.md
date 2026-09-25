@@ -86,3 +86,7 @@ Do not invent a graph by reading the whole tree. You may open files the CLI alre
 8. **Promote only after the user accepts.** Then: apply the delta to live YAML, bump `meta.version` + changelog on those live files, move the folder to `specs/changes/_archive/<slug>/`. Retrieve should then show one live graph.
 
 If this repo has no `specs/`, say so and point at bootstrap. Do not copy SpecPlane’s own `specs/` into another app.
+
+## Impact perspectives
+
+`impact <id>` is one affected subgraph plus projections (system, product, quality, governance, ownership). `blast` stays the bucket tree that `check_sync` uses. Do not invent stakeholder views (`qa_view`, `security_view`, and the like) or ask a model to re-decide blast. Agents may propose missing spec relationships as inferred; they are not the impact engine. Absence of a governed concern or owner is "not represented", never "no security impact" or "no QA required". See [`docs/impact-perspectives.md`](../../../docs/impact-perspectives.md).

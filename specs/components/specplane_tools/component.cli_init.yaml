@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-09-25"
   status: "draft"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "kernel-slice"
+    summary: "CLI_FILES and the wheel bundle include impact.py"
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "Consuming AGENTS.md template POST also calls run --change; run invokes bound checks only and does not certify behavior"
@@ -51,6 +55,7 @@ planning:
       - "Tests assert kit copied, kernel specs not copied, empty dirs, AGENTS append, no .github/workflows"
       - "Consuming AGENTS.md template states PRE retrieve / POST check_sync --change --changed-ids, then run --change. run invokes bound checks only and does not certify behavior."
       - "Does not stamp epistemic live"
+      - "Copied CLI files include impact.py"
     open_questions: []
     readiness: "in-progress"
 

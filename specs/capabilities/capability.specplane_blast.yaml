@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "blast"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-25"
   status: "planned"
-  version: "1.0.1"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-25"
+    author: "kernel-slice"
+    summary: "impact explains the same join-key closure with paths and projects it as system, product, quality, governance, and ownership. blast buckets stay."
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "v1: component-dep closure; foundations are terminal"
@@ -25,10 +29,12 @@ responsibilities:
   - "Name the change, the affects tree, and whether a human must decide"
   - "Return full impact in this slice; do not silently drop rows (Q94 / Q98 interruption policy is a later ADR)"
   - "When intent and code disagree, emit DECISION REQUIRED — SpecPlane does not pick a side"
+  - "impact explains that same closure with a path for each affected id, including an open change folder and no git diff"
+  - "Project the subgraph as system, product, quality, governance, and ownership. Absence of a field stays not represented"
 
 flows:
   - "blast a named id"
-  - "blast the open change folder"
+  - "impact a named id or an open change folder, with no git diff"
   - "blast a behavior-changing diff so check_sync can refuse an empty blast"
 
 business_value:
@@ -46,6 +52,8 @@ constraints:
     - "If it needs a 1,500-word preamble, the command is not simple enough yet"
     - "Empty blast on a behavior-changing diff is a fail for check_sync, not a pass"
     - "v1: recursive component depends_on/depended_on_by; a used foundation is listed then STOP (do not follow used_by)"
+    - "impact is one subgraph and five projections. blast buckets stay the check_sync tree"
+    - "A missing owner, governed concern, or verification stays not represented"
   data_classification: "internal"
 
 success_metrics:
@@ -54,6 +62,7 @@ success_metrics:
     five_second_readable_blast: "fixture output shows change + affects tree without a lecture"
     decision_required: "intent vs code disagreement is labeled DECISION REQUIRED"
     empty_blast_fails_check: "behavior-changing diff with empty blast does not pass check_sync"
+    explainable_impact: "a change folder with no diff names each affected id and the path that included it"
   derived_from: {}
 
 roadmap:

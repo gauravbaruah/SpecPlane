@@ -1,0 +1,77 @@
+meta:
+  id: capability.billing
+  purpose: "Take payment and retry a failed charge without double-billing"
+  level: capability
+  owner: "Product / Billing"
+  version: "1.0.0"
+  introduced_in: "1.0.0"
+  review_state: unreviewed
+  status: planned
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Impact fixture capability"
+    breaking: false
+
+responsibilities:
+  - "Charge a saved instrument"
+  - "Retry a declined charge once"
+
+flows:
+  - id: patient_payment
+    kinds: [journey]
+    goal: "Patient completes payment after a decline"
+    actors:
+      primary: patient
+    exceptions: [card_declined]
+    recovery: [retry_with_new_card]
+    outcomes:
+      success: ["payment completed"]
+  - "Refund"
+
+business_value:
+  user_outcome: "A patient can finish paying after a decline"
+  objective: "Collect payment for the visit"
+  revenue_dependency: high
+  strategic_priority: core
+
+constraints:
+  legal:
+    - "Cardholder data stays in the payment boundary"
+  security:
+    - "Retry must not log PAN"
+  ux:
+    - "Retry explains the next step"
+  data_classification: regulated
+
+analytics_events:
+  - name: payment_completed
+    when: "retry succeeds"
+    properties: [invoice_id]
+    emitted_by: component.billing_api
+
+success_metrics:
+  primary: payment_completion
+  targets:
+    payment_completion: ">99%"
+  derived_from:
+    payment_completion: [payment_completed]
+
+roadmap:
+  phase: "now"
+  priority: "P0"
+  depends_on:
+    - capability.identity
+  enables: []
+
+open_questions:
+  - id: oq_retry_window
+    question: "How long may a retry stay pending?"
+    status: open
+
+realized_by:
+  containers:
+    - container.billing
+  components:
+    - component.billing_api

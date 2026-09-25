@@ -1,0 +1,18 @@
+id: "impact_perspectives"
+kind: "evolve"
+status: "promoted"
+opened: "2026-09-25"
+promise_ids:
+  - "capability.specplane_blast"
+  - "component.cli_blast"
+  - "component.mcp_stdio"
+  - "capability.specplane_init"
+  - "component.cli_init"
+why: "One explainable affected subgraph, projected as system, product, quality, governance, and ownership. Blast buckets stay the check_sync tree."
+non_goals:
+  - "stakeholder views (qa_view, security_view, pm_view, architect_view)"
+  - "RACI or a new ownership object"
+  - "a governance enum or policy-pack paywall"
+  - "an LLM impact engine"
+  - "editing live 5C YAML before promote"
+  - "changing blast membership or the blast text format"

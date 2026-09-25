@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, check_sync, reconcile, list_gaps, run, promote, init.
+"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, init.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from impact import format_impact, impact  # noqa: E402
 from kernel import (  # noqa: E402
     blast,
     check_sync,
@@ -120,6 +121,20 @@ def cmd_blast(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_impact(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    payload = impact(kernel, args.spec_id)
+    if payload is None:
+        sys.stderr.write(f"not found: {args.spec_id}\n")
+        return 1
+    print(format_impact(payload), end="")
+    return 0
+
+
 def cmd_check_sync(args: argparse.Namespace) -> int:
     spec_root = resolve_spec_root(args.spec_root, args.config_dir)
     if not spec_root.is_dir():
@@ -214,7 +229,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / check_sync / reconcile / list_gaps / run / promote / init)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / impact / check_sync / reconcile / list_gaps / run / promote / init)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -232,6 +247,14 @@ def build_parser() -> argparse.ArgumentParser:
     add_root_args(p_blast)
     p_blast.add_argument("spec_id", help="SpecPlane id or start node")
     p_blast.set_defaults(func=cmd_blast)
+
+    p_impact = sub.add_parser(
+        "impact",
+        help="Explain one affected subgraph and project system, product, quality, governance, ownership",
+    )
+    add_root_args(p_impact)
+    p_impact.add_argument("spec_id", help="SpecPlane id or open change folder")
+    p_impact.set_defaults(func=cmd_impact)
 
     p_sync = sub.add_parser(
         "check_sync",
