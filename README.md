@@ -2,21 +2,29 @@
 
 **Keep coding agents aligned with what you actually meant to build.**
 
-It is a **git-native overlay of what a living product should do and how well** — not how it is implemented. You speak product language. The agent uses SpecPlane. You answer only consequential decisions.
+SpecPlane is a git-native specification graph for software built by humans and AI agents.
+
+Coding agents can change software extraordinarily quickly, but intent, architecture, constraints, tests, ownership, and evidence live in different places. SpecPlane keeps those relationships explicit and lets agents retrieve only the context relevant to a change.
+
+Product intent, architecture, implementation, quality, governance, ownership, and evidence stay connected in one graph. Humans and agents work through the projections they need.
 
 **Free now:** kit, local kernel, skills, optional MCP. No SpecPlane API key.
 
-**Later (not shipped):** spec coach, required GitHub check, viewer. Do not treat those as available today.
+**In development:** local read-only viewer for exploring SpecPlane projections.
+
+**Later:** hosted collaboration and review surfaces, a required GitHub check, and a spec coach.
 
 <img src="./SpecPlane_Logo.png" alt="SpecPlane" width="160">
 
 ## The loop
 
+You speak product language. The agent uses SpecPlane. You answer only consequential decisions.
+
 You tell your coding agent:
 
 > Reset links should expire in 15 minutes instead of 60.
 
-SpecPlane **retrieves** the current promise, **classifies** this as an evolve (the live promise is 60 minutes), **blasts** what else is tied to that id, asks **one question** only if a decision is unresolved, and gives the agent the minimum context to **implement**. Then **check_sync** — did the change stay aligned with the declared promise? If a success sensor already binds a check, **run** invokes that check and prints the evidence beside the claim. It does not certify the implementation.
+SpecPlane **retrieves** the current promise, **classifies** this as an evolve (the live promise is 60 minutes), **blasts** what else is tied to that id, asks **one question** only if a decision is unresolved, and gives the agent the minimum context to **implement**. **Impact** reads that same subgraph as system, product, quality, governance, or ownership. Then **check_sync** — did the change stay aligned with the declared promise? If a success sensor already binds a check, **run** invokes that check and prints the evidence beside the claim. It does not certify the implementation.
 
 You do not operate the CLI. The coding agent does.
 
@@ -24,7 +32,7 @@ You do not operate the CLI. The coding agent does.
 
 ![Ask: reset links 60 to 15, retrieve, classify evolve](./docs/ask.gif)
 
-**Impact** — blast shows who else is tied to that id.
+**Impact** — blast names who else is tied to that id. The same subgraph can be read as system, product, quality, governance, or ownership.
 
 ![Impact: blast component.password_reset](./docs/impact.gif)
 
@@ -44,7 +52,7 @@ You do not operate the CLI. The coding agent does.
 
 Ceremony scales with **semantic consequence**, not diff size. Full transcript: [`docs/golden-journey.md`](./docs/golden-journey.md).
 
-**Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP is available for the same retrieve / blast / check_sync / list_gaps / run tools when you want tool-native calls. You are not meant to type those commands.
+**Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP exposes retrieve, blast, impact, check_sync, list_gaps, and run when you want tool-native calls. You are not meant to type those commands.
 
 ## Try it
 
@@ -96,7 +104,7 @@ Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework
 | `docs/golden-journey.md` | Intended human+agent loop |
 | `legacy/` | Archived viewer — not the product path |
 
-Default schema **v9.1.0** (Capability, System, Container, Component, plus Foundations). Agent loading: [`AGENTS.md`](./AGENTS.md). You do not need that ontology to try the loop.
+Default schema **v9.1.0** (Capability, System, Container, Component, plus Foundations) is the structural model inside the graph. `impact` projects one affected subgraph as system, product, quality, governance, and ownership. Detail: [`docs/impact-perspectives.md`](./docs/impact-perspectives.md). Agent loading: [`AGENTS.md`](./AGENTS.md). You do not need that ontology to try the loop.
 
 ## License
 
