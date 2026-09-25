@@ -90,6 +90,8 @@ Switching perspective highlights, dims, or annotates the same graph. It does not
 
 Selecting an affected node explains why it is in the subgraph, using the kernel path, reason, and provenance. Do not infer causality from visual proximity.
 
+The Blast **picture** is hop columns from `impact.affected[].distance`: Selected · 1 hop · direct · 2 hops · Further (`distance >= 3`, expand in place). That layout is in scope. It is not a “model cannot say yet” item. Do not draw a second invented path. The remaining cannot-say list is in `decision.md`.
+
 ### 10. Change remains a first-class story
 
 A design-time change must stay useful before code exists. The same change accumulates, rendering only what exists: why → promises / product intent → journeys / constraints → impact → PM criteria → engineering realization → acceptance / validation → implementation delta → evidence → unresolved drift. Not four review products. Not a Jira lifecycle. The viewer supports both “understand this thing” and “understand this proposed change.”

@@ -41,6 +41,16 @@ class ViewerModelTests(unittest.TestCase):
         self.assertEqual(rec["path"], "capabilities/capability.billing_checkout.yaml")
         self.assertNotIn("sequence", rec["projections"])
 
+    def test_affected_hops_are_distances(self) -> None:
+        graph = self.payload["impacts"]["capability.billing"]
+        root = [node for node in graph["affected"] if node["id"] == "capability.billing"][0]
+        self.assertEqual(root["distance"], 0)
+        self.assertTrue(root["direct"])
+        worker = [node for node in graph["affected"] if node["id"] == "component.invoice_worker"][0]
+        self.assertGreaterEqual(worker["distance"], 2)
+        self.assertFalse(worker["direct"])
+        self.assertTrue(worker["path"])
+
     def test_affected_path_comes_from_impact(self) -> None:
         graph = self.payload["impacts"]["capability.billing"]
         others = [node for node in graph["affected"] if node["id"] != "capability.billing"]
@@ -55,6 +65,14 @@ class ViewerModelTests(unittest.TestCase):
 
     def test_gaps_match_list_gaps(self) -> None:
         self.assertEqual(self.payload["gaps"], list_gaps(self.kernel))
+
+    def test_blast_hop_copy_is_in_the_viewer(self) -> None:
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("1 hop · direct", src)
+        self.assertIn("Further", src)
+        self.assertIn("select to expand", src)
+        self.assertIn("+ hops", src)
+        self.assertIn("terminal · not expanding", src)
 
     def test_no_negative_security_claim(self) -> None:
         blob = "\n".join(

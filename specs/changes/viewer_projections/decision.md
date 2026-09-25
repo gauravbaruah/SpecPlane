@@ -62,6 +62,33 @@ Still in force:
 - Those five readings stay inside Blast. They are not navbar homes.
 - Inferred never looks live. Sensor sentences are not links. No Share, Upgrade, persona switch, API key, or YAML edit.
 - The path on a selected affected id comes from `impact.affected[].path`. The viewer does not walk the graph itself.
+
+## Blast hop columns (real — not “cannot say yet”)
+
+The Viewer 2 hop strip is a **projection of `impact.affected`**. Do not omit it, and do not invent a second chain in the browser.
+
+| Column | Kernel field |
+|---|---|
+| Selected | `distance === 0` |
+| 1 hop · direct | `distance === 1` (`direct` is true) |
+| 2 hops | `distance === 2` |
+| Further | `distance >= 3`, collapsed until expand. Copy: `+N more ids at 3+ hops — select to expand` |
+
+On a card, print `relationship` + via (last `path` step’s `from`), then `direct` / `N hops` / `terminal · not expanding` (foundation or incoming `uses`), then `epistemic_state`. Why-panel stays `path`.
+
+**No longer blank (do not hide behind “The model cannot say yet”):**
+
+- Hop-by-hop reason → `impact.affected[].path`
+- Owner / CODEOWNERS → Ownership perspective (`meta.owner` or derived CODEOWNERS)
+- Diagram picture → declared `type` / `title` / `description` / `mermaid`
+
+**Still cannot say — omit, do not invent:**
+
+- `about` / `flow_ref` matching a flowchart to `flows.stages`
+- Who handles a journey stage
+- Evidence behind `review_state`
+- The check bound to a sensor
+- Which stage a change touches (no lifecycle enum)
 - A missing field is omitted. No empty card just to keep the page symmetrical.
 
 ## Chrome (navbar and honesty)

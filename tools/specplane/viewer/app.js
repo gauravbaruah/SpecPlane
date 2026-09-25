@@ -571,8 +571,8 @@
     return view;
   }
 
-  function graphBlock(cols, selected, onselect, extra, prov) {
-    const graph = h("div", { class: "graph" }, cols.map(function (col) {
+  function graphBlock(cols, selected, onselect, extra, prov, kind) {
+    const graph = h("div", { class: "graph" + (kind ? " " + kind : "") }, cols.map(function (col) {
       return h("div", { class: "col" }, [
         h("div", { class: "colhead" }, [col.head]),
         ...visibleNodes(col, selected, onselect),
@@ -598,6 +598,12 @@
   }
 
   function visibleNodes(col, selected, onselect) {
+    if (col.further) {
+      return [h("button", {
+        class: "more further-box",
+        on: { click: function () { expanded.furtherHops = true; rerender(false); } },
+      }, ["+" + col.count + " more ids at " + col.minDist + "+ hops — select to expand"])];
+    }
     const key = col.head;
     const nodes = col.nodes || [];
     const open = expanded[key];
@@ -610,7 +616,7 @@
   }
 
   function nodeButton(node, selected, onselect) {
-    const on = node.id === selected || node.selectedId && !selected;
+    const on = selected ? node.id === selected : node.distance === 0 || (node.selectedId && !selected);
     const cls = ["node", node.epistemic || "declared", node.bit || "", node.change ? "change" : "", node.dim ? "dim" : "", on ? "is-selected" : ""].filter(Boolean).join(" ");
     const lines = node.lines && node.lines.length ? node.lines : ["", ""];
     return h("button", { class: cls, on: { click: function () { onselect(node.id); } } }, [
@@ -622,31 +628,84 @@
     ]);
   }
 
+  function shortRel(rel) {
+    return String(rel || "").replace(/\..*$/, "") || "linked";
+  }
+
+  function shortId(id) {
+    const s = String(id || "");
+    const i = s.lastIndexOf(".");
+    return i >= 0 ? s.slice(i + 1) : s;
+  }
+
+  function hopRel(node) {
+    if (!node.distance) return "selected";
+    const steps = node.path || [];
+    const via = steps.length ? steps[steps.length - 1].from : "";
+    const rel = node.relationship || "";
+    return via ? rel + " · " + via : rel;
+  }
+
+  function isTerminal(node) {
+    return node.level === "foundation" || shortRel(node.relationship) === "uses";
+  }
+
+  function hopLines(node, persp, inSet, graph) {
+    const hop = !node.distance
+      ? "selected"
+      : isTerminal(node)
+        ? "terminal · not expanding"
+        : (node.direct && node.distance === 1 ? "direct" : node.distance + " hops");
+    if (persp === "system") return [hop, node.epistemic_state || "declared"];
+    const extra = perspectiveLines(graph, node, persp, inSet);
+    return [hop, extra[0] || node.epistemic_state || "declared"];
+  }
+
+  function blastCards(graph, persp, nodes) {
+    const known = perspectiveSubjects(graph, persp);
+    return nodes.map(function (node) {
+      const inSet = !known || known.has(node.id);
+      return {
+        id: node.id,
+        distance: node.distance || 0,
+        bit: (record(node.id) || {}).bit || "",
+        epistemic: node.epistemic_state || "declared",
+        sub: hopRel(node),
+        lines: hopLines(node, persp, inSet, graph),
+        change: node.level === "change" || String(node.id).indexOf("change.") === 0,
+        dim: known && !inSet,
+      };
+    });
+  }
+
   function blastBlock(graph, selfId, selected, persp, onselect) {
     if (!graph) return h("p", { class: "note" }, ["impact returned nothing for this id."]);
-    const known = perspectiveSubjects(graph, persp);
     const byDist = {};
     (graph.affected || []).forEach(function (node) {
       const d = node.distance || 0;
       byDist[d] = byDist[d] || [];
-      const inSet = !known || known.has(node.id);
-      byDist[d].push({
-        id: node.id,
-        bit: (record(node.id) || {}).bit || "",
-        epistemic: node.epistemic_state || "declared",
-        sub: node.relationship || " ",
-        lines: perspectiveLines(graph, node, persp, inSet),
-        change: node.level === "change" || String(node.id).indexOf("change.") === 0,
-        dim: known && !inSet,
-      });
+      byDist[d].push(node);
     });
-    const cols = Object.keys(byDist).sort(function (a, b) { return Number(a) - Number(b); }).map(function (dist) {
-      return { head: dist === "0" ? "Selected" : dist === "1" ? "1 hop" : dist + " hops", nodes: byDist[dist] };
+    if (expanded.furtherFor !== selfId) {
+      expanded.furtherHops = false;
+      expanded.furtherFor = selfId;
+    }
+    const dists = Object.keys(byDist).map(Number).sort(function (a, b) { return a - b; });
+    const cols = [];
+    dists.forEach(function (dist) {
+      if (dist >= 3 && !expanded.furtherHops) return;
+      const head = dist === 0 ? "Selected" : dist === 1 ? "1 hop · direct" : dist + " hops";
+      cols.push({ head: head, nodes: blastCards(graph, persp, byDist[dist]) });
     });
-    const chosen = (graph.affected || []).filter(function (node) { return node.id === selected; })[0];
+    const far = dists.filter(function (dist) { return dist >= 3; }).reduce(function (n, dist) { return n + byDist[dist].length; }, 0);
+    if (far && !expanded.furtherHops) {
+      cols.push({ head: "Further", further: true, count: far, minDist: 3 });
+    }
+    const chosen = (graph.affected || []).filter(function (node) { return node.id === selected; })[0]
+      || (graph.affected || []).filter(function (node) { return !node.distance; })[0];
     const panel = chosen ? whyPanel(chosen, graph, persp) : h("p", { class: "quiet" }, ["Select an id to see why it is in this blast."]);
     const absence = absenceLine(graph, persp);
-    return graphBlock(cols, selected, onselect, h("div", {}, [absence, panel]), "derived · kernel impact");
+    return graphBlock(cols, selected, onselect, h("div", {}, [absence, panel]), "derived · kernel impact", "blast");
   }
 
   function perspectiveSubjects(graph, persp) {
