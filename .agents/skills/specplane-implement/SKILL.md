@@ -1,6 +1,6 @@
 ---
 name: specplane-implement
-description: Run the SpecPlane change ritual when the user describes a product change, bug, experiment, feature, install/docs that state a promise, or asks to implement. PRE: retrieve when a promise might move (if unsure, retrieve). POST check_sync --change after those changes. Typos/renames skip retrieve. Do not use for bootstrap or YAML-only authoring.
+description: Run the SpecPlane change ritual when the user describes a product change, bug, experiment, feature, install/docs that state a promise, or asks to implement. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --change, then run --change. Typos/renames skip retrieve. Do not use for bootstrap or YAML-only authoring.
 ---
 
 # SpecPlane Implement
@@ -25,7 +25,8 @@ Developers paste a prompt and expect codegen. You still run SpecPlane **when a p
 
 1. `validate`.
 2. `check_sync --change <slug> --changed-ids` with every id you retrieved, blasted, or whose realization files you edited. `<slug>` is this request’s `specs/changes/<slug>/` folder. The default changed-set is **spec YAML in git only**. An empty default is not a pass if you touched app code or `tools/specplane/`. A coverage pass is declared coverage, not behavioral agreement.
-3. Do not silently pick spec vs code. Do not edit live 5C YAML until the user accepts (promote).
+3. `run --change <slug>`. This invokes binds already on that change (`run.argv` or `run.unittest` / `test:`). It does not create tests, exec English `must:` lines, or certify that the implementation satisfies the spec. No bind → `not_run` (exit 0 when nothing failed or errored).
+4. Do not silently pick spec vs code. Do not edit live 5C YAML until the user accepts (promote).
 
 The kernel does not watch the chat. If you do not call retrieve/check_sync, SpecPlane is silent. Clarifying questions are the coding agent following this skill, not a SpecPlane daemon.
 
@@ -46,6 +47,7 @@ python3 tools/specplane/cli.py retrieve <id> --spec-root specs
 python3 tools/specplane/cli.py blast <id> --spec-root specs
 python3 tools/specplane/cli.py validate --spec-root specs
 python3 tools/specplane/cli.py check_sync --spec-root specs --change <slug> --changed-ids id1,id2
+python3 tools/specplane/cli.py run --spec-root specs --change <slug>
 ```
 
 Do not invent a graph by reading the whole tree. You may open files the CLI already named.
@@ -78,7 +80,7 @@ Do not invent a graph by reading the whole tree. You may open files the CLI alre
 
 6. **Implement** from the projection: live promise + delta + blast + decisions. Match capabilities, errors, events, and `success.yaml`. Keep bidirectional links if you touch `implements` / `uses` (on files in the change, or at promote).
 
-7. **POST reconcile.** Run `validate` and `check_sync --change <slug> --changed-ids` for ids you touched (including realization files). Coverage pass is not behavior verified. Optionally `python3 tools/specplane/drift.py --scope changed` as a reminder. Do not pick spec vs code when they disagree — report it.
+7. **POST reconcile.** Run `validate`, `check_sync --change <slug> --changed-ids` for ids you touched (including realization files), then `run --change <slug>`. Coverage pass is declared coverage, not behavioral agreement. A `run` pass means bound checks exited 0, not that the implementation satisfies the spec. Optionally `python3 tools/specplane/drift.py --scope changed` as a reminder. Do not pick spec vs code when they disagree — report it.
 
 8. **Promote only after the user accepts.** Then: apply the delta to live YAML, bump `meta.version` + changelog on those live files, move the folder to `specs/changes/_archive/<slug>/`. Retrieve should then show one live graph.
 

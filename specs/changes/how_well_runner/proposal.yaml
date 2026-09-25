@@ -1,0 +1,11 @@
+change_id: "how_well_runner"
+kind: "evolve"
+promise_ids:
+  - "capability.specplane_run"
+  - "component.cli_run"
+  - "component.mcp_stdio"
+  - "capability.specplane_change_folders"
+  - "capability.specplane_check_sync"
+why: >
+  L3 join: bind a success.yaml claim to an existing check; invoke that
+  check and record evidence. Not a test platform. check_sync stays L1.

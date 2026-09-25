@@ -15,7 +15,7 @@ Open **`examples/tiny-saas`** as the workspace (File → Open Folder). Skills an
 
 > Reset links should expire in 15 minutes instead of 60.
 
-You should not type `retrieve` or `blast`. The agent should **retrieve** `capability.authentication`, **classify evolve**, **blast** `component.password_reset`, open a change folder (leave `add_dunning` alone), implement `src/auth.py`, then **check_sync**.
+You should not type `retrieve` or `blast`. The agent should **retrieve** `capability.authentication`, **classify evolve**, **blast** `component.password_reset`, open a change folder (leave `add_dunning` alone), implement `src/auth.py`, then **check_sync**, then **run --change** if that folder binds a check. `run` does not create the test.
 
 Intended chat shape: [`golden-journey.md`](./golden-journey.md). Do not paste the master schema prompt into chat.
 
@@ -44,4 +44,4 @@ uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 
 Details: [`use-in-your-project.md`](./use-in-your-project.md). Do not copy this repo’s `specs/` (those YAML files specify SpecPlane’s own CLI).
 
-Local MCP is optional. Skills already call the kernel. Same four tools: retrieve, blast, check_sync, list_gaps. Validate stays CLI-only.
+Local MCP is optional. Skills already call the kernel. Same five tools: retrieve, blast, check_sync, list_gaps, run. Validate stays CLI-only. `run` joins a bound check; it is not a test runner.

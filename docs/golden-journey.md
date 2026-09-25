@@ -24,7 +24,7 @@ The transcript below is a **scripted example** (a reminders capability). Kernel 
 6. Call `blast`. Translate to “likely affected.”
 7. Ask **only** unresolved consequential questions (prefer one). Record the answer in `decision.md`. Wait.
 8. Give the coding agent a **minimal projection** (live promise + delta + blast + decision). Implement. Add tests that match `success.yaml`.
-9. **POST:** `validate` + `check_sync --change <slug> --changed-ids` on the ids you touched (and whose realization files you edited). The default changed-set is spec YAML only — do not treat an empty default as a pass. Coverage pass is declared coverage, not behavioral agreement. Do not silently pick spec vs code.
+9. **POST:** `validate` + `check_sync --change <slug> --changed-ids` on the ids you touched (and whose realization files you edited), then `run --change <slug>`. The default changed-set is spec YAML only — do not treat an empty default as a pass. Coverage pass is declared coverage, not behavioral agreement. `run` invokes checks already bound on that change (`run.argv` or `run.unittest` / `test:`). It does not create tests, execute English `must:` lines, or certify that the implementation satisfies the spec. No bind → `not_run`. Do not silently pick spec vs code.
 10. **Promote** into live YAML only after the human accepts. Archive the change folder.
 
 You never need a SpecPlane API key. The coding agent already in the editor is the intelligence. The kernel is deterministic.
@@ -168,11 +168,13 @@ python3 tools/specplane/cli.py validate --spec-root specs
 python3 tools/specplane/cli.py check_sync --spec-root specs \
   --change observation_triggered_reminders \
   --changed-ids capability.adaptive_reminders,component.reminder_scheduler,component.observation_pipeline
+python3 tools/specplane/cli.py run --spec-root specs \
+  --change observation_triggered_reminders
 ```
 
 </aside>
 
-**Agent:** Coverage is declared on this change — SpecPlane did not verify behavior. Structural validate passed. Ready to promote when you say this is the new live promise.
+**Agent:** Coverage is declared on this change — SpecPlane did not verify behavior. `run` invoked only checks that were already bound; with no bind, those sensors are `not_run`. That is evidence, not a certificate. Structural validate passed. Ready to promote when you say this is the new live promise.
 
 ### 12. Promote
 
@@ -200,10 +202,10 @@ python3 tools/specplane/cli.py check_sync --spec-root specs \
 ## What this journey is not
 
 - A SpecPlane-hosted agent or API key
-- SpecPlane watching the chat or tapping Codex — leftover/uncovered ids surface only if the agent calls retrieve / blast / list_gaps / check_sync. Clarifying questions are the agent following the skill
+- SpecPlane watching the chat or tapping Codex — leftover/uncovered ids surface only if the agent calls retrieve / blast / list_gaps / check_sync / run. Clarifying questions are the agent following the skill
 - A GitHub App, viewer, or a separate coach product
 - You becoming a YAML clerk
-- A new 5C type or kernel command
+- A new 5C type. `run` joins a check the product already has. It is not a test platform, a second CI, or a certificate that the implementation satisfies the spec.
 
 ## Try it on tiny-saas
 

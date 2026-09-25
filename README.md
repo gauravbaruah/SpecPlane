@@ -16,7 +16,7 @@ You tell your coding agent:
 
 > Reset links should expire in 15 minutes instead of 60.
 
-SpecPlane **retrieves** the current promise, **classifies** this as an evolve (the live promise is 60 minutes), **blasts** what else is tied to that id, asks **one question** only if a decision is unresolved, and gives the agent the minimum context to **implement**. Then **check_sync** — did the change stay aligned with intent?
+SpecPlane **retrieves** the current promise, **classifies** this as an evolve (the live promise is 60 minutes), **blasts** what else is tied to that id, asks **one question** only if a decision is unresolved, and gives the agent the minimum context to **implement**. Then **check_sync** — did the change stay aligned with the declared promise? If a success sensor already binds a check, **run** invokes that check and prints the evidence beside the claim. It does not certify the implementation.
 
 You do not operate the CLI. The coding agent does.
 
@@ -43,7 +43,7 @@ You do not operate the CLI. The coding agent does.
 
 Ceremony scales with **semantic consequence**, not diff size. Full transcript: [`docs/golden-journey.md`](./docs/golden-journey.md).
 
-**Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP is available for the same retrieve / blast / check_sync / list_gaps tools when you want tool-native calls. You are not meant to type those commands.
+**Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP is available for the same retrieve / blast / check_sync / list_gaps / run tools when you want tool-native calls. You are not meant to type those commands.
 
 ## Try it
 

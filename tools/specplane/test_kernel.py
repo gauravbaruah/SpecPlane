@@ -4,18 +4,33 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+
+import yaml
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from cli import git_changed_files, main as cli_main  # noqa: E402
-from kernel import blast, check_sync, format_check_sync, format_retrieve, load_kernel, map_changed_files, retrieve  # noqa: E402
+from kernel import (  # noqa: E402
+    SENSOR_TIMEOUT_S,
+    blast,
+    check_sync,
+    format_check_sync,
+    format_retrieve,
+    format_run,
+    load_kernel,
+    map_changed_files,
+    retrieve,
+    run_sensors,
+)
 from validate import validate  # noqa: E402
 
 GOLDEN = ROOT / "testdata" / "golden" / "messy_auth" / "specs"
 SCOPED = ROOT / "testdata" / "golden" / "scoped_coverage" / "specs"
+REPO = ROOT.parents[1]
 
 
 class GoldenValidate(unittest.TestCase):
@@ -291,6 +306,11 @@ class ListGapsTests(unittest.TestCase):
         self.assertIn("capability.auth_v1", payload["replaced"])
         self.assertIn("no_sensor", payload["missing_success_sensor"])
         self.assertNotIn("add_passkeys", payload["missing_success_sensor"])
+        self.assertEqual(
+            [key for key in payload if key != "advisory"],
+            ["phase1_no_join", "open_changes", "replaced", "missing_success_sensor"],
+        )
+        self.assertNotIn("missing_runnable", payload)
 
     def test_cli_exits_zero(self) -> None:
         from io import StringIO
@@ -323,6 +343,310 @@ class ListGapsTests(unittest.TestCase):
             (archive / "proposal.yaml").unlink(missing_ok=True)
             archive.rmdir()
             (GOLDEN / "changes" / "_archive").rmdir()
+
+
+def _write_change(spec_root: Path, slug: str, sensors: list, *, archive: bool = False) -> None:
+    folder = spec_root / "changes" / "_archive" / slug if archive else spec_root / "changes" / slug
+    folder.mkdir(parents=True)
+    (folder / "proposal.yaml").write_text(
+        f'change_id: "{slug}"\nkind: "evolve"\nstatus: "in-flight"\npromise_ids: []\n',
+        encoding="utf-8",
+    )
+    (folder / "success.yaml").write_text(
+        yaml.safe_dump({"sensors": sensors}, sort_keys=False),
+        encoding="utf-8",
+    )
+
+
+def _cli_run(spec_root: Path, slug: str, repo: Path) -> tuple[int, str, str]:
+    from io import StringIO
+    from unittest.mock import patch
+
+    buf, err = StringIO(), StringIO()
+    with patch("sys.stdout", buf), patch("sys.stderr", err):
+        code = cli_main(
+            ["run", "--spec-root", str(spec_root), "--change", slug, "--repo", str(repo)]
+        )
+    return code, buf.getvalue(), err.getvalue()
+
+
+def _no_bare_result(text: str) -> None:
+    for line in text.splitlines():
+        if line.startswith("result:"):
+            raise AssertionError(f"bare result line: {line}")
+
+
+class TestRun(unittest.TestCase):
+    def test_bound_unittest_target(self) -> None:
+        """Leaf check a fixture may bind. Does not call run."""
+        self.assertTrue(True)
+
+    def test_executes_bound_unittest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            _write_change(
+                root,
+                "bound_ok",
+                [
+                    {
+                        "id": "bound",
+                        "must": "leaf check exits 0",
+                        "run": {
+                            "unittest": (
+                                "tools.specplane.test_kernel.TestRun.test_bound_unittest_target"
+                            )
+                        },
+                    }
+                ],
+            )
+            code, text, err = _cli_run(root, "bound_ok", REPO)
+        self.assertEqual(code, 0, text + err)
+        self.assertIn("result: pass", text)
+        self.assertIn("behavior: evidence", text)
+        self.assertIn(
+            "SpecPlane invoked bound checks. It did not certify the implementation satisfies the spec.",
+            text,
+        )
+        self.assertNotIn("verified satisfies the spec", text)
+        _no_bare_result(text)
+
+    def test_test_key_is_unittest_alias(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            _write_change(
+                root,
+                "alias",
+                [
+                    {
+                        "id": "alias",
+                        "must": "test: is a unittest id",
+                        "test": "tools.specplane.test_kernel.TestRun.test_bound_unittest_target",
+                    }
+                ],
+            )
+            code, text, err = _cli_run(root, "alias", REPO)
+        self.assertEqual(code, 0, text + err)
+        self.assertIn("result: pass", text)
+
+    def test_english_must_not_executed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            marker = tmp_path / "from_must"
+            root = tmp_path / "specs"
+            _write_change(
+                root,
+                "words",
+                [{"id": "words", "must": f"touch {marker}"}],
+            )
+            code, text, err = _cli_run(root, "words", tmp_path)
+        self.assertEqual(code, 0, text + err)
+        self.assertIn("result: not_run", text)
+        self.assertIn("behavior: evidence", text)
+        self.assertIn("SpecPlane did not invoke a check.", text)
+        self.assertFalse(marker.exists())
+        self.assertNotIn("verified satisfies the spec", text)
+        _no_bare_result(text)
+
+    def test_evaluator_attach_not_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            marker = tmp_path / "from_evaluator"
+            root = tmp_path / "specs"
+            _write_change(
+                root,
+                "ev",
+                [
+                    {
+                        "id": "ev",
+                        "must": "evaluator without run is not_run",
+                        "evaluator": f"touch {marker}",
+                    }
+                ],
+            )
+            code, text, err = _cli_run(root, "ev", tmp_path)
+        self.assertEqual(code, 0, text + err)
+        self.assertIn("result: not_run", text)
+        self.assertFalse(marker.exists())
+        self.assertNotIn("verified satisfies the spec", text)
+
+    def test_argv_invoked_without_shell(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            marker = tmp_path / "argv_ran"
+            shell_marker = tmp_path / "shelled"
+            root = tmp_path / "specs"
+            script = (
+                "import sys; from pathlib import Path; Path(sys.argv[1]).write_text(sys.argv[2])"
+            )
+            _write_change(
+                root,
+                "argv_ok",
+                [
+                    {
+                        "id": "argv_ok",
+                        "must": "argv list runs without a shell",
+                        "evaluator": f"touch {shell_marker}",
+                        "run": {
+                            "argv": [sys.executable, "-c", script, str(marker), "ok && not-split"]
+                        },
+                    }
+                ],
+            )
+            code, text, err = _cli_run(root, "argv_ok", tmp_path)
+            self.assertEqual(code, 0, text + err)
+            self.assertIn("result: pass", text)
+            self.assertEqual(marker.read_text(encoding="utf-8"), "ok && not-split")
+            self.assertFalse(shell_marker.exists())
+
+            _write_change(
+                root,
+                "argv_string",
+                [
+                    {
+                        "id": "argv_string",
+                        "must": "a string is not a shell command",
+                        "run": {"argv": f"touch {shell_marker}"},
+                    }
+                ],
+            )
+            code, text, err = _cli_run(root, "argv_string", tmp_path)
+        self.assertEqual(code, 1, text + err)
+        self.assertIn("result: error", text)
+        self.assertFalse(shell_marker.exists())
+        _no_bare_result(text)
+
+    def test_unknown_and_archived_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            marker = tmp_path / "archived_ran"
+            root = tmp_path / "specs"
+            _write_change(root, "live_one", [{"id": "idle", "must": "nothing to run"}])
+            script = "import sys; from pathlib import Path; Path(sys.argv[1]).write_text('x')"
+            _write_change(
+                root,
+                "old_run",
+                [
+                    {
+                        "id": "old",
+                        "must": "archived",
+                        "run": {"argv": [sys.executable, "-c", script, str(marker)]},
+                    }
+                ],
+                archive=True,
+            )
+            code, text, err = _cli_run(root, "does_not_exist", tmp_path)
+            self.assertEqual(code, 1)
+            self.assertIn("unknown change: does_not_exist", err)
+            self.assertIn("unknown_change: does_not_exist", text)
+            code, text, err = _cli_run(root, "old_run", tmp_path)
+        self.assertEqual(code, 1, text + err)
+        self.assertIn("unknown change: old_run", err)
+        self.assertFalse(marker.exists())
+
+    def test_sensor_fail_exits_nonzero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            root = tmp_path / "specs"
+            _write_change(
+                root,
+                "fails",
+                [
+                    {
+                        "id": "fails",
+                        "must": "non-zero bind is fail",
+                        "run": {"argv": [sys.executable, "-c", "raise SystemExit(3)"]},
+                    }
+                ],
+            )
+            code, text, err = _cli_run(root, "fails", tmp_path)
+        self.assertEqual(code, 1, text + err)
+        self.assertIn("result: fail", text)
+        self.assertIn("exit 3", text)
+        self.assertNotIn("verified satisfies the spec", text)
+        _no_bare_result(text)
+
+    def test_either_bind_failing_fails_sensor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            _write_change(
+                root,
+                "both",
+                [
+                    {
+                        "id": "both",
+                        "must": "both binds must pass",
+                        "run": {
+                            "unittest": (
+                                "tools.specplane.test_kernel.TestRun.test_bound_unittest_target"
+                            ),
+                            "argv": [sys.executable, "-c", "raise SystemExit(1)"],
+                        },
+                    }
+                ],
+            )
+            payload = run_sensors(load_kernel(root), "both", repo=REPO)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["sensors"][0]["result"], "fail")
+
+    def test_check_sync_still_not_executed(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            marker = tmp_path / "should_not_run"
+            root = tmp_path / "specs"
+            script = "import sys; from pathlib import Path; Path(sys.argv[1]).write_text('x')"
+            _write_change(
+                root,
+                "scoped",
+                [
+                    {
+                        "id": "bound",
+                        "must": "claim only",
+                        "run": {"argv": [sys.executable, "-c", script, str(marker)]},
+                    }
+                ],
+            )
+            buf = StringIO()
+            with patch("sys.stdout", buf):
+                code = cli_main(
+                    ["check_sync", "--spec-root", str(root), "--change", "scoped"]
+                )
+            text = buf.getvalue()
+        self.assertEqual(code, 0, text)
+        self.assertIn("sensors: declared", text)
+        self.assertIn("not_executed", text)
+        self.assertIn("behavior: unverified", text)
+        self.assertNotIn("sensors: executed", text)
+        self.assertNotIn("result: pass", text)
+        self.assertFalse(marker.exists())
+
+    def test_timeout_is_error(self) -> None:
+        self.assertEqual(SENSOR_TIMEOUT_S, 120)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            root = tmp_path / "specs"
+            _write_change(
+                root,
+                "slow",
+                [
+                    {
+                        "id": "slow",
+                        "must": "timeout is error",
+                        "run": {
+                            "argv": [sys.executable, "-c", "import time; time.sleep(30)"]
+                        },
+                    }
+                ],
+            )
+            payload = run_sensors(load_kernel(root), "slow", repo=tmp_path, timeout=0.4)
+            text = format_run(payload)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["sensors"][0]["result"], "error")
+        self.assertIn("timed out", payload["sensors"][0]["detail"])
+        self.assertIn("result: error", text)
+        self.assertNotIn("verified satisfies the spec", text)
 
 
 if __name__ == "__main__":

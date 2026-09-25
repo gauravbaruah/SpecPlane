@@ -1,0 +1,23 @@
+change_id: "how_well_runner"
+kind: "evolve"
+
+ADDED:
+  capabilities:
+    - "capability.specplane_run"
+  components:
+    - "component.cli_run"
+
+MODIFIED:
+  - id: "capability.specplane_change_folders"
+    summary: "success.yaml sensors may bind run.argv / run.unittest / evaluator; must: remains the claim"
+  - id: "capability.specplane_check_sync"
+    summary: "Still does not execute sensors; compose with run, do not absorb it"
+  - id: "component.mcp_stdio"
+    summary: "Catalog adds run; same kernel as CLI; still no infer/specify/implement; validate CLI-only"
+  - id: "container.specplane_tools"
+    summary: "contains component.cli_run"
+  - id: "system.specplane_kernel"
+    summary: "run is a CLI command; MCP wraps it"
+
+REMOVED: []
+RENAMED: []

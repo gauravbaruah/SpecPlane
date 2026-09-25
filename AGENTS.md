@@ -12,7 +12,7 @@ Do not collapse these. That is how the recursive definition stays honest.
 |---|---|---|
 | `specplane/` | The **kit** — schema, applicable sections, foundation *boilerplates* | Load applicable sections. Copy this into other products. |
 | `specs/` | The **kernel product** — what SpecPlane-the-CLI must do and how well (first slice: bit, retrieve, blast, check_sync, change folders) | Author and implement *this product* from here. |
-| `tools/specplane/` | Realization of the kernel (`cli.py`: validate, retrieve, blast, check_sync, list_gaps, init; optional MCP) | Implement against `specs/`, not against brainstorm prose. Call the CLI; do not slurp `specs/`. |
+| `tools/specplane/` | Realization of the kernel (`cli.py`: validate, retrieve, blast, check_sync, list_gaps, run, init; optional MCP) | Implement against `specs/`, not against brainstorm prose. Call the CLI; do not slurp `specs/`. |
 | `design-docs/` | Local strategy (gitignored) | Do not publish. Do not treat as specs. |
 
 **Copy-the-kit** into another repo copies `specplane/`, skills, and rules. It does **not** copy `specs/`. Those YAML files are SpecPlane specifying itself, not a starter app.
@@ -59,8 +59,8 @@ Private and gitignored (do not commit, do not publish): `trial-implementations/`
 - Bidirectional links in the same change: `implements` ↔ `realized_by`, `uses` ↔ `used_by`, `dependencies.internal` ↔ `depended_on_by`.
 - Changelog entry whenever `meta.version` changes **on live 5C files**.
 - In-flight writes go in `specs/changes/<id>/`. Do not turn live YAML into diaries.
-- Call `tools/specplane/cli.py retrieve|blast|check_sync`; do not slurp `specs/`.
-- **PRE / POST:** retrieve when a promise might move (if unsure, retrieve); `check_sync --change <slug> --changed-ids` after those changes. Typos/renames skip retrieve. Ceremony scales with semantic consequence, not diff size. A coverage pass is declared coverage, not behavioral agreement.
+- Call `tools/specplane/cli.py retrieve|blast|check_sync|run`; do not slurp `specs/`.
+- **PRE / POST:** retrieve when a promise might move (if unsure, retrieve); `check_sync --change <slug> --changed-ids`, then `run --change <slug>`, after those changes. Typos/renames skip retrieve. Ceremony scales with semantic consequence, not diff size. A coverage pass is declared coverage, not behavioral agreement. `run` invokes bound checks only; it does not create tests or certify behavior.
 - Specs before code when behavior, contracts, events, rollout, security, **or how the product is obtained** (init/install/README CLI claims) change.
 
 ## Working on SpecPlane itself
@@ -68,7 +68,7 @@ Private and gitignored (do not commit, do not publish): `trial-implementations/`
 Two different jobs — pick one per session:
 
 1. **Kit / schema** — field changes go in the v9.1.0 **reference** first, then the matching applicable section. Do not put schema prose into `specs/`.
-2. **Kernel product** — if it could move a kernel promise, PRE retrieve, open a change folder, **wait** on consequential questions, then implement in `tools/specplane/`. That tree is the app: POST must `check_sync --change <slug> --changed-ids` for the matching `component.cli_*`. Do not invent CLI behavior that is not in `specs/`.
+2. **Kernel product** — if it could move a kernel promise, PRE retrieve, open a change folder, **wait** on consequential questions, then implement in `tools/specplane/`. That tree is the app: POST must `check_sync --change <slug> --changed-ids`, then `run --change <slug>`, for the matching `component.cli_*`. Do not invent CLI behavior that is not in `specs/`.
 
 Do not resurrect the Docusaurus viewer. Do not copy private consumer toolkits (Bhajami, Progress Flow) into this repo. Do not treat `specplane/foundations/` boilerplates as the kernel product tree.
 
