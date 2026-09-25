@@ -416,6 +416,57 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .foot { margin-top: 28px; color: var(--ink-3); font-size: 13px; line-height: 1.45; }
 .bucket { margin: 18px 0; }
 .bucket h2 { margin: 0 0 4px; }
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-raised);
+}
+.picker-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--ink-3); font-weight: 600; font-size: 12px; line-height: 1.3; }
+.pager { display: flex; align-items: center; gap: 2px; }
+.pager button, .pick {
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.pager button { width: 28px; height: 28px; border-radius: 6px; font-size: 16px; }
+.pager button:hover { background: var(--bg-hover); }
+.pick {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  width: 100%;
+  padding: 7px 6px;
+  border-radius: 6px;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.pick.on { background: var(--bg-hover); color: var(--ink-1); font-weight: 600; }
+.stage { position: relative; }
+.stage .node { position: absolute; width: auto; height: auto; }
+.wires { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; color: var(--ink-3); }
+.edge-label, .msg-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0 4px;
+  background: var(--bg-sunken);
+  color: var(--ink-2);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.lifeline { position: absolute; border-left: 1px dashed var(--dashed); }
+.msg { position: absolute; border-top: 1.5px solid var(--ink-3); }
+.msg.ret { border-top-style: dashed; border-top-color: var(--ink-4); }
+.msg-arrow { position: absolute; color: var(--ink-3); font-size: 10px; line-height: 10px; }
 .diagram { margin-top: 8px; }
 .canvas .diagram { overflow: visible; }
 .canvas .diagram svg { max-width: none; height: auto; }
