@@ -182,16 +182,49 @@ def _record(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _delta(data: dict[str, Any]) -> dict[str, list[str]]:
-    out: dict[str, list[str]] = {}
+def _delta_line(item: Any) -> dict[str, str] | None:
+    if isinstance(item, str):
+        text = item.strip()
+        return {"text": text} if text else None
+    if not isinstance(item, dict):
+        return None
+    spec_id = str(item.get("id") or "").strip()
+    text = str(item.get("summary") or item.get("text") or "").strip()
+    line: dict[str, str] = {}
+    if spec_id:
+        line["id"] = spec_id
+    if text:
+        line["text"] = text
+    return line or None
+
+
+def _delta(data: dict[str, Any]) -> dict[str, list[dict[str, str]]]:
+    out: dict[str, list[dict[str, str]]] = {}
     for key in DELTA_KEYS:
         value = data.get(key)
-        if isinstance(value, str) and value.strip():
-            out[key] = [value.strip()]
+        lines: list[dict[str, str]] = []
+        if isinstance(value, str):
+            line = _delta_line(value)
+            if line:
+                lines.append(line)
         elif isinstance(value, list):
-            lines = [str(item) for item in value if str(item).strip()]
-            if lines:
-                out[key] = lines
+            for item in value:
+                line = _delta_line(item)
+                if line:
+                    lines.append(line)
+        elif isinstance(value, dict):
+            for group, items in value.items():
+                group_name = str(group).strip()
+                seq = items if isinstance(items, list) else [items]
+                for item in seq:
+                    line = _delta_line(item)
+                    if not line:
+                        continue
+                    if group_name:
+                        line = {**line, "group": group_name}
+                    lines.append(line)
+        if lines:
+            out[key] = lines
     return out
 
 

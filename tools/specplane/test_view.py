@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from kernel import list_gaps, load_kernel  # noqa: E402
-from view import _opened, build_payload, refresh_payload, write_site  # noqa: E402
+from view import _delta, _opened, build_payload, refresh_payload, write_site  # noqa: E402
 
 BILLING = ROOT / "testdata" / "impact_billing" / "specs"
 INFERRED = ROOT / "testdata" / "inferred" / "specs"
@@ -183,6 +183,25 @@ class ViewerModelTests(unittest.TestCase):
             text = (out / "payload.js").read_text(encoding="utf-8")
             self.assertIn("fresh_change", text)
             self.assertFalse(refresh_payload(root, out))
+
+    def test_delta_lines_keep_id_and_summary(self) -> None:
+        mapped = _delta({
+            "MODIFIED": [{
+                "id": "capability.specplane_init",
+                "summary": "Docs only.",
+                "flows": [{"id": "init_product_repo"}],
+            }],
+        })
+        self.assertEqual(mapped["MODIFIED"], [{"id": "capability.specplane_init", "text": "Docs only."}])
+        grouped = _delta({"ADDED": {"kit": ["Validation rule 22"], "kernel": ["validate.py reports rule 22"]}})
+        self.assertEqual(grouped["ADDED"], [
+            {"group": "kit", "text": "Validation rule 22"},
+            {"group": "kernel", "text": "validate.py reports rule 22"},
+        ])
+        self.assertEqual(_delta({"ADDED": ["plain sentence"]})["ADDED"], [{"text": "plain sentence"}])
+        script = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("line.id ? idLink(line.id)", script)
+        self.assertNotIn("{'id'", script)
 
     def test_navbar_names_the_system_and_branch(self) -> None:
         systems = [rid for rid, rec in self.payload["records"].items() if rec.get("level") == "system"]

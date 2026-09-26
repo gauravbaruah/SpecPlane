@@ -1303,7 +1303,12 @@
       h("h2", { class: "kicker" }, ["Delta"]),
       ...keys.map(function (key) {
         return h("div", {}, [h("div", { class: "quiet" }, [key]), ...(delta[key] || []).map(function (line) {
-          return h("div", { class: "item" }, [line]);
+          if (typeof line === "string") line = { text: line };
+          return h("div", { class: "item delta-line" }, [
+            line.group ? h("span", { class: "quiet mono" }, [line.group]) : null,
+            line.id ? idLink(line.id) : null,
+            line.text || "",
+          ]);
         })]);
       }),
     ]);
