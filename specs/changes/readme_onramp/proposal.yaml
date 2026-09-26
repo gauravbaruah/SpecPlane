@@ -1,0 +1,19 @@
+id: "readme_onramp"
+kind: "fix"
+status: "in-flight"
+opened: "2026-09-26"
+promise_ids:
+  - "capability.specplane_init"
+  - "component.mcp_stdio"
+why: >-
+  Independent-agent first-run: README omitted pip/PyYAML and MCP wiring that
+  already exist. Public docs should match the live obtain path. Product verbs
+  they asked for (specplane mcp, change-folder promote, check_sync repair
+  speech, init-written hooks) stay next-step — not this change.
+non_goals:
+  - "new CLI verb specplane mcp"
+  - "auto-apply change-folder delta into live YAML"
+  - "change check_sync fail semantics or invent --strict"
+  - "init writes GitHub Actions or git hooks"
+  - "edit live 5C YAML"
+  - "expand the MCP catalog"

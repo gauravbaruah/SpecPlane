@@ -1,0 +1,19 @@
+change_id: "readme_onramp"
+kind: "fix"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_init"
+    summary: >-
+      Docs only. README / try / use-in-your-project now show pip install -e .
+      (or pip install pyyaml) before python3 tools/specplane/cli.py, matching
+      the live obtain path. No init behavior change.
+  - id: "component.mcp_stdio"
+    summary: >-
+      Docs only. Copy-pasteable Cursor / Claude Desktop / Claude Code MCP
+      snippets point at mcp_stdio.py. Catalog unchanged. No specplane mcp verb.
+
+REMOVED: []
+
+RENAMED: []

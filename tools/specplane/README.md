@@ -34,6 +34,21 @@ specplane view --spec-root specs
 python3 tools/specplane/mcp_stdio.py
 ```
 
+Optional editor wiring (Cursor `~/.cursor/mcp.json` or Claude Desktop `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "specplane": {
+      "command": "python3",
+      "args": ["/absolute/path/to/SpecPlane/tools/specplane/mcp_stdio.py"]
+    }
+  }
+}
+```
+
+`python3` must be able to import PyYAML. There is no `specplane mcp` verb yet.
+
 `python3 tools/specplane/cli.py …` is the same CLI if you did not `pip install -e .`.
 
 | Command | Job | Exit 1 when |

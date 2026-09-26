@@ -9,6 +9,7 @@ Live auth promise: **password reset links expire in 60 minutes** (`src/auth.py`)
 ```bash
 git clone https://github.com/gauravbaruah/SpecPlane.git
 cd SpecPlane
+pip install -e .    # or: pip install pyyaml
 ```
 
 Open **`examples/tiny-saas`** as the workspace (File → Open Folder). Then ask Cursor:
