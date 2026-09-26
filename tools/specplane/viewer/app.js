@@ -197,7 +197,7 @@
         theme,
       ]),
     ]);
-    return h("div", {}, [top, honesty(route), h("main", { class: "page" }, [body, footer()])]);
+    return h("div", {}, [top, honesty(route), h("main", { class: "page" }, [body])]);
   }
 
   let trail = [];
@@ -242,10 +242,6 @@
     }
     if (route.kind === "live" || route.kind === "changes" || route.kind === "gaps") trail = [];
     return null;
-  }
-
-  function footer() {
-    return h("p", { class: "foot" }, ["Review still happens on the pull request."]);
   }
 
   function liveIndex(route) {
