@@ -154,6 +154,16 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn('("127.0.0.1", 0)', server)
         self.assertNotIn("0.0.0.0", server)
 
+    def test_navbar_names_the_system_and_branch(self) -> None:
+        systems = [rid for rid, rec in self.payload["records"].items() if rec.get("level") == "system"]
+        self.assertEqual(systems, ["system.payments"])
+        self.assertEqual(self.payload["context"]["spec_root"], "specs")
+        self.assertIsInstance(self.payload["context"]["branch"], str)
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn(" · read-only", src)
+        self.assertIn('label: next === "dark" ? "Dark" : "Light"', src)
+        self.assertIn("theme-btn", (ASSETS / "app.css").read_text(encoding="utf-8"))
+
     def test_design_system_tokens_are_local(self) -> None:
         css = (ASSETS / "app.css").read_text(encoding="utf-8")
         self.assertIn("Schibsted Grotesk", css)

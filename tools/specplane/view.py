@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import subprocess
 import sys
 import webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
@@ -38,6 +39,19 @@ LEVELS = ("system", "capability", "container", "component", "foundation", "chang
 DELTA_KEYS = ("ADDED", "MODIFIED", "REMOVED")
 
 PAYLOAD_GAPS: list[dict[str, str]] = []
+
+
+def _branch(spec_root: Path) -> str:
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(spec_root), "rev-parse", "--abbrev-ref", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return ""
+    return "" if out in ("", "HEAD") else out
 
 
 def build_payload(kernel: Any) -> dict[str, Any]:
@@ -92,6 +106,10 @@ def build_payload(kernel: Any) -> dict[str, Any]:
         "impacts": impacts,
         "payload_gaps": PAYLOAD_GAPS,
         "mermaid": MERMAID_VERSION,
+        "context": {
+            "spec_root": kernel.spec_root.name,
+            "branch": _branch(kernel.spec_root),
+        },
     }
 
 

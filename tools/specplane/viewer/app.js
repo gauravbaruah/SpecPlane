@@ -71,6 +71,7 @@
     if (p.href != null) node.setAttribute("href", p.href);
     if (p.src) node.setAttribute("src", p.src);
     if (p.alt != null) node.setAttribute("alt", p.alt);
+    if (p.label) node.setAttribute("aria-label", p.label);
     if (p.type) node.type = p.type;
     if (p.placeholder) node.placeholder = p.placeholder;
     if (p.value != null && tag === "INPUT") node.value = p.value;
@@ -138,6 +139,26 @@
     return h("a", { class: cls, href: href("id/" + encodeURIComponent(id)) }, [breakable(id)]);
   }
 
+  function glyph(name) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    if (name === "sun") {
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "currentColor");
+      path.setAttribute("stroke-width", "1.75");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+      path.setAttribute("d", "M12 3v2.25M18.364 5.636l-1.591 1.591M21 12h-2.25M18.364 18.364l-1.591-1.591M12 18.75V21M7.227 16.773l-1.591 1.591M5.25 12H3M7.227 7.227 5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z");
+    } else {
+      path.setAttribute("fill", "currentColor");
+      path.setAttribute("d", "M21.75 15A9.75 9.75 0 0 1 9 2.25 7.5 7.5 0 1 0 21.75 15z");
+    }
+    svg.append(path);
+    return svg;
+  }
+
   function shell(route, body) {
     const lenses = [
       ["live", "Live"],
@@ -148,20 +169,33 @@
       return h("a", { href: href(pair[0]), class: route.kind === pair[0] || (pair[0] === "live" && route.kind === "id") || (pair[0] === "changes" && route.kind === "change") ? "on" : "" }, [pair[1]]);
     }));
     const chosen = document.documentElement.getAttribute("data-theme") || systemTheme();
-    const theme = h("div", { class: "theme" }, ["light", "dark"].map(function (name) {
-      return h("button", {
-        type: "button",
-        class: chosen === name ? "on" : "",
-        on: { click: function () { setTheme(name); rerender(false); } },
-      }, [name[0].toUpperCase() + name.slice(1)]);
-    }));
+    const next = chosen === "dark" ? "light" : "dark";
+    const theme = h("button", {
+      type: "button",
+      class: "theme-btn",
+      label: next === "dark" ? "Dark" : "Light",
+      on: { click: function () { setTheme(next); rerender(false); } },
+    }, [glyph(next === "dark" ? "moon" : "sun")]);
+    const ctx = DATA.context || {};
+    const rootName = ctx.spec_root || "specs";
+    const branch = ctx.branch || "";
+    const where = rootName + "/" + (branch ? " @ " + branch : "") + " · read-only";
+    const systems = Object.keys(DATA.records || {}).filter(function (id) {
+      return (DATA.records[id] || {}).level === "system";
+    }).sort();
     const top = h("header", { class: "top" }, [
       h("div", { class: "brand" }, [
         h("img", { src: "logo.png", alt: "" }),
         "SpecPlane",
+        ...systems.map(function (id) {
+          return h("a", { class: "sys", href: href("id/" + encodeURIComponent(id)) }, [breakable(id)]);
+        }),
       ]),
       nav,
-      h("div", { class: "top-end" }, [theme, h("div", { class: "quiet" }, ["read-only"])]),
+      h("div", { class: "top-end" }, [
+        h("div", { class: "where" }, [where]),
+        theme,
+      ]),
     ]);
     return h("div", {}, [top, honesty(route), h("main", { class: "page" }, [body, footer()])]);
   }
