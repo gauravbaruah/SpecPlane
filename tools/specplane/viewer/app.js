@@ -500,7 +500,7 @@
 
   function drawProjection(rec, graph, proj, selected, persp, onselect) {
     if (proj === "map") return graphBlock(mapColumns(rec), selected, onselect, mapWhy(rec, selected), "derived · from declared links");
-    if (proj === "layers") return graphBlock(layerColumns(rec), selected, onselect, null, "derived · 5C placement");
+    if (proj === "layers") return graphBlock(layerColumns(rec), selected, onselect, layerWhy(rec, selected), "derived · 5C placement");
     if (proj === "journey") return journeyBlock(rec, graph);
     if (proj === "diagrams") return diagramBlock(rec, selected, onselect);
     if (proj === "data") return dataBlock(rec, graph);
@@ -674,9 +674,24 @@
     if (far && !expanded.furtherHops) {
       cols.push({ head: "Further", further: true, count: far, minDist: 3 });
     }
-    const chosen = (graph.affected || []).filter(function (node) { return node.id === selected; })[0]
-      || (graph.affected || []).filter(function (node) { return !node.distance; })[0];
-    const panel = chosen ? whyPanel(chosen, graph, persp) : h("p", { class: "quiet" }, ["Select an id to see why it is in this blast."]);
+    const chosen = selected
+      ? (graph.affected || []).filter(function (node) { return node.id === selected; })[0]
+      : null;
+    const changeBlast = String(selfId).indexOf("change.") === 0;
+    const panel = chosen
+      ? whyPanel(chosen, graph, persp)
+      : aboutBox(
+        changeBlast
+          ? [
+            "What this change says it touches, and what the kernel reaches from there. Only the promised ids are a claim.",
+            "Select a node to see the hop chain. Foundations are listed and not expanded.",
+          ]
+          : [
+            "If this changes, what else should someone care about. Grouped by hop distance; nearer means more directly affected.",
+            "Select a node to see the hop chain. Foundations are listed and not expanded.",
+          ],
+        changeBlast ? "declared promise · derived reach" : "derived · kernel impact"
+      );
     const absence = absenceLine(graph, persp);
     return graphBlock(cols, selected, onselect, h("div", {}, [absence, panel]), "derived · kernel impact", "blast");
   }
@@ -760,9 +775,17 @@
     return null;
   }
 
+  function aboutBox(lines, prov) {
+    return h("div", { class: "why" }, [
+      h("div", { class: "why-head" }, ["About this projection"]),
+      ...lines.map(function (line) { return h("div", {}, [line]); }),
+      prov ? h("div", { class: "src" }, [prov]) : null,
+    ]);
+  }
+
   function whyBox(id, text, prov, extra) {
     return h("div", { class: "why" }, [
-      h("div", { class: "acc-sub" }, ["Why this is here"]),
+      h("div", { class: "why-head" }, ["Why this is here"]),
       h("div", { class: "mono" }, [breakable(id)]),
       h("div", {}, [text]),
       h("div", { class: "src" }, [prov]),
@@ -772,11 +795,21 @@
   }
 
   function mapWhy(rec, selected) {
-    if (!selected) return h("p", { class: "quiet" }, ["Select an id to see why it is on this map."]);
+    if (!selected) return aboutBox([
+      "Each node is here because one declared field names it. Select a node to see which field.",
+      "Nodes are ids. Open one to move the selection; the page recomposes around it.",
+    ], "derived · from declared links");
     if (selected === rec.id) return whyBox(selected, "The selected id.", "declared · this record");
     const link = (rec.links || []).filter(function (item) { return item.id === selected; })[0];
     const rel = link ? (REL[link.rel] || link.rel) : "Linked";
     return whyBox(selected, rel + " from " + rec.id + ".", (link ? rec.id + " · " + link.rel : "declared link"));
+  }
+
+  function layerWhy(rec, selected) {
+    if (!selected) return aboutBox([
+      "Capability is the value axis; system, container, and component are the structural axis. Foundations are shared rules.",
+    ], "derived · 5C placement");
+    return mapWhy(rec, selected);
   }
 
   function whyPanel(node, graph, persp) {
@@ -1165,13 +1198,15 @@
     else picture = diagramCard(diagram);
     const why = selected
       ? whyBox(selected, "Declared in “" + (diagram.title || diagram.type || "diagram") + "”.", "declared · diagrams")
-      : h("p", { class: "quiet" }, ["Select a node to see why it is in this diagram."]);
+      : aboutBox([
+        "This diagram is declared material, not generated. Participants that match an id can be followed.",
+      ], "declared · diagrams");
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · diagrams on this id"]),
       diagramPicker(list, index, pick),
       diagram.description ? h("p", { class: "note" }, [diagram.description]) : null,
       picture,
-      flow || sequence ? why : null,
+      why,
     ]);
   }
 
@@ -1212,6 +1247,9 @@
     if (!mine.length) return h("p", { class: "note" }, ["No data model declared on this id."]);
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · implementation.contracts.data_models"]),
+      aboutBox([
+        "Entities are declared on this id. A reference the model does not declare is left as written, not filled in.",
+      ], "declared · data models"),
       ...mine.map(function (item) {
         return h("div", {}, Object.keys(item.models).map(function (name) {
           return h("div", { class: "item" }, [
@@ -1239,6 +1277,9 @@
     const mine = journeys.filter(function (item) { return item.subject === rec.id; });
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · flows on this id"]),
+      aboutBox([
+        "Stages and outcomes are declared on the flow. A step the model does not name is not filled in.",
+      ], "declared · flows"),
       ...flows.map(function (item) {
         const stages = (item.stages || []).length ? item.stages.join(" → ") : "";
         const endings = outcomeLines(item.outcomes);

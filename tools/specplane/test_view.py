@@ -203,6 +203,15 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("line.id ? idLink(line.id)", script)
         self.assertNotIn("{'id'", script)
 
+    def test_about_projection_intro(self) -> None:
+        script = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("About this projection", script)
+        self.assertIn("Each node is here because one declared field names it.", script)
+        self.assertIn("Only the promised ids are a claim.", script)
+        self.assertIn("Capability is the value axis", script)
+        self.assertNotIn("Select an id to see why it is on this map.", script)
+        self.assertNotIn("Select an id to see why it is in this blast.", script)
+
     def test_navbar_names_the_system_and_branch(self) -> None:
         systems = [rid for rid, rec in self.payload["records"].items() if rec.get("level") == "system"]
         self.assertEqual(systems, ["system.payments"])
