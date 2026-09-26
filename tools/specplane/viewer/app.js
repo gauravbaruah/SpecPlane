@@ -290,12 +290,17 @@
         ]);
       })),
     ]);
+    const feet = {
+      live: "In flight is not a filter: an id is in flight when an open change names it.",
+      inferred: "Inferred ids were recovered from code. They are explorable and stay marked until promoted.",
+      replaced: "Replaced ids stay so history resolves. They are not part of the live model.",
+    };
     return h("section", {}, [
       h("h1", {}, ["Live"]),
       h("p", { class: "note" }, ["Capabilities in the spec root. Components, containers, and foundations are reached from an id."]),
       h("div", { class: "tools" }, [filters, find]),
       table,
-      h("p", { class: "quiet" }, ["In flight is not a filter. An id is in flight when an open change names it."]),
+      h("p", { class: "quiet" }, [feet[bit] || feet.live]),
     ]);
   }
 

@@ -163,6 +163,9 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn(" · read-only", src)
         self.assertIn('label: next === "dark" ? "Dark" : "Light"', src)
         self.assertIn("theme-btn", (ASSETS / "app.css").read_text(encoding="utf-8"))
+        self.assertIn("In flight is not a filter: an id is in flight when an open change names it.", src)
+        self.assertIn("Inferred ids were recovered from code. They are explorable and stay marked until promoted.", src)
+        self.assertIn("Replaced ids stay so history resolves. They are not part of the live model.", src)
 
     def test_design_system_tokens_are_local(self) -> None:
         css = (ASSETS / "app.css").read_text(encoding="utf-8")
