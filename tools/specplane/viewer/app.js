@@ -79,10 +79,12 @@
     if (p.on) {
       Object.keys(p.on).forEach(function (ev) { node.addEventListener(ev, p.on[ev]); });
     }
-    (children || []).forEach(function (kid) {
+    function place(kid) {
       if (kid == null || kid === false) return;
+      if (Array.isArray(kid)) { kid.forEach(place); return; }
       node.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
-    });
+    }
+    (children || []).forEach(place);
     return node;
   }
 
