@@ -74,7 +74,7 @@
     if (p.label) node.setAttribute("aria-label", p.label);
     if (p.type) node.type = p.type;
     if (p.placeholder) node.placeholder = p.placeholder;
-    if (p.value != null && tag === "INPUT") node.value = p.value;
+    if (p.value != null && String(tag).toLowerCase() === "input") node.value = p.value;
     if (p.open) node.open = true;
     if (p.on) {
       Object.keys(p.on).forEach(function (ev) { node.addEventListener(ev, p.on[ev]); });
