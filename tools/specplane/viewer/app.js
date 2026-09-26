@@ -311,23 +311,24 @@
     const rows = (DATA.changes || []).filter(function (c) {
       return !q || c.id.toLowerCase().indexOf(q) >= 0 || (c.why || "").toLowerCase().indexOf(q) >= 0;
     });
-    return h("section", {}, [
+    return h("section", { class: "changes-index" }, [
       h("h1", {}, ["Changes"]),
       h("p", { class: "note" }, ["Open change folders. Nothing here is live until it is promoted."]),
       h("div", { class: "tools" }, [h("input", {
         id: "find", class: "find", type: "search", placeholder: "Find by slug or why", value: findText,
         on: { input: function (ev) { findText = ev.target.value; rerender(true); } },
       })]),
-      h("table", { class: "index" }, [
+      h("table", { class: "index changes" }, [
         h("tbody", {}, rows.map(function (c) {
           const sensor = c.check_sync && c.check_sync.sensors === "declared"
             ? (c.check_sync.sensor_rows || []).length + " sensors declared · not run"
             : "No success sensor declared";
           return h("tr", { on: { click: function () { go("change/" + c.id); } } }, [
             h("td", {}, [h("a", { class: "mono inflight", href: href("change/" + c.id) }, [breakable(c.id)])]),
-            h("td", { class: "quiet" }, [c.kind || ""]),
-            h("td", {}, [(c.promise_ids || []).map(function (id, i) { return h("span", {}, [i ? ", " : "", idLink(id)]); })]),
+            h("td", { class: "quiet mono kind" }, [c.kind || ""]),
+            h("td", { class: "promises" }, (c.promise_ids || []).map(function (id) { return idLink(id); })),
             h("td", { class: "quiet" }, [sensor]),
+            h("td", { class: "opened" }, [c.opened ? "Opened " + c.opened : ""]),
           ]);
         })),
       ]),

@@ -54,6 +54,13 @@ def _branch(spec_root: Path) -> str:
     return "" if out in ("", "HEAD") else out
 
 
+def _opened(value: Any) -> str:
+    text = value.isoformat() if hasattr(value, "isoformat") else str(value or "").strip()
+    if len(text) >= 10 and text[4:5] == "-" and text[7:8] == "-":
+        return text[:10]
+    return ""
+
+
 def build_payload(kernel: Any) -> dict[str, Any]:
     records: dict[str, Any] = {}
     for doc in sorted(kernel.docs, key=lambda item: item.spec_id):
@@ -73,6 +80,7 @@ def build_payload(kernel: Any) -> dict[str, Any]:
             "kind": change.kind,
             "why": str(change.data.get("why") or "").strip(),
             "promise_ids": list(change.promise_ids),
+            "opened": _opened(change.data.get("opened")),
             "delta": _delta(change.data),
             "check_sync": {
                 "coverage": sync.get("coverage"),

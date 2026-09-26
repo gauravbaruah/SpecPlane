@@ -275,6 +275,22 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   gap: 8px;
   align-items: start;
 }
+.changes-index { max-width: 1064px; }
+.index.changes tr {
+  grid-template-columns: 200px 70px minmax(0, 1.4fr) 220px max-content;
+  gap: 4px 20px;
+  align-items: baseline;
+}
+.index.changes .promises { display: flex; flex-wrap: wrap; gap: 3px 12px; }
+.index.changes .kind { font-size: 12px; line-height: 1.4; font-weight: 500; }
+.index.changes .opened {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
 .index tbody tr { cursor: pointer; }
 .index tbody tr:hover { background: var(--bg-hover); }
 .index th { text-align: left; font-size: 11px; line-height: 1.35; font-weight: 500; font-family: "JetBrains Mono", monospace; color: var(--ink-3); padding: 8px 6px; min-width: 0; overflow-wrap: anywhere; }
@@ -486,10 +502,14 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .diagram svg { display: block; height: auto; }
 
 @media (max-width: 1100px) {
+  .index.changes tr {
+    grid-template-columns: minmax(0, 1.2fr) 70px minmax(0, 2fr) minmax(0, 1.2fr) max-content;
+  }
   .split { grid-template-columns: minmax(0, 1fr); }
   .top { flex-wrap: wrap; }
 }
 @media (max-width: 720px) {
   .top, .bar, .page { padding-inline: 16px; }
   .sys, .where { display: none; }
+  .index.changes tr { grid-template-columns: minmax(0, 1fr); }
 }

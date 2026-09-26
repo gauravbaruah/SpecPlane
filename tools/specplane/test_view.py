@@ -6,13 +6,14 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from kernel import list_gaps, load_kernel  # noqa: E402
-from view import build_payload, write_site  # noqa: E402
+from view import _opened, build_payload, write_site  # noqa: E402
 
 BILLING = ROOT / "testdata" / "impact_billing" / "specs"
 INFERRED = ROOT / "testdata" / "inferred" / "specs"
@@ -128,6 +129,10 @@ class ViewerModelTests(unittest.TestCase):
     def test_design_time_change(self) -> None:
         change = next(item for item in self.payload["changes"] if item["id"] == "billing_retry")
         self.assertIn("capability.billing", change["promise_ids"])
+        self.assertEqual(change["opened"], "")
+        self.assertEqual(_opened("2026-09-25"), "2026-09-25")
+        self.assertEqual(_opened(date(2026, 9, 25)), "2026-09-25")
+        self.assertEqual(_opened(""), "")
         self.assertTrue(change["why"])
         self.assertEqual(change["delta"], {})
         self.assertIn("blast", change["projections"])
