@@ -204,7 +204,7 @@ def _level_name(spec_id: str) -> str:
 
 def write_site(payload: dict[str, Any], out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
-    for name in ("index.html", "app.js", "app.css"):
+    for name in ("index.html", "app.js", "app.css", "logo.png"):
         shutil.copy2(assets_dir() / name, out / name)
     for folder in ("vendor", "fonts"):
         src = assets_dir() / folder

@@ -148,6 +148,8 @@ class ViewerModelTests(unittest.TestCase):
             self.assertTrue((out / "fonts" / "schibsted-grotesk-400.woff2").is_file())
             self.assertTrue((out / "fonts" / "jetbrains-mono-500.woff2").is_file())
             self.assertTrue((out / "payload.js").read_text(encoding="utf-8").startswith("window.SPECPLANE_VIEW"))
+            self.assertTrue((out / "logo.png").is_file())
+            self.assertIn("logo.png", script)
         server = (ROOT / "view.py").read_text(encoding="utf-8")
         self.assertIn('("127.0.0.1", 0)', server)
         self.assertNotIn("0.0.0.0", server)

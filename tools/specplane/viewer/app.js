@@ -69,6 +69,8 @@
     if (p.class) node.className = p.class;
     if (p.id) node.id = p.id;
     if (p.href != null) node.setAttribute("href", p.href);
+    if (p.src) node.setAttribute("src", p.src);
+    if (p.alt != null) node.setAttribute("alt", p.alt);
     if (p.type) node.type = p.type;
     if (p.placeholder) node.placeholder = p.placeholder;
     if (p.value != null && tag === "INPUT") node.value = p.value;
@@ -154,7 +156,10 @@
       }, [name[0].toUpperCase() + name.slice(1)]);
     }));
     const top = h("header", { class: "top" }, [
-      h("div", { class: "brand" }, ["SpecPlane"]),
+      h("div", { class: "brand" }, [
+        h("img", { src: "logo.png", alt: "" }),
+        "SpecPlane",
+      ]),
       nav,
       h("div", { class: "top-end" }, [theme, h("div", { class: "quiet" }, ["read-only"])]),
     ]);
