@@ -34,6 +34,7 @@ specplane view --spec-root R   same as other kernel commands
 
 - Default is **serve**, not export-only. `--open` means also launch the browser.
 - Server: stdlib / lightweight, **local-only**, ephemeral. Bind `127.0.0.1` (not `0.0.0.0`).
+- While serving, a request rewrites `payload.js` when the spec root is newer than that file. A reload shows a change folder that appeared after `specplane view` started. Assets are not recopied.
 - `--out` chooses the output directory. It is not “skip the server.”
 - If we need an artifact without serving, add `specplane view --static` or `specplane export viewer` later. Do not overload `--open` or `--out` for that.
 

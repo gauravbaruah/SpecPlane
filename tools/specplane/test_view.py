@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import os
+import shutil
 import sys
 import tempfile
+import time
 import unittest
 from datetime import date
 from pathlib import Path
@@ -13,7 +16,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from kernel import list_gaps, load_kernel  # noqa: E402
-from view import _opened, build_payload, write_site  # noqa: E402
+from view import _opened, build_payload, refresh_payload, write_site  # noqa: E402
 
 BILLING = ROOT / "testdata" / "impact_billing" / "specs"
 INFERRED = ROOT / "testdata" / "inferred" / "specs"
@@ -158,6 +161,28 @@ class ViewerModelTests(unittest.TestCase):
         server = (ROOT / "view.py").read_text(encoding="utf-8")
         self.assertIn('("127.0.0.1", 0)', server)
         self.assertNotIn("0.0.0.0", server)
+
+    def test_payload_refreshes_when_spec_root_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(BILLING, root)
+            out = Path(tmp) / "view"
+            write_site(build_payload(load_kernel(root)), out)
+            aged = time.time() - 5
+            os.utime(out / "payload.js", (aged, aged))
+            self.assertNotIn("fresh_change", (out / "payload.js").read_text(encoding="utf-8"))
+            folder = root / "changes" / "fresh_change"
+            folder.mkdir()
+            proposal = folder / "proposal.yaml"
+            proposal.write_text(
+                "id: fresh_change\nkind: evolve\nstatus: in-flight\n"
+                "promise_ids:\n  - capability.billing\nwhy: A folder that appeared after generation.\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(refresh_payload(root, out))
+            text = (out / "payload.js").read_text(encoding="utf-8")
+            self.assertIn("fresh_change", text)
+            self.assertFalse(refresh_payload(root, out))
 
     def test_navbar_names_the_system_and_branch(self) -> None:
         systems = [rid for rid, rec in self.payload["records"].items() if rec.get("level") == "system"]

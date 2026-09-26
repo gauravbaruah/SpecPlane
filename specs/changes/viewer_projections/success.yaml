@@ -42,6 +42,11 @@ sensors:
     must: "The viewer uses the design-system families and semantic colors, and ships the font files instead of calling a font service"
     run:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_design_system_tokens_are_local"
+  - id: "payload_refresh"
+    promise: "capability.specplane_viewer"
+    must: "A reload rebuilds the payload when a change folder appears after generation"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_payload_refreshes_when_spec_root_changes"
   - id: "design_time_change"
     promise: "capability.specplane_viewer"
     must: "A change with why and promise ids and no delta still has an impact path"

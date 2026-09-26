@@ -12,6 +12,7 @@ import json
 import shutil
 import subprocess
 import sys
+import threading
 import webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -228,6 +229,14 @@ def _level_name(spec_id: str) -> str:
     return ""
 
 
+def write_payload(payload: dict[str, Any], out: Path) -> None:
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "payload.js").write_text(
+        "window.SPECPLANE_VIEW = " + json.dumps(payload, ensure_ascii=False) + ";\n",
+        encoding="utf-8",
+    )
+
+
 def write_site(payload: dict[str, Any], out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
     for name in ("index.html", "app.js", "app.css", "logo.png"):
@@ -240,18 +249,53 @@ def write_site(payload: dict[str, Any], out: Path) -> None:
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(src, dest)
-    (out / "payload.js").write_text(
-        "window.SPECPLANE_VIEW = " + json.dumps(payload, ensure_ascii=False) + ";\n",
-        encoding="utf-8",
-    )
+    write_payload(payload, out)
 
 
-def serve(out: Path, open_browser: bool) -> int:
+def _spec_mtime(spec_root: Path) -> float:
+    latest = spec_root.stat().st_mtime if spec_root.exists() else 0.0
+    if not spec_root.is_dir():
+        return latest
+    for path in spec_root.rglob("*"):
+        try:
+            latest = max(latest, path.stat().st_mtime)
+        except OSError:
+            continue
+    return latest
+
+
+_refresh_lock = threading.Lock()
+
+
+def refresh_payload(spec_root: Path, out: Path) -> bool:
+    """Rewrite payload.js when the spec root is newer than the generated file."""
+    payload_path = out / "payload.js"
+    if payload_path.is_file() and _spec_mtime(spec_root) <= payload_path.stat().st_mtime:
+        return False
+    with _refresh_lock:
+        if payload_path.is_file() and _spec_mtime(spec_root) <= payload_path.stat().st_mtime:
+            return False
+        write_payload(build_payload(load_kernel(spec_root)), out)
+        return True
+
+
+def serve(out: Path, open_browser: bool, spec_root: Path | None = None) -> int:
     out = out.resolve()
 
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             super().__init__(*args, directory=str(out), **kwargs)
+
+        def do_GET(self) -> None:
+            if spec_root is not None:
+                refresh_payload(spec_root, out)
+            super().do_GET()
+
+        def end_headers(self) -> None:
+            path = self.path.split("?", 1)[0]
+            if path in ("/", "/index.html", "/payload.js"):
+                self.send_header("Cache-Control", "no-store")
+            super().end_headers()
 
         def log_message(self, fmt: str, *args: Any) -> None:
             return
@@ -285,7 +329,7 @@ def main(argv: list[str] | None = None) -> int:
     out = args.out if args.out is not None else args.config_dir / ".specplane" / "view"
     kernel = load_kernel(spec_root)
     write_site(build_payload(kernel), out)
-    return serve(out, args.open_browser)
+    return serve(out, args.open_browser, spec_root)
 
 
 if __name__ == "__main__":
