@@ -1153,18 +1153,22 @@
         prov ? h("div", { class: "mono" }, [prov]) : null,
       ]) : null,
       graph,
-      legend(),
+      legend(edges),
       extra || null,
     ]);
   }
 
-  function legend() {
-    return h("div", { class: "legend" }, [
+  function legend(edges) {
+    const items = [
       ["declared", "declared link"],
       ["derived", "derived reach"],
       ["inferred", "inferred link"],
       ["unknown", "not represented"],
-    ].map(function (pair) {
+    ];
+    if ((edges || []).some(function (edge) { return edge.kind === "promised"; })) {
+      items.unshift(["promised", "declared promise"]);
+    }
+    return h("div", { class: "legend" }, items.map(function (pair) {
       return h("span", {}, [h("span", { class: "swatch " + pair[0] }), pair[1]]);
     }));
   }
@@ -1319,6 +1323,7 @@
       const inSet = !known || known.has(node.id);
       return {
         id: node.id,
+        key: node.id,
         distance: node.distance || 0,
         bit: (record(node.id) || {}).bit || "",
         epistemic: node.epistemic_state || "declared",
@@ -1328,6 +1333,26 @@
         dim: known && !inSet,
       };
     });
+  }
+
+  function blastEdges(graph, visible) {
+    const edges = [];
+    const seen = {};
+    (graph.affected || []).forEach(function (node) {
+      if (!visible[node.id]) return;
+      const steps = node.path || [];
+      const last = steps[steps.length - 1];
+      if (!last || !last.from || last.from === node.id || !visible[last.from]) return;
+      const pair = last.from + "\t" + node.id;
+      if (seen[pair]) return;
+      seen[pair] = true;
+      const rel = last.relationship || "";
+      let kind = "derived";
+      if (rel === "promises" || rel === "promise_ids") kind = "promised";
+      else if (edgeKind(last.from, node.id) === "inferred") kind = "inferred";
+      edges.push({ from: last.from, to: node.id, kind: kind });
+    });
+    return edges;
   }
 
   function blastBlock(graph, selfId, selected, persp, onselect) {
@@ -1353,6 +1378,11 @@
     if (far && !expanded.furtherHops) {
       cols.push({ head: "Further", further: true, count: far, minDist: 3 });
     }
+    const visible = {};
+    cols.forEach(function (col) {
+      (col.nodes || []).forEach(function (node) { visible[node.id] = true; });
+    });
+    cols.edges = blastEdges(graph, visible);
     const chosen = selected
       ? (graph.affected || []).filter(function (node) { return node.id === selected; })[0]
       : null;
@@ -1363,10 +1393,12 @@
         changeBlast
           ? [
             "What this change says it touches, and what the kernel reaches from there. Only the promised ids are a claim.",
+            "A solid accent curve is a promise this change declares. A dotted curve is reach the kernel derives.",
             "Select a node to see the hop chain. Foundations are listed and not expanded.",
           ]
           : [
             "If this changes, what else should someone care about. Grouped by hop distance; nearer means more directly affected.",
+            "A dotted curve is the hop the kernel recorded. It is not a second walk.",
             "Select a node to see the hop chain. Foundations are listed and not expanded.",
           ],
         changeBlast ? "declared promise · derived reach" : "derived · kernel impact"

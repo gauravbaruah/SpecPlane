@@ -84,11 +84,15 @@ class ViewerModelTests(unittest.TestCase):
 
     def test_blast_hop_copy_is_in_the_viewer(self) -> None:
         src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
         self.assertIn("1 hop · direct", src)
         self.assertIn("Further", src)
         self.assertIn("select to expand", src)
         self.assertIn("+ hops", src)
         self.assertIn("terminal · not expanding", src)
+        self.assertIn("A dotted curve is the hop the kernel recorded.", src)
+        self.assertIn('rel === "promises"', src)
+        self.assertIn(".graph.linked .edges path.promised", css)
 
     def test_no_negative_security_claim(self) -> None:
         blob = "\n".join(
