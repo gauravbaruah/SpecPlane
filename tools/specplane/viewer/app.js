@@ -298,8 +298,10 @@
       replaced: "Replaced ids stay so history resolves. They are not part of the live model.",
     };
     return h("section", {}, [
-      h("h1", {}, ["Live"]),
-      h("p", { class: "note" }, ["Capabilities in the spec root. Components, containers, and foundations are reached from an id."]),
+      h("div", { class: "lede" }, [
+        h("h1", {}, ["Live"]),
+        h("p", { class: "note" }, ["Capabilities in the spec root. Components, containers, and foundations are reached from an id."]),
+      ]),
       h("div", { class: "tools" }, [filters, find]),
       table,
       h("p", { class: "quiet" }, [feet[bit] || feet.live]),
@@ -312,8 +314,10 @@
       return !q || c.id.toLowerCase().indexOf(q) >= 0 || (c.why || "").toLowerCase().indexOf(q) >= 0;
     });
     return h("section", { class: "changes-index" }, [
-      h("h1", {}, ["Changes"]),
-      h("p", { class: "note" }, ["Open change folders. Nothing here is live until it is promoted."]),
+      h("div", { class: "lede" }, [
+        h("h1", {}, ["Changes"]),
+        h("p", { class: "note" }, ["Open change folders. Nothing here is live until it is promoted."]),
+      ]),
       h("div", { class: "tools" }, [h("input", {
         id: "find", class: "find", type: "search", placeholder: "Find by slug or why", value: findText,
         on: { input: function (ev) { findText = ev.target.value; rerender(true); } },
@@ -338,8 +342,10 @@
   function gapsIndex() {
     const gaps = DATA.gaps || {};
     return h("section", {}, [
-      h("h1", {}, ["Gaps"]),
-      h("p", { class: "note" }, ["Where SpecPlane knows its model is incomplete. Advisory: nothing here is an error, and nothing here has been filled in for you."]),
+      h("div", { class: "lede" }, [
+        h("h1", {}, ["Gaps"]),
+        h("p", { class: "note" }, ["Where SpecPlane knows its model is incomplete. Advisory: nothing here is an error, and nothing here has been filled in for you."]),
+      ]),
       ...GAPS.map(function (bucket) {
         const ids = gaps[bucket[0]] || [];
         return h("div", { class: "bucket" }, [
@@ -361,16 +367,20 @@
     const persp = route.query.get("persp") || "system";
     return h("div", { class: "split" }, [
       h("div", { class: "copy" }, [
-        h("div", { class: "kicker" }, [rec.level || "record"]),
-        h("div", { class: "row" }, [bitMark(rec.bit), h("span", { class: "mono" }, [breakable(rec.id)])]),
-        h("div", { class: "quiet" }, [
-          rec.bit === "inferred" ? "inferred · not live" : rec.bit,
-          rec.review_state ? " · " + rec.review_state : "",
-          rec.status ? " · status " + rec.status : "",
+        h("div", { class: "identity" }, [
+          h("div", { class: "eyebrow" }, [rec.level || "record"]),
+          h("div", { class: "row" }, [bitMark(rec.bit), h("span", { class: "id-title" }, [breakable(rec.id)])]),
+          h("div", { class: "quiet mono" }, [
+            rec.bit === "inferred" ? "inferred · not live" : rec.bit,
+            rec.review_state ? " · " + rec.review_state : "",
+            rec.status ? " · status " + rec.status : "",
+          ]),
+          rec.path ? h("div", { class: "quiet mono" }, [breakable(rec.path)]) : null,
         ]),
-        rec.path ? h("div", { class: "quiet mono" }, [breakable(rec.path)]) : null,
-        h("div", { class: "kicker" }, ["Promise"]),
-        h("p", { class: "purpose" }, [rec.purpose || (rec.bit === "inferred" ? "retrieve returns no live slice for an inferred id." : "")]),
+        h("div", { class: "promise" }, [
+          h("div", { class: "kicker" }, ["Promise"]),
+          h("p", { class: "purpose" }, [rec.purpose || (rec.bit === "inferred" ? "retrieve returns no live slice for an inferred id." : "")]),
+        ]),
         flight(rec),
         definition(rec, graph),
         realization(rec, graph),
@@ -1313,19 +1323,27 @@
     const sync = change.check_sync || {};
     return h("div", { class: "split" }, [
       h("div", { class: "copy" }, [
-        h("div", { class: "kicker" }, ["Change"]),
-        h("div", { class: "row" }, [h("span", { class: "mono inflight" }, [breakable(change.id)])]),
-        h("div", { class: "quiet" }, ["in-flight", change.kind ? " · kind " + change.kind : ""]),
-        h("div", { class: "kicker" }, ["Why"]),
-        h("p", { class: "purpose" }, [change.why || ""]),
-        h("h2", { class: "kicker" }, ["Promise ids"]),
-        h("div", {}, (change.promise_ids || []).map(function (id) { return h("div", { class: "item" }, [idLink(id)]); })),
+        h("div", { class: "identity" }, [
+          h("div", { class: "eyebrow" }, ["Change"]),
+          h("div", { class: "row" }, [h("span", { class: "id-title inflight" }, [breakable(change.id)])]),
+          h("div", { class: "quiet mono" }, ["in-flight", change.kind ? " · kind " + change.kind : ""]),
+        ]),
+        h("div", { class: "promise" }, [
+          h("div", { class: "kicker" }, ["Why"]),
+          h("p", { class: "purpose" }, [change.why || ""]),
+        ]),
+        h("div", { class: "block" }, [
+          h("h2", { class: "kicker" }, ["Promise ids"]),
+          h("div", { class: "rows" }, (change.promise_ids || []).map(function (id) { return h("div", { class: "item" }, [idLink(id)]); })),
+        ]),
         deltaBlock(change.delta),
         sensorBlock(sync),
-        h("h2", { class: "kicker" }, ["What SpecPlane checked"]),
-        h("p", { class: "note" }, ["SpecPlane checked declared coverage. It did not verify behavior."]),
-        h("p", { class: "quiet" }, ["coverage " + (sync.coverage || ""), " · sensors " + (sync.sensors || ""), " · behavior unverified"]),
-        h("p", { class: "note" }, ["SpecPlane did not certify that an implementation satisfies the spec."]),
+        h("div", { class: "block" }, [
+          h("h2", { class: "kicker" }, ["What SpecPlane checked"]),
+          h("p", { class: "note" }, ["SpecPlane checked declared coverage. It did not verify behavior."]),
+          h("p", { class: "quiet mono" }, ["coverage " + (sync.coverage || ""), " · sensors " + (sync.sensors || ""), " · behavior unverified"]),
+          h("p", { class: "note" }, ["SpecPlane did not certify that an implementation satisfies the spec."]),
+        ]),
       ]),
       h("div", {}, [
         switcher(change.projections || ["blast"], "blast", function () {}),
@@ -1340,10 +1358,10 @@
   function deltaBlock(delta) {
     const keys = delta ? Object.keys(delta) : [];
     if (!keys.length) return null;
-    return h("div", {}, [
+    return h("div", { class: "block" }, [
       h("h2", { class: "kicker" }, ["Delta"]),
       ...keys.map(function (key) {
-        return h("div", {}, [h("div", { class: "quiet" }, [key]), ...(delta[key] || []).map(function (line) {
+        return h("div", { class: "rows" }, [h("div", { class: "quiet" }, [key]), ...(delta[key] || []).map(function (line) {
           if (typeof line === "string") line = { text: line };
           return h("div", { class: "item delta-line" }, [
             line.group ? h("span", { class: "quiet mono" }, [line.group]) : null,
@@ -1358,7 +1376,7 @@
   function sensorBlock(sync) {
     const rows = (sync && sync.sensor_rows) || [];
     if (!rows.length) return h("p", { class: "note" }, ["No success sensor declared."]);
-    return h("div", {}, [
+    return h("div", { class: "block" }, [
       h("h2", { class: "kicker" }, ["Success sensors"]),
       ...rows.map(function (row) {
         return h("div", { class: "item" }, [
