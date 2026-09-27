@@ -462,6 +462,8 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   stroke: var(--warning);
   stroke-dasharray: 5 4;
 }
+.graph.linked .edges path.derived,
+.graph.linked .edges path.unknown { stroke-dasharray: 2 4; }
 .graph.blast { gap: 28px; }
 .graph.blast .col { position: relative; }
 .graph.blast .col + .col::before {
@@ -679,7 +681,7 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .pick.on { background: var(--bg-hover); color: var(--ink-1); font-weight: 600; }
 .canvas { position: relative; }
 .canvas .node { position: absolute; width: auto; height: auto; }
-.wires { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; color: var(--ink-3); }
+.wires { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; color: var(--ink-4); }
 .edge-label, .msg-label {
   position: absolute;
   transform: translate(-50%, -50%);

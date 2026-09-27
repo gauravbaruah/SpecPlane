@@ -837,8 +837,8 @@
 
   function drawProjection(rec, graph, proj, selected, persp, onselect) {
     if (proj === "map") return graphBlock(mapColumns(rec, graph), selected, onselect, mapWhy(rec, selected, graph), "derived · from declared links", "", "Where this sits: the declared links one hop out from the selected id.");
-    if (proj === "layers") return graphBlock(layerColumns(rec), selected, onselect, layerWhy(rec, selected), "derived · 5C placement");
-    if (proj === "journey") return journeyBlock(rec, graph);
+    if (proj === "layers") return graphBlock(layerColumns(rec), selected, onselect, layerWhy(rec, selected), "derived · 5C placement", "", "The same declared links placed on the 5C axis around the selected id.");
+    if (proj === "journey") return journeyBlock(rec, graph, selected, onselect);
     if (proj === "diagrams") return diagramBlock(rec, selected, onselect);
     if (proj === "data") return dataBlock(rec, graph);
     if (proj === "blast") return blastBlock(graph, rec.id, selected, persp, onselect);
@@ -1003,14 +1003,125 @@
   }
 
   function layerColumns(rec) {
-    const ids = [rec.id].concat((rec.links || []).map(function (link) { return link.id; }));
-    const grouped = {};
-    ids.forEach(function (id) {
-      const level = levelOf(id) || "other";
-      grouped[level] = grouped[level] || [];
-      grouped[level].push(nodeModel(id, { via: level, selected: id === rec.id }));
+    const buckets = { capability: [], system: [], container: [], component: [], foundation: [] };
+    const edges = [];
+    function place(level, id, via, selected) {
+      const bucket = buckets[level];
+      if (!bucket || !id) return null;
+      const found = bucket.filter(function (node) { return node.id === id; })[0];
+      if (found) {
+        if (selected) found.selectedId = true;
+        return found;
+      }
+      const node = nodeModel(id, { via: via, selected: !!selected });
+      bucket.push(node);
+      return node;
+    }
+    function tie(from, to) {
+      if (!from || !to || from.key === to.key) return;
+      if (edges.some(function (edge) { return edge.from === from.key && edge.to === to.key; })) return;
+      edges.push({ from: from.key, to: to.key, kind: edgeKind(from.id, to.id) });
+    }
+    function foundationsOf(comp) {
+      linksOf(comp.id, "uses").forEach(function (link) {
+        if (levelOf(link.id) !== "foundation") return;
+        tie(comp, place("foundation", link.id, "uses · " + shortId(comp.id)));
+      });
+    }
+    function systemsFor(cap) {
+      listedBy(cap.id, "system_context").forEach(function (id) {
+        if (levelOf(id) !== "system") return;
+        tie(place("system", id, "system_context"), cap);
+      });
+    }
+    const level = rec.level || levelOf(rec.id);
+    if (level === "capability") {
+      const self = place("capability", rec.id, "", true);
+      systemsFor(self);
+      (rec.links || []).forEach(function (link) {
+        if (link.rel !== "realized_by") return;
+        const lv = levelOf(link.id);
+        if (lv === "container" || lv === "component") place(lv, link.id, "realized_by");
+      });
+      buckets.system.forEach(function (sys) {
+        const holds = ((record(sys.id) || {}).contains) || [];
+        buckets.container.forEach(function (box) {
+          if (holds.indexOf(box.id) >= 0) tie(sys, box);
+        });
+      });
+      buckets.container.forEach(function (box) {
+        const holds = ((record(box.id) || {}).contains) || [];
+        buckets.component.forEach(function (comp) {
+          if (holds.indexOf(comp.id) >= 0) tie(box, comp);
+        });
+      });
+      buckets.component.forEach(foundationsOf);
+    } else if (level === "system") {
+      const self = place("system", rec.id, "", true);
+      (rec.system_context || []).forEach(function (id) { tie(self, place("capability", id, "system_context")); });
+      (rec.contains || []).forEach(function (id) {
+        const lv = levelOf(id);
+        if (lv === "container") {
+          const box = place("container", id, "contains");
+          tie(self, box);
+          ((record(id) || {}).contains || []).forEach(function (child) {
+            if (levelOf(child) !== "component") return;
+            const comp = place("component", child, "contains");
+            tie(box, comp);
+            foundationsOf(comp);
+          });
+        } else if (lv === "component") {
+          const comp = place("component", id, "contains");
+          tie(self, comp);
+          foundationsOf(comp);
+        }
+      });
+    } else if (level === "container") {
+      const self = place("container", rec.id, "", true);
+      listedBy(rec.id, "contains").forEach(function (id) {
+        if (levelOf(id) !== "system") return;
+        tie(place("system", id, "contains"), self);
+      });
+      linksOf(rec.id, "implements").forEach(function (link) { systemsFor(place("capability", link.id, "implements")); });
+      (rec.contains || []).forEach(function (id) {
+        if (levelOf(id) !== "component") return;
+        const comp = place("component", id, "contains");
+        tie(self, comp);
+        foundationsOf(comp);
+      });
+    } else if (level === "component") {
+      const self = place("component", rec.id, "", true);
+      linksOf(rec.id, "implements").forEach(function (link) { systemsFor(place("capability", link.id, "implements")); });
+      listedBy(rec.id, "contains").forEach(function (id) {
+        if (levelOf(id) !== "container") return;
+        const box = place("container", id, "contains");
+        tie(box, self);
+        listedBy(id, "contains").forEach(function (sys) {
+          if (levelOf(sys) === "system") tie(place("system", sys, "contains"), box);
+        });
+      });
+      foundationsOf(self);
+    } else if (level === "foundation") {
+      const self = place("foundation", rec.id, "", true);
+      Object.keys(DATA.records).forEach(function (other) {
+        if (levelOf(other) !== "component") return;
+        if (!linksOf(other, "uses").some(function (link) { return link.id === rec.id; })) return;
+        const comp = place("component", other, "uses");
+        tie(comp, self);
+        listedBy(other, "contains").forEach(function (id) {
+          if (levelOf(id) === "container") tie(place("container", id, "contains"), comp);
+        });
+      });
+    } else {
+      place(buckets[level] ? level : "capability", rec.id, "", true);
+    }
+    const cols = ["capability", "system", "container", "component", "foundation"].filter(function (name) {
+      return buckets[name].length;
+    }).map(function (name) {
+      return { head: name.charAt(0).toUpperCase() + name.slice(1), nodes: buckets[name] };
     });
-    return Object.keys(grouped).map(function (level) { return { head: level, nodes: grouped[level] }; });
+    cols.edges = edges;
+    return cols;
   }
 
   function nodeModel(id, extra) {
@@ -1382,7 +1493,15 @@
     if (!selected) return aboutBox([
       "Capability is the value axis; system, container, and component are the structural axis. Foundations are shared rules.",
     ], "derived · 5C placement");
-    return mapWhy(rec, selected);
+    if (selected === rec.id) return whyBox(selected, "The selected id.", "declared · this record");
+    let via = "";
+    layerColumns(rec).forEach(function (col) {
+      (col.nodes || []).forEach(function (node) {
+        if (node.id === selected && node.sub) via = node.sub;
+      });
+    });
+    if (!via) return whyBox(selected, "A declared link places this id on the 5C axis.", "declared");
+    return whyBox(selected, via + " places this id on the 5C axis from " + rec.id + ".", "declared · " + via);
   }
 
   function whyPanel(node, graph, persp) {
@@ -1429,6 +1548,14 @@
     });
   }
 
+  function unquote(text) {
+    const s = String(text || "");
+    if (s.length >= 2 && ((s.charAt(0) === "\"" && s.charAt(s.length - 1) === "\"") || (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'"))) {
+      return s.slice(1, -1);
+    }
+    return s;
+  }
+
   function parseFlow(src) {
     const nodes = [];
     const by = {};
@@ -1442,9 +1569,9 @@
         nodes.push(by[id]);
       }
       const n = by[id];
-      if (m[2]) { n.text = m[2]; n.shape = "end"; }
-      else if (m[3]) { n.text = m[3]; n.shape = "decision"; }
-      else if (m[4] || m[5]) n.text = m[4] || m[5];
+      if (m[2]) { n.text = unquote(m[2]); n.shape = "end"; }
+      else if (m[3]) { n.text = unquote(m[3]); n.shape = "decision"; }
+      else if (m[4] || m[5]) n.text = unquote(m[4] || m[5]);
       return id;
     }
     String(src || "").split("\n").slice(1).forEach(function (line) {
@@ -1506,29 +1633,6 @@
     return { rank: rank, row: row };
   }
 
-  function edgePath(a, b) {
-    const acx = a.x + a.w / 2;
-    const bcx = b.x + b.w / 2;
-    if (b.r > a.r) {
-      const y1 = a.y + a.h;
-      const y2 = b.y;
-      const mid = (y1 + y2) / 2;
-      if (a.l === b.l) return "M" + acx + " " + y1 + " L" + bcx + " " + y2;
-      return "M" + acx + " " + y1 + " C" + acx + " " + mid + " " + bcx + " " + mid + " " + bcx + " " + y2;
-    }
-    if (b.r === a.r) {
-      const y = a.y + 18;
-      const x1 = b.l > a.l ? a.x + a.w : a.x;
-      const x2 = b.l > a.l ? b.x : b.x + b.w;
-      return "M" + x1 + " " + y + " L" + x2 + " " + y;
-    }
-    const x1 = a.x + a.w;
-    const y1 = a.y + 22;
-    const y2 = b.y + 22;
-    const bend = x1 + 36;
-    return "M" + x1 + " " + y1 + " C" + bend + " " + y1 + " " + bend + " " + y2 + " " + (b.x + b.w) + " " + y2;
-  }
-
   function layoutFlow(src) {
     const parsed = parseFlow(src);
     if (!parsed.nodes.length) return null;
@@ -1553,7 +1657,7 @@
       const b = pos[e.to];
       const midX = ((a.x + a.w / 2) + (b.x + b.w / 2)) / 2;
       const midY = b.r > a.r ? a.y + a.h + gy / 2 : (a.y + b.y) / 2;
-      return { key: i, d: edgePath(a, b), label: e.label, x: midX, y: midY, back: b.r < a.r };
+      return { key: i, d: mapCurve(a, b), label: e.label, x: midX, y: midY, back: b.r < a.r };
     });
     return {
       kind: "flow",
@@ -1580,7 +1684,7 @@
     String(src || "").split("\n").forEach(function (raw) {
       const line = raw.trim();
       if (!line || /^sequenceDiagram\b/i.test(line)) return;
-      const declared = line.match(/^participant\s+(\S+)(?:\s+as\s+(.+))?$/i);
+      const declared = line.match(/^(?:participant|actor)\s+(\S+)(?:\s+as\s+(.+))?$/i);
       if (declared) {
         part(declared[1], declared[2] || declared[1]);
         return;
@@ -1645,7 +1749,7 @@
       path.setAttribute("d", edge.d);
       path.setAttribute("fill", "none");
       path.setAttribute("stroke", "currentColor");
-      path.setAttribute("stroke-width", "1.5");
+      path.setAttribute("stroke-width", "1.4");
       if (edge.back) path.setAttribute("stroke-dasharray", "4 4");
       path.setAttribute("marker-end", "url(#" + marker + ")");
       svg.appendChild(path);
@@ -1691,7 +1795,7 @@
     });
     layout.nodes.forEach(function (n) {
       const box = layout.pos[n.id];
-      const on = n.id === selected;
+      const on = !!selected && n.id === selected;
       const btn = h("button", {
         type: "button",
         class: "node declared" + (on ? " is-focus" : ""),
@@ -1708,7 +1812,7 @@
     return stage;
   }
 
-  function sequenceStage(layout, selected, onselect) {
+  function sequenceStage(layout, selected, onselect, currentId) {
     const stage = h("div", { class: "canvas" });
     stage.style.width = layout.width + "px";
     stage.style.height = layout.height + "px";
@@ -1735,10 +1839,10 @@
       stage.appendChild(arrow);
     });
     layout.heads.forEach(function (head) {
-      const on = head.name === selected || head.ref === selected;
+      const on = !!selected && (head.name === selected || head.ref === selected);
       const btn = h("button", {
         type: "button",
-        class: "node " + (head.ref ? "declared" : "unknown") + (on ? " is-focus" : ""),
+        class: "node " + (head.ref ? "declared" : "unknown") + (head.ref && head.ref === currentId ? " is-current" : "") + (on ? " is-focus" : ""),
         on: { click: function () { onselect(head.ref || head.name); } },
       }, [
         h("div", { class: "pre" }, [head.ref ? "participant" : "external"]),
@@ -1767,7 +1871,7 @@
     }
     let picture = null;
     if (flow) picture = diagramFrame(flowStage(flow, selected, onselect));
-    else if (sequence) picture = diagramFrame(sequenceStage(sequence, selected, onselect));
+    else if (sequence) picture = diagramFrame(sequenceStage(sequence, selected, onselect, rec.id));
     else picture = diagramCard(diagram);
     const why = selected
       ? whyBox(selected, "Declared in “" + (diagram.title || diagram.type || "diagram") + "”.", "declared · diagrams")
@@ -1844,26 +1948,72 @@
     return extra ? name + " — " + extra : name;
   }
 
-  function journeyBlock(rec, graph) {
+  function journeyWhy(selected, staged) {
+    if (!selected) return aboutBox([
+      "Stages run left to right in the order the flow declares them.",
+      "A stage is not matched to a handler.",
+    ], "declared · flows");
+    if (staged) return whyBox(selected, "Declared as a stage on this flow. No handler is inferred.", "declared · flows.stages");
+    return whyBox(selected, "Declared as a flow on this id. It has no stage list.", "declared · flows");
+  }
+
+  function stageColumns(item) {
+    const stages = item.stages || [];
+    const flow = item.flow_id || "flow";
+    const edges = [];
+    const cols = stages.map(function (stage, index) {
+      const node = {
+        id: stage,
+        key: nodeKey(flow, stage),
+        bit: "",
+        epistemic: "declared",
+        sub: "stage",
+      };
+      if (index) edges.push({ from: nodeKey(flow, stages[index - 1]), to: node.key, kind: "declared" });
+      return { head: (index + 1) + " " + stage, nodes: [node] };
+    });
+    cols.edges = edges;
+    return cols;
+  }
+
+  function flowCards(items) {
+    const nodes = items.map(function (item, index) {
+      const name = item.flow_id || item.detail || ("flow " + (index + 1));
+      const lines = [];
+      if (item.goal && item.goal !== name) lines.push(item.goal);
+      outcomeLines(item.outcomes).forEach(function (line) { lines.push(line); });
+      return {
+        id: name,
+        key: nodeKey("flow", String(index) + " " + name),
+        bit: "",
+        epistemic: "declared",
+        sub: "flow",
+        lines: lines.slice(0, 3),
+      };
+    });
+    return [{ head: "Flows", nodes: nodes }];
+  }
+
+  function journeyBlock(rec, graph, selected, onselect) {
     const flows = productItems(graph, rec.id).filter(function (item) { return item.kind === "flow"; });
     const journeys = (((graph || {}).perspectives || {}).quality || {}).journeys || [];
     const mine = journeys.filter(function (item) { return item.subject === rec.id; });
+    const staged = flows.filter(function (item) { return (item.stages || []).length; });
+    const prose = flows.filter(function (item) { return !(item.stages || []).length; });
+    const hit = staged.some(function (item) { return (item.stages || []).indexOf(selected) >= 0; });
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · flows on this id"]),
-      aboutBox([
-        "Stages and outcomes are declared on the flow. A step the model does not name is not filled in.",
-      ], "declared · flows"),
-      ...flows.map(function (item) {
-        const stages = (item.stages || []).length ? item.stages.join(" → ") : "";
+      journeyWhy(selected, hit),
+      ...staged.map(function (item) {
         const endings = outcomeLines(item.outcomes);
-        return h("div", { class: "item" }, [
-          item.detail || item.flow_id || item.goal || "flow",
-          item.goal ? h("div", {}, [item.goal]) : null,
-          stages ? h("div", {}, [stages]) : null,
-          ...endings.map(function (line) { return h("div", {}, [line]); }),
-          h("div", { class: "src" }, [(item.subject || rec.id) + " · " + (item.source || "flows")]),
+        return h("div", { class: "blk" }, [
+          item.flow_id || item.goal ? h("div", { class: "blk-label" }, [item.flow_id || item.goal]) : null,
+          item.goal && item.flow_id ? h("div", { class: "quiet" }, [item.goal]) : null,
+          graphBlock(stageColumns(item), selected, onselect, null, "", "", ""),
+          endings.length ? h("div", { class: "quiet" }, [endings.join(" · ")]) : null,
         ]);
       }),
+      prose.length ? graphBlock(flowCards(prose), selected, onselect, null, "", "", "") : null,
       ...mine.map(function (item) {
         const bits = [];
         if ((item.exceptions || []).length) bits.push("exceptions: " + item.exceptions.join(", "));
