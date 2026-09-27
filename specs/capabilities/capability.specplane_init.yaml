@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-25"
+  last_updated: "2026-09-27"
   status: "planned"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-27"
+    author: "kernel-slice"
+    summary: "Added an init flowchart and an init sequence diagram"
+    breaking: false
   - date: "2026-09-25"
     author: "kernel-slice"
     summary: "Copied CLI siblings include impact.py"
@@ -82,3 +86,48 @@ realized_by:
     - "container.specplane_tools"
   components:
     - "component.cli_init"
+
+diagrams:
+  - type: "flowchart"
+    title: "Init flow"
+    description: "How init is started, when it refuses or fails, and what a ready destination receives"
+    mermaid: |
+      flowchart TD
+        start[Developer runs init] --> how{Where is init run from?}
+        how -->|Product repo| uvx["uvx --from git+ this repo specplane init"]
+        how -->|SpecPlane clone| clone["cli.py init, or pip install -e . then specplane init"]
+        uvx --> root{Destination is the kit root?}
+        clone --> root
+        root -->|Yes| refuse[Refuse]
+        root -->|No| exists{specplane/ already exists?}
+        exists -->|Yes, and --force was not passed| fail[Fail]
+        exists -->|No| copy["Copy specplane/, skills, and Cursor rules"]
+        copy --> cli["Optionally copy the local kernel CLI; never this repo's specs/"]
+        cli --> dirs["Create empty specs/capabilities, foundations, containers, components, changes"]
+        dirs --> agents["Write or append a consuming AGENTS.md"]
+        agents --> ask[Ask the agent for a Phase 1 capability]
+  - type: "sequence"
+    title: "Init interaction"
+    description: "Developer, init, and the destination repo: refuse, fail, or copy the kit and leave empty specs/ folders"
+    mermaid: |
+      sequenceDiagram
+        actor Dev as Developer
+        participant Init as specplane init
+        participant Dest as Destination repo
+
+        Dev->>Init: Run init from uvx --from git+ this repo, or from a SpecPlane clone
+        alt Destination is the kit root
+          Init-->>Dev: Refuse
+        else specplane/ already exists and --force was not passed
+          Init-->>Dev: Fail
+        else Destination has no specplane/
+          Init->>Dest: Copy specplane/, SpecPlane skills, and Cursor rules
+          Init->>Dest: Optionally copy the local kernel CLI
+          Note over Init,Dest: Never copy this repo's specs/. Do not write GitHub Actions or hooks.
+          Init->>Dest: Create empty specs/capabilities, foundations, containers, components, and changes
+          Note over Init,Dest: Do not invent an example capability
+          Init->>Dest: Write or append a consuming AGENTS.md
+          Note over Dest: Do not replace an existing project AGENTS.md. An existing repo is pointed at specplane-infer.
+          Init-->>Dev: Kit and empty specs/ tree
+          Note over Dev: Ask the agent for a Phase 1 capability after folders exist
+        end
