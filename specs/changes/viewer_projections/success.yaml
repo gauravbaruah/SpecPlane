@@ -52,6 +52,11 @@ sensors:
     must: "Definition and Realization group declared fields under labeled blocks instead of one flat list"
     run:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_definition_blocks_are_labeled"
+  - id: "map_curves"
+    promise: "capability.specplane_viewer"
+    must: "Map cards are joined by a curve for each declared link between them. An inferred endpoint uses a dashed warning stroke."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_definition_blocks_are_labeled"
   - id: "about_projection"
     promise: "capability.specplane_viewer"
     must: "A live record and a change open on About this projection until a node is selected"

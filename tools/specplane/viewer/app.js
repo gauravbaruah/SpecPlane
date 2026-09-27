@@ -864,28 +864,65 @@
     nodes.push(nodeModel(id, { via: via }));
   }
 
+  function nodeKey(id, via) {
+    return String(id) + "\t" + String(via || "");
+  }
+
+  function edgeKind(a, b) {
+    const left = record(a);
+    const right = record(b);
+    if ((left && left.bit === "inferred") || (right && right.bit === "inferred")) return "inferred";
+    return "declared";
+  }
+
   function mapColumns(rec, graph) {
     const level = rec.level || "";
     const context = [];
     const middle = [];
     const uses = [];
+    const edges = [];
     const selected = [nodeModel(rec.id, { selected: true })];
+    function tie(fromId, fromVia, toId, toVia) {
+      const from = nodeKey(fromId, fromVia);
+      const to = nodeKey(toId, toVia);
+      if (edges.some(function (edge) { return edge.from === from && edge.to === to; })) return;
+      edges.push({ from: from, to: to, kind: edgeKind(fromId, toId) });
+    }
+    function laid(pairs) {
+      const cols = mapCols(pairs);
+      cols.edges = edges;
+      return cols;
+    }
     if (level === "capability") {
-      listedBy(rec.id, "system_context").forEach(function (id) { pushNode(context, id, "system_context"); });
+      listedBy(rec.id, "system_context").forEach(function (id) {
+        pushNode(context, id, "system_context");
+        tie(id, "system_context", rec.id, "");
+      });
       productItems(graph, rec.id).forEach(function (item) {
         const id = item.related_id || item.detail;
-        if (item.kind === "roadmap_dependency") pushNode(context, id, "roadmap.depends_on");
-        if (item.kind === "roadmap_enables") pushNode(context, id, "roadmap.enables");
+        if (item.kind === "roadmap_dependency") {
+          pushNode(context, id, "roadmap.depends_on");
+          tie(id, "roadmap.depends_on", rec.id, "");
+        }
+        if (item.kind === "roadmap_enables") {
+          pushNode(context, id, "roadmap.enables");
+          tie(rec.id, "", id, "roadmap.enables");
+        }
       });
       (rec.links || []).forEach(function (link) {
-        if (link.rel === "realized_by") pushNode(middle, link.id, "realized_by");
+        if (link.rel === "realized_by") {
+          pushNode(middle, link.id, "realized_by");
+          tie(rec.id, "", link.id, "realized_by");
+        }
       });
       middle.forEach(function (node) {
         linksOf(node.id, "uses").forEach(function (link) {
-          pushNode(uses, link.id, "uses · " + shortId(node.id));
+          const via = "uses · " + shortId(node.id);
+          pushNode(uses, link.id, via);
+          tie(node.id, "realized_by", link.id, via);
         });
       });
-      return mapCols([
+      return laid([
         ["Context", context],
         ["Selected", selected],
         ["Realized by", middle],
@@ -893,12 +930,27 @@
       ]);
     }
     if (level === "component") {
-      linksOf(rec.id, "implements").forEach(function (link) { pushNode(context, link.id, "implements"); });
-      listedBy(rec.id, "contains").forEach(function (id) { pushNode(context, id, "contains"); });
-      linksOf(rec.id, "depended_on_by").forEach(function (link) { pushNode(context, link.id, "depended_on_by"); });
-      linksOf(rec.id, "depends_on").forEach(function (link) { pushNode(middle, link.id, "depends_on"); });
-      linksOf(rec.id, "uses").forEach(function (link) { pushNode(uses, link.id, "uses"); });
-      return mapCols([
+      linksOf(rec.id, "implements").forEach(function (link) {
+        pushNode(context, link.id, "implements");
+        tie(rec.id, "", link.id, "implements");
+      });
+      listedBy(rec.id, "contains").forEach(function (id) {
+        pushNode(context, id, "contains");
+        tie(id, "contains", rec.id, "");
+      });
+      linksOf(rec.id, "depended_on_by").forEach(function (link) {
+        pushNode(context, link.id, "depended_on_by");
+        tie(link.id, "depended_on_by", rec.id, "");
+      });
+      linksOf(rec.id, "depends_on").forEach(function (link) {
+        pushNode(middle, link.id, "depends_on");
+        tie(rec.id, "", link.id, "depends_on");
+      });
+      linksOf(rec.id, "uses").forEach(function (link) {
+        pushNode(uses, link.id, "uses");
+        tie(rec.id, "", link.id, "uses");
+      });
+      return laid([
         ["Serves & contained in", context],
         ["Selected", selected],
         ["Depends on", middle],
@@ -906,11 +958,23 @@
       ]);
     }
     if (level === "container") {
-      listedBy(rec.id, "contains").forEach(function (id) { pushNode(context, id, "contains"); });
-      linksOf(rec.id, "implements").forEach(function (link) { pushNode(context, link.id, "implements"); });
-      (rec.contains || []).forEach(function (id) { pushNode(middle, id, "contains"); });
-      linksOf(rec.id, "uses").forEach(function (link) { pushNode(uses, link.id, "uses"); });
-      return mapCols([
+      listedBy(rec.id, "contains").forEach(function (id) {
+        pushNode(context, id, "contains");
+        tie(id, "contains", rec.id, "");
+      });
+      linksOf(rec.id, "implements").forEach(function (link) {
+        pushNode(context, link.id, "implements");
+        tie(rec.id, "", link.id, "implements");
+      });
+      (rec.contains || []).forEach(function (id) {
+        pushNode(middle, id, "contains");
+        tie(rec.id, "", id, "contains");
+      });
+      linksOf(rec.id, "uses").forEach(function (link) {
+        pushNode(uses, link.id, "uses");
+        tie(rec.id, "", link.id, "uses");
+      });
+      return laid([
         ["Context", context],
         ["Selected", selected],
         ["Contains", middle],
@@ -921,14 +985,15 @@
       Object.keys(DATA.records).forEach(function (other) {
         if (linksOf(other, "uses").some(function (link) { return link.id === rec.id; })) {
           pushNode(context, other, "used_by");
+          tie(other, "used_by", rec.id, "");
         }
       });
-      return mapCols([
+      return laid([
         ["Used by", context],
         ["Selected", selected],
       ]);
     }
-    return mapCols([["Selected", selected]]);
+    return laid([["Selected", selected]]);
   }
 
   function mapCols(pairs) {
@@ -950,23 +1015,27 @@
 
   function nodeModel(id, extra) {
     const rec = record(id);
+    const via = (extra && extra.via) || "";
     return {
       id: id,
+      key: nodeKey(id, via),
       bit: rec ? rec.bit : "",
       epistemic: rec && rec.bit === "inferred" ? "inferred" : "declared",
-      sub: (extra && extra.via) || "",
+      sub: via,
       change: false,
       selectedId: extra && extra.selected,
     };
   }
 
   function graphBlock(cols, selected, onselect, extra, prov, kind, caption) {
-    const graph = h("div", { class: "graph" + (kind ? " " + kind : "") }, cols.map(function (col) {
+    const edges = cols.edges || [];
+    const graph = h("div", { class: "graph" + (kind ? " " + kind : "") + (edges.length ? " linked" : "") }, cols.map(function (col) {
       return h("div", { class: "col" }, [
         h("div", { class: "colhead" }, [col.head]),
         ...visibleNodes(col, selected, onselect),
       ]);
     }));
+    if (edges.length) graph.setAttribute("data-edges", JSON.stringify(edges));
     return h("div", {}, [
       caption || prov ? h("div", { class: "proj-note" }, [
         caption ? h("div", {}, [caption]) : null,
@@ -1020,13 +1089,83 @@
     const parts = idParts(node.id);
     const flight = ((record(node.id) || {}).in_flight || []).map(function (change) { return change.id; }).filter(Boolean);
     const lines = (node.lines || []).filter(Boolean);
-    return h("button", { class: cls, on: { click: function () { onselect(node.id); } } }, [
+    const button = h("button", { class: cls, on: { click: function () { onselect(node.id); } } }, [
       parts.pre ? h("div", { class: "pre" }, [parts.pre]) : null,
       h("div", { class: "id" }, [breakable(parts.name || node.id)]),
       node.sub ? h("div", { class: "sub" }, [node.sub]) : null,
       !on && flight.length ? h("div", { class: "tag" }, ["↳ " + flight.join(", ")]) : null,
       ...lines.map(function (line) { return h("div", { class: "line", title: line }, [line]); }),
     ]);
+    if (node.key) button.setAttribute("data-key", node.key);
+    return button;
+  }
+
+  function mapCurve(a, b) {
+    function n(value) { return Math.round(value * 10) / 10; }
+    if (Math.abs(a.x - b.x) < 1) {
+      const x0 = n(a.x + a.w / 2);
+      return a.y < b.y
+        ? "M" + x0 + " " + n(a.y + a.h) + " L" + x0 + " " + n(b.y)
+        : "M" + x0 + " " + n(a.y) + " L" + x0 + " " + n(b.y + b.h);
+    }
+    const fwd = b.x > a.x;
+    const x1 = n(fwd ? a.x + a.w : a.x);
+    const x2 = n(fwd ? b.x : b.x + b.w);
+    const y1 = n(a.y + a.h / 2);
+    const y2 = n(b.y + b.h / 2);
+    const mx = n((x1 + x2) / 2);
+    return "M" + x1 + " " + y1 + " C" + mx + " " + y1 + " " + mx + " " + y2 + " " + x2 + " " + y2;
+  }
+
+  function drawEdges(graph) {
+    const raw = graph.getAttribute("data-edges");
+    if (!raw) return;
+    let edges;
+    try { edges = JSON.parse(raw); } catch (err) { return; }
+    const box = graph.getBoundingClientRect();
+    const pos = {};
+    graph.querySelectorAll("[data-key]").forEach(function (el) {
+      const rect = el.getBoundingClientRect();
+      pos[el.getAttribute("data-key")] = {
+        x: rect.left - box.left,
+        y: rect.top - box.top,
+        w: rect.width,
+        h: rect.height,
+      };
+    });
+    const parts = [];
+    edges.forEach(function (edge) {
+      const from = pos[edge.from];
+      const to = pos[edge.to];
+      if (!from || !to) return;
+      parts.push(edge.kind + " " + mapCurve(from, to));
+    });
+    const sig = parts.join("|");
+    if (graph._edgeSig === sig) return;
+    graph._edgeSig = sig;
+    const previous = graph.querySelector(".edges");
+    if (previous) previous.remove();
+    if (!parts.length) return;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "edges");
+    svg.setAttribute("aria-hidden", "true");
+    parts.forEach(function (part) {
+      const cut = part.indexOf(" ");
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("class", part.slice(0, cut));
+      path.setAttribute("d", part.slice(cut + 1));
+      svg.appendChild(path);
+    });
+    graph.insertBefore(svg, graph.firstChild);
+  }
+
+  function paintMapEdges() {
+    document.querySelectorAll(".graph.linked").forEach(function (graph) {
+      drawEdges(graph);
+      if (graph._edgeObs || typeof ResizeObserver === "undefined") return;
+      graph._edgeObs = new ResizeObserver(function () { drawEdges(graph); });
+      graph._edgeObs.observe(graph);
+    });
   }
 
   function shortRel(rel) {
@@ -1832,6 +1971,7 @@
     else if (route.kind === "change") body = changePage(route);
     else body = liveIndex(route);
     document.getElementById("app").replaceChildren(shell(route, body));
+    paintMapEdges();
   }
 
   window.addEventListener("hashchange", function () { render(); });
