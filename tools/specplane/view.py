@@ -308,6 +308,16 @@ def _record(row: dict[str, Any], doc: Any, kernel: Any) -> dict[str, Any]:
     replaced_by = _filled((doc.meta or {}).get("replaced_by"))
     if replaced_by:
         public["replaced_by"] = replaced_by
+    context = doc.data.get("system_context")
+    if isinstance(context, dict):
+        listed = [_filled(item) for item in (context.get("capabilities") or []) if _filled(item)]
+        if listed:
+            public["system_context"] = listed
+    relationships = doc.data.get("relationships")
+    if isinstance(relationships, dict):
+        contained = [_filled(item) for item in (relationships.get("contains") or []) if _filled(item)]
+        if contained:
+            public["contains"] = contained
     history = _history(doc)
     if history:
         public["history"] = history

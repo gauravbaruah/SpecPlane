@@ -836,7 +836,7 @@
   }
 
   function drawProjection(rec, graph, proj, selected, persp, onselect) {
-    if (proj === "map") return graphBlock(mapColumns(rec), selected, onselect, mapWhy(rec, selected), "derived · from declared links");
+    if (proj === "map") return graphBlock(mapColumns(rec, graph), selected, onselect, mapWhy(rec, selected, graph), "derived · from declared links", "", "Where this sits: the declared links one hop out from the selected id.");
     if (proj === "layers") return graphBlock(layerColumns(rec), selected, onselect, layerWhy(rec, selected), "derived · 5C placement");
     if (proj === "journey") return journeyBlock(rec, graph);
     if (proj === "diagrams") return diagramBlock(rec, selected, onselect);
@@ -845,17 +845,96 @@
     return null;
   }
 
-  function mapColumns(rec) {
-    const cols = [{ head: "Selected", nodes: [nodeModel(rec.id, { selected: true })] }];
-    const grouped = {};
-    (rec.links || []).forEach(function (link) {
-      grouped[link.rel] = grouped[link.rel] || [];
-      grouped[link.rel].push(nodeModel(link.id, { via: link.rel }));
+  function linksOf(id, rel) {
+    const rec = record(id);
+    return ((rec && rec.links) || []).filter(function (link) { return link.rel === rel; });
+  }
+
+  function listedBy(id, field) {
+    const out = [];
+    Object.keys(DATA.records).forEach(function (other) {
+      const list = DATA.records[other][field] || [];
+      if (list.indexOf(id) >= 0) out.push(other);
     });
-    Object.keys(REL).forEach(function (rel) {
-      if (grouped[rel] && grouped[rel].length) cols.push({ head: REL[rel], nodes: grouped[rel] });
+    return out;
+  }
+
+  function pushNode(nodes, id, via) {
+    if (!id || nodes.some(function (node) { return node.id === id && node.sub === via; })) return;
+    nodes.push(nodeModel(id, { via: via }));
+  }
+
+  function mapColumns(rec, graph) {
+    const level = rec.level || "";
+    const context = [];
+    const middle = [];
+    const uses = [];
+    const selected = [nodeModel(rec.id, { selected: true })];
+    if (level === "capability") {
+      listedBy(rec.id, "system_context").forEach(function (id) { pushNode(context, id, "system_context"); });
+      productItems(graph, rec.id).forEach(function (item) {
+        const id = item.related_id || item.detail;
+        if (item.kind === "roadmap_dependency") pushNode(context, id, "roadmap.depends_on");
+        if (item.kind === "roadmap_enables") pushNode(context, id, "roadmap.enables");
+      });
+      (rec.links || []).forEach(function (link) {
+        if (link.rel === "realized_by") pushNode(middle, link.id, "realized_by");
+      });
+      middle.forEach(function (node) {
+        linksOf(node.id, "uses").forEach(function (link) {
+          pushNode(uses, link.id, "uses · " + shortId(node.id));
+        });
+      });
+      return mapCols([
+        ["Context", context],
+        ["Selected", selected],
+        ["Realized by", middle],
+        ["Uses", uses],
+      ]);
+    }
+    if (level === "component") {
+      linksOf(rec.id, "implements").forEach(function (link) { pushNode(context, link.id, "implements"); });
+      listedBy(rec.id, "contains").forEach(function (id) { pushNode(context, id, "contains"); });
+      linksOf(rec.id, "depended_on_by").forEach(function (link) { pushNode(context, link.id, "depended_on_by"); });
+      linksOf(rec.id, "depends_on").forEach(function (link) { pushNode(middle, link.id, "depends_on"); });
+      linksOf(rec.id, "uses").forEach(function (link) { pushNode(uses, link.id, "uses"); });
+      return mapCols([
+        ["Serves & contained in", context],
+        ["Selected", selected],
+        ["Depends on", middle],
+        ["Uses", uses],
+      ]);
+    }
+    if (level === "container") {
+      listedBy(rec.id, "contains").forEach(function (id) { pushNode(context, id, "contains"); });
+      linksOf(rec.id, "implements").forEach(function (link) { pushNode(context, link.id, "implements"); });
+      (rec.contains || []).forEach(function (id) { pushNode(middle, id, "contains"); });
+      linksOf(rec.id, "uses").forEach(function (link) { pushNode(uses, link.id, "uses"); });
+      return mapCols([
+        ["Context", context],
+        ["Selected", selected],
+        ["Contains", middle],
+        ["Uses", uses],
+      ]);
+    }
+    if (level === "foundation") {
+      Object.keys(DATA.records).forEach(function (other) {
+        if (linksOf(other, "uses").some(function (link) { return link.id === rec.id; })) {
+          pushNode(context, other, "used_by");
+        }
+      });
+      return mapCols([
+        ["Used by", context],
+        ["Selected", selected],
+      ]);
+    }
+    return mapCols([["Selected", selected]]);
+  }
+
+  function mapCols(pairs) {
+    return pairs.filter(function (pair) { return pair[0] === "Selected" || pair[1].length; }).map(function (pair) {
+      return { head: pair[0], nodes: pair[1] };
     });
-    return cols;
   }
 
   function layerColumns(rec) {
@@ -881,7 +960,7 @@
     };
   }
 
-  function graphBlock(cols, selected, onselect, extra, prov, kind) {
+  function graphBlock(cols, selected, onselect, extra, prov, kind, caption) {
     const graph = h("div", { class: "graph" + (kind ? " " + kind : "") }, cols.map(function (col) {
       return h("div", { class: "col" }, [
         h("div", { class: "colhead" }, [col.head]),
@@ -889,7 +968,10 @@
       ]);
     }));
     return h("div", {}, [
-      h("div", { class: "quiet" }, [prov || ""]),
+      caption || prov ? h("div", { class: "proj-note" }, [
+        caption ? h("div", {}, [caption]) : null,
+        prov ? h("div", { class: "mono" }, [prov]) : null,
+      ]) : null,
       graph,
       legend(),
       extra || null,
@@ -925,16 +1007,25 @@
     return out;
   }
 
+  function idParts(id) {
+    const text = String(id || "");
+    const cut = text.indexOf(".");
+    if (cut < 0) return { pre: "", name: text };
+    return { pre: text.slice(0, cut + 1), name: text.slice(cut + 1) };
+  }
+
   function nodeButton(node, selected, onselect) {
     const on = selected ? node.id === selected : node.distance === 0 || (node.selectedId && !selected);
     const cls = ["node", node.epistemic || "declared", node.bit || "", node.change ? "change" : "", node.dim ? "dim" : "", on ? "is-selected" : ""].filter(Boolean).join(" ");
-    const lines = node.lines && node.lines.length ? node.lines : ["", ""];
+    const parts = idParts(node.id);
+    const flight = ((record(node.id) || {}).in_flight || []).map(function (change) { return change.id; }).filter(Boolean);
+    const lines = (node.lines || []).filter(Boolean);
     return h("button", { class: cls, on: { click: function () { onselect(node.id); } } }, [
-      h("div", { class: "pre" }, [node.epistemic || "declared"]),
-      h("div", { class: "id" }, [breakable(node.id)]),
-      h("div", { class: "sub" }, [node.sub || " "]),
-      h("div", { class: "line", title: lines[0] || "" }, [lines[0] || " "]),
-      h("div", { class: "line", title: lines[1] || "" }, [lines[1] || " "]),
+      parts.pre ? h("div", { class: "pre" }, [parts.pre]) : null,
+      h("div", { class: "id" }, [breakable(parts.name || node.id)]),
+      node.sub ? h("div", { class: "sub" }, [node.sub]) : null,
+      !on && flight.length ? h("div", { class: "tag" }, ["↳ " + flight.join(", ")]) : null,
+      ...lines.map(function (line) { return h("div", { class: "line", title: line }, [line]); }),
     ]);
   }
 
@@ -1131,15 +1222,20 @@
     ]);
   }
 
-  function mapWhy(rec, selected) {
+  function mapWhy(rec, selected, graph) {
     if (!selected) return aboutBox([
       "Each node is here because one declared field names it. Select a node to see which field.",
       "Nodes are ids. Open one to move the selection; the page recomposes around it.",
     ], "derived · from declared links");
     if (selected === rec.id) return whyBox(selected, "The selected id.", "declared · this record");
-    const link = (rec.links || []).filter(function (item) { return item.id === selected; })[0];
-    const rel = link ? (REL[link.rel] || link.rel) : "Linked";
-    return whyBox(selected, rel + " from " + rec.id + ".", (link ? rec.id + " · " + link.rel : "declared link"));
+    let via = "";
+    mapColumns(rec, graph).forEach(function (col) {
+      (col.nodes || []).forEach(function (node) {
+        if (node.id === selected && node.sub) via = node.sub;
+      });
+    });
+    if (!via) return whyBox(selected, "A declared link names this id.", "declared");
+    return whyBox(selected, via + " names this id from " + rec.id + ".", "declared · " + via);
   }
 
   function layerWhy(rec, selected) {
@@ -1442,7 +1538,7 @@
   }
 
   function flowStage(layout, selected, onselect) {
-    const stage = h("div", { class: "stage" });
+    const stage = h("div", { class: "canvas" });
     stage.style.width = layout.width + "px";
     stage.style.height = layout.height + "px";
     stage.appendChild(svgWires(layout.edges, layout.width, layout.height));
@@ -1473,7 +1569,7 @@
   }
 
   function sequenceStage(layout, selected, onselect) {
-    const stage = h("div", { class: "stage" });
+    const stage = h("div", { class: "canvas" });
     stage.style.width = layout.width + "px";
     stage.style.height = layout.height + "px";
     layout.lifelines.forEach(function (line) {

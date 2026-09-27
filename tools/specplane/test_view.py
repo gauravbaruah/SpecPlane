@@ -242,6 +242,13 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("class: \"statusline\"", src)
         self.assertIn(".statusline .bit.inflight", css)
         self.assertIn(".statusline .rev.on", css)
+        for head in ("Context", "Realized by", "Uses", "Serves & contained in"):
+            self.assertIn('"' + head + '"', src)
+        self.assertIn("system_context", src)
+        self.assertIn("roadmap.depends_on", src)
+        systems = [rec for rec in self.payload["records"].values() if rec.get("system_context")]
+        self.assertTrue(systems)
+        self.assertTrue(any(systems[0]["system_context"]))
 
     def test_about_projection_intro(self) -> None:
         script = (ASSETS / "app.js").read_text(encoding="utf-8")

@@ -454,7 +454,9 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   border-left: 1.5px dotted var(--ink-4);
 }
 .col { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.colhead { font-family: "JetBrains Mono", monospace; font-size: 11px; line-height: 1.35; font-weight: 500; color: var(--ink-3); }
+.colhead { font-size: 11px; line-height: 1.3; font-weight: 600; color: var(--ink-3); text-align: center; letter-spacing: 0.02em; }
+.proj-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; color: var(--ink-3); font-size: 13px; line-height: 1.45; }
+.proj-note .mono { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 11px; line-height: 1.35; }
 .node {
   display: block;
   width: 100%;
@@ -466,8 +468,9 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   cursor: pointer;
 }
 .node .pre { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 11px; line-height: 1.35; color: var(--ink-3); }
-.node .id { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 13px; line-height: 1.4; color: var(--ink-1); overflow-wrap: anywhere; }
-.node .sub { font-size: 13px; line-height: 1.45; color: var(--ink-3); min-height: 16px; }
+.node .id { font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 12px; line-height: 1.25; color: var(--ink-1); overflow-wrap: anywhere; }
+.node .sub { font-weight: 500; font-size: 11px; line-height: 1.35; color: var(--ink-3); }
+.node .tag { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 11px; line-height: 1.35; color: var(--accent); }
 .node .line {
   min-height: 1.35em;
   font-family: "JetBrains Mono", monospace;
@@ -494,6 +497,7 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .node.replaced .id { text-decoration: line-through; color: var(--ink-4); }
 .node:hover { background: var(--bg-hover); }
 .node.is-selected, .node.is-selected:hover { background: var(--sel-bg); border-color: var(--sel-bg); }
+.node.is-selected .pre, .node.is-selected .sub { color: var(--sel-ink-2); }
 .node.is-selected .id { color: var(--sel-ink); }
 .node.is-selected .sub { color: var(--sel-ink-2); }
 .node.change { background: var(--accent-subtle); border-color: var(--accent-border); }
@@ -654,8 +658,8 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   line-height: 1.45;
 }
 .pick.on { background: var(--bg-hover); color: var(--ink-1); font-weight: 600; }
-.stage { position: relative; }
-.stage .node { position: absolute; width: auto; height: auto; }
+.canvas { position: relative; }
+.canvas .node { position: absolute; width: auto; height: auto; }
 .wires { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; color: var(--ink-3); }
 .edge-label, .msg-label {
   position: absolute;
