@@ -339,9 +339,13 @@
     ]);
   }
 
+  function changeById(id) {
+    return (DATA.changes || []).find(function (c) { return c.id === id; }) || null;
+  }
+
   function gapsIndex() {
     const gaps = DATA.gaps || {};
-    return h("section", {}, [
+    return h("section", { class: "gaps-index" }, [
       h("div", { class: "lede" }, [
         h("h1", {}, ["Gaps"]),
         h("p", { class: "note" }, ["Where SpecPlane knows its model is incomplete. Advisory: nothing here is an error, and nothing here has been filled in for you."]),
@@ -349,9 +353,28 @@
       ...GAPS.map(function (bucket) {
         const ids = gaps[bucket[0]] || [];
         return h("div", { class: "bucket" }, [
-          h("h2", {}, [bucket[1], " ", h("span", { class: "mono quiet" }, [bucket[0]])]),
-          h("p", { class: "note" }, [bucket[2]]),
-          ids.length ? h("div", {}, ids.map(function (id) { return h("div", { class: "item" }, [idLink(id)]); })) : h("div", { class: "quiet" }, ["(none)"]),
+          h("div", { class: "bucket-head" }, [
+            h("h2", {}, [bucket[1]]),
+            h("span", { class: "bucket-key" }, [bucket[0] + " · " + ids.length]),
+          ]),
+          h("p", { class: "meaning" }, [bucket[2]]),
+          ids.length ? h("table", { class: "index gaps" }, [
+            h("tbody", {}, ids.map(function (id) {
+              const change = changeById(id);
+              const rec = change ? null : record(id);
+              const purpose = change ? (change.why || "") : (rec && rec.purpose) || "";
+              const bit = change
+                ? "in-flight" + (change.kind ? " · " + change.kind : "")
+                : rec && rec.bit === "inferred" ? "inferred · not live" : (rec && rec.bit) || "";
+              return h("tr", {
+                on: { click: function () { go(change ? "change/" + id : "id/" + encodeURIComponent(id)); } },
+              }, [
+                h("td", {}, [h("span", { class: "idcell" }, [bitMark(change ? "inflight" : rec && rec.bit), idLink(id)])]),
+                h("td", {}, [purpose]),
+                h("td", { class: "gap-bit" + (change ? " inflight" : rec && rec.bit === "inferred" ? " bit inferred" : rec && rec.bit === "replaced" ? " replaced" : "") }, [bit]),
+              ]);
+            })),
+          ]) : h("div", { class: "gap-empty" }, ["(none)"]),
         ]);
       }),
     ]);
