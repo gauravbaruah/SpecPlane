@@ -146,7 +146,14 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg-canvas); color: var(--ink-1); overflow-x: clip; }
+body {
+  margin: 0;
+  background: var(--bg-canvas);
+  color: var(--ink-1);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 h1, h2, h3, p { margin: 0; }
 button, input { font: inherit; color: inherit; }
 a { color: var(--accent); text-decoration: none; }
@@ -160,7 +167,7 @@ a:hover { text-decoration: underline; }
   gap: 24px;
   box-sizing: border-box;
   padding-block: 14px;
-  padding-inline: max(clamp(24px, 4vw, 64px), calc((100vw - 1440px) / 2 + clamp(24px, 4vw, 64px)));
+  padding-inline: 28px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-surface);
 }
@@ -234,7 +241,7 @@ a:hover { text-decoration: underline; }
   gap: 16px;
   box-sizing: border-box;
   padding-block: 10px;
-  padding-inline: max(clamp(24px, 4vw, 64px), calc((100vw - 1440px) / 2 + clamp(24px, 4vw, 64px)));
+  padding-inline: 28px;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
   line-height: 1.45;
@@ -243,9 +250,8 @@ a:hover { text-decoration: underline; }
 }
 .page {
   box-sizing: border-box;
-  width: min(1440px, 100%);
-  margin-inline: auto;
-  padding: 28px clamp(24px, 4vw, 64px);
+  width: 100%;
+  padding: 28px;
   background: var(--bg-surface);
 }
 .split {
