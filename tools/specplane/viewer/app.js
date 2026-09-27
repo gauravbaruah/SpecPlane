@@ -1084,8 +1084,9 @@
   }
 
   function nodeButton(node, selected, onselect) {
-    const on = selected ? node.id === selected : node.distance === 0 || (node.selectedId && !selected);
-    const cls = ["node", node.epistemic || "declared", node.bit || "", node.change ? "change" : "", node.dim ? "dim" : "", on ? "is-selected" : ""].filter(Boolean).join(" ");
+    const current = node.distance === 0 || !!node.selectedId;
+    const focus = !!(selected && node.id === selected);
+    const cls = ["node", node.epistemic || "declared", node.bit || "", node.change ? "change" : "", node.dim ? "dim" : "", current ? "is-current" : "", focus ? "is-focus" : ""].filter(Boolean).join(" ");
     const parts = idParts(node.id);
     const flight = ((record(node.id) || {}).in_flight || []).map(function (change) { return change.id; }).filter(Boolean);
     const lines = (node.lines || []).filter(Boolean);
@@ -1093,7 +1094,7 @@
       parts.pre ? h("div", { class: "pre" }, [parts.pre]) : null,
       h("div", { class: "id" }, [breakable(parts.name || node.id)]),
       node.sub ? h("div", { class: "sub" }, [node.sub]) : null,
-      !on && flight.length ? h("div", { class: "tag" }, ["↳ " + flight.join(", ")]) : null,
+      !current && flight.length ? h("div", { class: "tag" }, ["↳ " + flight.join(", ")]) : null,
       ...lines.map(function (line) { return h("div", { class: "line", title: line }, [line]); }),
     ]);
     if (node.key) button.setAttribute("data-key", node.key);
@@ -1693,7 +1694,7 @@
       const on = n.id === selected;
       const btn = h("button", {
         type: "button",
-        class: "node declared" + (on ? " is-selected" : ""),
+        class: "node declared" + (on ? " is-focus" : ""),
         on: { click: function () { onselect(n.id); } },
       }, [
         h("div", { class: "pre" }, [n.shape === "end" ? "outcome" : n.shape === "decision" ? "decision" : "step"]),
@@ -1737,7 +1738,7 @@
       const on = head.name === selected || head.ref === selected;
       const btn = h("button", {
         type: "button",
-        class: "node " + (head.ref ? "declared" : "unknown") + (on ? " is-selected" : ""),
+        class: "node " + (head.ref ? "declared" : "unknown") + (on ? " is-focus" : ""),
         on: { click: function () { onselect(head.ref || head.name); } },
       }, [
         h("div", { class: "pre" }, [head.ref ? "participant" : "external"]),

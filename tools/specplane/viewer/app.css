@@ -515,14 +515,14 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .node.unknown { border-style: dashed; border-color: var(--dashed); }
 .node.replaced .id { text-decoration: line-through; color: var(--ink-4); }
 .node:hover { background: var(--bg-hover); }
-.node.is-selected, .node.is-selected:hover { background: var(--sel-bg); border-color: var(--sel-bg); }
-.node.is-selected .pre, .node.is-selected .sub { color: var(--sel-ink-2); }
-.node.is-selected .id { color: var(--sel-ink); }
-.node.is-selected .sub { color: var(--sel-ink-2); }
+.node.is-current, .node.is-current:hover { background: var(--sel-bg); border-color: var(--sel-bg); }
+.node.is-current .pre, .node.is-current .sub, .node.is-current .line { color: var(--sel-ink-2); }
+.node.is-current .id { color: var(--sel-ink); }
+.node.is-focus { box-shadow: 0 0 0 2px var(--accent); }
 .node.change { background: var(--accent-subtle); border-color: var(--accent-border); }
 .node.change .id { color: var(--accent); }
-.node.change.is-selected { background: var(--sel-bg); border-color: var(--sel-bg); }
-.node.change.is-selected .id { color: var(--sel-ink); }
+.node.change.is-current { background: var(--sel-bg); border-color: var(--sel-bg); }
+.node.change.is-current .id { color: var(--sel-ink); }
 .node.dim { opacity: 0.38; }
 .more { border-style: dashed; border-color: var(--dashed); background: transparent; cursor: pointer; color: var(--ink-3); font-size: 13px; line-height: 1.45; }
 .further-box {
