@@ -426,7 +426,7 @@
 
   function flight(rec) {
     if (!rec.in_flight || !rec.in_flight.length) return null;
-    return h("div", {}, rec.in_flight.map(function (c) {
+    return h("div", { class: "strips" }, rec.in_flight.map(function (c) {
       return h("div", { class: "strip" }, [
         h("div", {}, [h("span", { class: "acc-sub" }, ["In flight"]), " ", idLink(c.id), c.kind ? h("span", { class: "quiet" }, [" " + c.kind]) : ""]),
         c.why ? h("div", {}, [c.why]) : null,
@@ -459,29 +459,187 @@
     return items.filter(function (item) { return item.subject === id; });
   }
 
-  function definition(rec, graph) {
-    const duties = rec.responsibilities || [];
-    const items = productItems(graph, rec.id).filter(function (item) {
-      if (item.kind === "flow" || item.kind === "open_question") return false;
-      if (item.kind === "responsibility" && duties.length) return false;
-      return true;
-    });
-    if (!duties.length && !items.length) return null;
-    const summary = [duties.length ? plural(duties.length, "responsibility", "responsibilities") : "", items.length ? plural(items.length, "declared line") : ""].filter(Boolean).join(" · ");
-    return section("def:" + rec.id, "Definition", "what is promised", summary, [
-      ...duties.map(function (line) { return h("div", { class: "item" }, [line, h("div", { class: "src" }, ["responsibilities"])]); }),
-      ...items.map(itemRow),
+  function block(label, src, rows) {
+    const body = (rows || []).filter(Boolean);
+    if (!body.length) return null;
+    return h("div", { class: "blk" }, [
+      h("div", { class: "blk-head" }, [
+        h("span", { class: "blk-label" }, [label]),
+        src ? h("span", { class: "blk-src" }, [src]) : null,
+      ]),
+      ...body,
     ]);
+  }
+
+  function textRow(text) {
+    if (!text) return null;
+    return h("div", { class: "item" }, [String(text)]);
+  }
+
+  function kvLines(pairs) {
+    return (pairs || []).filter(function (pair) { return pair && pair[1]; }).map(function (pair) {
+      return h("div", { class: "kv-line" }, [
+        h("span", { class: "kv-k" }, [pair[0]]),
+        h("span", { class: "kv-v" }, [String(pair[1])]),
+      ]);
+    });
+  }
+
+  function kvRow(pairs) {
+    const lines = kvLines(pairs);
+    if (!lines.length) return null;
+    return h("div", { class: "item" }, lines);
+  }
+
+  function idListRow(label, ids) {
+    if (!ids.length) return null;
+    return h("div", { class: "item" }, [
+      h("div", { class: "kv-k" }, [label]),
+      h("div", { class: "ids" }, ids.map(idLink)),
+    ]);
+  }
+
+  function sourceKey(item) {
+    const source = item.source || "";
+    const cut = source.lastIndexOf(".");
+    return cut >= 0 ? source.slice(cut + 1) : source;
+  }
+
+  function fieldValue(item) {
+    const detail = String(item.detail || "");
+    const prefix = sourceKey(item) + ": ";
+    return detail.indexOf(prefix) === 0 ? detail.slice(prefix.length) : detail;
+  }
+
+  function splitOnce(text) {
+    const raw = String(text || "");
+    const cut = raw.indexOf(": ");
+    if (cut < 0) return ["", raw];
+    return [raw.slice(0, cut), raw.slice(cut + 2)];
+  }
+
+  function ofKind(items, kinds) {
+    return items.filter(function (item) { return kinds.indexOf(item.kind) >= 0; });
+  }
+
+  function flowRow(item) {
+    const pairs = [];
+    if (item.kinds && item.kinds.length) pairs.push(["kinds", item.kinds.join(", ")]);
+    if (item.stages && item.stages.length) pairs.push(["stages", item.stages.join(" → ")]);
+    const outcomes = item.outcomes || {};
+    Object.keys(outcomes).forEach(function (key) {
+      const texts = outcomes[key];
+      if (texts && texts.length) pairs.push([key, texts.join("; ")]);
+    });
+    return h("div", { class: "item" }, [
+      item.flow_id ? h("div", { class: "row-id" }, [item.flow_id]) : null,
+      item.goal ? h("div", {}, [item.goal]) : (!item.flow_id ? String(item.detail || "") : null),
+      ...kvLines(pairs),
+    ]);
+  }
+
+  function definitionSummary(duties, flows, constraints, success, road) {
+    const parts = [];
+    if (duties.length) parts.push(plural(duties.length, "responsibility", "responsibilities"));
+    if (flows.length) parts.push(plural(flows.length, "flow"));
+    if (constraints.length) {
+      const klass = constraints.filter(function (item) { return sourceKey(item) === "data_classification"; })[0];
+      parts.push(klass ? "constraints (" + fieldValue(klass) + ")" : "constraints");
+    }
+    const primary = success.filter(function (item) { return item.kind === "success_metric"; })[0];
+    if (primary && primary.detail) parts.push("target: " + primary.detail);
+    const roadItem = road.filter(function (item) { return item.kind === "roadmap"; })[0];
+    if (roadItem) {
+      const detail = String(roadItem.detail || "");
+      const phase = ((detail.match(/phase=(.*?)(?: priority=|$)/) || [])[1] || "").trim();
+      const priority = ((detail.match(/priority=(.*)$/) || [])[1] || "").trim();
+      const bit = [phase, priority].filter(Boolean).join(" ");
+      if (bit) parts.push(bit);
+    }
+    return parts.join(" · ");
+  }
+
+  function definition(rec, graph) {
+    const items = productItems(graph, rec.id);
+    const duties = (rec.responsibilities && rec.responsibilities.length)
+      ? rec.responsibilities.slice()
+      : ofKind(items, ["responsibility"]).map(function (item) { return item.detail; });
+    const flows = ofKind(items, ["flow"]);
+    const business = ofKind(items, ["business_value"]);
+    const constraints = ofKind(items, ["constraint"]);
+    const success = ofKind(items, ["success_metric", "success_target", "success_metric_source"]);
+    const events = ofKind(items, ["analytics_event"]);
+    const road = ofKind(items, ["roadmap", "roadmap_dependency", "roadmap_enables"]);
+    const refs = ofKind(items, ["flow_ref"]);
+    const blocks = [
+      duties.length ? block("Responsibilities", "responsibilities", duties.map(textRow)) : null,
+      flows.length ? block("Flows", "flows", flows.map(flowRow)) : null,
+      business.length ? block("Business value", "business_value", [kvRow(business.map(function (item) {
+        const key = sourceKey(item);
+        const labels = { user_outcome: "user_outcome", objective: "objective", revenue_dependency: "revenue", strategic_priority: "priority" };
+        return [labels[key] || key, fieldValue(item)];
+      }))]) : null,
+      constraints.length ? block("Constraints", "constraints", [kvRow(constraints.map(function (item) {
+        const key = sourceKey(item);
+        return [key === "data_classification" ? "classification" : key, fieldValue(item)];
+      }))]) : null,
+      success.length ? block("Success", "success_metrics", [kvRow(success.map(function (item) {
+        if (item.kind === "success_metric") return ["primary", item.detail || ""];
+        const parts = splitOnce(item.detail);
+        const name = parts[0] || (item.kind === "success_metric_source" ? "derived_from" : "target");
+        return [item.kind === "success_metric_source" ? name + " from" : name, parts[1] || item.detail || ""];
+      }))]) : null,
+      events.length ? block("Analytics events", "analytics_events", events.map(function (item) { return textRow(item.detail); })) : null,
+      road.length ? block("Roadmap", "roadmap", roadmapRows(road)) : null,
+      refs.length ? block("Flow slice", "planning.user_flows", refs.map(function (item) {
+        return kvRow([["flow_ref", item.detail || ""]]);
+      })) : null,
+    ].filter(Boolean);
+    if (!blocks.length) return null;
+    return section("def:" + rec.id, "Definition", "what is promised", definitionSummary(duties, flows, constraints, success, road), blocks);
+  }
+
+  function roadmapRows(items) {
+    const rows = [];
+    ofKind(items, ["roadmap"]).forEach(function (item) {
+      const detail = String(item.detail || "");
+      const phase = ((detail.match(/phase=(.*?)(?: priority=|$)/) || [])[1] || "").trim();
+      const priority = ((detail.match(/priority=(.*)$/) || [])[1] || "").trim();
+      rows.push(kvRow([["phase", phase], ["priority", priority]]));
+    });
+    [["depends_on", "roadmap_dependency"], ["enables", "roadmap_enables"]].forEach(function (pair) {
+      const ids = ofKind(items, [pair[1]]).map(function (item) { return item.related_id || item.detail; }).filter(Boolean);
+      if (ids.length) rows.push(idListRow(pair[0], ids));
+    });
+    return rows;
+  }
+
+  function checkGroup(item) {
+    if (item.kind === "acceptance_criterion") return ["Acceptance criteria", "validation.acceptance_criteria"];
+    if (item.kind === "edge_case" || item.kind === "readiness") return ["Edge cases & readiness", "validation"];
+    if (item.kind === "test_strategy") return ["Test strategy", "validation.test_strategy"];
+    if (item.kind === "apis" || item.kind === "events" || item.kind === "states") return ["Contracts", "contracts"];
+    if (item.strategy || item.rollback_trigger || item.source === "rollout") return ["Rollout", "rollout"];
+    return ["Observability", "observability"];
+  }
+
+  function checkRow(item) {
+    if (item.strategy || item.rollback_trigger) return kvRow([["strategy", item.strategy || ""], ["rollback", item.rollback_trigger || ""]]);
+    if (item.kind === "test_strategy" && item.name) return kvRow([[item.name, item.detail || ""]]);
+    if (item.kind === "apis" || item.kind === "events" || item.kind === "states") return kvRow([[item.kind, item.detail || ""]]);
+    return textRow(item.detail || item.kind || "");
   }
 
   function realization(rec, graph) {
     const realized = (rec.links || []).filter(function (link) { return link.rel === "realized_by"; }).map(function (link) { return link.id; });
     const quality = graph ? (graph.perspectives || {}).quality || {} : {};
+    const own = rec.level !== "capability";
     const rows = [];
     ["criteria", "verification", "contracts", "sensors", "rollout"].forEach(function (key) {
       (quality[key] || []).forEach(function (item) {
         if (item.kind === "data_models") return;
-        if (realized.indexOf(item.subject) >= 0) rows.push(item);
+        const subject = item.subject || "";
+        if (own ? subject === rec.id : realized.indexOf(subject) >= 0) rows.push(item);
       });
     });
     if (!realized.length && !rows.length) {
@@ -490,17 +648,47 @@
       }
       return null;
     }
-    return section("real:" + rec.id, "Realization", "how it is built and checked", [realized.length ? plural(realized.length, "realizing id") : "", rows.length ? plural(rows.length, "check") : ""].filter(Boolean).join(" · "), [
-      ...realized.map(function (id) {
-        return h("div", { class: "item" }, [idLink(id), h("div", { class: "src" }, [rec.id + " · realized_by"])]);
-      }),
-      ...rows.map(function (item) {
-        return h("div", { class: "item" }, [
-          item.detail || item.kind || "",
-          h("div", { class: "src" }, [(item.subject || "") + " · " + (item.source || "")]),
-        ]);
-      }),
-    ]);
+    const containers = realized.filter(function (id) { return levelOf(id) === "container"; });
+    const components = realized.filter(function (id) { return levelOf(id) !== "container"; });
+    const blocks = [
+      block("Realized by", "realized_by", [
+        idListRow("containers", containers),
+        idListRow("components", components),
+      ]),
+    ];
+    const order = ["Contracts", "Acceptance criteria", "Edge cases & readiness", "Test strategy", "Observability", "Rollout"];
+    const buckets = {};
+    rows.forEach(function (item) {
+      const grouped = checkGroup(item);
+      const subject = item.subject || rec.id;
+      buckets[subject] = buckets[subject] || {};
+      const slot = buckets[subject][grouped[0]] || { src: grouped[1], rows: [] };
+      slot.rows.push(checkRow(item));
+      buckets[subject][grouped[0]] = slot;
+    });
+    const subjects = realized.filter(function (id) { return buckets[id]; });
+    Object.keys(buckets).forEach(function (id) {
+      if (subjects.indexOf(id) < 0) subjects.push(id);
+    });
+    subjects.forEach(function (subject) {
+      order.forEach(function (label) {
+        const slot = buckets[subject][label];
+        if (!slot) return;
+        blocks.push(block(label, subject + " · " + slot.src, slot.rows));
+      });
+    });
+    const present = blocks.filter(Boolean);
+    const acceptance = rows.filter(function (item) { return item.kind === "acceptance_criterion"; }).length;
+    const slos = rows.filter(function (item) { return item.kind === "slos"; }).length;
+    const strategy = (rows.filter(function (item) { return item.strategy; })[0] || {}).strategy;
+    const summary = [
+      containers.length ? plural(containers.length, "container") : "",
+      components.length ? plural(components.length, "component") : "",
+      acceptance ? plural(acceptance, "acceptance criterion", "acceptance criteria") : "",
+      slos ? plural(slos, "SLO") : "",
+      strategy ? strategy + " rollout" : "",
+    ].filter(Boolean).join(" · ");
+    return section("real:" + rec.id, "Realization", "how it is built and checked", summary, present);
   }
 
   function questions(rec, graph) {

@@ -203,6 +203,23 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("line.id ? idLink(line.id)", script)
         self.assertNotIn("{'id'", script)
 
+    def test_definition_blocks_are_labeled(self) -> None:
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
+        for label in (
+            "Responsibilities",
+            "Business value",
+            "Constraints",
+            "Success",
+            "Roadmap",
+            "Realized by",
+            "Acceptance criteria",
+        ):
+            self.assertIn('"' + label + '"', src)
+        self.assertNotIn('plural(items.length, "declared line")', src)
+        self.assertIn(".blk-label", css)
+        self.assertIn(".kv-line", css)
+
     def test_about_projection_intro(self) -> None:
         script = (ASSETS / "app.js").read_text(encoding="utf-8")
         self.assertIn("About this projection", script)
