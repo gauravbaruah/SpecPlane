@@ -557,6 +557,29 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .kv-line { display: grid; grid-template-columns: minmax(118px, max-content) minmax(0, 1fr); gap: 12px; align-items: baseline; }
 .kv-v { font-size: 13px; line-height: 1.45; }
 .ids { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.trace { display: flex; flex-direction: column; gap: 0; }
+.trace-step { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; }
+.trace-label { padding-top: 10px; font-size: 12px; line-height: 1.3; font-weight: 600; color: var(--ink-2); }
+.trace-box, .trace-sensor {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 11px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+.trace-box.gap { border-style: dashed; background: transparent; }
+.trace-src {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+.trace-items { display: flex; flex-wrap: wrap; gap: 3px 12px; }
+.trace-sensor { background: var(--accent-subtle); border-color: transparent; }
 .strips { display: flex; flex-direction: column; gap: 12px; }
 .strip {
   display: flex;

@@ -23,7 +23,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from impact import impact  # noqa: E402
-from kernel import check_sync, list_gaps, load_kernel, retrieve  # noqa: E402
+from kernel import check_sync, list_gaps, load_kernel, retrieve, success_sensors  # noqa: E402
+from validate import dig  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
 def assets_dir() -> Path:
@@ -68,7 +69,7 @@ def build_payload(kernel: Any) -> dict[str, Any]:
         row = retrieve(kernel, doc.spec_id)
         if row is None:
             continue
-        records[doc.spec_id] = _record(row)
+        records[doc.spec_id] = _record(row, doc, kernel)
 
     changes: list[dict[str, Any]] = []
     for change in kernel.changes:
@@ -144,7 +145,131 @@ def change_projections(graph: dict[str, Any] | None) -> list[str]:
     return []
 
 
-def _record(row: dict[str, Any]) -> dict[str, Any]:
+def _filled(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def _history(doc: Any) -> dict[str, Any]:
+    meta = doc.meta or {}
+    history: dict[str, Any] = {}
+    for key in ("version", "introduced_in", "last_updated", "owner"):
+        text = _filled(meta.get(key))
+        if text:
+            history[key] = text
+    changelog: list[dict[str, Any]] = []
+    raw_log = doc.data.get("changelog")
+    if isinstance(raw_log, list):
+        for entry in raw_log:
+            if not isinstance(entry, dict):
+                continue
+            date = _filled(entry.get("date"))
+            summary = _filled(entry.get("summary"))
+            if not date and not summary:
+                continue
+            item: dict[str, Any] = {"date": date, "summary": summary}
+            author = _filled(entry.get("author"))
+            if author:
+                item["author"] = author
+            if entry.get("breaking") is True:
+                item["breaking"] = True
+            changelog.append(item)
+    if changelog:
+        history["changelog"] = changelog
+    refs: list[dict[str, str]] = []
+    raw_refs = doc.data.get("refs")
+    if isinstance(raw_refs, list):
+        for ref in raw_refs:
+            if not isinstance(ref, dict):
+                continue
+            item = {
+                key: _filled(ref.get(key))
+                for key in ("id", "title", "type", "path", "url")
+                if _filled(ref.get(key))
+            }
+            if item:
+                refs.append(item)
+    if refs:
+        history["refs"] = refs
+    realization = dig(doc.data, "implementation", "realization")
+    paths = realization.get("paths") if isinstance(realization, dict) else None
+    if isinstance(paths, list):
+        cleaned = [_filled(path) for path in paths if _filled(path)]
+        if cleaned:
+            history["realization_paths"] = cleaned
+    return history
+
+
+def _validation_checks(doc: Any) -> dict[str, Any]:
+    validation = dig(doc.data, "implementation", "validation") if doc is not None else None
+    if not isinstance(validation, dict):
+        return {"declared": False}
+    criteria = validation.get("acceptance_criteria")
+    count = len([item for item in criteria if _filled(item)]) if isinstance(criteria, list) else 0
+    strategy = validation.get("test_strategy")
+    names = [str(name) for name, value in strategy.items() if _filled(value)] if isinstance(strategy, dict) else []
+    checks: dict[str, Any] = {"declared": bool(count or names)}
+    if count:
+        checks["acceptance"] = count
+    if names:
+        checks["strategies"] = names
+    return checks
+
+
+def _trace(kernel: Any, doc: Any) -> dict[str, Any]:
+    metrics = doc.data.get("success_metrics")
+    targets = metrics.get("targets") if isinstance(metrics, dict) and isinstance(metrics.get("targets"), dict) else {}
+    derived = metrics.get("derived_from") if isinstance(metrics, dict) and isinstance(metrics.get("derived_from"), dict) else {}
+    emitters: dict[str, str] = {}
+    raw_events = doc.data.get("analytics_events")
+    if isinstance(raw_events, list):
+        for event in raw_events:
+            if not isinstance(event, dict):
+                continue
+            name = _filled(event.get("name"))
+            if name:
+                emitters[name] = _filled(event.get("emitted_by"))
+    rows: list[dict[str, Any]] = []
+    for name, value in targets.items():
+        label = _filled(name)
+        text = _filled(value)
+        if not label or not text:
+            continue
+        sources = derived.get(name)
+        if isinstance(sources, str):
+            sources = [sources]
+        measured: list[dict[str, Any]] = []
+        if isinstance(sources, list):
+            for source in sources:
+                event = _filled(source)
+                if not event:
+                    continue
+                emitted = emitters.get(event, "")
+                item: dict[str, Any] = {"name": event}
+                if emitted:
+                    item["emitted_by"] = emitted
+                    target = kernel.by_id.get(emitted)
+                    item["checks"] = _validation_checks(target) if target is not None else {"missing": True}
+                measured.append(item)
+        row: dict[str, Any] = {"name": label, "value": text}
+        if measured:
+            row["measured_by"] = measured
+        rows.append(row)
+    sensors: list[dict[str, str]] = []
+    for change in kernel.changes:
+        if not change.open:
+            continue
+        for sensor in success_sensors(change):
+            if sensor.get("promise") == doc.spec_id:
+                sensors.append({"change": change.path.name, "must": sensor["must"]})
+    trace: dict[str, Any] = {}
+    if rows:
+        trace["targets"] = rows
+    if sensors:
+        trace["sensors"] = sensors
+    return trace
+
+
+def _record(row: dict[str, Any], doc: Any, kernel: Any) -> dict[str, Any]:
     live = row.get("live") if isinstance(row.get("live"), dict) else None
     declared = row.get("declared") if isinstance(row.get("declared"), dict) else None
     shown = live if live is not None else declared
@@ -162,7 +287,7 @@ def _record(row: dict[str, Any]) -> dict[str, Any]:
             links.append({"rel": "depends_on", "id": spec_id})
         for spec_id in shown.get("depended_on_by") or []:
             links.append({"rel": "depended_on_by", "id": spec_id})
-    return {
+    public: dict[str, Any] = {
         "id": row["id"],
         "bit": row.get("bit") or "",
         "review_state": row.get("review_state") or "",
@@ -180,6 +305,13 @@ def _record(row: dict[str, Any]) -> dict[str, Any]:
         "live_slice": live is not None,
         "inferred_as_live": bool(row.get("inferred_as_live")),
     }
+    history = _history(doc)
+    if history:
+        public["history"] = history
+    trace = _trace(kernel, doc)
+    if trace:
+        public["trace"] = trace
+    return public
 
 
 def _delta_line(item: Any) -> dict[str, str] | None:

@@ -42,6 +42,11 @@ sensors:
     must: "The viewer uses the design-system families and semantic colors, and ships the font files instead of calling a font service"
     run:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_design_system_tokens_are_local"
+  - id: "source_history"
+    promise: "capability.specplane_viewer"
+    must: "Source and history shows the changelog when the spec declares one, and Promise to realization shows declared targets"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_source_history_and_trace_when_declared"
   - id: "definition_blocks"
     promise: "capability.specplane_viewer"
     must: "Definition and Realization group declared fields under labeled blocks instead of one flat list"

@@ -203,6 +203,25 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("line.id ? idLink(line.id)", script)
         self.assertNotIn("{'id'", script)
 
+    def test_source_history_and_trace_when_declared(self) -> None:
+        rec = self.payload["records"]["capability.billing"]
+        doc = self.kernel.by_id["capability.billing"]
+        entry = doc.data["changelog"][0]
+        shown = rec["history"]["changelog"][0]
+        self.assertEqual(shown["date"], entry["date"])
+        self.assertEqual(shown["summary"], entry["summary"])
+        self.assertEqual(rec["history"]["version"], doc.meta["version"])
+        targets = (doc.data.get("success_metrics") or {}).get("targets") or {}
+        if targets:
+            self.assertEqual([row["name"] for row in rec["trace"]["targets"]], list(targets))
+        else:
+            self.assertNotIn("trace", rec)
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("Source & history", src)
+        self.assertIn("Promise → realization", src)
+        self.assertIn('"Changelog"', src)
+        self.assertIn("derived_from is not represented", src)
+
     def test_definition_blocks_are_labeled(self) -> None:
         src = (ASSETS / "app.js").read_text(encoding="utf-8")
         css = (ASSETS / "app.css").read_text(encoding="utf-8")

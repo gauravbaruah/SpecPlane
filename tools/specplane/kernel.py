@@ -344,7 +344,7 @@ def resolve_open_change(kernel: Kernel, slug: str) -> Change | None:
     return None
 
 
-def success_must_lines(change: Change) -> list[str]:
+def success_sensors(change: Change) -> list[dict[str, str]]:
     path = change.path / "success.yaml"
     if not path.is_file():
         return []
@@ -354,13 +354,23 @@ def success_must_lines(change: Change) -> list[str]:
     sensors = loaded.get("sensors") or []
     if not isinstance(sensors, list):
         return []
-    out: list[str] = []
+    out: list[dict[str, str]] = []
     for row in sensors:
-        if isinstance(row, dict):
-            must = str(row.get("must") or "").strip()
-            if must:
-                out.append(must)
+        if not isinstance(row, dict):
+            continue
+        must = str(row.get("must") or "").strip()
+        if not must:
+            continue
+        item = {"must": must, "promise": str(row.get("promise") or "").strip()}
+        sensor_id = str(row.get("id") or "").strip()
+        if sensor_id:
+            item["id"] = sensor_id
+        out.append(item)
     return out
+
+
+def success_must_lines(change: Change) -> list[str]:
+    return [row["must"] for row in success_sensors(change)]
 
 
 def covering_changes(

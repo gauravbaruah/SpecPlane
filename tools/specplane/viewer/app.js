@@ -406,8 +406,10 @@
         ]),
         flight(rec),
         definition(rec, graph),
+        promiseTrace(rec),
         realization(rec, graph),
         questions(rec, graph),
+        sourceHistory(rec),
       ]),
       h("div", { class: "stage" }, [
         switcher(projections, proj, function (name) { go("id/" + encodeURIComponent(rec.id), { proj: name }); }),
@@ -695,6 +697,105 @@
     const items = productItems(graph, rec.id).filter(function (item) { return item.kind === "open_question"; });
     if (!items.length) return null;
     return section("ask:" + rec.id, "Open questions", "declared unknowns", plural(items.length, "question"), items.map(itemRow));
+  }
+
+  function traceStep(label, src, gap, items) {
+    return h("div", { class: "trace-step" }, [
+      h("div", { class: "trace-label" }, [label]),
+      h("div", { class: gap ? "trace-box gap" : "trace-box" }, [
+        h("div", { class: "trace-src" }, [src]),
+        h("div", { class: "trace-items" }, items),
+      ]),
+    ]);
+  }
+
+  function checkText(measured) {
+    const checks = measured.checks || {};
+    if (checks.missing) return measured.emitted_by + " is not in this spec root.";
+    if (!checks.declared) return measured.emitted_by + ": no validation declared";
+    const parts = [];
+    if (checks.acceptance) parts.push(plural(checks.acceptance, "acceptance criterion", "acceptance criteria"));
+    if (checks.strategies && checks.strategies.length) parts.push(checks.strategies.join(", ") + " tests declared");
+    return measured.emitted_by + ": " + parts.join("; ");
+  }
+
+  function promiseTrace(rec) {
+    const trace = rec.trace || {};
+    const targets = trace.targets || [];
+    const sensors = trace.sensors || [];
+    if (!targets.length && !sensors.length) return null;
+    let missing = 0;
+    const traced = targets.some(function (target) { return (target.measured_by || []).length; });
+    const rows = targets.map(function (target) {
+      const measured = target.measured_by || [];
+      const steps = [traceStep("Target", "success_metrics.targets", false, [
+        h("span", { class: "row-id" }, [target.name]),
+        h("span", {}, [" " + target.value]),
+      ])];
+      if (!measured.length) return h("div", { class: "trace" }, steps);
+      const orphans = measured.filter(function (item) { return !item.emitted_by; });
+      missing += orphans.length;
+      steps.push(traceStep("Measured by", "success_metrics.derived_from", false, measured.map(function (item) {
+        return h("span", { class: "row-id" }, [item.name]);
+      })));
+      steps.push(traceStep("Emitted by", "analytics_events.emitted_by", orphans.length > 0, measured.map(function (item) {
+        return item.emitted_by
+          ? idLink(item.emitted_by)
+          : h("span", { class: "note" }, [item.name + " has no emitted_by. Nothing in the model produces it."]);
+      })));
+      const linked = measured.filter(function (item) { return item.emitted_by; });
+      steps.push(traceStep("Checked by", "component validation", !linked.length, linked.length
+        ? linked.map(function (item) { return h("span", {}, [checkText(item)]); })
+        : [h("span", { class: "note" }, ["Not connected in the model."])]));
+      return h("div", { class: "trace" }, steps);
+    });
+    if (targets.length && !traced) {
+      rows.push(h("p", { class: "note" }, ["derived_from is not represented, so these targets are not traced to an event."]));
+    }
+    sensors.forEach(function (sensor) {
+      rows.push(h("div", { class: "trace-sensor" }, [
+        h("div", { class: "trace-src" }, ["open change sensor on this promise · " + sensor.change + " · success.yaml"]),
+        h("div", {}, [sensor.must]),
+        h("div", { class: "trace-src" }, ["declared · not executed"]),
+      ]));
+    });
+    const summary = [
+      targets.length ? plural(targets.length, "target") + (traced ? " traced through events to components" : "") : "",
+      missing ? plural(missing, "event") + " with no emitter" : "",
+      sensors.length ? plural(sensors.length, "open-change sensor") + ", not run" : "",
+    ].filter(Boolean).join(" · ");
+    return section("trace:" + rec.id, "Promise → realization", "how success is judged and checked", summary, rows);
+  }
+
+  function sourceHistory(rec) {
+    const history = rec.history || {};
+    const changelog = history.changelog || [];
+    const refs = history.refs || [];
+    const paths = history.realization_paths || [];
+    const meta = [
+      ["version", history.version],
+      ["introduced_in", history.introduced_in],
+      ["last_updated", history.last_updated],
+      ["owner", history.owner],
+    ];
+    if (!rec.path && !meta.some(function (pair) { return pair[1]; }) && !changelog.length && !refs.length && !paths.length) return null;
+    const fileRows = [];
+    if (rec.path) fileRows.push(h("div", { class: "item" }, [breakable(rec.path)]));
+    if (meta.some(function (pair) { return pair[1]; })) fileRows.push(kvRow(meta));
+    if (paths.length) fileRows.push(kvRow([["realization.paths", paths.join(", ")]]));
+    const blocks = [
+      fileRows.length ? block("File", "the repository is the source", fileRows) : null,
+      changelog.length ? block("Changelog", "changelog", changelog.map(function (entry) {
+        const text = (entry.summary || "") + (entry.breaking ? " · breaking" : "");
+        return kvRow([[entry.date || "undated", text]]);
+      })) : null,
+      refs.length ? block("Refs", "refs", refs.map(function (ref) {
+        const label = [ref.title, ref.type ? "(" + ref.type + ")" : ""].filter(Boolean).join(" ");
+        return kvRow([[ref.id || ref.path || ref.url || "ref", label || ref.path || ref.url || ""]]);
+      })) : null,
+    ].filter(Boolean);
+    const summary = [rec.path, history.version ? "v" + history.version : ""].filter(Boolean).join(" · ");
+    return section("src:" + rec.id, "Source & history", "why SpecPlane says this", summary, blocks);
   }
 
   function itemRow(item) {
