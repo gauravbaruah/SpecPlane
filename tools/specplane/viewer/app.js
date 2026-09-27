@@ -230,7 +230,7 @@
           ...trail.slice(0, -1).map(crumb),
           crumb(rec.id),
         ]),
-        h("div", { class: "quiet mono" }, [rec.bit === "inferred" ? "inferred · not live" : (rec.bit || "live")]),
+        h("div", { class: "pin" }, [[rec.id, rec.bit || "live", rec.review_state].filter(Boolean).join(" · ")]),
       ]);
     }
     if (route.kind === "change") {
@@ -239,7 +239,7 @@
           h("a", { href: href("changes") }, ["← Changes"]),
           h("span", { class: "crumb" }, [h("span", { class: "sep" }, ["›"]), h("span", { class: "mono inflight" }, [breakable(route.arg)])]),
         ]),
-        h("div", { class: "inflight" }, ["in-flight"]),
+        h("div", { class: "pin" }, ["change · " + route.arg + " · in-flight"]),
       ]);
     }
     if (route.kind === "live" || route.kind === "changes" || route.kind === "gaps") trail = [];
