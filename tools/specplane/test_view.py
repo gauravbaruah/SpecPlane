@@ -238,6 +238,10 @@ class ViewerModelTests(unittest.TestCase):
         self.assertNotIn('plural(items.length, "declared line")', src)
         self.assertIn(".blk-label", css)
         self.assertIn(".kv-line", css)
+        self.assertIn("(reviewed ? \"●\" : \"○\")", src)
+        self.assertIn("class: \"statusline\"", src)
+        self.assertIn(".statusline .bit.inflight", css)
+        self.assertIn(".statusline .rev.on", css)
 
     def test_about_projection_intro(self) -> None:
         script = (ASSETS / "app.js").read_text(encoding="utf-8")

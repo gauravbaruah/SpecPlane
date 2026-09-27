@@ -120,6 +120,25 @@
     return h("span", { class: "mark " + (bit || "live") });
   }
 
+  function recordStatus(rec) {
+    const bit = rec.bit || "live";
+    const bitText = bit === "inferred" ? "inferred · not live" : bit === "replaced" ? "replaced" + (rec.replaced_by ? " → " + rec.replaced_by : "") : "live";
+    const reviewed = !!(rec.review_state && rec.review_state !== "unreviewed");
+    return h("div", { class: "statusline" }, [
+      h("span", { class: "bit " + bit }, [bitText]),
+      rec.review_state ? h("span", { class: reviewed ? "rev on" : "rev" }, [(reviewed ? "●" : "○") + " " + rec.review_state]) : null,
+      rec.status ? h("span", { class: "st" }, ["status " + rec.status]) : null,
+    ]);
+  }
+
+  function changeStatus(change) {
+    return h("div", { class: "statusline" }, [
+      h("span", { class: "bit inflight" }, ["in-flight"]),
+      change.kind ? h("span", { class: "st" }, ["kind " + change.kind]) : null,
+      change.opened ? h("span", { class: "st" }, ["opened " + change.opened]) : null,
+    ]);
+  }
+
   function breakable(text) {
     const frag = document.createDocumentFragment();
     String(text).split(/([._/])/).forEach(function (part) {
@@ -392,12 +411,8 @@
       h("div", { class: "copy" }, [
         h("div", { class: "identity" }, [
           h("div", { class: "eyebrow" }, [rec.level || "record"]),
-          h("div", { class: "row" }, [bitMark(rec.bit), h("span", { class: "id-title" }, [breakable(rec.id)])]),
-          h("div", { class: "quiet mono" }, [
-            rec.bit === "inferred" ? "inferred · not live" : rec.bit,
-            rec.review_state ? " · " + rec.review_state : "",
-            rec.status ? " · status " + rec.status : "",
-          ]),
+          h("div", { class: "row" }, [bitMark(rec.bit), h("span", { class: rec.bit === "replaced" ? "id-title replaced" : "id-title" }, [breakable(rec.id)])]),
+          recordStatus(rec),
           rec.path ? h("div", { class: "quiet mono" }, [breakable(rec.path)]) : null,
         ]),
         h("div", { class: "promise" }, [
@@ -1637,8 +1652,8 @@
       h("div", { class: "copy" }, [
         h("div", { class: "identity" }, [
           h("div", { class: "eyebrow" }, ["Change"]),
-          h("div", { class: "row" }, [h("span", { class: "id-title inflight" }, [breakable(change.id)])]),
-          h("div", { class: "quiet mono" }, ["in-flight", change.kind ? " · kind " + change.kind : ""]),
+          h("div", { class: "row" }, [bitMark("inflight"), h("span", { class: "id-title inflight" }, [breakable(change.id)])]),
+          changeStatus(change),
         ]),
         h("div", { class: "promise" }, [
           h("div", { class: "kicker" }, ["Why"]),

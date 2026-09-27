@@ -305,6 +305,9 @@ def _record(row: dict[str, Any], doc: Any, kernel: Any) -> dict[str, Any]:
         "live_slice": live is not None,
         "inferred_as_live": bool(row.get("inferred_as_live")),
     }
+    replaced_by = _filled((doc.meta or {}).get("replaced_by"))
+    if replaced_by:
+        public["replaced_by"] = replaced_by
     history = _history(doc)
     if history:
         public["history"] = history

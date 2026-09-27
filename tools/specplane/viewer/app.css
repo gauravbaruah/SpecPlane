@@ -320,14 +320,31 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 }
 .purpose { font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
 .row { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-.mark { width: 9px; height: 9px; display: inline-block; box-sizing: border-box; }
+.mark { width: 9px; height: 9px; display: inline-block; box-sizing: border-box; flex: none; }
+.identity .mark { width: 11px; height: 11px; }
 .mark.live { background: var(--ink-1); }
 .mark.inflight { background: var(--accent); }
-.mark.inferred { border: 1.5px dashed var(--warning); }
-.mark.replaced { border: 1.5px solid var(--dashed); }
-.bit.inferred { color: var(--warning); }
-.bit.replaced { color: var(--ink-4); text-decoration: line-through; }
+.mark.inferred { border: 2px dashed var(--warning); }
+.mark.replaced { border: 2px solid var(--dashed); }
+.id-title.replaced { color: var(--ink-4); text-decoration: line-through; }
 .inflight { color: var(--accent); }
+.statusline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.statusline .bit { color: var(--ink-1); }
+.statusline .bit.inferred { color: var(--warning); }
+.statusline .bit.replaced { color: var(--ink-4); }
+.statusline .bit.inflight { color: var(--accent); }
+.statusline .rev { color: var(--ink-4); }
+.statusline .rev.on { color: var(--ink-1); }
+.statusline .st { color: var(--ink-3); font-weight: 500; }
 
 .index, .index thead, .index tbody { display: block; width: 100%; }
 .index tr {
