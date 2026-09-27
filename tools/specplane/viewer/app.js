@@ -199,7 +199,7 @@
         theme,
       ]),
     ]);
-    return h("div", {}, [top, honesty(route), h("main", { class: "page" }, [body])]);
+    return h("div", { class: "shell" }, [top, honesty(route), h("main", { class: "page" }, [body])]);
   }
 
   let trail = [];
@@ -409,7 +409,7 @@
         realization(rec, graph),
         questions(rec, graph),
       ]),
-      h("div", {}, [
+      h("div", { class: "stage" }, [
         switcher(projections, proj, function (name) { go("id/" + encodeURIComponent(rec.id), { proj: name }); }),
         proj === "blast" ? perspectiveRow(persp, function (name) {
           go("id/" + encodeURIComponent(rec.id), { proj: "blast", persp: name, node: node });
@@ -1368,7 +1368,7 @@
           h("p", { class: "note" }, ["SpecPlane did not certify that an implementation satisfies the spec."]),
         ]),
       ]),
-      h("div", {}, [
+      h("div", { class: "stage" }, [
         switcher(change.projections || ["blast"], "blast", function () {}),
         perspectiveRow(persp, function (name) { go("change/" + change.id, { persp: name, node: node }); }),
         blastBlock(graph, "change." + change.id, node, persp, function (id) {
