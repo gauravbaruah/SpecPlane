@@ -335,13 +335,11 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   gap: 2px 18px;
 }
 .index.gaps td {
-  border-top: 0;
-  border-bottom: 1px solid var(--divider);
-  padding: 9px 6px;
   font-size: 13px;
   line-height: 1.4;
   font-weight: 400;
 }
+.index.gaps tbody tr { padding: 9px 6px; }
 .index.gaps .mono { font-size: 12px; line-height: 1.4; }
 .index.gaps .gap-bit {
   font-family: "JetBrains Mono", monospace;
@@ -359,10 +357,13 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
   font-size: 13px;
   line-height: 1.45;
 }
-.index tbody tr { cursor: pointer; }
+.index thead tr { padding: 8px 6px; border-bottom: 1px solid var(--divider); }
+.index tbody tr { cursor: pointer; padding: 12px 6px; border-bottom: 1px solid var(--divider); }
+.index.changes tbody tr { padding: 13px 6px; }
 .index tbody tr:hover { background: var(--bg-hover); }
-.index th { text-align: left; font-size: 11px; line-height: 1.35; font-weight: 500; font-family: "JetBrains Mono", monospace; color: var(--ink-3); padding: 8px 6px; min-width: 0; overflow-wrap: anywhere; }
-.index td { border-top: 1px solid var(--divider); padding: 12px 6px; vertical-align: baseline; font-size: 14px; line-height: 1.4; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.index th, .index td { border: 0; padding: 0; min-width: 0; overflow-wrap: anywhere; }
+.index th { text-align: left; font-size: 11px; line-height: 1.35; font-weight: 500; font-family: "JetBrains Mono", monospace; color: var(--ink-3); }
+.index td { vertical-align: baseline; font-size: 14px; line-height: 1.4; font-weight: 500; }
 .index td.quiet { font-size: 13px; line-height: 1.45; font-weight: 400; }
 .find {
   border: 1px solid var(--border-strong);
