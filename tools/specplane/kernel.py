@@ -962,6 +962,40 @@ COVERAGE_NOTE = (
 )
 
 
+def _uncovered_recipe(payload: dict[str, Any]) -> list[str]:
+    """Next steps when coverage failed on known ids. Not for unknown ids or an unknown change."""
+    if payload.get("unknown_change") or payload.get("unknown"):
+        return []
+    uncovered = [str(item) for item in (payload.get("uncovered") or []) if item]
+    if not uncovered:
+        return []
+    slug = str(payload.get("change") or "").strip()
+    ids = ",".join(uncovered)
+    lines = ["  uncovered:"]
+    for item in uncovered:
+        lines.append(f"    - {item}")
+    lines.append("  To resolve:")
+    if len(uncovered) == 1:
+        lines.append(f"    1. retrieve {uncovered[0]}")
+    else:
+        lines.append("    1. retrieve each uncovered id:")
+        for item in uncovered:
+            lines.append(f"       - {item}")
+    if slug:
+        lines.append(
+            f"    2. Open or extend specs/changes/{slug}/ "
+            "(proposal.yaml, delta.yaml, success.yaml) so those ids are in promise_ids."
+        )
+        lines.append(f"    3. check_sync --change {slug} --changed-ids {ids}")
+    else:
+        lines.append(
+            "    2. Open a change folder (proposal.yaml, delta.yaml, success.yaml) "
+            "so those ids are in promise_ids."
+        )
+        lines.append(f"    3. check_sync --changed-ids {ids}")
+    return lines
+
+
 def format_check_sync(payload: dict[str, Any]) -> str:
     lines = ["check_sync"]
     if payload.get("change"):
@@ -1014,6 +1048,7 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         lines.append("DECISION REQUIRED")
         lines.append("  Named behavior moved and live spec / open change did not cover it.")
         lines.append("  SpecPlane does not stamp live.")
+        lines.extend(_uncovered_recipe(payload))
     unmapped = payload.get("unmapped_changed") or []
     if unmapped:
         lines.append("unmapped_changed:")

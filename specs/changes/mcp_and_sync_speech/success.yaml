@@ -1,0 +1,26 @@
+change_id: "mcp_and_sync_speech"
+kind: "evolve"
+
+sensors:
+  - id: "mcp_verb_starts_stdio"
+    promise: "component.mcp_stdio"
+    must: "specplane mcp --help succeeds and the command starts the existing stdio server"
+    run:
+      unittest: "tools.specplane.test_kernel.McpAndSyncSpeechTests.test_mcp_help_and_starts_stdio"
+  - id: "catalog_unchanged"
+    promise: "component.mcp_stdio"
+    must: "MCP catalog is still retrieve, blast, impact, check_sync, list_gaps, run"
+    run:
+      unittest: "tools.specplane.test_mcp.McpCatalogTests.test_catalog_lists_kernel_tools"
+  - id: "uncovered_names_next_steps"
+    promise: "capability.specplane_check_sync"
+    must: "Uncovered check_sync prints retrieve, open/extend a change folder, and re-run check_sync, and still says it does not stamp live"
+    run:
+      unittest: "tools.specplane.test_kernel.McpAndSyncSpeechTests.test_uncovered_names_next_steps"
+  - id: "no_strict_flag"
+    promise: "capability.specplane_check_sync"
+    must: "check_sync has no --strict flag"
+    run:
+      unittest: "tools.specplane.test_kernel.McpAndSyncSpeechTests.test_check_sync_has_no_strict"
+
+looks_fine_is_not_a_sensor: true

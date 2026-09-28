@@ -1185,6 +1185,150 @@ class DemoTeethTests(unittest.TestCase):
         self.assertIn("invisible without a map", readme)
 
 
+class McpAndSyncSpeechTests(unittest.TestCase):
+    def test_mcp_help_and_starts_stdio(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        import mcp_stdio
+
+        buf = StringIO()
+        with patch("sys.stdout", buf), patch("mcp_stdio.serve") as serve:
+            try:
+                with self.assertRaises(SystemExit) as ctx:
+                    cli_main(["mcp", "--help"])
+                self.assertEqual(ctx.exception.code, 0)
+                serve.assert_not_called()
+                code = cli_main(["mcp", "--spec-root", str(GOLDEN)])
+                self.assertEqual(code, 0)
+                serve.assert_called_once()
+                self.assertIn("stdio", buf.getvalue().lower())
+                self.assertEqual(mcp_stdio._default_spec_root, GOLDEN.resolve())
+            finally:
+                mcp_stdio.set_default_spec_root(None)
+
+    def test_uncovered_names_next_steps(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(GOLDEN),
+                    "--changed-ids",
+                    "component.banner",
+                ]
+            )
+        text = buf.getvalue()
+        self.assertEqual(code, 1)
+        self.assertIn("does not stamp live", text)
+        self.assertIn("To resolve:", text)
+        self.assertIn("retrieve component.banner", text)
+        self.assertIn("Open a change folder", text)
+        self.assertIn("check_sync --changed-ids component.banner", text)
+        self.assertNotIn("specs/changes/", text)
+
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(GOLDEN),
+                    "--change",
+                    "add_passkeys",
+                    "--changed-ids",
+                    "component.banner",
+                ]
+            )
+        text = buf.getvalue()
+        self.assertEqual(code, 1)
+        self.assertIn("does not stamp live", text)
+        self.assertIn("specs/changes/add_passkeys/", text)
+        self.assertIn("check_sync --change add_passkeys --changed-ids component.banner", text)
+
+        buf = StringIO()
+        err = StringIO()
+        with patch("sys.stdout", buf), patch("sys.stderr", err):
+            code = cli_main(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(SCOPED),
+                    "--change",
+                    "does_not_exist",
+                    "--changed-ids",
+                    "capability.alpha",
+                ]
+            )
+        self.assertEqual(code, 1)
+        self.assertIn("unknown_change: does_not_exist", buf.getvalue())
+        self.assertNotIn("To resolve:", buf.getvalue())
+
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(GOLDEN),
+                    "--changed-ids",
+                    "capability.no_such",
+                ]
+            )
+        self.assertEqual(code, 1)
+        self.assertIn("unknown_ids:", buf.getvalue())
+        self.assertNotIn("To resolve:", buf.getvalue())
+
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            code = cli_main(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(GOLDEN),
+                    "--changed-ids",
+                    "capability.orphan",
+                ]
+            )
+        self.assertEqual(code, 0)
+        self.assertIn("phase1_advisory", buf.getvalue())
+        self.assertNotIn("To resolve:", buf.getvalue())
+
+        empty = format_check_sync(
+            {
+                "change": "",
+                "changed_ids": ["capability.linked_empty"],
+                "coverage": "fail",
+                "ok": False,
+                "uncovered": [],
+                "unknown": [],
+                "unknown_change": "",
+                "empty_blast": ["capability.linked_empty"],
+                "phase1_advisory": [],
+                "sensors": "missing",
+                "decision_required": True,
+            }
+        )
+        self.assertIn("empty_blast:", empty)
+        self.assertIn("does not stamp live", empty)
+        self.assertNotIn("To resolve:", empty)
+
+    def test_check_sync_has_no_strict(self) -> None:
+        from io import StringIO
+        from unittest.mock import patch
+
+        buf = StringIO()
+        with patch("sys.stdout", buf):
+            with self.assertRaises(SystemExit) as ctx:
+                cli_main(["check_sync", "--help"])
+        self.assertEqual(ctx.exception.code, 0)
+        self.assertNotIn("--strict", buf.getvalue())
+
+
 class TryPathViewTests(unittest.TestCase):
     def test_try_path_ends_on_auth_blast(self) -> None:
         try_doc = (REPO / "docs" / "try.md").read_text(encoding="utf-8")

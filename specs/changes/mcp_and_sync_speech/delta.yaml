@@ -1,0 +1,25 @@
+change_id: "mcp_and_sync_speech"
+kind: "evolve"
+
+ADDED:
+  - "specplane mcp starts the existing stdio server; optional --spec-root is the default when a tool call omits spec_root"
+  - "uncovered check_sync prints retrieve, open or extend a change folder, and check_sync again"
+
+MODIFIED:
+  - id: "capability.specplane_check_sync"
+    summary: >-
+      Same fail semantics. When decision_required and at least one id is
+      uncovered, stdout adds those ids and the resolve steps. Unknown change,
+      unknown ids, empty blast, and Phase 1 advisory keep their existing lines
+      and do not get that recipe. No --strict. Still does not stamp live.
+  - id: "component.cli_check_sync"
+    summary: >-
+      The check_sync command prints the same recipe. No new flag.
+  - id: "component.mcp_stdio"
+    summary: >-
+      cli.py mcp calls mcp_stdio.serve(). Catalog stays retrieve, blast,
+      impact, check_sync, list_gaps, run. A per-call spec_root still wins.
+
+REMOVED: []
+
+RENAMED: []

@@ -22,7 +22,13 @@ from kernel import (  # noqa: E402
     retrieve,
     run_sensors,
 )
-from mcp_stdio import MCP_TOOLS, dispatch, handle_message, tool_descriptors  # noqa: E402
+from mcp_stdio import (  # noqa: E402
+    MCP_TOOLS,
+    dispatch,
+    handle_message,
+    set_default_spec_root,
+    tool_descriptors,
+)
 
 GOLDEN = ROOT / "testdata" / "golden" / "messy_auth" / "specs"
 SCOPED = ROOT / "testdata" / "golden" / "scoped_coverage" / "specs"
@@ -84,6 +90,19 @@ class McpCatalogTests(unittest.TestCase):
         self.assertIn("coverage: fail", text)
         self.assertIn("change: select_output_folder", text)
         self.assertIn("behavior: unverified", text)
+
+    def test_omitted_spec_root_uses_cli_default_and_per_call_wins(self) -> None:
+        try:
+            set_default_spec_root(SCOPED)
+            scoped = dispatch("retrieve", {"id": "capability.alpha"})
+            self.assertIn("capability.alpha", scoped)
+            golden = dispatch(
+                "retrieve",
+                {"id": "capability.authentication", "spec_root": str(GOLDEN)},
+            )
+            self.assertIn("capability.authentication", golden)
+        finally:
+            set_default_spec_root(None)
 
     def test_run_requires_change(self) -> None:
         with self.assertRaises(ValueError):

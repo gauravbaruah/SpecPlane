@@ -108,7 +108,7 @@ Auth, billing, notifications, one open billing change, and `src/auth.py` with a 
 
 Skills already call the kernel. MCP is optional. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate, promote, and reconcile stay CLI-only.
 
-After `pip install -e .` (or `pip install pyyaml`) from this checkout, add one of these. Replace the path with your clone.
+After `pip install -e .` (or `pip install pyyaml`) from this checkout, `specplane mcp` starts that server. Optional `--spec-root` is the default when a tool call omits `spec_root`.
 
 **Cursor** (`~/.cursor/mcp.json`) or **Claude Desktop** (`claude_desktop_config.json`):
 
@@ -116,8 +116,8 @@ After `pip install -e .` (or `pip install pyyaml`) from this checkout, add one o
 {
   "mcpServers": {
     "specplane": {
-      "command": "python3",
-      "args": ["/absolute/path/to/SpecPlane/tools/specplane/mcp_stdio.py"]
+      "command": "specplane",
+      "args": ["mcp"]
     }
   }
 }
@@ -126,10 +126,10 @@ After `pip install -e .` (or `pip install pyyaml`) from this checkout, add one o
 **Claude Code** — same JSON in the project `.mcp.json`, or:
 
 ```bash
-claude mcp add specplane -- python3 /absolute/path/to/SpecPlane/tools/specplane/mcp_stdio.py
+claude mcp add specplane -- specplane mcp
 ```
 
-In a product repo after `specplane init`, point `args` at that repo’s `tools/specplane/mcp_stdio.py`. The script adds its own directory to `sys.path`; PyYAML still has to be importable by that `python3`.
+From a checkout where `specplane` is not on PATH, `python3 tools/specplane/mcp_stdio.py` is the same server. In a product repo after `specplane init`, that script is `tools/specplane/mcp_stdio.py`. It adds its own directory to `sys.path`; PyYAML still has to be importable by that `python3`.
 
 ## Use it in your product
 

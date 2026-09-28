@@ -250,6 +250,10 @@ class ViewerModelTests(unittest.TestCase):
         script = (ASSETS / "app.js").read_text(encoding="utf-8")
         self.assertIn("line.id ? idLink(line.id)", script)
         self.assertNotIn("{'id'", script)
+        self.assertIn("What the change declares", script)
+        self.assertIn("What SpecPlane checked", script)
+        self.assertIn("What SpecPlane infers", script)
+        self.assertIn("the repository is the source", script)
 
     def test_source_history_and_trace_when_declared(self) -> None:
         rec = self.payload["records"]["capability.billing"]

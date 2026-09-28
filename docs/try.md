@@ -75,6 +75,6 @@ uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 
 Details: [`use-in-your-project.md`](./use-in-your-project.md). Do not copy this repo’s `specs/` (those YAML files specify SpecPlane’s own CLI).
 
-Local MCP is optional. Skills already call the kernel. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate stays CLI-only. `reconcile` is CLI-only: optional declared file maps, including greenfield with no infer. `run` joins a bound check; it is not a test runner. `impact` explains one affected subgraph; it does not replace `blast`.
+Local MCP is optional. After install, `specplane mcp` starts the same stdio server. Skills already call the kernel. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate stays CLI-only. `reconcile` is CLI-only: optional declared file maps, including greenfield with no infer. `run` joins a bound check; it is not a test runner. `impact` explains one affected subgraph; it does not replace `blast`.
 
 Copy-paste Cursor / Claude Desktop / Claude Code snippets: [README — Optional: local MCP](../README.md#optional-local-mcp).

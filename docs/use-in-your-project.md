@@ -81,7 +81,7 @@ If you already have an `AGENTS.md`, keep your project rules and append the SpecP
 
 ### Optional local MCP
 
-Skills already call the kernel. To expose retrieve, blast, impact, check_sync, list_gaps, and run as tools, point the editor at the copied stdio server. Validate, promote, and reconcile stay CLI-only.
+Skills already call the kernel. To expose retrieve, blast, impact, check_sync, list_gaps, and run as tools, start the same server with `specplane mcp`. Validate, promote, and reconcile stay CLI-only.
 
 **Cursor** (`~/.cursor/mcp.json`) or **Claude Desktop** (`claude_desktop_config.json`):
 
@@ -89,16 +89,16 @@ Skills already call the kernel. To expose retrieve, blast, impact, check_sync, l
 {
   "mcpServers": {
     "specplane": {
-      "command": "python3",
-      "args": ["/absolute/path/to/your-app/tools/specplane/mcp_stdio.py"]
+      "command": "specplane",
+      "args": ["mcp"]
     }
   }
 }
 ```
 
-**Claude Code** — same JSON in the project `.mcp.json`, or `claude mcp add specplane -- python3 /absolute/path/to/your-app/tools/specplane/mcp_stdio.py`.
+**Claude Code** — same JSON in the project `.mcp.json`, or `claude mcp add specplane -- specplane mcp`.
 
-That `python3` must be able to import PyYAML (`pip install pyyaml` or `pip install -e /path/to/SpecPlane`).
+If `specplane` is not on PATH, point `command` at `python3` and `args` at that repo’s `tools/specplane/mcp_stdio.py`. That `python3` must be able to import PyYAML (`pip install pyyaml` or `pip install -e /path/to/SpecPlane`).
 
 ### Consuming `AGENTS.md`
 

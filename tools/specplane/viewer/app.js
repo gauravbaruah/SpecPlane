@@ -453,7 +453,8 @@
     return n + " " + (n === 1 ? one : (many || one + "s"));
   }
 
-  function section(key, title, sub, summary, body) {
+  function section(key, title, sub, summary, body, startOpen) {
+    if (openSections[key] == null) openSections[key] = !!startOpen;
     const open = !!openSections[key];
     return h("div", { class: "acc" }, [
       h("button", { class: "acc-head", type: "button", on: { click: function () { openSections[key] = !open; rerender(false); } } }, [
@@ -1958,17 +1959,33 @@
           h("div", { class: "kicker" }, ["Why"]),
           h("p", { class: "purpose" }, [change.why || ""]),
         ]),
-        h("div", { class: "block" }, [
-          h("h2", { class: "kicker" }, ["Promise ids"]),
-          h("div", { class: "rows" }, (change.promise_ids || []).map(function (id) { return h("div", { class: "item" }, [idLink(id)]); })),
-        ]),
-        deltaBlock(change.delta),
-        sensorBlock(sync),
-        h("div", { class: "block" }, [
-          h("h2", { class: "kicker" }, ["What SpecPlane checked"]),
-          h("p", { class: "note" }, ["SpecPlane checked declared coverage. It did not verify behavior."]),
-          h("p", { class: "quiet mono" }, ["coverage " + (sync.coverage || ""), " · sensors " + (sync.sensors || ""), " · behavior unverified"]),
-          h("p", { class: "note" }, ["SpecPlane did not certify that an implementation satisfies the spec."]),
+        section("decl:" + change.id, "What the change declares", "proposal.yaml · delta.yaml · success.yaml", "", [
+          promiseBlock(change),
+          deltaBlock(change.delta),
+          sensorBlock(sync),
+        ], true),
+        section("chk:" + change.id, "What SpecPlane checked", "check_sync · run", "", [
+          block("Coverage", "check_sync", [
+            h("div", { class: "item" }, ["SpecPlane checked declared coverage. It did not verify behavior."]),
+            kvRow([
+              ["coverage", sync.coverage || ""],
+              ["sensors", sync.sensors || ""],
+              ["behavior", sync.behavior || "unverified"],
+            ]),
+          ]),
+          block("Run", "run", [
+            h("div", { class: "item" }, ["SpecPlane did not certify that an implementation satisfies the spec."]),
+          ]),
+        ], true),
+        section("inf:" + change.id, "What SpecPlane infers", "blast", "", [
+          block("Reach", "", [
+            h("div", { class: "item" }, ["Ids past the ones this change names are reached by the kernel from declared links. The change does not claim them."]),
+          ]),
+        ], true),
+        section("src:" + change.id, "Source", "the repository is the source", "specs/changes/" + change.id + "/", [
+          block("Files", "", changeFiles(change, sync).map(function (path) {
+            return h("div", { class: "item quiet" }, [path]);
+          })),
         ]),
       ]),
       h("div", { class: "stage" }, [
@@ -1981,36 +1998,51 @@
     ]);
   }
 
+  function promiseBlock(change) {
+    const ids = change.promise_ids || [];
+    if (!ids.length) return null;
+    return block("Promise ids", "proposal.yaml promise_ids", [
+      h("div", { class: "item" }, [h("div", { class: "ids" }, ids.map(idLink))]),
+    ]);
+  }
+
   function deltaBlock(delta) {
     const keys = delta ? Object.keys(delta) : [];
     if (!keys.length) return null;
-    return h("div", { class: "block" }, [
-      h("h2", { class: "kicker" }, ["Delta"]),
-      ...keys.map(function (key) {
-        return h("div", { class: "rows" }, [h("div", { class: "quiet" }, [key]), ...(delta[key] || []).map(function (line) {
-          if (typeof line === "string") line = { text: line };
-          return h("div", { class: "item delta-line" }, [
-            line.group ? h("span", { class: "quiet mono" }, [line.group]) : null,
-            line.id ? idLink(line.id) : null,
-            line.text || "",
-          ]);
-        })]);
-      }),
-    ]);
+    const rows = [];
+    keys.forEach(function (key) {
+      (delta[key] || []).forEach(function (line) {
+        if (typeof line === "string") line = { text: line };
+        rows.push(h("div", { class: "item delta-line" }, [
+          h("span", { class: "quiet mono" }, [line.group ? key + " · " + line.group : key]),
+          line.id ? idLink(line.id) : null,
+          line.text || "",
+        ]));
+      });
+    });
+    if (!rows.length) return null;
+    return block("Delta", "delta.yaml", rows);
   }
 
   function sensorBlock(sync) {
     const rows = (sync && sync.sensor_rows) || [];
-    if (!rows.length) return h("p", { class: "note" }, ["No success sensor declared."]);
-    return h("div", { class: "block" }, [
-      h("h2", { class: "kicker" }, ["Success sensors"]),
-      ...rows.map(function (row) {
-        return h("div", { class: "item" }, [
-          h("div", { class: "sensor" }, [row.must || ""]),
-          h("div", { class: "src" }, [(row.change || "") + " · success.yaml · not run"]),
-        ]);
-      }),
+    if (!rows.length) return block("Success sensors", "success.yaml sensors", [
+      h("div", { class: "item" }, ["No success sensor declared."]),
     ]);
+    return block("Success sensors", "success.yaml sensors", rows.map(function (row) {
+      return h("div", { class: "item" }, [
+        h("div", { class: "sensor" }, [row.must || ""]),
+        h("div", { class: "src" }, [(row.change ? row.change + " · " : "") + "success.yaml · not run"]),
+      ]);
+    }));
+  }
+
+  function changeFiles(change, sync) {
+    const folder = "specs/changes/" + change.id + "/";
+    const names = ["proposal.yaml"];
+    if (change.delta && Object.keys(change.delta).length) names.push("delta.yaml");
+    if (((sync && sync.sensor_rows) || []).length) names.push("success.yaml");
+    return names.map(function (name) { return folder + name; });
   }
 
   function rerender(keepFind) {

@@ -212,6 +212,21 @@ def cmd_promote(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_mcp(args: argparse.Namespace) -> int:
+    from mcp_stdio import serve, set_default_spec_root
+
+    if args.spec_root is not None:
+        spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+        if not spec_root.is_dir():
+            sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+            return 1
+        set_default_spec_root(spec_root)
+    else:
+        set_default_spec_root(None)
+    serve()
+    return 0
+
+
 def cmd_view(args: argparse.Namespace) -> int:
     from view import build_payload, serve, write_site
 
@@ -364,6 +379,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Replace dest/specplane if it already exists",
     )
     p_init.set_defaults(func=cmd_init)
+
+    p_mcp = sub.add_parser(
+        "mcp",
+        help="Start the stdio MCP server (retrieve, blast, impact, check_sync, list_gaps, run)",
+        description=(
+            "Start the existing stdio MCP server. "
+            "Tools: retrieve, blast, impact, check_sync, list_gaps, run."
+        ),
+    )
+    add_root_args(p_mcp)
+    p_mcp.set_defaults(func=cmd_mcp)
 
     p_view = sub.add_parser(
         "view",
