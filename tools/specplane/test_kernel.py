@@ -1185,5 +1185,30 @@ class DemoTeethTests(unittest.TestCase):
         self.assertIn("invisible without a map", readme)
 
 
+class TryPathViewTests(unittest.TestCase):
+    def test_try_path_ends_on_auth_blast(self) -> None:
+        try_doc = (REPO / "docs" / "try.md").read_text(encoding="utf-8")
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        example = (REPO / "examples" / "tiny-saas" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("specplane view", try_doc)
+        self.assertIn("#id/capability.authentication?proj=blast", try_doc)
+        self.assertIn("what does a 60→15 change put at risk?", try_doc)
+        for spec_id in (
+            "capability.notifications",
+            "capability.billing",
+            "component.notifier",
+            "component.password_reset",
+            "component.billing_api",
+            "foundation.security_baseline",
+        ):
+            self.assertIn(spec_id, try_doc)
+        self.assertNotIn("3 services", try_doc)
+        self.assertIn("does not block a pull request", try_doc)
+        self.assertNotIn("CI blocked", try_doc)
+        self.assertIn("docs/try.md#5-what-the-change-puts-at-risk", readme)
+        self.assertIn("specplane view", example)
+        self.assertIn("#id/capability.authentication?proj=blast", example)
+
+
 if __name__ == "__main__":
     unittest.main()

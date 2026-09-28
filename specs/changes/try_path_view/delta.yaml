@@ -1,0 +1,16 @@
+change_id: "try_path_view"
+kind: "learn"
+
+ADDED:
+  - "docs/try.md ends the try path on specplane view, Blast of capability.authentication"
+
+MODIFIED:
+  - id: "capability.specplane_init"
+    summary: >-
+      Docs only. The try path points at the local viewer blast for the
+      tiny-saas auth id and names the real blast membership. Init behavior
+      is unchanged. No GitHub Actions or hooks.
+
+REMOVED: []
+
+RENAMED: []
