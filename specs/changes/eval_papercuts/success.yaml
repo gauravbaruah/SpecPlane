@@ -1,0 +1,31 @@
+change_id: "eval_papercuts"
+kind: "fix"
+
+sensors:
+  - id: "nested_mapped_edit_fails"
+    promise: "capability.specplane_check_sync"
+    must: "Editing a mapped file under a nested spec root fails coverage"
+    run:
+      unittest: "tools.specplane.test_ci_gate.CiGateTests.test_checkout_tiny_saas_auth_edit_fails_coverage"
+  - id: "nested_gate_fails_mapped_edit"
+    promise: "component.cli_check_sync"
+    must: "ci_gate --apply-diff fails the same mapped edit when the spec root is nested"
+    run:
+      unittest: "tools.specplane.test_ci_gate.CiGateTests.test_nested_apply_diff_fails_mapped_edit"
+  - id: "inflight_added_id"
+    promise: "capability.specplane_check_sync"
+    must: "A scoped change treats an ADDED id that is not on disk as known, and still fails when that slug does not list it"
+    run:
+      unittest: "tools.specplane.test_kernel.ScopedCoverageTests.test_scoped_added_id_is_known_only_on_that_change"
+  - id: "docs_match_what_ships"
+    promise: "capability.specplane_init"
+    must: "Public docs say the viewer ships, CI is a paste, and init still writes no workflow"
+    run:
+      unittest: "tools.specplane.test_ci_gate.CiGateTests.test_public_docs_match_what_ships"
+  - id: "init_copies_gate_not_workflow"
+    promise: "capability.specplane_init"
+    must: "Init copies ci_gate.py and still does not write GitHub Actions or git hooks"
+    run:
+      unittest: "tools.specplane.test_ci_gate.CiGateTests.test_init_does_not_write_workflow"
+
+looks_fine_is_not_a_sensor: true

@@ -16,12 +16,14 @@ Product intent, architecture, implementation, quality, governance, ownership, an
 - **Foundation:** Shared global rules (security, design tokens, error codes).
 - **In-flight change:** A staging folder (`specs/changes/`) so experiments do not pollute live specs.
 - **Sensor:** A real check or test bound to a promise (`must:` or a unit test). It is evidence, not a certificate.
+- **blast:** what else this change may touch.
+- **bit:** live, inferred, in-flight, or replaced.
 
-**Free now:** kit, local kernel, skills, optional MCP. No SpecPlane API key.
+The CLI, MCP, viewer, skills, and a pasted CI check are projections of one kernel.
 
-**In development:** local read-only viewer for exploring SpecPlane projections.
+**Free now:** kit, local kernel, skills, optional MCP, and `specplane view` (local, `127.0.0.1`, no API key).
 
-**Later:** hosted collaboration and review surfaces, a required GitHub check, and a spec coach.
+**Later:** hosted share, a required GitHub check, and a spec coach. An optional paste-in check can ask whether a change is accounted for by declared intent and bound evidence. Init does not install it.
 
 <img src="./SpecPlane_Logo.png" alt="SpecPlane" width="160">
 
@@ -96,6 +98,8 @@ pip install -e .    # or: pip install pyyaml
 
 Python 3.10+ and PyYAML. Without that install, `python3 tools/specplane/cli.py --help` fails on a bare system.
 
+You say the change. The agent retrieves, blasts, and implements. You look at blast in `specplane view`.
+
 Open **`examples/tiny-saas`** as the workspace. Ask Cursor:
 
 > Reset links should expire in 15 minutes instead of 60.
@@ -141,6 +145,10 @@ uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 
 That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package.
 
+Then ask for a Phase 1 capability. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
+
+### Advanced
+
 If `uvx` is not installed, from a SpecPlane checkout:
 
 ```bash
@@ -149,7 +157,7 @@ specplane init --dest /path/to/your-app
 # or: python3 /path/to/SpecPlane/tools/specplane/cli.py init --dest /path/to/your-app
 ```
 
-Then ask for a Phase 1 capability. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
+A hand copy of the toolkit (including `impact.py`, `view.py`, and `viewer/`) is the rsync fallback in [`docs/use-in-your-project.md`](./docs/use-in-your-project.md). There is no `uvx specplane` and no `pip install specplane`.
 
 Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `promote --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
 
@@ -165,7 +173,8 @@ Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework
 |---|---|
 | `specplane/` | Kit — schema, applicable sections, foundation boilerplates |
 | `specs/` | Kernel product — SpecPlane specifying its CLI. **Do not copy into other apps.** |
-| `tools/specplane/` | Local CLI + MCP |
+| `tools/specplane/` | Local CLI, MCP, and `specplane view` |
+| `tools/specplane/viewer/` | The shipping local viewer |
 | `examples/tiny-saas/` | Synthetic overlay + small `src/` for the try path |
 | `.agents/skills/` and `.cursor/skills/` | Same skills (keep identical) |
 | `docs/golden-journey.md` | Intended human+agent loop |

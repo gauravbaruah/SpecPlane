@@ -48,13 +48,32 @@ def _git_lines(repo: Path, args: list[str]) -> list[str]:
 
 
 def git_changed_files(repo: Path) -> list[str]:
-    """Staged + unstaged + untracked (Q115). Untracked specs are visible even with no HEAD."""
-    names = set(_git_lines(repo, ["diff", "--name-only", "--cached"]))
-    names.update(_git_lines(repo, ["diff", "--name-only", "HEAD"]))
+    """Staged + unstaged + untracked (Q115). Paths are relative to repo, not the git toplevel."""
+    names = set(_git_lines(repo, ["diff", "--name-only", "--relative", "--cached"]))
+    names.update(_git_lines(repo, ["diff", "--name-only", "--relative", "HEAD"]))
     if not names:
-        names.update(_git_lines(repo, ["diff", "--name-only"]))
+        names.update(_git_lines(repo, ["diff", "--name-only", "--relative"]))
     names.update(_git_lines(repo, ["ls-files", "--others", "--exclude-standard"]))
     return sorted(names)
+
+
+def paths_for_config_dir(repo: Path, config_dir: Path, files: list[str]) -> list[str]:
+    """Drop the config-dir prefix when repo is the git toplevel and config lives below it."""
+    try:
+        prefix = config_dir.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        return files
+    if not prefix or prefix == ".":
+        return files
+    prefix = prefix.rstrip("/") + "/"
+    adjusted: list[str] = []
+    for name in files:
+        norm = name.replace("\\", "/")
+        if norm.startswith(prefix):
+            adjusted.append(norm[len(prefix) :])
+        else:
+            adjusted.append(norm)
+    return adjusted
 
 
 def add_root_args(parser: argparse.ArgumentParser) -> None:
@@ -145,7 +164,7 @@ def cmd_check_sync(args: argparse.Namespace) -> int:
     unmapped: list[str] = []
     if not changed_ids:
         repo = (args.repo or Path.cwd()).resolve()
-        files = git_changed_files(repo)
+        files = paths_for_config_dir(repo, args.config_dir.resolve(), git_changed_files(repo))
         changed_ids, unmapped = default_changed_ids(kernel, files, repo)
     payload = check_sync(kernel, changed_ids, change_slug=args.change or None)
     if unmapped:
@@ -165,7 +184,8 @@ def cmd_reconcile(args: argparse.Namespace) -> int:
         return 1
     kernel = load_kernel(spec_root)
     repo = (args.repo or Path.cwd()).resolve()
-    payload = reconcile(kernel, git_changed_files(repo), repo=repo)
+    files = paths_for_config_dir(repo, args.config_dir.resolve(), git_changed_files(repo))
+    payload = reconcile(kernel, files, repo=repo)
     print(format_reconcile(payload), end="")
     return 0
 

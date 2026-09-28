@@ -23,4 +23,4 @@ tools/specplane/_specplane_kit/*
 build/
 
 # Generated local viewer (`specplane view`). Regenerable. Not tooling source.
-.specplane/view/
+**/.specplane/view/

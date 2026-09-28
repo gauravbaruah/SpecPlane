@@ -147,7 +147,7 @@ class CiGateTests(unittest.TestCase):
         self.assertIn("coverage: pass", result.stdout)
 
     def test_init_does_not_write_workflow(self) -> None:
-        self.assertNotIn("ci_gate.py", CLI_FILES)
+        self.assertIn("ci_gate.py", CLI_FILES)
         init_src = (ROOT / "initkit.py").read_text(encoding="utf-8")
         self.assertIn("did not write GitHub Actions or git hooks", init_src)
         workflow = (REPO / ".github" / "workflows" / "specplane-gate.yml").read_text(encoding="utf-8")
@@ -164,10 +164,145 @@ class CiGateTests(unittest.TestCase):
         guide = (REPO / "docs" / "use-in-your-project.md").read_text(encoding="utf-8")
         self.assertIn("Init does not write that workflow", guide)
         self.assertIn("not a required GitHub check", guide)
-        self.assertIn(
-            "**Later:** hosted collaboration and review surfaces, a required GitHub check",
-            readme,
+        self.assertIn("a required GitHub check", readme)
+        self.assertNotIn("**In development:**", readme)
+
+    def test_public_docs_match_what_ships(self) -> None:
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        specs_readme = (REPO / "specs" / "README.md").read_text(encoding="utf-8")
+        guide = (REPO / "docs" / "use-in-your-project.md").read_text(encoding="utf-8")
+        ci = (REPO / "docs" / "ci.md").read_text(encoding="utf-8")
+        public = "\n".join(
+            [
+                readme,
+                guide,
+                ci,
+                (REPO / "docs" / "try.md").read_text(encoding="utf-8"),
+                (REPO / "AGENTS.md").read_text(encoding="utf-8"),
+            ]
         )
+        self.assertIn("specplane view", readme)
+        out_of_slice = specs_readme.split("## Out of slice", 1)[1]
+        self.assertNotIn("Viewer", out_of_slice)
+        not_yet = guide.split("## Not included yet", 1)[1]
+        self.assertNotIn("supported spec viewer", not_yet)
+        self.assertNotIn("Git hooks or CI/CD wiring", not_yet)
+        self.assertNotIn("pip install -e .", ci)
+        self.assertIn("pip install -r tools/specplane/requirements.txt", ci)
+        self.assertNotIn("CI checks at the intent level", public)
+        self.assertIn("declared intent and bound evidence", ci)
+
+    def test_checkout_tiny_saas_auth_edit_fails_coverage(self) -> None:
+        tiny = REPO / "examples" / "tiny-saas"
+        auth = tiny / "src" / "auth.py"
+        original = auth.read_text(encoding="utf-8")
+        cli = ROOT / "cli.py"
+        try:
+            auth.write_text(original.replace("60", "15", 1), encoding="utf-8")
+            nested = _check_sync(tiny, tiny, tiny / "specs")
+            toplevel = _check_sync(REPO, tiny, tiny / "specs")
+        finally:
+            auth.write_text(original, encoding="utf-8")
+        self.assertEqual(nested.returncode, 1, nested.stdout + nested.stderr)
+        self.assertIn("component.password_reset", nested.stdout)
+        self.assertIn("coverage: fail", nested.stdout)
+        self.assertNotIn("examples/tiny-saas/src/auth.py", nested.stdout)
+        self.assertEqual(toplevel.returncode, 1, toplevel.stdout + toplevel.stderr)
+        self.assertIn("component.password_reset", toplevel.stdout)
+        self.assertIn("coverage: fail", toplevel.stdout)
+
+    def test_nested_apply_diff_fails_mapped_edit(self) -> None:
+        repo = _nested_tiny()
+        try:
+            auth = repo / "app" / "src" / "auth.py"
+            auth.write_text(
+                auth.read_text(encoding="utf-8").replace("60", "15", 1),
+                encoding="utf-8",
+            )
+            _git(repo, "add", "app/src/auth.py")
+            _git(repo, "commit", "-m", "ttl")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(GATE),
+                    "--repo",
+                    str(repo),
+                    "--base",
+                    "HEAD~1",
+                    "--spec-root",
+                    str(repo / "app" / "specs"),
+                    "--apply-diff",
+                ],
+                cwd=repo,
+                text=True,
+                capture_output=True,
+            )
+        finally:
+            shutil.rmtree(repo)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("component.password_reset", result.stdout)
+        self.assertIn("coverage: fail", result.stdout)
+
+    def test_nested_unmapped_file_stays_advisory(self) -> None:
+        repo = _nested_tiny()
+        try:
+            extra = repo / "app" / "src" / "notes.py"
+            extra.write_text("note = 1\n", encoding="utf-8")
+            _git(repo, "add", "app/src/notes.py")
+            _git(repo, "commit", "-m", "note")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(GATE),
+                    "--repo",
+                    str(repo),
+                    "--base",
+                    "HEAD~1",
+                    "--spec-root",
+                    str(repo / "app" / "specs"),
+                    "--apply-diff",
+                ],
+                cwd=repo,
+                text=True,
+                capture_output=True,
+            )
+        finally:
+            shutil.rmtree(repo)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("src/notes.py", result.stdout)
+        self.assertIn("coverage: pass", result.stdout)
+
+
+def _check_sync(repo: Path, config_dir: Path, spec_root: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "cli.py"),
+            "check_sync",
+            "--repo",
+            str(repo),
+            "--config-dir",
+            str(config_dir),
+            "--spec-root",
+            str(spec_root),
+        ],
+        cwd=repo,
+        text=True,
+        capture_output=True,
+    )
+
+
+def _nested_tiny() -> Path:
+    tiny = REPO / "examples" / "tiny-saas"
+    tmp = Path(tempfile.mkdtemp(prefix="specplane-nested-"))
+    app = tmp / "app"
+    shutil.copytree(tiny / "specs", app / "specs")
+    shutil.copytree(tiny / "src", app / "src")
+    shutil.copy(tiny / "specplane.config.json", app / "specplane.config.json")
+    _git(tmp, "init")
+    _git(tmp, "add", "app")
+    _git(tmp, "commit", "-m", "base")
+    return tmp
 
 
 if __name__ == "__main__":

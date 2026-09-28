@@ -129,4 +129,4 @@ python3 tools/specplane/cli.py retrieve capability.specplane_retrieve --spec-roo
 
 ## Out of slice
 
-Viewer, GitHub App, coach, infer-the-world, copying this `specs/` into other apps, Claude’s enum, `raw/` directories, flattening L22 vs L28 GTM tensions.
+GitHub App, coach, infer-the-world, copying this `specs/` into other apps, Claude’s enum, `raw/` directories, flattening L22 vs L28 GTM tensions.
