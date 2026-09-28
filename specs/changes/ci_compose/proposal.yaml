@@ -1,0 +1,18 @@
+id: "ci_compose"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-28"
+promise_ids:
+  - "capability.specplane_init"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+why: >-
+  A pull request should be able to run validate, check_sync, and run
+  when no agent calls them. Init still does not write the workflow.
+non_goals:
+  - "a new CLI verb"
+  - "init writing .github/workflows or git hooks"
+  - "a required GitHub check as a product claim"
+  - "mapping every component"
+  - "executing English must: lines"
+  - "editing live 5C YAML before accept"

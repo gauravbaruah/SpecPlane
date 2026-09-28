@@ -1,0 +1,25 @@
+change_id: "ci_compose"
+kind: "evolve"
+
+ADDED:
+  - "A pull_request workflow composes validate, default check_sync, and run --change when a change folder is in the diff"
+  - "docs/ci.md is a paste-in copy of that workflow"
+
+MODIFIED:
+  - id: "capability.specplane_init"
+    summary: >-
+      Unchanged. Init still does not write GitHub Actions or git hooks,
+      and does not copy the gate script.
+  - id: "capability.specplane_check_sync"
+    summary: >-
+      Unchanged command. CI calls it with the default changed-set on the
+      pull-request diff, and again with --change when specs/changes/<slug>/
+      is in that diff. It still does not execute sensors.
+  - id: "capability.specplane_run"
+    summary: >-
+      Unchanged command. CI calls run --change only for a change folder
+      in the pull-request diff. English must: is still not a command.
+
+REMOVED: []
+
+RENAMED: []
