@@ -1,6 +1,6 @@
 id: "flow_mapping_requires_id"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-24"
 promise_ids:
   - "capability.specplane_validate"
