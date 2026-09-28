@@ -41,8 +41,9 @@ specplane view --spec-root R   same as other kernel commands
 ## Mermaid
 
 - **Vendor** a pinned Mermaid build under `tools/specplane/viewer/vendor/` — Mermaid **10.9.3** (`mermaid.min.js`). The page does not load it from a CDN. Diagrams stay off the switcher until the kernel returns diagram source.
+- A declared diagram is rendered by that vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves. A label that is an id can be selected. The Mermaid source stays available under the picture.
 - No CDN. Offline / no-account / no-key is a Community property.
-- Rendering must not change because a CDN moved.
+- Rendering must not change because a CDN moved. The diagram frame does not listen for the wheel in a way that zooms or stops the page from scrolling.
 - Every picture stays in the column, including Map, Blast, Layers, and Diagrams. The page scrolls. A picture wider than the column scrolls inside the column. Nothing captures the wheel to zoom, and nothing runs to the screen edge.
 
 ## Data (do not slurp)

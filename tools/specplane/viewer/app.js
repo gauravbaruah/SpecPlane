@@ -16,9 +16,6 @@
     data: "Data",
   };
   let diagramSeq = 0;
-  if (window.mermaid && window.mermaid.initialize) {
-    window.mermaid.initialize({ startOnLoad: false, securityLevel: "strict" });
-  }
   const REL = {
     realized_by: "Realized by",
     implements: "Implements",
@@ -1580,215 +1577,6 @@
     });
   }
 
-  function unquote(text) {
-    const s = String(text || "");
-    if (s.length >= 2 && ((s.charAt(0) === "\"" && s.charAt(s.length - 1) === "\"") || (s.charAt(0) === "'" && s.charAt(s.length - 1) === "'"))) {
-      return s.slice(1, -1);
-    }
-    return s;
-  }
-
-  function parseFlow(src) {
-    const nodes = [];
-    const by = {};
-    const edges = [];
-    function tok(t) {
-      const m = String(t).trim().match(/^([A-Za-z0-9_]+)\s*(?:\(\[(.+?)\]\)|\{(.+?)\}|\[(.+?)\]|\((.+?)\))?$/);
-      if (!m) return null;
-      const id = m[1];
-      if (!by[id]) {
-        by[id] = { id: id, text: "", shape: "box" };
-        nodes.push(by[id]);
-      }
-      const n = by[id];
-      if (m[2]) { n.text = unquote(m[2]); n.shape = "end"; }
-      else if (m[3]) { n.text = unquote(m[3]); n.shape = "decision"; }
-      else if (m[4] || m[5]) n.text = unquote(m[4] || m[5]);
-      return id;
-    }
-    String(src || "").split("\n").slice(1).forEach(function (line) {
-      const p = line.trim().split(/\s*-->\s*(?:\|([^|]*)\|\s*)?/);
-      if (p.length < 3) {
-        if (line.trim() && line.trim().indexOf("flowchart") !== 0) tok(line);
-        return;
-      }
-      for (let i = 0; i + 2 < p.length; i += 2) {
-        const a = tok(p[i]);
-        const b = tok(p[i + 2]);
-        if (a && b) edges.push({ from: a, to: b, label: p[i + 1] || "" });
-      }
-    });
-    return { nodes: nodes, edges: edges };
-  }
-
-  function flowPlace(nodes, edges) {
-    const ids = nodes.map(function (n) { return n.id; });
-    const inc = {};
-    edges.forEach(function (e) { inc[e.to] = true; });
-    const start = ids.filter(function (id) { return !inc[id]; })[0] || ids[0];
-    const rank = {};
-    const row = {};
-    const occ = {};
-    function place(id, r) {
-      let w = r;
-      while (occ[rank[id] + "," + w]) w += 1;
-      row[id] = w;
-      occ[rank[id] + "," + w] = true;
-    }
-    const q = [];
-    function run() {
-      while (q.length) {
-        const u = q.shift();
-        edges.filter(function (e) { return e.from === u; }).forEach(function (e) {
-          if (rank[e.to] === undefined) {
-            rank[e.to] = rank[u] + 1;
-            place(e.to, row[u]);
-            q.push(e.to);
-          }
-        });
-      }
-    }
-    if (start) {
-      rank[start] = 0;
-      place(start, 0);
-      q.push(start);
-      run();
-    }
-    ids.forEach(function (id) {
-      if (rank[id] === undefined) {
-        rank[id] = 0;
-        place(id, 0);
-        q.push(id);
-        run();
-      }
-    });
-    return { rank: rank, row: row };
-  }
-
-  function layoutFlow(src) {
-    const parsed = parseFlow(src);
-    if (!parsed.nodes.length) return null;
-    const place = flowPlace(parsed.nodes, parsed.edges);
-    const nw = 168;
-    const nh = 72;
-    const gx = 64;
-    const gy = 56;
-    const pad = 16;
-    const pos = {};
-    let maxR = 0;
-    let maxL = 0;
-    parsed.nodes.forEach(function (n) {
-      const r = place.rank[n.id] || 0;
-      const l = place.row[n.id] || 0;
-      maxR = Math.max(maxR, r);
-      maxL = Math.max(maxL, l);
-      pos[n.id] = { x: pad + l * (nw + gx), y: pad + r * (nh + gy), w: nw, h: nh, r: r, l: l };
-    });
-    const edges = parsed.edges.map(function (e, i) {
-      const a = pos[e.from];
-      const b = pos[e.to];
-      const midX = ((a.x + a.w / 2) + (b.x + b.w / 2)) / 2;
-      const midY = b.r > a.r ? a.y + a.h + gy / 2 : (a.y + b.y) / 2;
-      return { key: i, d: mapCurve(a, b), label: e.label, x: midX, y: midY, back: b.r < a.r };
-    });
-    return {
-      kind: "flow",
-      nodes: parsed.nodes,
-      pos: pos,
-      edges: edges,
-      width: pad * 2 + (maxL + 1) * nw + maxL * gx,
-      height: pad * 2 + (maxR + 1) * nh + maxR * gy,
-    };
-  }
-
-  function parseSequence(src) {
-    const alias = {};
-    const parts = [];
-    const msgs = [];
-    function part(name, label) {
-      const key = name;
-      if (alias[key] != null) return alias[key];
-      alias[key] = parts.length;
-      const shown = (label || key).trim();
-      parts.push({ name: shown, ref: record(shown) ? shown : "" });
-      return alias[key];
-    }
-    String(src || "").split("\n").forEach(function (raw) {
-      const line = raw.trim();
-      if (!line || /^sequenceDiagram\b/i.test(line)) return;
-      const declared = line.match(/^(?:participant|actor)\s+(\S+)(?:\s+as\s+(.+))?$/i);
-      if (declared) {
-        part(declared[1], declared[2] || declared[1]);
-        return;
-      }
-      const msg = line.match(/^(.+?)\s*(-->>|->>|-->|->)\s*(.+?)\s*:\s*(.*)$/);
-      if (!msg) return;
-      msgs.push({
-        from: part(msg[1].trim(), msg[1].trim()),
-        to: part(msg[3].trim(), msg[3].trim()),
-        label: msg[4],
-        ret: msg[2].indexOf("--") === 0,
-      });
-    });
-    return { parts: parts, msgs: msgs };
-  }
-
-  function layoutSequence(src) {
-    const parsed = parseSequence(src);
-    if (!parsed.parts.length) return null;
-    const n = parsed.parts.length;
-    const bw = 140;
-    const gap = 36;
-    const pad = 16;
-    const width = pad * 2 + n * bw + (n - 1) * gap;
-    const cw = bw + gap;
-    const heads = parsed.parts.map(function (p, i) {
-      return { name: p.name, ref: p.ref, x: pad + i * cw, y: pad, w: bw, h: 64 };
-    });
-    const top = pad + 64 + 28;
-    const step = 42;
-    const height = top + Math.max(parsed.msgs.length, 1) * step + 16;
-    const msgs = parsed.msgs.map(function (m, i) {
-      const x1 = heads[m.from].x + bw / 2;
-      const x2 = heads[m.to].x + bw / 2;
-      const y = top + i * step;
-      return {
-        left: Math.min(x1, x2),
-        width: Math.max(Math.abs(x2 - x1), 28),
-        top: y,
-        label: m.label,
-        ret: m.ret,
-        self: m.from === m.to,
-        fwd: x2 >= x1,
-        ax: x2,
-      };
-    });
-    const lifelines = heads.map(function (head) {
-      return { x: head.x + bw / 2, top: head.y + head.h, h: height - (head.y + head.h) - 8 };
-    });
-    return { kind: "sequence", heads: heads, msgs: msgs, lifelines: lifelines, width: width, height: height };
-  }
-
-  function svgWires(edges, width, height) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "wires");
-    svg.setAttribute("width", String(width));
-    svg.setAttribute("height", String(height));
-    const marker = "spArrow" + (++diagramSeq);
-    svg.innerHTML = "<defs><marker id=\"" + marker + "\" viewBox=\"0 0 8 8\" refX=\"7\" refY=\"4\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0 0 L8 4 L0 8 z\" fill=\"currentColor\"></path></marker></defs>";
-    edges.forEach(function (edge) {
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", edge.d);
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", "currentColor");
-      path.setAttribute("stroke-width", "1.4");
-      if (edge.back) path.setAttribute("stroke-dasharray", "4 4");
-      path.setAttribute("marker-end", "url(#" + marker + ")");
-      svg.appendChild(path);
-    });
-    return svg;
-  }
-
   function diagramPicker(list, index, onpick) {
     return h("div", { class: "picker" }, [
       h("div", { class: "picker-head" }, [
@@ -1813,79 +1601,152 @@
     ]);
   }
 
-  function flowStage(layout, selected, onselect) {
-    const stage = h("div", { class: "canvas" });
-    stage.style.width = layout.width + "px";
-    stage.style.height = layout.height + "px";
-    stage.appendChild(svgWires(layout.edges, layout.width, layout.height));
-    layout.edges.forEach(function (edge) {
-      if (!edge.label) return;
-      const label = h("div", { class: "edge-label" }, [edge.label]);
-      label.style.left = edge.x + "px";
-      label.style.top = edge.y + "px";
-      stage.appendChild(label);
+
+  function applyMermaidTheme() {
+    if (!window.mermaid || !window.mermaid.initialize) return;
+    const style = getComputedStyle(document.documentElement);
+    function token(name) {
+      return style.getPropertyValue(name).trim();
+    }
+    const dark = (document.documentElement.getAttribute("data-theme") || systemTheme()) === "dark";
+    window.mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      themeVariables: {
+        darkMode: dark,
+        background: token("--bg-sunken"),
+        fontFamily: "Schibsted Grotesk, sans-serif",
+        fontSize: "14px",
+        primaryColor: token("--bg-surface"),
+        primaryTextColor: token("--ink-1"),
+        primaryBorderColor: token("--ink-4"),
+        secondaryColor: token("--bg-raised"),
+        secondaryTextColor: token("--ink-1"),
+        secondaryBorderColor: token("--ink-4"),
+        tertiaryColor: token("--bg-sunken"),
+        tertiaryTextColor: token("--ink-1"),
+        tertiaryBorderColor: token("--ink-4"),
+        lineColor: token("--ink-4"),
+        textColor: token("--ink-1"),
+        mainBkg: token("--bg-surface"),
+        nodeBorder: token("--ink-4"),
+        clusterBkg: token("--bg-sunken"),
+        clusterBorder: token("--ink-4"),
+        titleColor: token("--ink-1"),
+        edgeLabelBackground: token("--bg-sunken"),
+        actorBkg: token("--bg-surface"),
+        actorBorder: token("--ink-4"),
+        actorTextColor: token("--ink-1"),
+        actorLineColor: token("--ink-4"),
+        signalColor: token("--ink-3"),
+        signalTextColor: token("--ink-2"),
+        labelBoxBkgColor: token("--bg-surface"),
+        labelBoxBorderColor: token("--ink-4"),
+        labelTextColor: token("--ink-1"),
+        loopTextColor: token("--ink-2"),
+        noteBkgColor: token("--bg-raised"),
+        noteTextColor: token("--ink-1"),
+        noteBorderColor: token("--ink-4"),
+        activationBkgColor: token("--bg-raised"),
+        activationBorderColor: token("--ink-4"),
+        sequenceNumberColor: token("--ink-1"),
+      },
     });
-    layout.nodes.forEach(function (n) {
-      const box = layout.pos[n.id];
-      const on = !!selected && n.id === selected;
-      const btn = h("button", {
-        type: "button",
-        class: "node declared" + (on ? " is-focus" : ""),
-        on: { click: function () { onselect(n.id); } },
-      }, [
-        h("div", { class: "pre" }, [n.shape === "end" ? "outcome" : n.shape === "decision" ? "decision" : "step"]),
-        h("div", { class: "id" }, [breakable(n.text || n.id)]),
-      ]);
-      btn.style.left = box.x + "px";
-      btn.style.top = box.y + "px";
-      btn.style.width = box.w + "px";
-      stage.appendChild(btn);
-    });
-    return stage;
   }
 
-  function sequenceStage(layout, selected, onselect, currentId) {
-    const stage = h("div", { class: "canvas" });
-    stage.style.width = layout.width + "px";
-    stage.style.height = layout.height + "px";
-    layout.lifelines.forEach(function (line) {
-      const el = h("div", { class: "lifeline" });
-      el.style.left = line.x + "px";
-      el.style.top = line.top + "px";
-      el.style.height = line.h + "px";
-      stage.appendChild(el);
+  function releaseWheel(frame) {
+    frame.addEventListener("wheel", function (ev) {
+      ev.stopPropagation();
+    }, { capture: true, passive: true });
+  }
+
+  function sizeDiagram(svg) {
+    const box = (svg.getAttribute("viewBox") || "").trim().split(/[\s,]+/);
+    const width = Number(box[2]);
+    const height = Number(box[3]);
+    if (!(width > 0) || !(height > 0)) return;
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
+    svg.style.maxWidth = "none";
+    svg.style.width = width + "px";
+    svg.style.height = height + "px";
+  }
+
+  function plainLabel(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function wireDiagram(svg, selected, onselect) {
+    const hosts = [];
+    svg.querySelectorAll("g.node").forEach(function (node) { hosts.push(node); });
+    svg.querySelectorAll("text.actor").forEach(function (text) {
+      if (text.parentElement && hosts.indexOf(text.parentElement) < 0) hosts.push(text.parentElement);
     });
-    layout.msgs.forEach(function (msg) {
-      const line = h("div", { class: "msg" + (msg.ret ? " ret" : "") });
-      line.style.left = msg.left + "px";
-      line.style.top = msg.top + "px";
-      line.style.width = msg.width + "px";
-      const label = h("div", { class: "msg-label" }, [msg.label]);
-      label.style.left = (msg.left + msg.width / 2) + "px";
-      label.style.top = (msg.top - 16) + "px";
-      const arrow = h("div", { class: "msg-arrow" }, [msg.self ? "▼" : msg.fwd ? "▶" : "◀"]);
-      arrow.style.left = (msg.self ? msg.left + msg.width - 8 : msg.fwd ? msg.left + msg.width - 10 : msg.left - 2) + "px";
-      arrow.style.top = (msg.top - 7) + "px";
-      stage.appendChild(line);
-      stage.appendChild(label);
-      stage.appendChild(arrow);
+    hosts.forEach(function (host) {
+      let label = "";
+      const named = host.querySelector(".nodeLabel");
+      if (named && named.closest("g.node") === host) label = plainLabel(named.textContent);
+      if (!label) {
+        const actor = host.querySelector(":scope > text.actor");
+        if (actor) label = plainLabel(actor.textContent);
+      }
+      if (!label || !record(label)) return;
+      host.classList.add("spec-id");
+      if (selected && label === selected) host.classList.add("is-focus");
+      host.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        onselect(label);
+      });
     });
-    layout.heads.forEach(function (head) {
-      const on = !!selected && (head.name === selected || head.ref === selected);
-      const btn = h("button", {
+  }
+
+  function diagramFrame(picture) {
+    const frame = h("div", { class: "diagram-frame" }, [picture]);
+    releaseWheel(frame);
+    return frame;
+  }
+
+  function diagramPicture(diagram, selected, onselect) {
+    const host = h("div", { class: "diagram" });
+    const frame = diagramFrame(host);
+    const source = diagram.mermaid || "";
+    if (source && window.mermaid && window.mermaid.render) {
+      applyMermaidTheme();
+      const id = "spdiag" + (++diagramSeq);
+      window.mermaid.render(id, source).then(function (result) {
+        const holder = document.createElement("div");
+        holder.innerHTML = result.svg;
+        const svg = holder.querySelector("svg");
+        host.replaceChildren();
+        if (!svg) {
+          host.append(h("pre", {}, [source]));
+          return;
+        }
+        sizeDiagram(svg);
+        wireDiagram(svg, selected, onselect);
+        host.append(svg);
+      }).catch(function () {
+        host.replaceChildren(h("pre", {}, [source]));
+      });
+    } else if (source) {
+      host.append(h("pre", {}, [source]));
+    }
+    return frame;
+  }
+
+  function mermaidSource(rec, index, source) {
+    if (!source) return null;
+    const key = "src:" + rec.id + ":" + index;
+    const open = !!expanded[key];
+    return h("div", { class: "mermaid-source" }, [
+      h("button", {
         type: "button",
-        class: "node " + (head.ref ? "declared" : "unknown") + (head.ref && head.ref === currentId ? " is-current" : "") + (on ? " is-focus" : ""),
-        on: { click: function () { onselect(head.ref || head.name); } },
-      }, [
-        h("div", { class: "pre" }, [head.ref ? "participant" : "external"]),
-        h("div", { class: "id" }, [breakable(head.name)]),
-      ]);
-      btn.style.left = head.x + "px";
-      btn.style.top = head.y + "px";
-      btn.style.width = head.w + "px";
-      stage.appendChild(btn);
-    });
-    return stage;
+        class: "more",
+        on: { click: function () { expanded[key] = !open; rerender(false); } },
+      }, [open ? "Hide Mermaid source ↑" : "View Mermaid source ↓"]),
+      open ? h("pre", {}, [source]) : null,
+    ]);
   }
 
   function diagramBlock(rec, selected, onselect) {
@@ -1895,58 +1756,24 @@
     if (!(index >= 0 && index < list.length)) index = 0;
     const diagram = list[index];
     const source = diagram.mermaid || "";
-    const kind = (diagram.type || "").toLowerCase();
-    const flow = kind === "flowchart" || /^\s*flowchart\b/i.test(source) ? layoutFlow(source) : null;
-    const sequence = !flow && (kind === "sequence" || /^\s*sequenceDiagram\b/i.test(source)) ? layoutSequence(source) : null;
     function pick(i) {
       go("id/" + encodeURIComponent(rec.id), { proj: "diagrams", dg: String(i) });
     }
-    let picture = null;
-    if (flow) picture = diagramFrame(flowStage(flow, selected, onselect));
-    else if (sequence) picture = diagramFrame(sequenceStage(sequence, selected, onselect, rec.id));
-    else picture = diagramCard(diagram);
     const why = selected
       ? whyBox(selected, "Declared in “" + (diagram.title || diagram.type || "diagram") + "”.", "declared · diagrams")
       : aboutBox([
-        "This diagram is declared material, not generated. Participants that match an id can be followed.",
+        "This diagram is declared Mermaid. A label that is an id can be followed.",
       ], "declared · diagrams");
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · diagrams on this id"]),
       diagramPicker(list, index, pick),
       diagram.description ? h("p", { class: "note" }, [diagram.description]) : null,
-      picture,
+      diagramPicture(diagram, selected, onselect),
+      mermaidSource(rec, index, source),
       why,
     ]);
   }
 
-  function diagramFrame(picture) {
-    return h("div", { class: "diagram-frame" }, [picture]);
-  }
-
-  function diagramCard(diagram) {
-    const host = h("div", { class: "diagram" });
-    const title = diagram.title || diagram.type || "diagram";
-    const source = diagram.mermaid || "";
-    if (source && window.mermaid && window.mermaid.render) {
-      const id = "spdiag" + (++diagramSeq);
-      window.mermaid.render(id, source).then(function (result) {
-        const holder = document.createElement("div");
-        holder.innerHTML = result.svg;
-        host.replaceChildren();
-        while (holder.firstChild) host.append(holder.firstChild);
-      }).catch(function () {
-        host.replaceChildren(h("pre", {}, [source]));
-      });
-    } else if (source) {
-      host.append(h("pre", {}, [source]));
-    }
-    return h("div", { class: "item" }, [
-      title,
-      diagram.type ? h("div", { class: "src" }, [diagram.type + " · diagrams"]) : null,
-      diagram.description ? h("div", {}, [diagram.description]) : null,
-      diagramFrame(host),
-    ]);
-  }
 
   function dataBlock(rec, graph) {
     const contracts = ((((graph || {}).perspectives || {}).quality || {}).contracts) || [];

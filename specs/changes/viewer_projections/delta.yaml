@@ -7,7 +7,8 @@ ADDED:
   - "tools/specplane/view.py and tools/specplane/viewer/ generate and serve the local readout"
   - "foundation.design_system: viewer color, type, and provenance tokens"
 
-MODIFIED: []
+MODIFIED:
+  - "Declared diagrams are rendered by the vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves."
 
 REMOVED: []
 

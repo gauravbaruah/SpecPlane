@@ -7,6 +7,11 @@ sensors:
     must: "An inferred id stays inferred and is not given a live slice"
     run:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_inferred_is_not_live"
+  - id: "mermaid_diagrams"
+    promise: "capability.specplane_viewer"
+    must: "A declared diagram is rendered by the vendored Mermaid. A label that is an id can be selected. The source can be shown under the picture."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_diagrams_scroll_in_the_column"
   - id: "diagram_scroll"
     promise: "capability.specplane_viewer"
     must: "Map, Blast, Layers, and Diagrams stay in the column. The page scrolls. Nothing captures the wheel to zoom."
