@@ -4,13 +4,25 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-27"
+  last_updated: "2026-09-28"
   status: "planned"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "ci_compose"
+    summary: "A paste-in pull-request workflow may call validate, check_sync, and run. Init still does not write that file, and it is not a required GitHub check."
+    breaking: false
+  - date: "2026-09-28"
+    author: "try_path_view"
+    summary: "The try path ends on the local viewer blast for the tiny-saas auth id. Init behavior is unchanged."
+    breaking: false
+  - date: "2026-09-28"
+    author: "readme_onramp"
+    summary: "README, try, and use-in-your-project show the install path and specplane mcp. Init behavior is unchanged."
+    breaking: false
   - date: "2026-09-27"
     author: "kernel-slice"
     summary: "Added an init flowchart and an init sequence diagram"
@@ -59,6 +71,7 @@ constraints:
   ux:
     - "Does not copy kernel specs/ into the dest"
     - "Does not write .github/workflows or git hooks"
+    - "A paste-in pull-request workflow may call validate, check_sync, and run. Init does not write that file. It is not a required GitHub check."
     - "Does not invent an example capability (bootstrap does that)"
     - "Does not infer or scan the destination. Brownfield mapping is the specplane-infer skill."
     - "Published PyPI / npx package is not this command"

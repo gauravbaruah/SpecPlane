@@ -1,6 +1,6 @@
 id: "readme_onramp"
 kind: "fix"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-26"
 promise_ids:
   - "capability.specplane_init"
@@ -17,3 +17,4 @@ non_goals:
   - "init writes GitHub Actions or git hooks"
   - "edit live 5C YAML"
   - "expand the MCP catalog"
+note: "Promoted 2026-09-28. The no-specplane-mcp non-goal was already superseded by mcp_and_sync_speech; live docs name the verb."

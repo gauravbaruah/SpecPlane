@@ -6,13 +6,21 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "mcp"]
-  last_updated: "2026-09-25"
+  last_updated: "2026-09-28"
   status: "draft"
-  version: "1.5.0"
+  version: "1.6.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "mcp_and_sync_speech"
+    summary: "specplane mcp starts this server. Optional --spec-root is the default when a tool call omits spec_root. A per-call spec_root still wins. Catalog unchanged."
+    breaking: false
+  - date: "2026-09-28"
+    author: "demo_teeth"
+    summary: "MCP retrieve prints the same constraint lists as the CLI."
+    breaking: false
   - date: "2026-09-25"
     author: "kernel-slice"
     summary: "Catalog adds impact. Same kernel function as the CLI. No infer, specify, or implement tool."
@@ -89,5 +97,7 @@ implementation:
       - "promote is not in the catalog; agents shell out"
       - "reconcile is not in the catalog; agents shell out"
       - "Hosted MCP is out of slice"
+      - "specplane mcp starts this server. A per-call spec_root wins over --spec-root."
+      - "Retrieve stdout matches the CLI, including authored constraint lists"
     open_questions: []
     readiness: "in-progress"

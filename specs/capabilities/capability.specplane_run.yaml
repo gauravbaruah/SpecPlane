@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "mcp", "run"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-09-28"
   status: "planned"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "ci_compose"
+    summary: "A paste-in pull-request workflow may call run --change only for a change folder in that diff. English must: is still not a command."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "L3 join — run binds a success.yaml claim to an existing argv or unittest id and records the exit. Not a test runner. check_sync stays L1."
@@ -42,6 +46,7 @@ constraints:
     - "Do not execute English must: text. Do not parse application source. Do not infer a test."
   ux:
     - "Not a test runner, not a second CI, and not a replacement for pytest, Playwright, eval harnesses, cron, or GitHub Actions"
+    - "A paste-in pull-request workflow may call run --change only for a change folder in that diff"
     - "Stdout is per-sensor pass | fail | not_run | error, then behavior: evidence. No bare result: pass as a certificate."
     - "Unknown or archived --change exits non-zero and invokes nothing"
     - "Do not measure capability success_metrics. Do not parse test_strategy into a command."
