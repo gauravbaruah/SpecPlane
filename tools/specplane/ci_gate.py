@@ -32,6 +32,12 @@ def change_slugs(files: list[str]) -> list[str]:
     return sorted(set(slugs))
 
 
+def open_change_slugs(repo: Path, files: list[str]) -> list[str]:
+    """Slugs whose open folder still exists. An archive move is not a folder to run."""
+    root = repo / "specs" / "changes"
+    return [slug for slug in change_slugs(files) if (root / slug).is_dir()]
+
+
 def _git(repo: Path, args: list[str]) -> str:
     return subprocess.check_output(["git", *args], cwd=repo, text=True, stderr=subprocess.DEVNULL)
 
@@ -63,7 +69,7 @@ def gate(repo: Path, spec_root: Path, base: str, *, apply_diff: bool) -> int:
     except (subprocess.CalledProcessError, RuntimeError) as exc:
         sys.stderr.write(f"ci_gate: {exc}\n")
         return 2
-    slugs = change_slugs(files)
+    slugs = open_change_slugs(repo, files)
     print(
         "ci_gate slugs: " + (", ".join(slugs) if slugs else "(none)"),
         flush=True,

@@ -17,7 +17,7 @@ GATE = ROOT / "ci_gate.py"
 
 sys.path.insert(0, str(ROOT))
 
-from ci_gate import change_slugs  # noqa: E402
+from ci_gate import change_slugs, open_change_slugs  # noqa: E402
 from initkit import CLI_FILES  # noqa: E402
 
 
@@ -68,6 +68,15 @@ class CiGateTests(unittest.TestCase):
             ]
         )
         self.assertEqual(slugs, ["ci_compose"])
+
+    def test_archived_folder_is_not_an_open_slug(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            slugs = open_change_slugs(
+                repo,
+                ["specs/changes/promote_completed/proposal.yaml"],
+            )
+        self.assertEqual(slugs, [])
 
     def test_skip_skill_spec_edit_fails(self) -> None:
         repo = _repo_with_golden()
