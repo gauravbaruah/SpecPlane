@@ -17,7 +17,12 @@ uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 
 Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package; `uvx specplane` would fail.
 
-Fallback from a checkout: `python3 /path/to/SpecPlane/tools/specplane/cli.py init`.
+Fallback from a checkout (Python 3.10+ and PyYAML):
+
+```bash
+pip install -e /path/to/SpecPlane    # or: pip install pyyaml
+python3 /path/to/SpecPlane/tools/specplane/cli.py init
+```
 
 That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions. It does not ask which coding agent you use — skills for Cursor, Claude Code, and Codex are copied together.
 
@@ -73,6 +78,27 @@ Add a consuming `AGENTS.md` (below) and:
 Commit those files. Open the **product** repo in Cursor or Claude Code (not only the SpecPlane clone).
 
 If you already have an `AGENTS.md`, keep your project rules and append the SpecPlane loading contract rather than replacing the file.
+
+### Optional local MCP
+
+Skills already call the kernel. To expose retrieve, blast, impact, check_sync, list_gaps, and run as tools, point the editor at the copied stdio server. Validate, promote, and reconcile stay CLI-only.
+
+**Cursor** (`~/.cursor/mcp.json`) or **Claude Desktop** (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "specplane": {
+      "command": "python3",
+      "args": ["/absolute/path/to/your-app/tools/specplane/mcp_stdio.py"]
+    }
+  }
+}
+```
+
+**Claude Code** — same JSON in the project `.mcp.json`, or `claude mcp add specplane -- python3 /absolute/path/to/your-app/tools/specplane/mcp_stdio.py`.
+
+That `python3` must be able to import PyYAML (`pip install pyyaml` or `pip install -e /path/to/SpecPlane`).
 
 ### Consuming `AGENTS.md`
 

@@ -26,9 +26,21 @@ flows:
       primary: patient
     exceptions: [card_declined]
     recovery: [retry_with_new_card]
+    stages: [charge, decline, retry, completed]
     outcomes:
       success: ["payment completed"]
+      abandonment: ["patient leaves"]
   - "Refund"
+
+diagrams:
+  - type: sequence
+    title: "Retry after decline"
+    description: "Patient asks the billing API to retry a declined charge"
+    mermaid: |
+      sequenceDiagram
+        participant Patient
+        participant API
+        Patient->>API: retry
 
 business_value:
   user_outcome: "A patient can finish paying after a decline"

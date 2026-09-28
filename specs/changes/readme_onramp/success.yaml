@@ -1,0 +1,22 @@
+change_id: "readme_onramp"
+kind: "fix"
+
+sensors:
+  - id: "readme_shows_editable_install"
+    promise: "capability.specplane_init"
+    must: "README Try it shows pip install -e . (or pip install pyyaml) after clone"
+    run:
+      argv:
+        - "python3"
+        - "-c"
+        - "from pathlib import Path; t=Path('README.md').read_text(); assert 'pip install -e .' in t and 'pyyaml' in t.lower()"
+  - id: "readme_mcp_snippet_not_invented_verb"
+    promise: "component.mcp_stdio"
+    must: "README includes an mcpServers snippet for mcp_stdio.py and does not claim a specplane mcp command exists"
+    run:
+      argv:
+        - "python3"
+        - "-c"
+        - "from pathlib import Path; t=Path('README.md').read_text(); assert 'mcpServers' in t and 'mcp_stdio.py' in t; assert 'specplane mcp' not in t"
+
+looks_fine_is_not_a_sensor: true

@@ -7,7 +7,10 @@ Synthetic sandbox: [`examples/tiny-saas`](../examples/tiny-saas/). Auth, billing
 ```bash
 git clone https://github.com/gauravbaruah/SpecPlane.git
 cd SpecPlane
+pip install -e .    # or: pip install pyyaml
 ```
+
+Python 3.10+ and PyYAML. Without that install, `python3 tools/specplane/cli.py` fails on a bare system.
 
 Open **`examples/tiny-saas`** as the workspace (File → Open Folder). Skills and the kit are already linked there.
 
@@ -35,7 +38,19 @@ specplane blast component.password_reset
 specplane check_sync --changed-ids capability.billing
 ```
 
-## 4. Your product
+## 4. The catch
+
+`retrieve capability.authentication` prints the live sentence: **Password reset links expire in 60 minutes**. It does not print the whole file, and it does not read `src/auth.py`.
+
+A one-line TTL is not a one-file idea. `blast` and `impact` of `capability.authentication` name `capability.notifications`, `capability.billing`, `component.notifier`, and `foundation.security_baseline`.
+
+**Invisible.** With no `implementation.realization.paths` on `component.password_reset`, and without `check_sync --changed-ids`, editing `60` to `15` in `src/auth.py` never enters the default changed-set. The kernel does not parse that file.
+
+**Caught as coverage.** This example declares `src/auth.py` on `component.password_reset`. A change to that file (or an explicit `--changed-ids component.password_reset`) puts the component in the changed-set. The only open change is `add_dunning`, which covers billing, not auth. `check_sync` then fails coverage. That is declared coverage, not proof the code matches the sentence, and not a GitHub check blocking a commit.
+
+Maps stay optional on every other product. This demo declares one path so the try path can show the join.
+
+## 5. Your product
 
 ```bash
 cd /path/to/your-app
@@ -45,3 +60,5 @@ uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 Details: [`use-in-your-project.md`](./use-in-your-project.md). Do not copy this repo’s `specs/` (those YAML files specify SpecPlane’s own CLI).
 
 Local MCP is optional. Skills already call the kernel. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate stays CLI-only. `reconcile` is CLI-only: optional declared file maps, including greenfield with no infer. `run` joins a bound check; it is not a test runner. `impact` explains one affected subgraph; it does not replace `blast`.
+
+Copy-paste Cursor / Claude Desktop / Claude Code snippets: [README — Optional: local MCP](../README.md#optional-local-mcp).

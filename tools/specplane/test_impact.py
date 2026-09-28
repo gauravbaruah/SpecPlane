@@ -191,6 +191,25 @@ class ImpactTests(unittest.TestCase):
         self.assertIn("A declined charge can be retried once", criteria)
         self.assertIn("payment_completion", criteria)
 
+    def test_stages_outcomes_and_data_models(self) -> None:
+        payload = impact(self.kernel, "capability.billing")
+        assert payload is not None
+        product = payload["perspectives"]["product"]
+        flow = next(item for item in product["items"] if item.get("flow_id") == "patient_payment")
+        self.assertEqual(flow["stages"], ["charge", "decline", "retry", "completed"])
+        self.assertEqual(flow["outcomes"]["success"], ["payment completed"])
+        self.assertEqual(flow["outcomes"]["abandonment"], ["patient leaves"])
+        quality = payload["perspectives"]["quality"]
+        models = [row for row in quality["contracts"] if row.get("kind") == "data_models"]
+        self.assertEqual(len(models), 1)
+        self.assertEqual(models[0]["subject"], "component.billing_api")
+        self.assertEqual(models[0]["epistemic_state"], "declared")
+        self.assertEqual(models[0]["source"], "contracts.data_models")
+        self.assertEqual(
+            models[0]["models"]["RetryRequest"]["fields"],
+            ["invoice_id", "instrument_id"],
+        )
+
     def test_governance_is_declared_and_foundations_stay_unclassified(self) -> None:
         payload = impact(self.kernel, "billing_retry")
         assert payload is not None

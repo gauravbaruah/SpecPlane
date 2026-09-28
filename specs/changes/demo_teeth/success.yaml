@@ -1,0 +1,26 @@
+change_id: "demo_teeth"
+kind: "fix"
+
+sensors:
+  - id: "retrieve_prints_sixty"
+    promise: "capability.specplane_retrieve"
+    must: "retrieve of tiny-saas capability.authentication prints the 60-minute reset sentence and does not dump the rest of the file"
+    run:
+      unittest: "tools.specplane.test_kernel.DemoTeethTests.test_retrieve_prints_reset_ttl_not_the_file"
+  - id: "mapped_auth_py"
+    promise: "component.cli_retrieve"
+    must: "When src/auth.py is the changed file, reconcile maps it to component.password_reset and default check_sync fails coverage because no open change covers auth"
+    run:
+      unittest: "tools.specplane.test_kernel.DemoTeethTests.test_auth_py_joins_default_changed_set_and_fails_coverage"
+  - id: "blast_names_neighbors"
+    promise: "capability.specplane_retrieve"
+    must: "blast of tiny-saas capability.authentication names notifications, billing, notifier, and security_baseline"
+    run:
+      unittest: "tools.specplane.test_kernel.DemoTeethTests.test_auth_blast_names_neighbors"
+  - id: "catch_writeup"
+    promise: "component.mcp_stdio"
+    must: "docs/try.md states the invisible edit and the coverage catch with those ids, and the README points at it, without a CI or OpenSpec claim"
+    run:
+      unittest: "tools.specplane.test_kernel.DemoTeethTests.test_catch_writeup_is_honest"
+
+looks_fine_is_not_a_sensor: true

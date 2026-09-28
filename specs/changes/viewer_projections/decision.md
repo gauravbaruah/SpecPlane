@@ -34,14 +34,18 @@ specplane view --spec-root R   same as other kernel commands
 
 - Default is **serve**, not export-only. `--open` means also launch the browser.
 - Server: stdlib / lightweight, **local-only**, ephemeral. Bind `127.0.0.1` (not `0.0.0.0`).
+- While serving, a request rewrites `payload.js` when the spec root is newer than that file. A reload shows a change folder that appeared after `specplane view` started. Assets are not recopied.
 - `--out` chooses the output directory. It is not “skip the server.”
 - If we need an artifact without serving, add `specplane view --static` or `specplane export viewer` later. Do not overload `--open` or `--out` for that.
 
 ## Mermaid
 
-- **Vendor** a pinned Mermaid build under `tools/specplane/viewer/` (exact version recorded here when added).
+- **Vendor** a pinned Mermaid build under `tools/specplane/viewer/vendor/` — Mermaid **10.9.3** (`mermaid.min.js`). The page does not load it from a CDN. Diagrams stay off the switcher until the kernel returns diagram source.
+- A declared diagram is rendered by that vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves. A label that is an id can be selected. The Mermaid source stays available under the picture.
 - No CDN. Offline / no-account / no-key is a Community property.
-- Rendering must not change because a CDN moved.
+- Rendering must not change because a CDN moved. The diagram frame does not listen for the wheel in a way that zooms or stops the page from scrolling.
+- Every picture stays in the column, including Map, Blast, Layers, Journey, Data, and Diagrams. The page scrolls. Cards have a minimum width. A picture wider than the column scrolls sideways inside the column. Nothing captures the wheel to zoom.
+- Expand opens the current picture in the centre of the viewport with a 5% margin on every side. It is available on a declared diagram and on Map, Blast, Layers, Journey, and Data. It does not take over the browser. Escape or Close leaves it. The wheel does not zoom.
 
 ## Data (do not slurp)
 
@@ -51,10 +55,10 @@ Call `retrieve`, `impact`, `list_gaps`, `check_sync`. `blast` is coverage bucket
 
 Provisional. Viewer v2 is the working design (`design-docs/design-references/SpecPlane viewer design (5).zip`, canvas `Viewer v2.dc.html`). Build toward those frames. They are the surface GB would actually use. Runtime may omit or reshape a block when the payload has no field for it. That is expected, and it is not a reason to shrink the design back to the earlier wireframe.
 
-Unlocked:
+Unlocked. Full text: `viewer2-amendment.md` in this folder (also in `design-docs/handoffs/H-E-viewer.md`, which is gitignored).
 
-- The projection control may offer **Map, Blast, Layers, Journey, Diagrams, and Data** when the record has that data. One slot: the selected projection replaces the picture. A projection with nothing to draw is omitted.
-- Blast may be read five ways (System, Product, Quality, Governance, Ownership) on that same drawing, as in the turn-3 frames. Nodes stay put. An empty reading says the relationship is not represented.
+- The projection control may offer **Map, Blast, Layers, Journey, Diagrams, and Data** when the record has that data. One slot: the selected projection replaces the picture. A projection with nothing to draw is omitted. Sequence is a diagram type inside Diagrams, not its own tab. Diagrams is where a record shows the diagrams it holds.
+- Blast may be read five ways (System, Product, Quality, Governance, Ownership) on that same drawing. The perspective control is subordinate to the projection switcher. Nodes stay put. Empty speech is “not represented,” “No governance relationship identified in the current model,” or “Ownership not represented,” depending on the reading.
 
 Still in force:
 
@@ -62,6 +66,33 @@ Still in force:
 - Those five readings stay inside Blast. They are not navbar homes.
 - Inferred never looks live. Sensor sentences are not links. No Share, Upgrade, persona switch, API key, or YAML edit.
 - The path on a selected affected id comes from `impact.affected[].path`. The viewer does not walk the graph itself.
+
+## Blast hop columns (real — not “cannot say yet”)
+
+The Viewer 2 hop strip is a **projection of `impact.affected`**. Do not omit it, and do not invent a second chain in the browser.
+
+| Column | Kernel field |
+|---|---|
+| Selected | `distance === 0` |
+| 1 hop · direct | `distance === 1` (`direct` is true) |
+| 2 hops | `distance === 2` |
+| Further | `distance >= 3`, collapsed until expand. Copy: `+N more ids at 3+ hops — select to expand` |
+
+On a card, print `relationship` + via (last `path` step’s `from`), then `direct` / `N hops` / `terminal · not expanding` (foundation or incoming `uses`), then `epistemic_state`. Why-panel stays `path`.
+
+**No longer blank (do not hide behind “The model cannot say yet”):**
+
+- Hop-by-hop reason → `impact.affected[].path`
+- Owner / CODEOWNERS → Ownership perspective (`meta.owner` or derived CODEOWNERS)
+- Diagram picture → declared `type` / `title` / `description` / `mermaid`
+
+**Still cannot say — omit, do not invent:**
+
+- `about` / `flow_ref` matching a flowchart to `flows.stages`
+- Who handles a journey stage
+- Evidence behind `review_state`
+- The check bound to a sensor
+- Which stage a change touches (no lifecycle enum)
 - A missing field is omitted. No empty card just to keep the page symmetrical.
 
 ## Chrome (navbar and honesty)
@@ -81,7 +112,7 @@ Read-only. No YAML edit. PR markdown remains the free review path. Threads / sha
 |---|---|
 | Purpose, bit, review_state | Full responsibilities / changelog |
 | Open changes for this id | Foundations list |
-| One projection (Map, Blast, Layers, Journey, Diagrams, or Data — whichever this payload has) | The other projections, via the control |
+| One projection (Map, Blast, Layers, Journey, Diagrams, or Data — whichever this payload has). Sequence is inside Diagrams | The other projections, via the control |
 | Coverage / sensors band on a change | How-well `success_metrics` targets |
 
 Clickable: spec ids, change slugs, `refs[].url`.  

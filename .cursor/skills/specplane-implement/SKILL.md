@@ -45,6 +45,7 @@ Prefer `specplane` if it is on PATH, else `python3 tools/specplane/cli.py`.
 ```bash
 python3 tools/specplane/cli.py retrieve <id> --spec-root specs
 python3 tools/specplane/cli.py blast <id> --spec-root specs
+python3 tools/specplane/cli.py impact <id> --spec-root specs
 python3 tools/specplane/cli.py validate --spec-root specs
 python3 tools/specplane/cli.py check_sync --spec-root specs --change <slug> --changed-ids id1,id2
 python3 tools/specplane/cli.py reconcile --spec-root specs

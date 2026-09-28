@@ -26,6 +26,8 @@ LIVE_STATUSES = {
 }
 REPLACED_STATUSES = {"deprecated", "archived"}
 INFERRED_MARKERS = {"inferred"}
+# Capability Phase 1 lists. data_classification is a label, not a promise sentence.
+CONSTRAINT_LIST_KEYS = ("legal", "security", "ux")
 
 
 @dataclass
@@ -128,11 +130,52 @@ def open_changes_for(kernel: Kernel, spec_id: str) -> list[Change]:
     ]
 
 
-def slice_fields(doc: SpecDoc) -> dict[str, Any]:
+def _relative_spec_path(spec_root: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(spec_root.resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _declared_diagrams(doc: SpecDoc) -> list[dict[str, str]]:
+    raw = doc.data.get("diagrams")
+    if not isinstance(raw, list):
+        return []
+    diagrams: list[dict[str, str]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        row: dict[str, str] = {}
+        for key in ("type", "title", "description", "mermaid"):
+            value = item.get(key)
+            if isinstance(value, str) and value.strip():
+                row[key] = value.strip()
+        if row.get("type") or row.get("mermaid"):
+            diagrams.append(row)
+    return diagrams
+
+
+def authored_constraint_lists(doc: SpecDoc) -> dict[str, list[str]]:
+    """Legal, security, and ux sentences as authored. Omits empty lists and scalars."""
+    raw = doc.data.get("constraints")
+    if not isinstance(raw, dict):
+        return {}
+    lists: dict[str, list[str]] = {}
+    for key in CONSTRAINT_LIST_KEYS:
+        value = raw.get(key)
+        if not isinstance(value, list):
+            continue
+        texts = as_str_list(value)
+        if texts:
+            lists[key] = texts
+    return lists
+
+
+def slice_fields(doc: SpecDoc, spec_root: Path | None = None) -> dict[str, Any]:
     realized = doc.data.get("realized_by") if isinstance(doc.data.get("realized_by"), dict) else {}
     deps = dig(doc.data, "implementation", "dependencies", "internal")
     depended = dig(doc.data, "implementation", "depended_on_by", "components")
-    return {
+    fields: dict[str, Any] = {
         "id": doc.spec_id,
         "purpose": doc.meta.get("purpose") or "",
         "level": doc.level,
@@ -145,6 +188,15 @@ def slice_fields(doc: SpecDoc) -> dict[str, Any]:
         "depends_on": as_str_list(deps),
         "depended_on_by": as_str_list(depended),
     }
+    constraints = authored_constraint_lists(doc)
+    if constraints:
+        fields["constraints"] = constraints
+    if spec_root is not None:
+        fields["path"] = _relative_spec_path(spec_root, doc.path)
+    diagrams = _declared_diagrams(doc)
+    if diagrams:
+        fields["diagrams"] = diagrams
+    return fields
 
 
 def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
@@ -152,9 +204,11 @@ def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
     if not doc:
         return None
     bit = bit_of(doc)
-    live_slice = slice_fields(doc) if bit == "live" else None
+    fields = slice_fields(doc, kernel.spec_root)
+    live_slice = fields if bit == "live" else None
+    declared = fields if bit == "inferred" else None
     replaced_self = spec_id if bit == "replaced" else None
-    return {
+    payload: dict[str, Any] = {
         "id": spec_id,
         "bit": bit,
         "review_state": str(doc.meta.get("review_state") or ""),
@@ -168,6 +222,9 @@ def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
         ],
         "inferred_as_live": False,
     }
+    if declared is not None:
+        payload["declared"] = declared
+    return payload
 
 
 def _component_edges(doc: SpecDoc) -> tuple[list[str], list[str], list[str]]:
@@ -308,7 +365,7 @@ def resolve_open_change(kernel: Kernel, slug: str) -> Change | None:
     return None
 
 
-def success_must_lines(change: Change) -> list[str]:
+def success_sensors(change: Change) -> list[dict[str, str]]:
     path = change.path / "success.yaml"
     if not path.is_file():
         return []
@@ -318,13 +375,23 @@ def success_must_lines(change: Change) -> list[str]:
     sensors = loaded.get("sensors") or []
     if not isinstance(sensors, list):
         return []
-    out: list[str] = []
+    out: list[dict[str, str]] = []
     for row in sensors:
-        if isinstance(row, dict):
-            must = str(row.get("must") or "").strip()
-            if must:
-                out.append(must)
+        if not isinstance(row, dict):
+            continue
+        must = str(row.get("must") or "").strip()
+        if not must:
+            continue
+        item = {"must": must, "promise": str(row.get("promise") or "").strip()}
+        sensor_id = str(row.get("id") or "").strip()
+        if sensor_id:
+            item["id"] = sensor_id
+        out.append(item)
     return out
+
+
+def success_must_lines(change: Change) -> list[str]:
+    return [row["must"] for row in success_sensors(change)]
 
 
 def covering_changes(
@@ -788,6 +855,52 @@ def format_promote(payload: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _format_slice(lines: list[str], label: str, fields: dict[str, Any]) -> None:
+    lines.append(f"{label}:")
+    lines.append(f"  id: {fields['id']}")
+    if fields.get("path"):
+        lines.append(f"  path: {fields['path']}")
+    if fields.get("purpose"):
+        lines.append(f"  purpose: {fields['purpose']}")
+    for key in (
+        "responsibilities",
+        "implements",
+        "realized_by_components",
+        "realized_by_containers",
+        "uses",
+        "depends_on",
+        "depended_on_by",
+    ):
+        values = fields.get(key) or []
+        if values:
+            lines.append(f"  {key}:")
+            for item in values:
+                lines.append(f"    - {item}")
+    constraints = fields.get("constraints") or {}
+    if constraints:
+        lines.append("  constraints:")
+        for key in CONSTRAINT_LIST_KEYS:
+            values = constraints.get(key) or []
+            if not values:
+                continue
+            lines.append(f"    {key}:")
+            for item in values:
+                lines.append(f"      - {item}")
+    diagrams = fields.get("diagrams") or []
+    if diagrams:
+        lines.append("  diagrams:")
+        for diagram in diagrams:
+            dtype = str(diagram.get("type") or "").strip() or "diagram"
+            title = str(diagram.get("title") or "").strip()
+            head = f"{dtype} — {title}" if title else dtype
+            lines.append(f"    - {head}")
+            mermaid = str(diagram.get("mermaid") or "")
+            if mermaid:
+                lines.append("      mermaid: |")
+                for line in mermaid.splitlines():
+                    lines.append(f"        {line}")
+
+
 def format_retrieve(payload: dict[str, Any]) -> str:
     lines = [f"retrieve {payload['id']}", f"bit: {payload['bit']}"]
     review_state = str(payload.get("review_state") or "")
@@ -798,24 +911,10 @@ def format_retrieve(payload: dict[str, Any]) -> str:
         lines.append(f"status: {status}")
     live = payload.get("live")
     if live and payload["bit"] != "inferred":
-        lines.append("live:")
-        lines.append(f"  id: {live['id']}")
-        if live.get("purpose"):
-            lines.append(f"  purpose: {live['purpose']}")
-        for key in (
-            "responsibilities",
-            "implements",
-            "realized_by_components",
-            "realized_by_containers",
-            "uses",
-            "depends_on",
-            "depended_on_by",
-        ):
-            values = live.get(key) or []
-            if values:
-                lines.append(f"  {key}:")
-                for item in values:
-                    lines.append(f"    - {item}")
+        _format_slice(lines, "live", live)
+    declared = payload.get("declared")
+    if declared and payload["bit"] == "inferred":
+        _format_slice(lines, "declared", declared)
     replaced = payload.get("replaced") or []
     if replaced:
         lines.append("replaced:")

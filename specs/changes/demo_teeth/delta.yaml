@@ -1,0 +1,24 @@
+change_id: "demo_teeth"
+kind: "fix"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_retrieve"
+    summary: >-
+      A capability retrieve prints authored legal, security, and ux
+      constraint lists. The slice stays a minimal projection: purpose,
+      responsibilities, those lists, and the open in-flight delta.
+      Not the whole file. must: lines are not executed.
+  - id: "component.cli_retrieve"
+    summary: >-
+      format_retrieve prints those constraint lists and still omits
+      business value, changelog, and data_classification.
+  - id: "component.mcp_stdio"
+    summary: >-
+      MCP retrieve uses the same stdout, so the constraint lists appear
+      there too. Catalog unchanged.
+
+REMOVED: []
+
+RENAMED: []

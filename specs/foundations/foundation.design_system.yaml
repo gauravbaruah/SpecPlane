@@ -1,0 +1,166 @@
+meta:
+  id: "foundation.design_system"
+  purpose: "Semantic color, type, and provenance strokes for the SpecPlane viewer"
+  level: "foundation"
+  owner: "SpecPlane"
+  tags: ["design", "viewer", "tokens"]
+  last_updated: "2026-09-25"
+  status: "draft"
+  version: "1.3.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Map, Blast, Layers, and Diagrams stay in the column. The page scrolls. Nothing captures the wheel to zoom."
+    breaking: false
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Spacing, radius, focus, and the control recipes from the viewer design system. Projection tabs are a filled control. Perspectives stay an underline. Accordions say Open and Close."
+    breaking: false
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Frame the page at 1440px with a clamped gutter. Names wrap on separators. Diagram and map canvases may run to the viewport edge."
+    breaking: false
+  - date: "2026-09-25"
+    author: "specplane"
+    summary: "Light and dark tokens, nine text styles, and provenance strokes from the viewer design system."
+    breaking: false
+
+provides:
+  - "Light and dark semantic colors: canvas, surface, raised, sunken, border, ink, accent, selection, success, warning, danger"
+  - "Two families and nine text styles: Schibsted Grotesk for prose, JetBrains Mono for ids and provenance"
+  - "Provenance strokes: declared, derived, inferred, future, unknown"
+  - "Fonts ship with the viewer. The page does not load a font service"
+  - "A 1440px frame with a clamped side gutter. Pictures stay inside that frame"
+
+used_by:
+  containers: []
+  components: []
+
+tokens:
+  color:
+    light:
+      canvas: "#e6e3dc"
+      surface: "#fbfaf7"
+      raised: "#ffffff"
+      sunken: "#f3f1ec"
+      hover: "#f1efe9"
+      border: "#e4e1da"
+      border_strong: "#d6d3cb"
+      divider: "#ece9e2"
+      dashed: "#b9b6ae"
+      ink_1: "#1d1f24"
+      ink_2: "#3d4048"
+      ink_3: "#62656d"
+      ink_4: "#8a8c92"
+      accent: "#1f55c9"
+      accent_subtle: "#edf2fc"
+      accent_border: "#c9d6f3"
+      selection_bg: "#1d1f24"
+      selection_ink: "#fbfaf7"
+      selection_ink_2: "#b9bcc4"
+      success: "#1d7a45"
+      success_bg: "#eaf5ee"
+      warning: "#9a5b00"
+      warning_bg: "#fff8ec"
+      danger: "#b3261e"
+      danger_bg: "#fbeceb"
+    dark:
+      canvas: "#111214"
+      surface: "#18191c"
+      raised: "#1f2024"
+      sunken: "#141517"
+      hover: "#25272b"
+      border: "#2b2d32"
+      border_strong: "#393c42"
+      divider: "#232529"
+      dashed: "#4a4d54"
+      ink_1: "#ecebe7"
+      ink_2: "#c6c5c0"
+      ink_3: "#9c9da2"
+      ink_4: "#6f7177"
+      accent: "#7ea3f5"
+      accent_subtle: "#1a2440"
+      accent_border: "#2e4277"
+      selection_bg: "#ecebe7"
+      selection_ink: "#111214"
+      selection_ink_2: "#55575d"
+      success: "#5dc28b"
+      success_bg: "#14261c"
+      warning: "#e2a755"
+      warning_bg: "#2a2114"
+      danger: "#f08a82"
+      danger_bg: "#2d1716"
+  typography:
+    font_family_sans: "Schibsted Grotesk"
+    font_family_mono: "JetBrains Mono"
+    styles:
+      - { name: display, family: sans, weight: 600, size: 32, line_height: 1.15 }
+      - { name: title, family: sans, weight: 600, size: 22, line_height: 1.25 }
+      - { name: heading, family: sans, weight: 600, size: 16, line_height: 1.3 }
+      - { name: body, family: sans, weight: 400, size: 14, line_height: 1.5 }
+      - { name: body_sm, family: sans, weight: 400, size: 13, line_height: 1.45 }
+      - { name: label, family: sans, weight: 600, size: 12, line_height: 1.3 }
+      - { name: mono, family: mono, weight: 500, size: 13, line_height: 1.4 }
+      - { name: mono_sm, family: mono, weight: 500, size: 12, line_height: 1.4 }
+      - { name: mono_xs, family: mono, weight: 500, size: 11, line_height: 1.35 }
+  provenance:
+    - { name: declared, dash: solid }
+    - { name: derived, dash: "2 4" }
+    - { name: inferred, dash: "5 4", light_ink: "#9a5b00", light_bg: "#fff8ec", dark_ink: "#e2a755", dark_bg: "#2a2114" }
+    - { name: future, dash: "5 4", light_ink: "#7a4fa0", light_bg: "#f6f1fa", dark_ink: "#bf9ae0", dark_bg: "#241c2d" }
+    - { name: unknown, dash: "4 4" }
+  spacing:
+    - { token: space_1, px: 2 }
+    - { token: space_2, px: 4 }
+    - { token: space_3, px: 6 }
+    - { token: space_4, px: 8 }
+    - { token: space_5, px: 12 }
+    - { token: space_6, px: 16 }
+    - { token: space_7, px: 24 }
+    - { token: space_8, px: 32 }
+    - { token: space_9, px: 48 }
+    - { token: space_10, px: 64 }
+  radius:
+    xs: 4
+    sm: 6
+    md: 8
+    lg: 12
+    full: 999
+
+layout:
+  content_max_width: "1440px"
+  gutter: "clamp(24px, 4vw, 64px)"
+  split: "minmax(420px, 5fr) minmax(0, 7fr)"
+  stack_below: "1100px"
+  narrow_gutter_below: "720px"
+  narrow_gutter: "16px"
+  reading_measure: "72ch"
+  name_breaks: [".", "_", "/"]
+  name_overflow: "overflow-wrap: anywhere"
+  canvases: "Map, Blast, Layers, and Diagrams stay in the column. The page scrolls. A picture wider than the column scrolls inside the column."
+
+principles:
+  - "Every viewer color and text style maps to one of these tokens"
+  - "Light and dark carry the same roles"
+  - "Inferred is a warning stroke, never a live fill"
+  - "Absence stays not represented. It does not become a success or danger color"
+  - "The page is a 1440px frame with a clamped gutter, not a percentage margin"
+  - "Names wrap in full. They are never cut off with an ellipsis"
+  - "Pictures stay in the column. The page scrolls. Nothing captures the wheel to zoom"
+  - "Live, Changes, and Gaps, and the projection switcher, use a filled selected state"
+  - "Blast perspectives stay an underlined text row, so they never look like the projection switcher"
+  - "A closed section says Open. An open section says Close. The summary stays visible either way"
+  - "Rows and nodes show a hover fill. Focus is a 2px accent outline"
+
+components:
+  - "Lens and projection switcher: selected fill is the selection background, label is the selection ink"
+  - "Perspective row: label weight, ink, 2px accent underline on the active name"
+  - "Index row: hover fill, the whole row opens the record, names wrap"
+  - "Accordion: heading, one-line summary, Open or Close"
+  - "In-flight change: accent border, accent-subtle fill, link to the change"
+
+refs: []
+diagrams: []

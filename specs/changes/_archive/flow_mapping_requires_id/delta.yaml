@@ -15,4 +15,5 @@ MODIFIED:
     - "tools/specplane/test_validate.py"
 REMOVED: []
 notes:
-  - "goal is not required. Live capability YAML is unchanged."
+  - "goal is not required."
+  - "Promoted 2026-09-27 onto capability.specplane_validate and component.cli_validate."

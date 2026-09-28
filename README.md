@@ -2,29 +2,65 @@
 
 **Keep coding agents aligned with what you actually meant to build.**
 
-It is a **git-native overlay of what a living product should do and how well** — not how it is implemented. You speak product language. The agent uses SpecPlane. You answer only consequential decisions.
+SpecPlane is a git-native specification graph for software built by humans and AI agents.
+
+Coding agents can change software extraordinarily quickly, but intent, architecture, constraints, tests, ownership, and evidence live in different places. SpecPlane keeps those relationships explicit and lets agents retrieve only the context relevant to a change.
+
+Product intent, architecture, implementation, quality, governance, ownership, and evidence stay connected in one graph. Humans and agents work through the projections they need.
+
+### In plain English
+
+- **Capability:** What the product promises the user it can do.
+- **Foundation:** Shared global rules (security, design tokens, error codes).
+- **In-flight change:** A staging folder (`specs/changes/`) so experiments do not pollute live specs.
+- **Sensor:** A real check or test bound to a promise (`must:` or a unit test). It is evidence, not a certificate.
 
 **Free now:** kit, local kernel, skills, optional MCP. No SpecPlane API key.
 
-**Later (not shipped):** spec coach, required GitHub check, viewer. Do not treat those as available today.
+**In development:** local read-only viewer for exploring SpecPlane projections.
+
+**Later:** hosted collaboration and review surfaces, a required GitHub check, and a spec coach.
 
 <img src="./SpecPlane_Logo.png" alt="SpecPlane" width="160">
 
 ## The loop
 
+You speak product language. The agent uses SpecPlane. You answer only consequential decisions.
+
 You tell your coding agent:
 
 > Reset links should expire in 15 minutes instead of 60.
 
-SpecPlane **retrieves** the current promise, **classifies** this as an evolve (the live promise is 60 minutes), **blasts** what else is tied to that id, asks **one question** only if a decision is unresolved, and gives the agent the minimum context to **implement**. Then **check_sync** — did the change stay aligned with the declared promise? If a success sensor already binds a check, **run** invokes that check and prints the evidence beside the claim. It does not certify the implementation.
+SpecPlane **retrieves** the current promise, **classifies** this as an evolve (the live promise is 60 minutes), **blasts** what else is tied to that id, asks **one question** only if a decision is unresolved, and gives the agent the minimum context to **implement**. **Impact** reads that same subgraph as system, product, quality, governance, or ownership. Then **check_sync** — did the change stay aligned with the declared promise? If a success sensor already binds a check, **run** invokes that check and prints the evidence beside the claim. It does not certify the implementation.
 
 You do not operate the CLI. The coding agent does.
+
+### Before vs after
+
+| Scenario | Standard AI coding agent | With SpecPlane |
+| :--- | :--- | :--- |
+| **Request:** *"Reset links expire in 15m"* | Agent edits `auth.py`, changes `60` → `15`, says "Done." | Agent calls `retrieve`, classifies **evolve**, and isolates the work in `specs/changes/`. |
+| **Cross-system impact** | Tunnel vision. Misses who else is tied to that promise. | `blast` of the auth id names `capability.notifications`, `capability.billing`, `component.notifier`, and `foundation.security_baseline`. |
+| **Documentation & audit** | Specs rot; live docs still say 60m. | In-flight change stays off live YAML. At accept, live spec gets a version bump and changelog. |
+| **Verification** | Agent says everything looks good. | `check_sync` checks declared coverage. `run` invokes bound checks only and refuses to call that certification. |
+
+### How the pieces fit
+
+```mermaid
+flowchart LR
+  H[Human developer] -->|plain English intent| A[Coding agent]
+  A --> K[SpecPlane kernel / MCP]
+  A --> C[Application code]
+  K -->|retrieve · blast · impact| A
+  A -->|implement| C
+  A -->|check_sync · run| K
+```
 
 **Ask** — you speak product language.
 
 ![Ask: reset links 60 to 15, retrieve, classify evolve](./docs/ask.gif)
 
-**Impact** — blast shows who else is tied to that id.
+**Impact** — blast names who else is tied to that id. The same subgraph can be read as system, product, quality, governance, or ownership.
 
 ![Impact: blast component.password_reset](./docs/impact.gif)
 
@@ -44,7 +80,7 @@ You do not operate the CLI. The coding agent does.
 
 Ceremony scales with **semantic consequence**, not diff size. Full transcript: [`docs/golden-journey.md`](./docs/golden-journey.md).
 
-**Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP is available for the same retrieve / blast / check_sync / list_gaps / run tools when you want tool-native calls. You are not meant to type those commands.
+**Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP exposes retrieve, blast, impact, check_sync, list_gaps, and run when you want tool-native calls. You are not meant to type those commands.
 
 ## Try it
 
@@ -52,15 +88,46 @@ Synthetic example — not a real product, not this repo’s kernel `specs/`.
 
 ```bash
 git clone https://github.com/gauravbaruah/SpecPlane.git
+cd SpecPlane
+pip install -e .    # or: pip install pyyaml
 ```
+
+Python 3.10+ and PyYAML. Without that install, `python3 tools/specplane/cli.py --help` fails on a bare system.
 
 Open **`examples/tiny-saas`** as the workspace. Ask Cursor:
 
 > Reset links should expire in 15 minutes instead of 60.
 
-Auth, billing, notifications, one open billing change, and `src/auth.py` with a 60-minute reset TTL. Details: [`examples/tiny-saas/README.md`](./examples/tiny-saas/README.md) and [`docs/try.md`](./docs/try.md).
+Auth, billing, notifications, one open billing change, and `src/auth.py` with a 60-minute reset TTL. `retrieve` prints that sentence. The catch — an `auth.py` edit is invisible without a map or `--changed-ids`, and fails coverage when the map is present and no open change covers auth — is in [`docs/try.md`](./docs/try.md#4-the-catch). Details: [`examples/tiny-saas/README.md`](./examples/tiny-saas/README.md).
 
 `blast` of a single id (not the whole loop): [docs/blast.gif](./docs/blast.gif).
+
+## Optional: local MCP
+
+Skills already call the kernel. MCP is optional. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate, promote, and reconcile stay CLI-only.
+
+After `pip install -e .` (or `pip install pyyaml`) from this checkout, add one of these. Replace the path with your clone.
+
+**Cursor** (`~/.cursor/mcp.json`) or **Claude Desktop** (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "specplane": {
+      "command": "python3",
+      "args": ["/absolute/path/to/SpecPlane/tools/specplane/mcp_stdio.py"]
+    }
+  }
+}
+```
+
+**Claude Code** — same JSON in the project `.mcp.json`, or:
+
+```bash
+claude mcp add specplane -- python3 /absolute/path/to/SpecPlane/tools/specplane/mcp_stdio.py
+```
+
+In a product repo after `specplane init`, point `args` at that repo’s `tools/specplane/mcp_stdio.py`. The script adds its own directory to `sys.path`; PyYAML still has to be importable by that `python3`.
 
 ## Use it in your product
 
@@ -72,7 +139,13 @@ uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 
 That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package.
 
-If `uvx` is not installed: `python3 /path/to/SpecPlane/tools/specplane/cli.py init` from a checkout.
+If `uvx` is not installed, from a SpecPlane checkout:
+
+```bash
+pip install -e .
+specplane init --dest /path/to/your-app
+# or: python3 /path/to/SpecPlane/tools/specplane/cli.py init --dest /path/to/your-app
+```
 
 Then ask for a Phase 1 capability. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
 
@@ -96,7 +169,7 @@ Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework
 | `docs/golden-journey.md` | Intended human+agent loop |
 | `legacy/` | Archived viewer — not the product path |
 
-Default schema **v9.1.0** (Capability, System, Container, Component, plus Foundations). Agent loading: [`AGENTS.md`](./AGENTS.md). You do not need that ontology to try the loop.
+Default schema **v9.1.0** (Capability, System, Container, Component, plus Foundations) is the structural model inside the graph. `impact` projects one affected subgraph as system, product, quality, governance, and ownership. Detail: [`docs/impact-perspectives.md`](./docs/impact-perspectives.md). Agent loading: [`AGENTS.md`](./AGENTS.md). You do not need that ontology to try the loop.
 
 ## License
 

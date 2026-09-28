@@ -1,0 +1,84 @@
+change_id: "viewer_projections"
+kind: "learn"
+
+sensors:
+  - id: "inferred_not_live"
+    promise: "capability.specplane_viewer"
+    must: "An inferred id stays inferred and is not given a live slice"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_inferred_is_not_live"
+  - id: "mermaid_diagrams"
+    promise: "capability.specplane_viewer"
+    must: "A declared diagram is rendered by the vendored Mermaid. A label that is an id can be selected. The source can be shown under the picture."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_diagrams_scroll_in_the_column"
+  - id: "diagram_scroll"
+    promise: "capability.specplane_viewer"
+    must: "Map, Blast, Layers, Journey, Data, and Diagrams stay in the column unless Expand is open. Expand keeps a 5% margin and does not take over the browser. The page scrolls. Nothing captures the wheel to zoom."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_diagrams_scroll_in_the_column"
+  - id: "blast_hops"
+    promise: "capability.specplane_viewer"
+    must: "Blast columns follow impact distance. Distance 3 and beyond stays collapsed until expand."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_affected_hops_are_distances"
+  - id: "affected_path"
+    promise: "capability.specplane_viewer"
+    must: "An affected id carries the kernel path that included it"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_affected_path_comes_from_impact"
+  - id: "gaps_match"
+    promise: "capability.specplane_list_gaps"
+    must: "The gaps lens matches list_gaps"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_gaps_match_list_gaps"
+  - id: "no_negative_claim"
+    promise: "capability.specplane_viewer"
+    must: "The viewer does not say no security impact, no QA required, no compliance impact, or no owner required"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_no_negative_security_claim"
+  - id: "projection_switcher"
+    promise: "capability.specplane_viewer"
+    must: "Sequence is not its own tab. Diagrams and Data appear when that record's payload contains them, and stay absent when it does not"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_projection_switcher"
+  - id: "design_system_tokens"
+    promise: "foundation.design_system"
+    must: "The viewer uses the design-system families and semantic colors, and ships the font files instead of calling a font service"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_design_system_tokens_are_local"
+  - id: "source_history"
+    promise: "capability.specplane_viewer"
+    must: "Source and history shows the changelog when the spec declares one, and Promise to realization shows declared targets"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_source_history_and_trace_when_declared"
+  - id: "definition_blocks"
+    promise: "capability.specplane_viewer"
+    must: "Definition and Realization group declared fields under labeled blocks instead of one flat list"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_definition_blocks_are_labeled"
+  - id: "map_curves"
+    promise: "capability.specplane_viewer"
+    must: "Map cards are joined by a curve for each declared link between them. An inferred endpoint uses a dashed warning stroke."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_definition_blocks_are_labeled"
+  - id: "about_projection"
+    promise: "capability.specplane_viewer"
+    must: "A live record and a change open on About this projection until a node is selected"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_about_projection_intro"
+  - id: "delta_lines"
+    promise: "capability.specplane_viewer"
+    must: "A delta mapping shows its id and summary. A grouped delta shows the group and the sentence. Neither is printed as a raw mapping."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_delta_lines_keep_id_and_summary"
+  - id: "payload_refresh"
+    promise: "capability.specplane_viewer"
+    must: "A reload rebuilds the payload when a change folder appears after generation"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_payload_refreshes_when_spec_root_changes"
+  - id: "design_time_change"
+    promise: "capability.specplane_viewer"
+    must: "A change with why and promise ids and no delta still has an impact path"
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_design_time_change"

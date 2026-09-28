@@ -1,0 +1,20 @@
+id: "projection_payload"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-25"
+promise_ids:
+  - "capability.specplane_retrieve"
+  - "capability.specplane_blast"
+  - "component.cli_retrieve"
+  - "component.cli_blast"
+  - "component.mcp_stdio"
+why: >
+  Project fields the schema already holds: diagrams, the spec path, flow
+  stages and outcomes, and data_models. An inferred id keeps bit inferred
+  and gains a declared slice that is not live.
+non_goals:
+  - "a joined trace from a success target through an event to an emitting component"
+  - "new list_gaps buckets"
+  - "changelog text on retrieve"
+  - "editing live 5C YAML before promote"
+  - "calling an inferred slice live"

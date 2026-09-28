@@ -1,18 +1,22 @@
 meta:
   id: "component.cli_validate"
-  purpose: "Local validate command: schema, naming, links, changelog"
+  purpose: "Local validate command: schema, naming, links, changelog, and capability flow shape"
   level: "component"
   type: "service"
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli"]
-  last_updated: "2026-09-17"
+  last_updated: "2026-09-27"
   status: "draft"
-  version: "1.0.1"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-27"
+    author: "kernel-slice"
+    summary: "A flow mapping without a non-empty id fails. Strings, and a mapping with an id and no goal, still pass."
+    breaking: false
   - date: "2026-09-17"
     author: "kernel-slice"
     summary: "H02 — MCP does not depend on validate; agents shell out"
@@ -38,6 +42,7 @@ planning:
     success:
       - "Valid tree exits 0"
       - "Garbage YAML, id/filename mismatch, or one-sided links exit non-zero with named findings"
+      - "A flow mapping without a non-empty id fails. String items, and a mapping with an id and no goal, still pass."
     errors:
       - "Missing spec root → tell how to pass --spec-root"
       - "Unreadable YAML → parse error, not a live graph"
@@ -52,6 +57,7 @@ implementation:
   validation:
     acceptance_criteria:
       - "Existing tools/specplane testdata invalid fixtures still fail after this slice is implemented"
+      - "A flow mapping without a non-empty id fails. String items, and a mapping with an id and no goal, still pass."
       - "Does not stamp epistemic live"
     open_questions:
       - "Exact stdout/exit-code table is Build Pack work after examination"

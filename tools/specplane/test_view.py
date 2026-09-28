@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+"""Viewer projects kernel payloads. It does not restyle inferred as live."""
+
+from __future__ import annotations
+
+import os
+import shutil
+import sys
+import tempfile
+import time
+import unittest
+from datetime import date
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+from cli import main as cli_main  # noqa: E402
+from kernel import list_gaps, load_kernel  # noqa: E402
+from view import _delta, _opened, build_payload, refresh_payload, write_site  # noqa: E402
+import view as view_mod  # noqa: E402
+
+BILLING = ROOT / "testdata" / "impact_billing" / "specs"
+INFERRED = ROOT / "testdata" / "inferred" / "specs"
+ASSETS = ROOT / "viewer"
+FORBIDDEN = (
+    "no security impact",
+    "no QA required",
+    "No compliance impact",
+    "No owner required",
+)
+
+
+class ViewerModelTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.kernel = load_kernel(BILLING)
+        self.payload = build_payload(self.kernel)
+
+    def test_inferred_is_not_live(self) -> None:
+        payload = build_payload(load_kernel(INFERRED))
+        rec = payload["records"]["capability.billing_checkout"]
+        self.assertEqual(rec["bit"], "inferred")
+        self.assertFalse(rec["live_slice"])
+        self.assertFalse(rec["inferred_as_live"])
+        self.assertEqual(rec["purpose"], "Customer completes paid checkout")
+        self.assertIn("Accept payment and record the order", rec["responsibilities"])
+        self.assertEqual(rec["path"], "capabilities/capability.billing_checkout.yaml")
+        self.assertNotIn("sequence", rec["projections"])
+
+    def test_affected_hops_are_distances(self) -> None:
+        graph = self.payload["impacts"]["capability.billing"]
+        root = [node for node in graph["affected"] if node["id"] == "capability.billing"][0]
+        self.assertEqual(root["distance"], 0)
+        self.assertTrue(root["direct"])
+        worker = [node for node in graph["affected"] if node["id"] == "component.invoice_worker"][0]
+        self.assertGreaterEqual(worker["distance"], 2)
+        self.assertFalse(worker["direct"])
+        self.assertTrue(worker["path"])
+
+    def test_affected_path_comes_from_impact(self) -> None:
+        graph = self.payload["impacts"]["capability.billing"]
+        others = [node for node in graph["affected"] if node["id"] != "capability.billing"]
+        self.assertTrue(others)
+        for node in others:
+            self.assertTrue(node["path"], node["id"])
+            for step in node["path"]:
+                self.assertIn("from", step)
+                self.assertIn("relationship", step)
+                self.assertIn("to", step)
+                self.assertTrue(step["to"])
+
+    def test_gaps_match_list_gaps(self) -> None:
+        self.assertEqual(self.payload["gaps"], list_gaps(self.kernel))
+
+    def test_diagrams_scroll_in_the_column(self) -> None:
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
+        self.assertIn("diagram-frame", src)
+        self.assertIn("mermaid.render", src)
+        self.assertIn("View Mermaid source", src)
+        self.assertIn("record(label)", src)
+        self.assertNotIn("function parseFlow", src)
+        self.assertNotIn("function parseSequence", src)
+        self.assertNotIn("viewportCanvas", src)
+        wheel = src.split("function releaseWheel", 1)[1].split("function sizeDiagram", 1)[0]
+        self.assertIn("stopPropagation", wheel)
+        self.assertIn("passive: true", wheel)
+        self.assertNotIn("preventDefault", wheel)
+        frame = css.split(".diagram-frame {", 1)[1].split("}", 1)[0]
+        self.assertIn("overflow-x: auto", frame)
+        self.assertIn("max-width: 100%", frame)
+        self.assertIn("touch-action: auto", frame)
+        self.assertNotIn("max-height", frame)
+        self.assertIn("Expand", src)
+        self.assertIn("inset: 5%", css)
+        self.assertNotIn("requestFullscreen", src)
+        self.assertNotIn("preventDefault", src.split("function toggleExpand", 1)[1].split("function expandable", 1)[0])
+        scroll = css.split(".graph-frame {", 1)[1].split("}", 1)[0]
+        self.assertIn("overflow-x: auto", scroll)
+        self.assertIn("max-width: 100%", scroll)
+        self.assertNotIn("max-height", scroll)
+        self.assertIn("--card-min: 275px", css)
+        self.assertIn("grid-auto-columns: var(--card-min)", css)
+        self.assertNotIn("minmax(var(--card-min), 1fr)", css)
+        self.assertNotIn("touch-action: none", css)
+
+    def test_blast_hop_copy_is_in_the_viewer(self) -> None:
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
+        self.assertIn("1 hop · direct", src)
+        self.assertIn("Further", src)
+        self.assertIn("select to expand", src)
+        self.assertIn("+ hops", src)
+        self.assertIn("terminal · not expanding", src)
+        self.assertIn("A dotted curve is the hop the kernel recorded.", src)
+        self.assertIn('rel === "promises"', src)
+        self.assertIn(".graph.linked .edges path.promised", css)
+
+    def test_no_negative_security_claim(self) -> None:
+        blob = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (
+                ASSETS / "app.js",
+                ASSETS / "app.css",
+                ASSETS / "index.html",
+                ROOT / "view.py",
+            )
+        )
+        for phrase in FORBIDDEN:
+            self.assertNotIn(phrase, blob)
+
+    def test_projection_switcher(self) -> None:
+        rec = self.payload["records"]["capability.billing"]
+        self.assertIn("map", rec["projections"])
+        self.assertIn("blast", rec["projections"])
+        self.assertIn("layers", rec["projections"])
+        self.assertIn("journey", rec["projections"])
+        self.assertIn("diagrams", rec["projections"])
+        self.assertNotIn("sequence", rec["projections"])
+        self.assertNotIn("data", rec["projections"])
+        self.assertEqual(rec["diagrams"][0]["type"], "sequence")
+        self.assertEqual(rec["path"], "capabilities/capability.billing.yaml")
+        graph = self.payload["impacts"]["capability.billing"]
+        flow = next(
+            item
+            for item in graph["perspectives"]["product"]["items"]
+            if item.get("flow_id") == "patient_payment"
+        )
+        self.assertEqual(flow["stages"], ["charge", "decline", "retry", "completed"])
+        api = self.payload["records"]["component.billing_api"]
+        self.assertIn("data", api["projections"])
+        self.assertNotIn("diagrams", api["projections"])
+        identity = self.payload["records"]["capability.identity"]
+        self.assertNotIn("diagrams", identity["projections"])
+        self.assertNotIn("data", identity["projections"])
+        self.assertNotIn("sequence", identity["projections"])
+
+    def test_design_time_change(self) -> None:
+        change = next(item for item in self.payload["changes"] if item["id"] == "billing_retry")
+        self.assertIn("capability.billing", change["promise_ids"])
+        self.assertEqual(change["opened"], "")
+        self.assertEqual(_opened("2026-09-25"), "2026-09-25")
+        self.assertEqual(_opened(date(2026, 9, 25)), "2026-09-25")
+        self.assertEqual(_opened(""), "")
+        self.assertTrue(change["why"])
+        self.assertEqual(change["delta"], {})
+        self.assertIn("blast", change["projections"])
+        graph = self.payload["impacts"]["change:billing_retry"]
+        promised = next(node for node in graph["affected"] if node["id"] == "capability.billing")
+        self.assertTrue(promised["path"])
+
+    def test_site_is_local(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            write_site(self.payload, out)
+            html = (out / "index.html").read_text(encoding="utf-8")
+            script = (out / "app.js").read_text(encoding="utf-8")
+            self.assertNotIn("cdn.", html + script)
+            self.assertNotIn("http://", html)
+            self.assertNotIn("https://", html)
+            self.assertTrue((out / "vendor" / "mermaid.min.js").is_file())
+            self.assertTrue((out / "fonts" / "schibsted-grotesk-400.woff2").is_file())
+            self.assertTrue((out / "fonts" / "jetbrains-mono-500.woff2").is_file())
+            self.assertTrue((out / "payload.js").read_text(encoding="utf-8").startswith("window.SPECPLANE_VIEW"))
+            self.assertTrue((out / "logo.png").is_file())
+            self.assertIn("logo.png", script)
+        server = (ROOT / "view.py").read_text(encoding="utf-8")
+        self.assertIn('("127.0.0.1", 0)', server)
+        self.assertNotIn("0.0.0.0", server)
+
+    def test_payload_refreshes_when_spec_root_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(BILLING, root)
+            out = Path(tmp) / "view"
+            write_site(build_payload(load_kernel(root)), out)
+            aged = time.time() - 5
+            os.utime(out / "payload.js", (aged, aged))
+            self.assertNotIn("fresh_change", (out / "payload.js").read_text(encoding="utf-8"))
+            folder = root / "changes" / "fresh_change"
+            folder.mkdir()
+            proposal = folder / "proposal.yaml"
+            proposal.write_text(
+                "id: fresh_change\nkind: evolve\nstatus: in-flight\n"
+                "promise_ids:\n  - capability.billing\nwhy: A folder that appeared after generation.\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(refresh_payload(root, out))
+            text = (out / "payload.js").read_text(encoding="utf-8")
+            self.assertIn("fresh_change", text)
+            self.assertFalse(refresh_payload(root, out))
+            seen: dict[str, Path] = {}
+
+            def fake_serve(site: Path, open_browser: bool, spec_root: Path | None = None) -> int:
+                seen["spec_root"] = spec_root
+                return 0
+
+            real_serve = view_mod.serve
+            view_mod.serve = fake_serve
+            try:
+                code = cli_main([
+                    "view",
+                    "--spec-root",
+                    str(root),
+                    "--config-dir",
+                    tmp,
+                    "--out",
+                    str(out),
+                ])
+            finally:
+                view_mod.serve = real_serve
+            self.assertEqual(code, 0)
+            self.assertEqual(seen["spec_root"].resolve(), root.resolve())
+
+    def test_delta_lines_keep_id_and_summary(self) -> None:
+        mapped = _delta({
+            "MODIFIED": [{
+                "id": "capability.specplane_init",
+                "summary": "Docs only.",
+                "flows": [{"id": "init_product_repo"}],
+            }],
+        })
+        self.assertEqual(mapped["MODIFIED"], [{"id": "capability.specplane_init", "text": "Docs only."}])
+        grouped = _delta({"ADDED": {"kit": ["Validation rule 22"], "kernel": ["validate.py reports rule 22"]}})
+        self.assertEqual(grouped["ADDED"], [
+            {"group": "kit", "text": "Validation rule 22"},
+            {"group": "kernel", "text": "validate.py reports rule 22"},
+        ])
+        self.assertEqual(_delta({"ADDED": ["plain sentence"]})["ADDED"], [{"text": "plain sentence"}])
+        script = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("line.id ? idLink(line.id)", script)
+        self.assertNotIn("{'id'", script)
+
+    def test_source_history_and_trace_when_declared(self) -> None:
+        rec = self.payload["records"]["capability.billing"]
+        doc = self.kernel.by_id["capability.billing"]
+        entry = doc.data["changelog"][0]
+        shown = rec["history"]["changelog"][0]
+        self.assertEqual(shown["date"], entry["date"])
+        self.assertEqual(shown["summary"], entry["summary"])
+        self.assertEqual(rec["history"]["version"], doc.meta["version"])
+        targets = (doc.data.get("success_metrics") or {}).get("targets") or {}
+        if targets:
+            self.assertEqual([row["name"] for row in rec["trace"]["targets"]], list(targets))
+        else:
+            self.assertNotIn("trace", rec)
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("Source & history", src)
+        self.assertIn("Promise → realization", src)
+        self.assertIn('"Changelog"', src)
+        self.assertIn("derived_from is not represented", src)
+
+    def test_definition_blocks_are_labeled(self) -> None:
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
+        for label in (
+            "Responsibilities",
+            "Business value",
+            "Constraints",
+            "Success",
+            "Roadmap",
+            "Realized by",
+            "Acceptance criteria",
+        ):
+            self.assertIn('"' + label + '"', src)
+        self.assertNotIn('plural(items.length, "declared line")', src)
+        self.assertIn(".blk-label", css)
+        self.assertIn(".kv-line", css)
+        self.assertIn("(reviewed ? \"●\" : \"○\")", src)
+        self.assertIn("class: \"statusline\"", src)
+        self.assertIn(".statusline .bit.inflight", css)
+        self.assertIn(".statusline .rev.on", css)
+        for head in ("Context", "Realized by", "Uses", "Serves & contained in"):
+            self.assertIn('"' + head + '"', src)
+        self.assertIn("system_context", src)
+        self.assertIn("roadmap.depends_on", src)
+        self.assertIn("is-current", src)
+        self.assertIn("is-focus", src)
+        self.assertIn(".node.is-current", css)
+        self.assertIn("box-shadow: 0 0 0 2px var(--accent)", css)
+        self.assertNotIn(".node.is-selected", css)
+        self.assertIn("The same declared links placed on the 5C axis", src)
+        self.assertIn("A stage is not matched to a handler.", src)
+        self.assertIn("mapCurve(a, b)", src)
+        self.assertIn("function mapCurve", src)
+        self.assertIn('" C"', src)
+        self.assertIn("data-edges", src)
+        self.assertIn("data-key", src)
+        self.assertIn(".graph.linked .edges path", css)
+        self.assertIn("stroke: var(--ink-4)", css)
+        self.assertIn("stroke-dasharray: 5 4", css)
+        self.assertNotIn("#9a9ca2", src)
+        self.assertNotIn("#9a9ca2", css)
+        systems = [rec for rec in self.payload["records"].values() if rec.get("system_context")]
+        self.assertTrue(systems)
+        self.assertTrue(any(systems[0]["system_context"]))
+
+    def test_about_projection_intro(self) -> None:
+        script = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("About this projection", script)
+        self.assertIn("Each node is here because one declared field names it.", script)
+        self.assertIn("Only the promised ids are a claim.", script)
+        self.assertIn("Capability is the value axis", script)
+        self.assertNotIn("Select an id to see why it is on this map.", script)
+        self.assertNotIn("Select an id to see why it is in this blast.", script)
+
+    def test_navbar_names_the_system_and_branch(self) -> None:
+        systems = [rid for rid, rec in self.payload["records"].items() if rec.get("level") == "system"]
+        self.assertEqual(systems, ["system.payments"])
+        self.assertEqual(self.payload["context"]["spec_root"], "specs")
+        self.assertIsInstance(self.payload["context"]["branch"], str)
+        src = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn(" · read-only", src)
+        self.assertIn('label: next === "dark" ? "Dark" : "Light"', src)
+        self.assertIn("theme-btn", (ASSETS / "app.css").read_text(encoding="utf-8"))
+        self.assertIn("In flight is not a filter: an id is in flight when an open change names it.", src)
+        self.assertIn("Inferred ids were recovered from code. They are explorable and stay marked until promoted.", src)
+        self.assertIn("Replaced ids stay so history resolves. They are not part of the live model.", src)
+
+    def test_design_system_tokens_are_local(self) -> None:
+        css = (ASSETS / "app.css").read_text(encoding="utf-8")
+        self.assertIn("Schibsted Grotesk", css)
+        self.assertIn("JetBrains Mono", css)
+        self.assertIn("--bg-surface: #fbfaf7", css)
+        self.assertIn("--bg-surface: #18191c", css)
+        self.assertIn("--warning: #9a5b00", css)
+        self.assertIn("prefers-color-scheme: dark", css)
+        self.assertIn(':root[data-theme="dark"]', css)
+        self.assertIn(':root:not([data-theme="light"])', css)
+        script = (ASSETS / "app.js").read_text(encoding="utf-8")
+        self.assertIn("specplane-view-theme", script)
+        self.assertIn('"light"', script)
+        self.assertIn('"dark"', script)
+        self.assertNotIn("fonts.googleapis.com", css)
+        self.assertNotIn("cdn.", css)
+        self.assertIn("padding-inline: 28px", css)
+        self.assertIn("padding-inline: 16px", css)
+        self.assertIn("minmax(420px, 5fr) minmax(0, 7fr)", css)
+        self.assertIn("72ch", css)
+        self.assertIn("overflow-wrap: anywhere", css)
+        self.assertIn("minmax(0, 1fr)", css)
+        self.assertIn("1100px", css)
+        id_rule = css.split(".node .id {", 1)[1].split("}", 1)[0]
+        self.assertNotIn("ellipsis", id_rule)
+        self.assertIn(".node .line", css)
+        self.assertNotIn("break-all", css)
+        self.assertIn("[._/]", script)
+        self.assertIn("Open ↓", script)
+        self.assertIn("Close ↑", script)
+        self.assertIn("← Live", script)
+        self.assertIn("Why this is here", script)
+        self.assertIn("declared here", script)
+        self.assertIn("mermaid.render", script)
+        self.assertIn("View Mermaid source", script)
+        self.assertNotIn("function parseFlow", script)
+        self.assertIn("not represented", script)
+        self.assertIn("background: var(--bg-canvas)", css)
+        self.assertIn("720px", css)
+        self.assertIn("--bg-hover", css)
+        self.assertTrue((ASSETS / "fonts" / "schibsted-grotesk-600.woff2").is_file())
+        self.assertTrue((ASSETS / "fonts" / "jetbrains-mono-500.woff2").is_file())
+
+
+if __name__ == "__main__":
+    unittest.main()
