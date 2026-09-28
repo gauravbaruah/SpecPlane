@@ -2,6 +2,8 @@
 
 **Keep coding agents aligned with what you actually meant to build.**
 
+> We built SpecPlane because AI coding agents can write code faster than humans can maintain a coherent model of what the system is supposed to be. SpecPlane gives that model a structure—business capabilities, architecture, components, contracts, constraints, dependencies and evidence—and makes it explorable by humans and usable by agents.
+
 SpecPlane is a git-native specification graph for software built by humans and AI agents.
 
 Coding agents can change software extraordinarily quickly, but intent, architecture, constraints, tests, ownership, and evidence live in different places. SpecPlane keeps those relationships explicit and lets agents retrieve only the context relevant to a change.
