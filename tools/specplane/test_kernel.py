@@ -236,6 +236,100 @@ class ScopedCoverageTests(unittest.TestCase):
         self.assertIn("unknown_change: does_not_exist", buf.getvalue())
         self.assertIn("coverage: fail", buf.getvalue())
 
+    def test_scoped_added_id_is_known_only_on_that_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(SCOPED, root)
+            change = root / "changes" / "learn_viewer"
+            change.mkdir()
+            (change / "proposal.yaml").write_text(
+                "\n".join(
+                    [
+                        "id: learn_viewer",
+                        "kind: learn",
+                        "status: in-flight",
+                        "promise_ids:",
+                        "  - capability.specplane_viewer",
+                        "why: name the viewer",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (change / "delta.yaml").write_text(
+                "\n".join(
+                    [
+                        "change_id: learn_viewer",
+                        "kind: learn",
+                        "ADDED:",
+                        "  - capability.specplane_viewer",
+                        "  - a prose sentence that is not an id",
+                        "MODIFIED: []",
+                        "REMOVED: []",
+                        "RENAMED: []",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (change / "success.yaml").write_text(
+                "\n".join(
+                    [
+                        "change_id: learn_viewer",
+                        "kind: learn",
+                        "sensors:",
+                        "  - id: named",
+                        "    promise: capability.specplane_viewer",
+                        "    must: The new id is named on this change",
+                        "looks_fine_is_not_a_sensor: true",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            kernel = load_kernel(root)
+            covered = check_sync(
+                kernel,
+                ["capability.specplane_viewer"],
+                change_slug="learn_viewer",
+            )
+            self.assertEqual(covered["unknown"], [])
+            self.assertNotIn("capability.specplane_viewer", covered["uncovered"])
+            self.assertTrue(covered["ok"], covered)
+            self.assertIsNone(retrieve(kernel, "capability.specplane_viewer"))
+
+            (change / "proposal.yaml").write_text(
+                "\n".join(
+                    [
+                        "id: learn_viewer",
+                        "kind: learn",
+                        "status: in-flight",
+                        "promise_ids:",
+                        "  - capability.beta",
+                        "why: the new id is not on this change",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            missed_kernel = load_kernel(root)
+            missed = check_sync(
+                missed_kernel,
+                ["capability.specplane_viewer"],
+                change_slug="learn_viewer",
+            )
+            self.assertEqual(missed["unknown"], [])
+            self.assertIn("capability.specplane_viewer", missed["uncovered"])
+            self.assertFalse(missed["ok"])
+            bare = check_sync(missed_kernel, ["capability.specplane_viewer"])
+            self.assertIn("capability.specplane_viewer", bare["unknown"])
+            other = check_sync(
+                missed_kernel,
+                ["capability.specplane_viewer"],
+                change_slug="select_output_folder",
+            )
+            self.assertIn("capability.specplane_viewer", other["unknown"])
+
     def test_phase1_advisory_does_not_fail_when_scoped(self) -> None:
         payload = check_sync(
             self.kernel,

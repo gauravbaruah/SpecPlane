@@ -40,7 +40,7 @@ That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.
 
 Copy the `specplane/` directory, skills, and rules — **not** the whole SpecPlane git repo, and **not** this repo’s `specs/` folder. Pin the SpecPlane commit you copied from (schema **v9.1.0**; default branch `main`).
 
-Manual rsync (fallback):
+Prefer `specplane init`. Manual rsync is the fallback:
 
 ```bash
 # Schema + foundations (required path: specplane/)
@@ -56,14 +56,17 @@ rsync -a /path/to/SpecPlane/.cursor/rules/specplane-*.mdc .cursor/rules/
 mkdir -p tools/specplane
 rsync -a /path/to/SpecPlane/tools/specplane/cli.py \
           /path/to/SpecPlane/tools/specplane/kernel.py \
+          /path/to/SpecPlane/tools/specplane/impact.py \
           /path/to/SpecPlane/tools/specplane/validate.py \
           /path/to/SpecPlane/tools/specplane/drift.py \
           /path/to/SpecPlane/tools/specplane/initkit.py \
           /path/to/SpecPlane/tools/specplane/mcp_stdio.py \
           /path/to/SpecPlane/tools/specplane/ci_gate.py \
+          /path/to/SpecPlane/tools/specplane/view.py \
           /path/to/SpecPlane/tools/specplane/README.md \
           /path/to/SpecPlane/tools/specplane/requirements.txt \
           tools/specplane/
+rsync -a /path/to/SpecPlane/tools/specplane/viewer/ tools/specplane/viewer/
 cp /path/to/SpecPlane/tools/specplane/specplane.config.json.example specplane.config.json
 # then, if you want the agent to run checks: pip install -r tools/specplane/requirements.txt
 
@@ -103,7 +106,7 @@ If `specplane` is not on PATH, point `command` at `python3` and `args` at that r
 
 ### Optional CI
 
-Paste [`docs/ci.md`](./ci.md) if a pull request should run `validate`, `check_sync`, and `run` without an agent. Init does not write that workflow. It is not a required GitHub check unless you turn branch protection on yourself. `check_sync` still does not execute sensors.
+Paste [`docs/ci.md`](./ci.md) if a pull request should ask whether a change is accounted for by declared intent and bound evidence. Init copies `ci_gate.py`. Init does not write that workflow. It is not a required GitHub check unless you turn branch protection on yourself. `check_sync` still does not execute sensors. A coverage pass is declared coverage, not behavioral agreement.
 
 ### Consuming `AGENTS.md`
 
@@ -172,6 +175,4 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 
 - A PyPI / `npx specplane` package (`uvx --from git+…@main` is the install that works today)
 - An init wizard that picks Cursor vs Claude vs Codex (all three get the same skills)
-- Git hooks or CI/CD wiring for validate/drift in product repos
-- A supported spec viewer (the Docusaurus tool under `legacy/` is archived)
 - Copying this kit into an important product until a real session matches [`golden-journey.md`](./golden-journey.md)

@@ -10,7 +10,7 @@ v9.1.0 extends C4 with **Capability** and **Foundation** layers. It supports **c
 
 | Aspect | v9.1.0 |
 |--------|--------|
-| **Model** | 5C: Capability → System → Container → Component → Code |
+| **Model** | 5C: Capability, System, Container, Component, plus Foundations. Code is realization, not a fifth C. |
 | **File layout** | `capabilities/`, `foundations/`, `system.*.yaml`, `containers/`, `components/<container>/` |
 | **Capability-first** | ✅ Business value modeled before any container/component |
 | **Foundations** | ✅ Cross-cutting specs (design system, API conventions, security, AI guidelines, etc.) |

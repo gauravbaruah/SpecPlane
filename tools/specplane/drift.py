@@ -26,9 +26,9 @@ IGNORE_PREFIXES = (
 
 def git_files(scope: str, repo: Path) -> list[str]:
     if scope == "changed":
-        cmd = ["git", "diff", "--name-only", "HEAD"]
+        cmd = ["git", "diff", "--name-only", "--relative", "HEAD"]
         staged = subprocess.check_output(
-            ["git", "diff", "--name-only", "--cached"], cwd=repo, text=True
+            ["git", "diff", "--name-only", "--relative", "--cached"], cwd=repo, text=True
         ).splitlines()
         unstaged = subprocess.check_output(cmd, cwd=repo, text=True).splitlines()
         return sorted({line.strip() for line in staged + unstaged if line.strip()})

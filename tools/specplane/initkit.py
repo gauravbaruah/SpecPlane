@@ -19,6 +19,7 @@ CLI_FILES = (
     "requirements.txt",
     "specplane.config.json.example",
     "view.py",
+    "ci_gate.py",
 )
 
 SPEC_DIR_NAMES = (
@@ -121,6 +122,19 @@ def _write_claude(dest: Path) -> None:
     path.write_text("@AGENTS.md\n", encoding="utf-8")
 
 
+_VIEW_IGNORE = "**/.specplane/view/"
+
+
+def _ensure_view_gitignore(dest: Path) -> None:
+    path = dest / ".gitignore"
+    existing = path.read_text(encoding="utf-8") if path.is_file() else ""
+    if _VIEW_IGNORE in existing:
+        return
+    if existing and not existing.endswith("\n"):
+        existing += "\n"
+    path.write_text(existing + _VIEW_IGNORE + "\n", encoding="utf-8")
+
+
 def _empty_specs(dest: Path) -> None:
     root = dest / "specs"
     for name in SPEC_DIR_NAMES:
@@ -199,6 +213,8 @@ def init_kit(
         json.dumps(config, indent=2) + "\n", encoding="utf-8"
     )
     notes.append("wrote specplane.config.json")
+    _ensure_view_gitignore(dest)
+    notes.append("ignored generated **/.specplane/view/")
 
     notes.append(_write_agents(dest))
     _write_claude(dest)

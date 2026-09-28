@@ -32,10 +32,27 @@ def change_slugs(files: list[str]) -> list[str]:
     return sorted(set(slugs))
 
 
-def open_change_slugs(repo: Path, files: list[str]) -> list[str]:
+def open_change_slugs(repo: Path, files: list[str], spec_root: Path | None = None) -> list[str]:
     """Slugs whose open folder still exists. An archive move is not a folder to run."""
-    root = repo / "specs" / "changes"
-    return [slug for slug in change_slugs(files) if (root / slug).is_dir()]
+    roots = [repo / "specs" / "changes"]
+    if spec_root is not None:
+        roots.append(spec_root / "changes")
+    found: list[str] = []
+    for slug in change_slugs(files):
+        if any((root / slug).is_dir() for root in roots):
+            found.append(slug)
+    return found
+
+
+def product_root(spec_root: Path) -> Path:
+    """Directory that holds specplane.config.json, else the parent of the spec root."""
+    current = spec_root.resolve()
+    while True:
+        if (current / "specplane.config.json").is_file():
+            return current
+        if current.parent == current:
+            return spec_root.resolve().parent
+        current = current.parent
 
 
 def _git(repo: Path, args: list[str]) -> str:
@@ -69,13 +86,14 @@ def gate(repo: Path, spec_root: Path, base: str, *, apply_diff: bool) -> int:
     except (subprocess.CalledProcessError, RuntimeError) as exc:
         sys.stderr.write(f"ci_gate: {exc}\n")
         return 2
-    slugs = open_change_slugs(repo, files)
+    slugs = open_change_slugs(repo, files, spec_root)
     print(
         "ci_gate slugs: " + (", ".join(slugs) if slugs else "(none)"),
         flush=True,
     )
     subprocess.check_call(["git", "reset", "--soft", merge_base], cwd=repo)
-    root = ["--spec-root", str(spec_root), "--config-dir", str(repo)]
+    config_dir = product_root(spec_root)
+    root = ["--spec-root", str(spec_root), "--config-dir", str(config_dir)]
     repo_args = ["--repo", str(repo)]
     failed = False
     if _invoke(repo, ["validate", *root]) != 0:

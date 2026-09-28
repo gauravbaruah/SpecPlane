@@ -2,7 +2,7 @@
 
 Optional local commands for v9.1.0 specs. Copy `tools/specplane/` into a product repo alongside `specplane/` and `specs/` if you want the agent (or you) to run checks in a session.
 
-Requires Python 3.10+ and PyYAML.
+Requires Python 3.10+ and PyYAML. Editable and wheel metadata tests need the dev extra (`setuptools`).
 
 ```bash
 uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init --dest /path/to/product

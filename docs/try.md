@@ -1,5 +1,7 @@
 # Try SpecPlane in five minutes
 
+You say the change in product language. The agent retrieves, blasts, and implements. You look at blast in `specplane view`.
+
 Synthetic sandbox: [`examples/tiny-saas`](../examples/tiny-saas/). Auth, billing, notifications, one open billing change. Live promise: **reset links expire in 60 minutes**. Leave `testdata/golden/messy_auth` for kernel tests.
 
 ## 1. Clone and open the example
@@ -30,13 +32,15 @@ Intended chat shape: [`golden-journey.md`](./golden-journey.md). Do not paste th
 
 ## 3. Optional: run the kernel yourself
 
-From `examples/tiny-saas`, after `pip install -e ../..` at the SpecPlane root (or `uvx --from ../.. specplane …`):
+From `examples/tiny-saas`, after the install in section 1:
 
 ```bash
 specplane retrieve capability.authentication
 specplane blast component.password_reset
 specplane check_sync --changed-ids capability.billing
 ```
+
+Other install shapes are under [Advanced](#advanced).
 
 ## 4. The catch
 
@@ -78,3 +82,7 @@ Details: [`use-in-your-project.md`](./use-in-your-project.md). Do not copy this 
 Local MCP is optional. After install, `specplane mcp` starts the same stdio server. Skills already call the kernel. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate stays CLI-only. `reconcile` is CLI-only: optional declared file maps, including greenfield with no infer. `run` joins a bound check; it is not a test runner. `impact` explains one affected subgraph; it does not replace `blast`.
 
 Copy-paste Cursor / Claude Desktop / Claude Code snippets: [README — Optional: local MCP](../README.md#optional-local-mcp).
+
+## Advanced
+
+`python3 tools/specplane/cli.py` is the same CLI when `specplane` is not on PATH. From a SpecPlane checkout, `uvx --from ../.. specplane …` also works inside `examples/tiny-saas` after `pip install -e ../..`. A hand copy of the toolkit is in [`use-in-your-project.md`](./use-in-your-project.md). There is no `uvx specplane` and no `pip install specplane`.

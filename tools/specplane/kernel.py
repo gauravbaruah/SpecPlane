@@ -617,6 +617,32 @@ def format_reconcile(payload: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _is_spec_id(text: str) -> bool:
+    return text.startswith(("capability.", "component.", "container.", "foundation.", "system.")) and " " not in text
+
+
+def change_known_ids(change: Change) -> set[str]:
+    """Ids this open change names, including ones not on disk yet."""
+    ids = {item for item in change.promise_ids if item}
+    path = change.path / "delta.yaml"
+    if not path.is_file():
+        return ids
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        return ids
+    added = loaded.get("ADDED") or []
+    if not isinstance(added, list):
+        return ids
+    for item in added:
+        if isinstance(item, str) and _is_spec_id(item.strip()):
+            ids.add(item.strip())
+        elif isinstance(item, dict):
+            raw = str(item.get("id") or "").strip()
+            if _is_spec_id(raw):
+                ids.add(raw)
+    return ids
+
+
 def check_sync(
     kernel: Kernel,
     changed_ids: list[str],
@@ -632,7 +658,12 @@ def check_sync(
 
     phase1_advisory: list[str] = []
     linked: list[str] = []
-    unknown = [cid for cid in changed_ids if cid not in kernel.by_id]
+    known = change_known_ids(scoped) if scoped is not None else set()
+    unknown = [
+        cid
+        for cid in changed_ids
+        if cid not in kernel.by_id and cid not in known
+    ]
     for cid in changed_ids:
         doc = kernel.by_id.get(cid)
         if not doc:
@@ -646,6 +677,12 @@ def check_sync(
     empty_blasts: list[str] = []
     if not unknown_change:
         uncovered = [cid for cid in linked if not id_covered(kernel, cid, only=scoped)]
+        if scoped is not None:
+            for cid in changed_ids:
+                if cid in kernel.by_id or cid not in known:
+                    continue
+                if cid not in scoped.promise_ids and cid not in uncovered:
+                    uncovered.append(cid)
         for cid in linked:
             result = blast(kernel, cid)
             if result and result["empty"]:

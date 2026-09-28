@@ -1,6 +1,8 @@
 # Optional CI
 
-`specplane init` does not write this file. Paste it into a product repo if a pull request should run the kernel when no agent does.
+SpecPlane brings declared intent into the CI loop. The check asks whether a change is accounted for by declared intent and bound evidence. A coverage pass is declared coverage, not behavioral agreement.
+
+`specplane init` copies `ci_gate.py` with the CLI and does not write this file. Paste it into a product repo if a pull request should run the kernel when no agent does. It is available, not automatically installed, and not a required GitHub check.
 
 The job calls the existing commands. It does not add a verb, and it does not turn the check into a required GitHub check. That stays a branch-protection choice.
 
@@ -29,7 +31,6 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r tools/specplane/requirements.txt
-      - run: pip install -e .
       - name: validate, check_sync, run
         run: >-
           python3 tools/specplane/ci_gate.py
@@ -38,4 +39,4 @@ jobs:
           --apply-diff
 ```
 
-Copy `tools/specplane/ci_gate.py` with the workflow. Init does not copy either.
+Init copies `tools/specplane/ci_gate.py`. Init does not write this workflow. This repository’s own workflows install this checkout as a package, because this repository is a Python package. A product repo should not. `pip install pyyaml` is enough when you do not copy `requirements.txt`.

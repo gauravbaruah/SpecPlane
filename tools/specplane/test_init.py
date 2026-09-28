@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 import tempfile
@@ -40,6 +41,7 @@ class InitKitTests(unittest.TestCase):
         self.assertTrue((self.dest / ".cursor" / "rules" / "specplane-core.mdc").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "cli.py").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "view.py").is_file())
+        self.assertTrue((self.dest / "tools" / "specplane" / "ci_gate.py").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "viewer" / "app.js").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "initkit.py").is_file())
         self.assertFalse((self.dest / "tools" / "specplane" / "testdata").exists())
@@ -51,6 +53,10 @@ class InitKitTests(unittest.TestCase):
         yaml_caps = list((self.dest / "specs" / "capabilities").glob("*.yaml"))
         self.assertEqual(yaml_caps, [])
         self.assertFalse((self.dest / ".github" / "workflows").exists())
+        ignore = (self.dest / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn("**/.specplane/view/", ignore)
+        self.assertNotIn(".specplane/\n", ignore)
+        self.assertNotIn(".specplane/**", ignore)
         config = json.loads((self.dest / "specplane.config.json").read_text(encoding="utf-8"))
         self.assertEqual(config["schemaVersion"], "9.1.0")
         self.assertIn("kitCommit", config)
@@ -109,6 +115,10 @@ class InitKitTests(unittest.TestCase):
     def test_default_kit_root_prefers_checkout(self) -> None:
         self.assertEqual(default_kit_root().resolve(), KIT.resolve())
 
+    @unittest.skipUnless(
+        importlib.util.find_spec("setuptools") is not None,
+        "editable metadata test needs setuptools (dev extra)",
+    )
     def test_editable_metadata_without_prebuilt_bundle(self) -> None:
         import os
         import shutil

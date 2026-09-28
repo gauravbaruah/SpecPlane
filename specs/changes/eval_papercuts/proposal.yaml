@@ -1,0 +1,20 @@
+id: "eval_papercuts"
+kind: "fix"
+status: "in-flight"
+opened: "2026-09-28"
+promise_ids:
+  - "capability.specplane_check_sync"
+  - "component.cli_check_sync"
+  - "capability.specplane_init"
+why: >-
+  The try-path catch does not fire from this checkout, and the public docs
+  still describe the viewer and CI as if they were not shipped.
+non_goals:
+  - "a new CLI verb"
+  - "--strict"
+  - "init --ci"
+  - "init writing .github/workflows or git hooks"
+  - "a required GitHub check as a product claim"
+  - "PyPI"
+  - "a product rename"
+  - "editing live 5C YAML before accept"

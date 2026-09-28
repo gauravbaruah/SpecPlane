@@ -36,6 +36,8 @@ jobs:
       - run: python3 tools/specplane/test_init.py
       - run: python3 tools/specplane/test_mcp.py
       - run: python3 tools/specplane/test_ci_gate.py
+      - run: python3 tools/specplane/test_impact.py
+      - run: python3 tools/specplane/test_view.py
       - run: python3 tools/specplane/validate.py --spec-root tools/specplane/testdata/valid/specs
       - run: python3 tools/specplane/cli.py validate --spec-root tools/specplane/testdata/golden/messy_auth/specs
       - run: python3 tools/specplane/cli.py validate --spec-root examples/tiny-saas/specs

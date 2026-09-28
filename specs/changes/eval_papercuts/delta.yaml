@@ -1,0 +1,23 @@
+change_id: "eval_papercuts"
+kind: "fix"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_check_sync"
+    summary: >-
+      A mapped file under a nested spec root fails coverage. An id named
+      on the scoped change, including one not on disk yet, is in-flight
+      known. It is not live.
+  - id: "component.cli_check_sync"
+    summary: >-
+      Changed-file paths are relative to the repo, then to the config dir
+      when that dir sits below the git toplevel.
+  - id: "capability.specplane_init"
+    summary: >-
+      Init copies ci_gate.py and ignores generated **/.specplane/view/.
+      It still does not write a workflow or a git hook.
+
+REMOVED: []
+
+RENAMED: []
