@@ -1,0 +1,19 @@
+id: "mcp_and_sync_speech"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-28"
+promise_ids:
+  - "capability.specplane_check_sync"
+  - "component.cli_check_sync"
+  - "component.mcp_stdio"
+why: >-
+  Agents need one command to start the stdio server that already exists,
+  and a failed check_sync needs to name the uncovered ids and the next
+  commands. It still does not stamp live.
+non_goals:
+  - "a seventh MCP tool"
+  - "promote, reconcile, or validate on MCP"
+  - "check_sync --strict"
+  - "init writing git hooks or GitHub workflows"
+  - "a new capability.specplane_mcp"
+  - "editing live 5C YAML before accept"

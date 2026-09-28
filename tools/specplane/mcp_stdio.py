@@ -110,10 +110,24 @@ def tool_descriptors() -> list[dict[str, Any]]:
     ]
 
 
+_default_spec_root: Path | None = None
+
+
+def set_default_spec_root(spec_root: Path | None) -> None:
+    """Default for tool calls that omit spec_root. A per-call spec_root still wins."""
+    global _default_spec_root
+    _default_spec_root = spec_root.resolve() if spec_root is not None else None
+
+
 def _kernel_from_args(arguments: dict[str, Any] | None):
     arguments = arguments or {}
     raw = arguments.get("spec_root")
-    spec_root = resolve_spec_root(Path(raw) if raw else None, Path.cwd())
+    if raw:
+        spec_root = resolve_spec_root(Path(str(raw)), Path.cwd())
+    elif _default_spec_root is not None:
+        spec_root = _default_spec_root
+    else:
+        spec_root = resolve_spec_root(None, Path.cwd())
     if not spec_root.is_dir():
         raise FileNotFoundError(f"spec root does not exist: {spec_root}")
     return load_kernel(spec_root)
