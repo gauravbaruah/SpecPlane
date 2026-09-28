@@ -15,8 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+from cli import main as cli_main  # noqa: E402
 from kernel import list_gaps, load_kernel  # noqa: E402
 from view import _delta, _opened, build_payload, refresh_payload, write_site  # noqa: E402
+import view as view_mod  # noqa: E402
 
 BILLING = ROOT / "testdata" / "impact_billing" / "specs"
 INFERRED = ROOT / "testdata" / "inferred" / "specs"
@@ -206,6 +208,28 @@ class ViewerModelTests(unittest.TestCase):
             text = (out / "payload.js").read_text(encoding="utf-8")
             self.assertIn("fresh_change", text)
             self.assertFalse(refresh_payload(root, out))
+            seen: dict[str, Path] = {}
+
+            def fake_serve(site: Path, open_browser: bool, spec_root: Path | None = None) -> int:
+                seen["spec_root"] = spec_root
+                return 0
+
+            real_serve = view_mod.serve
+            view_mod.serve = fake_serve
+            try:
+                code = cli_main([
+                    "view",
+                    "--spec-root",
+                    str(root),
+                    "--config-dir",
+                    tmp,
+                    "--out",
+                    str(out),
+                ])
+            finally:
+                view_mod.serve = real_serve
+            self.assertEqual(code, 0)
+            self.assertEqual(seen["spec_root"].resolve(), root.resolve())
 
     def test_delta_lines_keep_id_and_summary(self) -> None:
         mapped = _delta({

@@ -222,7 +222,7 @@ def cmd_view(args: argparse.Namespace) -> int:
     out = args.out if args.out is not None else args.config_dir / ".specplane" / "view"
     kernel = load_kernel(spec_root)
     write_site(build_payload(kernel), out)
-    return serve(out, args.open_browser)
+    return serve(out, args.open_browser, spec_root)
 
 
 def cmd_init(args: argparse.Namespace) -> int:
