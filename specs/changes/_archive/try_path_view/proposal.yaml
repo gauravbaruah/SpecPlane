@@ -1,6 +1,6 @@
 id: "try_path_view"
 kind: "learn"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-28"
 promise_ids:
   - "capability.specplane_init"

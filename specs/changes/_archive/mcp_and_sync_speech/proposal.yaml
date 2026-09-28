@@ -1,6 +1,6 @@
 id: "mcp_and_sync_speech"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-28"
 promise_ids:
   - "capability.specplane_check_sync"

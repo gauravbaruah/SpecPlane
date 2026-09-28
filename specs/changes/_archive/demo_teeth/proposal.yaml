@@ -1,6 +1,6 @@
 id: "demo_teeth"
 kind: "fix"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-27"
 promise_ids:
   - "capability.specplane_retrieve"

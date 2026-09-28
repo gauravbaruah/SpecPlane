@@ -1,0 +1,28 @@
+change_id: "promote_completed"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_init"
+    summary: "Paste-in CI, try-path view, and README onramp are live. Init still does not write a workflow."
+  - id: "capability.specplane_check_sync"
+    summary: "Uncovered check_sync names the next commands. A paste-in workflow may call it."
+  - id: "capability.specplane_run"
+    summary: "A paste-in workflow may call run --change for a change folder in the diff."
+  - id: "capability.specplane_retrieve"
+    summary: "Retrieve prints constraint lists, the spec path, and declared diagrams."
+  - id: "capability.specplane_blast"
+    summary: "Impact includes declared stages, outcomes, and data_models."
+  - id: "component.cli_retrieve"
+    summary: "Same retrieve stdout as the capability."
+  - id: "component.cli_check_sync"
+    summary: "Same uncovered recipe. No --strict."
+  - id: "component.cli_blast"
+    summary: "impact includes declared stages, outcomes, and data_models."
+  - id: "component.mcp_stdio"
+    summary: "specplane mcp starts the server. Retrieve matches the CLI."
+
+REMOVED: []
+
+RENAMED: []

@@ -4,13 +4,21 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "retrieve"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-09-28"
   status: "planned"
-  version: "1.1.1"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "projection_payload"
+    summary: "Retrieve prints the spec path and declared diagrams. An inferred id keeps a declared slice and is not live."
+    breaking: false
+  - date: "2026-09-28"
+    author: "demo_teeth"
+    summary: "A capability retrieve prints authored legal, security, and ux constraint lists. It still omits business value, changelog, and data_classification."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "infer_promote — inferred is still never presented as live"
@@ -51,7 +59,9 @@ constraints:
     - "Default answer is the live graph; leftovers and open delta are labeled, not mixed in as live"
     - "Stdout prints meta.review_state and meta.status next to bit; live still means graph membership, not approval"
     - "Skills and AGENTS.md call retrieve, not read specs/"
-    - "An inferred id prints inferred (not live) on stderr and omits the live slice"
+    - "An inferred id prints inferred (not live) on stderr and omits the live slice. It still prints the declared slice."
+    - "Stdout includes the spec path and declared diagrams when the spec has them"
+    - "Authored legal, security, and ux constraint lists are printed. Business value, changelog, and data_classification stay omitted. must: lines are not executed."
   data_classification: "internal"
 
 success_metrics:

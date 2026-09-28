@@ -1,0 +1,20 @@
+id: "promote_completed"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-28"
+promise_ids:
+  - "capability.specplane_init"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+  - "capability.specplane_retrieve"
+  - "capability.specplane_blast"
+  - "component.cli_retrieve"
+  - "component.cli_check_sync"
+  - "component.cli_blast"
+  - "component.mcp_stdio"
+why: >-
+  The accepted deltas are now in the live specs. This folder exists so the
+  pull-request gate can see a covering change. Archive it in the next commit
+  so retrieve shows one live graph.
+non_goals:
+  - "leaving this folder open after the live files land"

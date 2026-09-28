@@ -4,13 +4,21 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "check_sync"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-09-28"
   status: "planned"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "ci_compose"
+    summary: "A paste-in pull-request workflow may call this command on the default changed-set, and again with --change when a change folder is in the diff. The command still does not execute sensors."
+    breaking: false
+  - date: "2026-09-28"
+    author: "mcp_and_sync_speech"
+    summary: "When coverage fails on uncovered ids, stdout names those ids and the next commands. It does not invent a slug, and it still does not stamp live."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "Default changed-set includes component ids from declared realization.paths. Unmapped app files are advisory. Still does not parse source or print verified."
@@ -74,7 +82,9 @@ constraints:
     - "Stdout bands: coverage / sensors declared|missing (must lines not executed) / behavior unverified. Never sensors executed. Never a bare result: pass that sounds like behavior."
     - "Do not execute run binds. Do not add --run-sensors. Evidence of a bound check is the run command."
     - "Do not silently pick spec vs code"
-    - "GitHub App / required check is out of slice; this is the local command that later wraps"
+    - "When decision_required and at least one id is uncovered, stdout names those ids and the resolve steps: retrieve each id, open or extend the change folder, then check_sync again. If --change was passed, name that slug. If it was not, do not invent one."
+    - "Unknown change, unknown ids, empty blast, and Phase 1 advisory keep their existing lines and do not get the uncovered recipe. No --strict."
+    - "A paste-in pull-request workflow may call this command. A required GitHub check is not a product claim."
   data_classification: "internal"
 
 success_metrics:
