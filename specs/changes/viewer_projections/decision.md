@@ -91,7 +91,7 @@ On a card, print `relationship` + via (last `path` step’s `from`), then `direc
 - `about` / `flow_ref` matching a flowchart to `flows.stages`
 - Who handles a journey stage
 - Evidence behind `review_state`
-- The check bound to a sensor
+- Whether a sensor's check passed or failed. The page shows the harness declared on that sensor (`run.unittest`, `run.test`, `run.argv`, or `test`) followed by `not_run`. No harness is `none · not_run`. This page does not invoke the check and does not reuse an earlier result.
 - Which stage a change touches (no lifecycle enum)
 - A missing field is omitted. No empty card just to keep the page symmetrical.
 
