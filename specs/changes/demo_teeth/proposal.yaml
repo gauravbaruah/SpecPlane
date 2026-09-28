@@ -1,0 +1,21 @@
+id: "demo_teeth"
+kind: "fix"
+status: "in-flight"
+opened: "2026-09-27"
+promise_ids:
+  - "capability.specplane_retrieve"
+  - "component.cli_retrieve"
+  - "component.mcp_stdio"
+why: >-
+  Retrieve omitted authored capability constraints, so the tiny-saas
+  60-minute reset sentence never reached stdout. The try-path component
+  also had no realization.paths, so an edit to src/auth.py stayed out of
+  the default check_sync set unless someone passed --changed-ids.
+non_goals:
+  - "print the whole spec file"
+  - "execute must: lines"
+  - "add changelog, success targets, or new diagram fields on this slice"
+  - "require realization.paths on any product except this demo"
+  - "parse auth.py to learn the TTL"
+  - "edit live kernel 5C YAML before accept"
+  - "claim a CI catch or an OpenSpec comparison"

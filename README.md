@@ -98,7 +98,7 @@ Open **`examples/tiny-saas`** as the workspace. Ask Cursor:
 
 > Reset links should expire in 15 minutes instead of 60.
 
-Auth, billing, notifications, one open billing change, and `src/auth.py` with a 60-minute reset TTL. Details: [`examples/tiny-saas/README.md`](./examples/tiny-saas/README.md) and [`docs/try.md`](./docs/try.md).
+Auth, billing, notifications, one open billing change, and `src/auth.py` with a 60-minute reset TTL. `retrieve` prints that sentence. The catch — an `auth.py` edit is invisible without a map or `--changed-ids`, and fails coverage when the map is present and no open change covers auth — is in [`docs/try.md`](./docs/try.md#4-the-catch). Details: [`examples/tiny-saas/README.md`](./examples/tiny-saas/README.md).
 
 `blast` of a single id (not the whole loop): [docs/blast.gif](./docs/blast.gif).
 

@@ -26,6 +26,8 @@ LIVE_STATUSES = {
 }
 REPLACED_STATUSES = {"deprecated", "archived"}
 INFERRED_MARKERS = {"inferred"}
+# Capability Phase 1 lists. data_classification is a label, not a promise sentence.
+CONSTRAINT_LIST_KEYS = ("legal", "security", "ux")
 
 
 @dataclass
@@ -153,6 +155,22 @@ def _declared_diagrams(doc: SpecDoc) -> list[dict[str, str]]:
     return diagrams
 
 
+def authored_constraint_lists(doc: SpecDoc) -> dict[str, list[str]]:
+    """Legal, security, and ux sentences as authored. Omits empty lists and scalars."""
+    raw = doc.data.get("constraints")
+    if not isinstance(raw, dict):
+        return {}
+    lists: dict[str, list[str]] = {}
+    for key in CONSTRAINT_LIST_KEYS:
+        value = raw.get(key)
+        if not isinstance(value, list):
+            continue
+        texts = as_str_list(value)
+        if texts:
+            lists[key] = texts
+    return lists
+
+
 def slice_fields(doc: SpecDoc, spec_root: Path | None = None) -> dict[str, Any]:
     realized = doc.data.get("realized_by") if isinstance(doc.data.get("realized_by"), dict) else {}
     deps = dig(doc.data, "implementation", "dependencies", "internal")
@@ -170,6 +188,9 @@ def slice_fields(doc: SpecDoc, spec_root: Path | None = None) -> dict[str, Any]:
         "depends_on": as_str_list(deps),
         "depended_on_by": as_str_list(depended),
     }
+    constraints = authored_constraint_lists(doc)
+    if constraints:
+        fields["constraints"] = constraints
     if spec_root is not None:
         fields["path"] = _relative_spec_path(spec_root, doc.path)
     diagrams = _declared_diagrams(doc)
@@ -855,6 +876,16 @@ def _format_slice(lines: list[str], label: str, fields: dict[str, Any]) -> None:
             lines.append(f"  {key}:")
             for item in values:
                 lines.append(f"    - {item}")
+    constraints = fields.get("constraints") or {}
+    if constraints:
+        lines.append("  constraints:")
+        for key in CONSTRAINT_LIST_KEYS:
+            values = constraints.get(key) or []
+            if not values:
+                continue
+            lines.append(f"    {key}:")
+            for item in values:
+                lines.append(f"      - {item}")
     diagrams = fields.get("diagrams") or []
     if diagrams:
         lines.append("  diagrams:")

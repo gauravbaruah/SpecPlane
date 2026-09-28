@@ -1124,5 +1124,66 @@ class TestReconcile(unittest.TestCase):
         self.assertEqual(unmapped, [])
 
 
+class DemoTeethTests(unittest.TestCase):
+    """Try-path: retrieve prints the 60-minute constraint; auth.py joins the map."""
+
+    def setUp(self) -> None:
+        self.repo = REPO / "examples" / "tiny-saas"
+        self.kernel = load_kernel(self.repo / "specs")
+
+    def test_retrieve_prints_reset_ttl_not_the_file(self) -> None:
+        payload = retrieve(self.kernel, "capability.authentication")
+        assert payload is not None
+        text = format_retrieve(payload)
+        self.assertIn("Password reset links expire in 60 minutes", text)
+        self.assertIn("PKCE required for OAuth", text)
+        self.assertIn("constraints:", text)
+        self.assertIn("security:", text)
+        self.assertNotIn("Enable signed-in product use", text)
+        self.assertNotIn("Synthetic tiny-saas auth capability", text)
+        self.assertNotIn("confidential", text)
+        self.assertNotIn("must:", text)
+        self.assertNotIn("\n    - Login\n", text)
+
+    def test_auth_py_joins_default_changed_set_and_fails_coverage(self) -> None:
+        ids, unmapped = default_changed_ids(self.kernel, ["src/auth.py"], self.repo)
+        self.assertIn("component.password_reset", ids)
+        self.assertNotIn("src/auth.py", unmapped)
+        report = reconcile(self.kernel, ["src/auth.py"], repo=self.repo)
+        self.assertEqual(
+            report["mapped_changed"],
+            [{"path": "src/auth.py", "id": "component.password_reset"}],
+        )
+        self.assertEqual(report["missing"], [])
+        sync = check_sync(self.kernel, ids)
+        self.assertFalse(sync["ok"])
+        self.assertEqual(sync["coverage"], "fail")
+        self.assertIn("component.password_reset", sync["uncovered"])
+        self.assertNotIn("capability.billing", sync["uncovered"])
+
+    def test_auth_blast_names_neighbors(self) -> None:
+        payload = blast(self.kernel, "capability.authentication")
+        assert payload is not None
+        self.assertIn("capability.notifications", payload["affects"]["capabilities"])
+        self.assertIn("capability.billing", payload["affects"]["capabilities"])
+        self.assertIn("component.notifier", payload["affects"]["components"])
+        self.assertIn("foundation.security_baseline", payload["affects"]["foundations"])
+
+    def test_catch_writeup_is_honest(self) -> None:
+        try_doc = (REPO / "docs" / "try.md").read_text(encoding="utf-8")
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Password reset links expire in 60 minutes", try_doc)
+        self.assertIn("does not parse", try_doc)
+        self.assertIn("fails coverage", try_doc)
+        self.assertIn("Maps stay optional", try_doc)
+        self.assertIn("capability.notifications", try_doc)
+        self.assertIn("foundation.security_baseline", try_doc)
+        self.assertIn("not a GitHub check", try_doc)
+        self.assertNotIn("OpenSpec", try_doc)
+        self.assertNotIn("caught a commit", try_doc)
+        self.assertIn("docs/try.md#4-the-catch", readme)
+        self.assertIn("invisible without a map", readme)
+
+
 if __name__ == "__main__":
     unittest.main()

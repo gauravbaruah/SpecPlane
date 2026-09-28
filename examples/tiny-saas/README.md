@@ -2,7 +2,7 @@
 
 Synthetic example — not a real product. Spec overlay plus a few Python files so you can try SpecPlane without touching this repo’s kernel `specs/`.
 
-Live auth promise: **password reset links expire in 60 minutes** (`src/auth.py`).
+Live auth promise: **password reset links expire in 60 minutes**. `retrieve` prints that sentence. `component.password_reset` declares `src/auth.py`, so a change to that file joins the default `check_sync` set. The catch: [`docs/try.md`](../../docs/try.md#4-the-catch).
 
 ## Try
 
