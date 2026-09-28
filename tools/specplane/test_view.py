@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from cli import main as cli_main  # noqa: E402
-from kernel import list_gaps, load_kernel  # noqa: E402
-from view import _delta, _opened, build_payload, refresh_payload, write_site  # noqa: E402
+from kernel import Change, list_gaps, load_kernel  # noqa: E402
+from view import _delta, _opened, _viewer_sensors, build_payload, refresh_payload, write_site  # noqa: E402
 import view as view_mod  # noqa: E402
 
 BILLING = ROOT / "testdata" / "impact_billing" / "specs"
@@ -254,6 +254,34 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("What SpecPlane checked", script)
         self.assertIn("What SpecPlane infers", script)
         self.assertIn("the repository is the source", script)
+        self.assertIn('["op", key]', script)
+        self.assertIn('["bound check", row.bound_check || "none · not_run"]', script)
+
+    def test_viewer_sensor_rows_keep_id_promise_and_check(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "sample"
+            folder.mkdir()
+            (folder / "success.yaml").write_text(
+                "sensors:\n"
+                "  - id: offer_within_5m\n"
+                "    promise: capability.waitlist\n"
+                "    must: A cancelled slot is offered within 5 minutes\n"
+                "  - id: nested_edit\n"
+                "    promise: capability.specplane_check_sync\n"
+                "    must: Editing a mapped file fails coverage\n"
+                "    run:\n"
+                "      unittest: tools.specplane.test_ci_gate.CiGateTests.test_one\n",
+                encoding="utf-8",
+            )
+            change = Change("sample", "fix", "in-flight", [], folder, {})
+            rows = _viewer_sensors(change)
+        self.assertEqual(rows[0]["id"], "offer_within_5m")
+        self.assertEqual(rows[0]["promise"], "capability.waitlist")
+        self.assertEqual(rows[0]["bound_check"], "none · not_run")
+        self.assertEqual(
+            rows[1]["bound_check"],
+            "tools.specplane.test_ci_gate.CiGateTests.test_one · not_run",
+        )
 
     def test_source_history_and_trace_when_declared(self) -> None:
         rec = self.payload["records"]["capability.billing"]

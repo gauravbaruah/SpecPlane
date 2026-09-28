@@ -495,7 +495,7 @@
     return (pairs || []).filter(function (pair) { return pair && pair[1]; }).map(function (pair) {
       return h("div", { class: "kv-line" }, [
         h("span", { class: "kv-k" }, [pair[0]]),
-        h("span", { class: "kv-v" }, [String(pair[1])]),
+        h("span", { class: "kv-v" }, [pair[1] instanceof Node ? pair[1] : String(pair[1])]),
       ]);
     });
   }
@@ -2013,10 +2013,13 @@
     keys.forEach(function (key) {
       (delta[key] || []).forEach(function (line) {
         if (typeof line === "string") line = { text: line };
-        rows.push(h("div", { class: "item delta-line" }, [
-          h("span", { class: "quiet mono" }, [line.group ? key + " · " + line.group : key]),
-          line.id ? idLink(line.id) : null,
-          line.text || "",
+        rows.push(h("div", { class: "item" }, [
+          line.text ? h("div", {}, [line.text]) : null,
+          h("div", {}, kvLines([
+            ["op", key],
+            ["id", line.id ? idLink(line.id) : ""],
+            ["group", line.group || ""],
+          ])),
         ]));
       });
     });
@@ -2031,8 +2034,12 @@
     ]);
     return block("Success sensors", "success.yaml sensors", rows.map(function (row) {
       return h("div", { class: "item" }, [
-        h("div", { class: "sensor" }, [row.must || ""]),
-        h("div", { class: "src" }, [(row.change ? row.change + " · " : "") + "success.yaml · not run"]),
+        row.must ? h("div", { class: "sensor" }, [row.must]) : null,
+        h("div", {}, kvLines([
+          ["id", row.id || ""],
+          ["promise", row.promise ? idLink(row.promise) : ""],
+          ["bound check", row.bound_check || "none · not_run"],
+        ])),
       ]);
     }));
   }

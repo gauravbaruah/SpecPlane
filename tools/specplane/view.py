@@ -14,6 +14,7 @@ import subprocess
 import sys
 import threading
 import webbrowser
+import yaml
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from typing import Any
@@ -88,7 +89,7 @@ def build_payload(kernel: Any) -> dict[str, Any]:
                 "coverage": sync.get("coverage"),
                 "sensors": sync.get("sensors"),
                 "behavior": sync.get("behavior"),
-                "sensor_rows": sync.get("sensor_rows") or [],
+                "sensor_rows": _viewer_sensors(change),
                 "ok": bool(sync.get("ok")),
             },
         }
@@ -325,6 +326,59 @@ def _record(row: dict[str, Any], doc: Any, kernel: Any) -> dict[str, Any]:
     if trace:
         public["trace"] = trace
     return public
+
+
+def _bound_check(row: dict[str, Any]) -> str:
+    """The declared harness, plus not_run. This page does not invoke it."""
+    names: list[str] = []
+    run = row.get("run")
+    if isinstance(run, dict):
+        for key in ("unittest", "test"):
+            text = str(run.get(key) or "").strip()
+            if text:
+                names.append(text)
+        argv = run.get("argv")
+        if (
+            isinstance(argv, list)
+            and argv
+            and all(isinstance(part, str) and part.strip() for part in argv)
+        ):
+            names.append(" ".join(part.strip() for part in argv))
+    test = row.get("test")
+    if isinstance(test, str) and test.strip():
+        names.append(test.strip())
+    binding = ", ".join(names) if names else "none"
+    return binding + " · not_run"
+
+
+def _viewer_sensors(change: Any) -> list[dict[str, str]]:
+    path = change.path / "success.yaml"
+    if not path.is_file():
+        return []
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        return []
+    sensors = loaded.get("sensors") or []
+    if not isinstance(sensors, list):
+        return []
+    rows: list[dict[str, str]] = []
+    for row in sensors:
+        if not isinstance(row, dict):
+            continue
+        must = str(row.get("must") or "").strip()
+        if not must:
+            continue
+        item = {
+            "must": must,
+            "promise": str(row.get("promise") or "").strip(),
+            "bound_check": _bound_check(row),
+            "change": change.path.name,
+        }
+        sensor_id = str(row.get("id") or "").strip()
+        if sensor_id:
+            item["id"] = sensor_id
+        rows.append(item)
+    return rows
 
 
 def _delta_line(item: Any) -> dict[str, str] | None:

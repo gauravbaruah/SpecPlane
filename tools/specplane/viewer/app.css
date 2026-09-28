@@ -644,7 +644,6 @@ div.node { cursor: default; }
   font-size: 14px;
   line-height: 1.45;
 }
-.delta-line { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
 .sensor { color: var(--ink-1); }
 .note { color: var(--ink-2); font-size: 14px; line-height: 1.5; }
 .bucket { margin: 0; display: flex; flex-direction: column; gap: 6px; }
