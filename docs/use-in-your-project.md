@@ -52,7 +52,7 @@ rsync -a /path/to/SpecPlane/.agents/skills/specplane-* .agents/skills/
 rsync -a /path/to/SpecPlane/.cursor/skills/specplane-* .cursor/skills/
 rsync -a /path/to/SpecPlane/.cursor/rules/specplane-*.mdc .cursor/rules/
 
-# Toolkit (optional — agent/local only, not CI). Needed for retrieve/blast/check_sync.
+# Toolkit (optional). Needed for retrieve/blast/check_sync. Init does not copy a workflow.
 mkdir -p tools/specplane
 rsync -a /path/to/SpecPlane/tools/specplane/cli.py \
           /path/to/SpecPlane/tools/specplane/kernel.py \
@@ -60,6 +60,7 @@ rsync -a /path/to/SpecPlane/tools/specplane/cli.py \
           /path/to/SpecPlane/tools/specplane/drift.py \
           /path/to/SpecPlane/tools/specplane/initkit.py \
           /path/to/SpecPlane/tools/specplane/mcp_stdio.py \
+          /path/to/SpecPlane/tools/specplane/ci_gate.py \
           /path/to/SpecPlane/tools/specplane/README.md \
           /path/to/SpecPlane/tools/specplane/requirements.txt \
           tools/specplane/
@@ -99,6 +100,10 @@ Skills already call the kernel. To expose retrieve, blast, impact, check_sync, l
 **Claude Code** — same JSON in the project `.mcp.json`, or `claude mcp add specplane -- specplane mcp`.
 
 If `specplane` is not on PATH, point `command` at `python3` and `args` at that repo’s `tools/specplane/mcp_stdio.py`. That `python3` must be able to import PyYAML (`pip install pyyaml` or `pip install -e /path/to/SpecPlane`).
+
+### Optional CI
+
+Paste [`docs/ci.md`](./ci.md) if a pull request should run `validate`, `check_sync`, and `run` without an agent. Init does not write that workflow. It is not a required GitHub check unless you turn branch protection on yourself. `check_sync` still does not execute sensors.
 
 ### Consuming `AGENTS.md`
 

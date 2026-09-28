@@ -1,0 +1,29 @@
+name: specplane-gate
+
+# Paste-in promise gate. specplane init does not write this file.
+# Not a required check unless branch protection is turned on separately.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/specplane/requirements.txt
+      - run: pip install -e .
+      - name: validate, check_sync, run
+        run: >-
+          python3 tools/specplane/ci_gate.py
+          --base "origin/${{ github.base_ref }}"
+          --spec-root specs
+          --apply-diff
