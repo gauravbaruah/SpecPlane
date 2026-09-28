@@ -99,8 +99,9 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("overflow-x: auto", scroll)
         self.assertIn("max-width: 100%", scroll)
         self.assertNotIn("max-height", scroll)
-        self.assertIn("--card-min: 220px", css)
-        self.assertIn("minmax(var(--card-min), 1fr)", css)
+        self.assertIn("--card-min: 275px", css)
+        self.assertIn("grid-auto-columns: var(--card-min)", css)
+        self.assertNotIn("minmax(var(--card-min), 1fr)", css)
         self.assertNotIn("touch-action: none", css)
 
     def test_blast_hop_copy_is_in_the_viewer(self) -> None:

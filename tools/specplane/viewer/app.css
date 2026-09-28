@@ -70,7 +70,7 @@
   --inferred-bg: #fff8ec;
   --future: #7a4fa0;
   --future-bg: #f6f1fa;
-  --card-min: 220px;
+  --card-min: 275px;
   color-scheme: light;
   color: var(--ink-1);
   background: var(--bg-canvas);
@@ -443,7 +443,7 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .graph {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(var(--card-min), 1fr);
+  grid-auto-columns: var(--card-min);
   gap: 18px;
   align-items: start;
   width: max-content;
@@ -473,14 +473,15 @@ h2, .bucket h2, summary { font-size: 16px; line-height: 1.3; font-weight: 600; }
 .graph.linked .edges path.unknown { stroke-dasharray: 2 4; }
 .graph.linked .edges path.promised { stroke: var(--accent); }
 .graph.blast { gap: 28px; }
-.col { min-width: var(--card-min); display: flex; flex-direction: column; gap: 8px; }
+.col { width: var(--card-min); max-width: var(--card-min); min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .colhead { font-size: 11px; line-height: 1.3; font-weight: 600; color: var(--ink-3); text-align: center; letter-spacing: 0.02em; }
 .proj-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; color: var(--ink-3); font-size: 13px; line-height: 1.45; }
 .proj-note .mono { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 11px; line-height: 1.35; }
 .node {
   display: block;
   width: 100%;
-  min-width: var(--card-min);
+  min-width: 0;
+  max-width: 100%;
   text-align: left;
   background: var(--bg-raised);
   border: 1px solid var(--border);
