@@ -44,7 +44,8 @@ specplane view --spec-root R   same as other kernel commands
 - A declared diagram is rendered by that vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves. A label that is an id can be selected. The Mermaid source stays available under the picture.
 - No CDN. Offline / no-account / no-key is a Community property.
 - Rendering must not change because a CDN moved. The diagram frame does not listen for the wheel in a way that zooms or stops the page from scrolling.
-- Every picture stays in the column, including Map, Blast, Layers, and Diagrams. The page scrolls. A picture wider than the column scrolls inside the column. Nothing captures the wheel to zoom, and nothing runs to the screen edge.
+- Every picture stays in the column, including Map, Blast, Layers, Journey, Data, and Diagrams. The page scrolls. Cards have a minimum width. A picture wider than the column scrolls sideways inside the column. Nothing captures the wheel to zoom.
+- A declared diagram has an explicit Full screen control. That view fills the screen and still does not zoom on the wheel. Escape leaves it. The ordinary picture stays in the column.
 
 ## Data (do not slurp)
 

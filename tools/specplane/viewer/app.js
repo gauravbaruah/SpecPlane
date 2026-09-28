@@ -1149,7 +1149,7 @@
         caption ? h("div", {}, [caption]) : null,
         prov ? h("div", { class: "mono" }, [prov]) : null,
       ]) : null,
-      graph,
+      h("div", { class: "graph-frame" }, [graph]),
       legend(edges),
       extra || null,
     ]);
@@ -1701,8 +1701,39 @@
     });
   }
 
+  function fullscreenTarget() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+
+  function toggleFullscreen(frame) {
+    if (fullscreenTarget() === frame) {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      return;
+    }
+    if (frame.requestFullscreen) frame.requestFullscreen();
+    else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+  }
+
+  function syncFullscreenButtons() {
+    const current = fullscreenTarget();
+    document.querySelectorAll(".full-btn").forEach(function (btn) {
+      const frame = btn.closest(".diagram-frame");
+      btn.textContent = frame && current === frame ? "Exit full screen" : "Full screen";
+    });
+  }
+
   function diagramFrame(picture) {
-    const frame = h("div", { class: "diagram-frame" }, [picture]);
+    const frame = h("div", { class: "diagram-frame" }, [
+      h("div", { class: "diagram-bar" }, [
+        h("button", {
+          type: "button",
+          class: "full-btn",
+          on: { click: function () { toggleFullscreen(frame); } },
+        }, ["Full screen"]),
+      ]),
+      picture,
+    ]);
     releaseWheel(frame);
     return frame;
   }
@@ -1781,30 +1812,35 @@
       return item.subject === rec.id && item.kind === "data_models" && item.models;
     });
     if (!mine.length) return h("p", { class: "note" }, ["No data model declared on this id."]);
+    const cards = [];
+    mine.forEach(function (item) {
+      Object.keys(item.models).forEach(function (name) {
+        cards.push(h("div", { class: "col" }, [
+          h("div", { class: "colhead" }, [name]),
+          h("div", { class: "node" }, [modelFields(item.models[name]) || name]),
+          h("div", { class: "src" }, [item.subject + " · " + (item.source || "contracts.data_models")]),
+        ]));
+      });
+    });
     return h("div", {}, [
       h("div", { class: "quiet" }, ["declared · implementation.contracts.data_models"]),
       aboutBox([
         "Entities are declared on this id. A reference the model does not declare is left as written, not filled in.",
       ], "declared · data models"),
-      ...mine.map(function (item) {
-        return h("div", {}, Object.keys(item.models).map(function (name) {
-          return h("div", { class: "item" }, [
-            modelLine(name, item.models[name]),
-            h("div", { class: "src" }, [item.subject + " · " + (item.source || "contracts.data_models")]),
-          ]);
-        }));
-      }),
+      h("div", { class: "graph-frame" }, [
+        h("div", { class: "graph" }, cards),
+      ]),
     ]);
   }
 
-  function modelLine(name, value) {
-    let extra = "";
-    if (Array.isArray(value)) extra = value.join(", ");
-    else if (value && typeof value === "object") {
+  function modelFields(value) {
+    if (Array.isArray(value)) return value.join(", ");
+    if (value && typeof value === "object") {
       const fields = value.fields;
-      extra = Array.isArray(fields) ? fields.join(", ") : Object.keys(value).join(", ");
-    } else if (value != null && value !== "") extra = String(value);
-    return extra ? name + " — " + extra : name;
+      return Array.isArray(fields) ? fields.join(", ") : Object.keys(value).join(", ");
+    }
+    if (value != null && value !== "") return String(value);
+    return "";
   }
 
   function journeyWhy(selected, staged) {
@@ -1985,5 +2021,7 @@
   }
 
   window.addEventListener("hashchange", function () { render(); });
+  document.addEventListener("fullscreenchange", syncFullscreenButtons);
+  document.addEventListener("webkitfullscreenchange", syncFullscreenButtons);
   render();
 })();

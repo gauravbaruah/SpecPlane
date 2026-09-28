@@ -9,6 +9,7 @@ ADDED:
 
 MODIFIED:
   - "Declared diagrams are rendered by the vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves."
+  - "Diagrams can be shown full screen. Map, Blast, Layers, Journey, and Data scroll sideways once a card reaches its minimum width."
 
 REMOVED: []
 
