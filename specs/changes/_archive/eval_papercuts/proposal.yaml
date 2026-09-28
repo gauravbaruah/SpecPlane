@@ -1,6 +1,6 @@
 id: "eval_papercuts"
 kind: "fix"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-28"
 promise_ids:
   - "capability.specplane_check_sync"

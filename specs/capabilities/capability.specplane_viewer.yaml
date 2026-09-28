@@ -1,0 +1,71 @@
+meta:
+  id: "capability.specplane_viewer"
+  purpose: "Local read-only projection of the kernel a person can open in a browser"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "viewer"]
+  last_updated: "2026-09-28"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-28"
+    author: "viewer_projections"
+    summary: "Promoted the local viewer. It generates a readout, serves 127.0.0.1, and does not become a second product."
+    breaking: false
+
+responsibilities:
+  - "Generate a local readout of retrieve, impact, and list_gaps"
+  - "Serve that readout on 127.0.0.1 and print the URL"
+  - "Show one projection at a time when the record has that data: Map, Blast, Layers, Journey, Diagrams, or Data"
+  - "Render a declared diagram with the vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves"
+  - "Keep an inferred record from looking live"
+  - "Read Blast from impact distance and from the five perspectives on that same drawing"
+
+flows:
+  - "specplane view generates into .specplane/view/ and serves 127.0.0.1"
+  - "specplane view --open does the same and launches the browser"
+  - "specplane view --out DIR generates there and still serves"
+  - "A reload rebuilds the payload when the spec root is newer than the generated payload"
+
+business_value:
+  user_outcome: "A person can see what a change puts at risk without reading the YAML"
+  objective: "Give the same kernel a human projection"
+  revenue_dependency: "low"
+  strategic_priority: "core"
+
+constraints:
+  legal: []
+  security:
+    - "Bind 127.0.0.1 only. No API key. The page does not load Mermaid or fonts from a network"
+  ux:
+    - "Navbar is Live, Changes, Gaps, plus the open id, bit, and review_state. The five Blast readings are not navbar homes"
+    - "Sequence is a diagram type inside Diagrams, not its own tab. A projection with nothing to draw is omitted"
+    - "Empty perspective speech is not represented. It is never no security impact, no QA required, or no owner required"
+    - "Expand shows the current picture in the centre of the viewport with a 5% margin. Escape or Close leaves it. The wheel does not zoom"
+    - "A sensor sentence is not a link. The page shows the declared harness and not_run. It does not invoke the check"
+    - "Generated pages stay out of specs/. --static and a hosted share are not this command"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "local_readout"
+  targets:
+    local_readout: "specplane view prints a 127.0.0.1 URL for the generated readout"
+  derived_from: {}
+
+roadmap:
+  phase: "local viewer"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_retrieve"
+    - "capability.specplane_blast"
+    - "capability.specplane_list_gaps"
+  enables: []
+
+realized_by:
+  containers:
+    - "container.specplane_tools"
+  components:
+    - "component.cli_view"

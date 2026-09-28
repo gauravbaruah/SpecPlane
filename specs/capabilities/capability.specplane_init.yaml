@@ -6,11 +6,23 @@ meta:
   tags: ["kernel", "cli", "init"]
   last_updated: "2026-09-28"
   status: "planned"
-  version: "1.5.0"
+  version: "1.8.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "init_journey"
+    summary: "A failed copy names the kit folders to delete and leaves specs/ alone. --force replaces the kit, keeps specs/, and deletes generated .specplane/view/. There is no uninstall command."
+    breaking: false
+  - date: "2026-09-28"
+    author: "viewer_projections"
+    summary: "Init copies view.py and the viewer/ tree with the CLI. --kit-only copies neither."
+    breaking: false
+  - date: "2026-09-28"
+    author: "eval_papercuts"
+    summary: "Init copies ci_gate.py and ignores generated **/.specplane/view/. It still does not write a workflow or a git hook."
+    breaking: false
   - date: "2026-09-28"
     author: "ci_compose"
     summary: "A paste-in pull-request workflow may call validate, check_sync, and run. Init still does not write that file, and it is not a required GitHub check."
@@ -53,8 +65,29 @@ responsibilities:
   - "Consuming AGENTS.md points an existing repo at specplane-infer. Greenfield stays bootstrap. There is no scan CLI."
 
 flows:
-  - "From a product repo: uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@<branch> specplane init"
-  - "From a SpecPlane clone: python3 tools/specplane/cli.py init, or pip install -e . then specplane init"
+  - id: init_product_repo
+    kinds: [journey]
+    goal: "A product repo has the kit and an empty specs/ tree"
+    actors:
+      primary: developer
+    entry:
+      trigger: "developer runs specplane init from uvx --from git+ this repo, or from a SpecPlane clone"
+      preconditions:
+        - "destination is not the kit root"
+    stages:
+      - choose_destination
+      - copy_kit
+      - create_empty_specs_dirs
+      - write_or_append_agents
+    outcomes:
+      success:
+        - "dest has specplane/, skills, rules, and empty specs/ folders"
+        - "kernel specs/ from this repo are not copied"
+    exceptions:
+      - "dest already contains specplane/ and --force was not passed"
+    recovery:
+      - "If init fails after copying some files, it does not roll back. Delete specplane/, the specplane-* skills and rules, tools/specplane/, and specplane.config.json, then run init again. Leave specs/ alone."
+      - "--force replaces the kit copy and does not keep a previous kit file the new copy no longer has. It does not delete or empty specs/. It deletes generated .specplane/view/ so the next specplane view rebuilds. It does not start the viewer."
   - "Re-run without --force when specplane/ already exists → fail"
   - "Ask the agent for a Phase 1 capability after folders exist"
 
@@ -76,8 +109,11 @@ constraints:
     - "Does not infer or scan the destination. Brownfield mapping is the specplane-infer skill."
     - "Published PyPI / npx package is not this command"
     - "uvx --from git+ this repo may run init because the installed wheel bundles the kit"
-    - "Copied CLI siblings include impact.py"
+    - "Copied CLI siblings include impact.py, ci_gate.py, view.py, and the viewer/ tree. --kit-only copies neither the CLI nor the viewer."
+    - "Appends **/.specplane/view/ to the destination .gitignore when that line is missing. Does not ignore every path under .specplane/."
     - "No interactive agent-picker"
+    - "A failed copy does not roll back. It names specplane/, the specplane-* skills and rules, tools/specplane/, and specplane.config.json, and says to run init again. It says to leave specs/ alone."
+    - "--force replaces the kit copy. It does not delete or empty specs/. It deletes generated .specplane/view/ and does not start the viewer. There is no uninstall command."
   data_classification: "internal"
 
 success_metrics:
@@ -114,7 +150,9 @@ diagrams:
         root -->|Yes| refuse[Refuse]
         root -->|No| exists{specplane/ already exists?}
         exists -->|Yes, and --force was not passed| fail[Fail]
+        exists -->|Yes, and --force| replace["Replace the kit. Keep specs/. Delete generated .specplane/view/"]
         exists -->|No| copy["Copy specplane/, skills, and Cursor rules"]
+        replace --> copy
         copy --> cli["Optionally copy the local kernel CLI; never this repo's specs/"]
         cli --> dirs["Create empty specs/capabilities, foundations, containers, components, changes"]
         dirs --> agents["Write or append a consuming AGENTS.md"]

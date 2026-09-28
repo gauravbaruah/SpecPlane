@@ -1,9 +1,17 @@
-# init_journey
+# init_journey — decisions
 
-Class: **evolve** of `capability.specplane_init`, not promoted.
+GB 2026-09-28.
 
-Dogfood of `specplane-flows`. This file needs a journey (where init starts, the path, how it ends). It does not get a lifecycle or information table.
+## Partial copy
 
-PRE retrieve: init copies the kit and empty `specs/` folders; four string flows. Blast neighborhood was already known from the live `realized_by` (`component.cli_init`, `container.specplane_tools`).
+If init fails after copying some files, it does not try to roll back. It says what went wrong, then: delete `specplane/`, the `specplane-*` skills and rules, `tools/specplane/`, and `specplane.config.json`, and run init again. Leave `specs/` alone.
 
-Unanswered terminate / recover / `--force` retention stay `open_questions`. Do not invent those answers into the mapping.
+## --force
+
+`--force` replaces the kit copy. It does not keep a previous kit file the new copy no longer has. It does not delete or empty `specs/`. It does not remove a SpecPlane block already in `AGENTS.md`.
+
+Generated `.specplane/view/` is output. `--force` deletes that directory so the next `specplane view` builds from the replaced kit. Init does not start the viewer.
+
+## Removal
+
+There is no uninstall command. Removing the kit is the same delete list as a failed init. `specs/` stays. Termination of the product overlay is outside this capability.

@@ -3,9 +3,22 @@ sensors:
   - id: "one_journey_mapping"
     promise: "capability.specplane_init"
     must: "Init has one journey mapping (init_product_repo) and the other flow items stay strings"
-  - id: "gaps_are_questions"
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_live_init_has_one_journey"
+  - id: "failed_copy_and_force"
+    promise: "component.cli_init"
+    must: "A failed copy names the kit folders and leaves specs/ alone. --force keeps specs/, drops a stale kit file, and deletes generated .specplane/view/."
+    run:
+      unittest: "tools.specplane.test_init.InitKitTests.test_partial_copy_names_what_to_delete"
+  - id: "force_keeps_specs"
     promise: "capability.specplane_init"
-    must: "Partial copy, --force retention, and termination are open_questions, not filled lifecycle fields"
+    must: "--force replaces the kit, keeps specs/, and deletes generated .specplane/view/. There is no uninstall command."
+    run:
+      unittest: "tools.specplane.test_init.InitKitTests.test_force_replaces_kit_keeps_specs_and_clears_view"
   - id: "neighbor_unchanged"
     promise: "capability.specplane_change_folders"
     must: "A string-only neighbor capability was left string-only"
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_change_folders_stay_strings"
+
+looks_fine_is_not_a_sensor: true

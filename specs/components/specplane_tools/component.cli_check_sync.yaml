@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-09-28"
   status: "draft"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "eval_papercuts"
+    summary: "Changed-file paths are relative to the repo, then to the config dir when that dir sits below the git toplevel."
+    breaking: false
   - date: "2026-09-28"
     author: "mcp_and_sync_speech"
     summary: "Uncovered failure names the ids and the next commands. No --strict. Still does not stamp live."
@@ -78,6 +82,7 @@ implementation:
       - "Default changed-set includes untracked specs/**/*.yaml; skips specs/changes/"
       - "Default changed-set also includes a component id when a changed file matches implementation.realization.paths. --changed-ids does not add those ids."
       - "An unmapped changed app file is advisory and does not fail coverage. A missing declared path does not fail coverage and is not deleted."
+      - "A changed file path is relative to the repo, then to the config dir when that dir sits below the git toplevel, before it is matched to realization.paths."
       - "Optional --change <slug> scopes coverage to that folder; unknown slug exits non-zero; default without --change remains any-open-change"
       - "Never auto-write live. Does not parse source to learn values (e.g. timeout 60)"
       - "Uncovered failure prints retrieve, open or extend the change folder, and check_sync again. No --strict flag."
