@@ -686,7 +686,7 @@ div.node { cursor: default; }
   justify-content: flex-end;
   margin-bottom: 8px;
 }
-.full-btn {
+.expand-btn {
   border: 1px solid var(--border);
   background: var(--bg-raised);
   color: var(--ink-2);
@@ -696,7 +696,16 @@ div.node { cursor: default; }
   font-size: 12px;
   font-weight: 600;
 }
-.full-btn:hover { background: var(--bg-hover); color: var(--ink-1); }
+.expand-btn:hover { background: var(--bg-hover); color: var(--ink-1); }
+.expand-stage { display: contents; }
+.expand-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--ink-1) 32%, transparent);
+}
+.expand-backdrop[hidden] { display: none; }
+body.is-expanded { overflow: hidden; }
 .diagram-frame {
   max-width: 100%;
   overflow-x: auto;
@@ -705,20 +714,41 @@ div.node { cursor: default; }
   touch-action: auto;
   margin-top: 8px;
 }
-.diagram-frame:fullscreen {
-  background: var(--bg-canvas);
-  max-width: none;
-  overflow: auto;
-  padding: 24px;
+.graph-frame.is-expanded,
+.diagram-frame.is-expanded {
+  position: fixed;
+  z-index: 21;
+  inset: 5%;
   box-sizing: border-box;
+  max-width: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
 }
-.diagram-frame:fullscreen .diagram-bar {
+.graph-frame.is-expanded .diagram-bar,
+.diagram-frame.is-expanded .diagram-bar {
   position: sticky;
   top: 0;
   z-index: 2;
+  flex: none;
+  align-self: stretch;
   margin: 0 0 12px;
   padding-bottom: 8px;
   background: var(--bg-canvas);
+}
+.graph-frame.is-expanded .expand-stage,
+.diagram-frame.is-expanded .expand-stage {
+  display: flex;
+  flex: 1 0 auto;
+  align-items: safe center;
+  justify-content: safe center;
+  min-width: min-content;
+  min-height: min-content;
 }
 .diagram, .diagram svg {
   touch-action: auto;

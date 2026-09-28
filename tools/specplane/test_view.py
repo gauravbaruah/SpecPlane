@@ -89,9 +89,10 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("max-width: 100%", frame)
         self.assertIn("touch-action: auto", frame)
         self.assertNotIn("max-height", frame)
-        self.assertIn("requestFullscreen", src)
-        self.assertIn("Full screen", src)
-        self.assertNotIn("preventDefault", src.split("function toggleFullscreen", 1)[1].split("function syncFullscreenButtons", 1)[0])
+        self.assertIn("Expand", src)
+        self.assertIn("inset: 5%", css)
+        self.assertNotIn("requestFullscreen", src)
+        self.assertNotIn("preventDefault", src.split("function toggleExpand", 1)[1].split("function expandable", 1)[0])
         scroll = css.split(".graph-frame {", 1)[1].split("}", 1)[0]
         self.assertIn("overflow-x: auto", scroll)
         self.assertIn("max-width: 100%", scroll)

@@ -14,7 +14,7 @@ sensors:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_diagrams_scroll_in_the_column"
   - id: "diagram_scroll"
     promise: "capability.specplane_viewer"
-    must: "Map, Blast, Layers, Journey, Data, and Diagrams stay in the column unless a diagram is put in full screen. The page scrolls. Nothing captures the wheel to zoom."
+    must: "Map, Blast, Layers, Journey, Data, and Diagrams stay in the column unless Expand is open. Expand keeps a 5% margin and does not take over the browser. The page scrolls. Nothing captures the wheel to zoom."
     run:
       unittest: "tools.specplane.test_view.ViewerModelTests.test_diagrams_scroll_in_the_column"
   - id: "blast_hops"

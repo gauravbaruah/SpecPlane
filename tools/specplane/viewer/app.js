@@ -1149,7 +1149,7 @@
         caption ? h("div", {}, [caption]) : null,
         prov ? h("div", { class: "mono" }, [prov]) : null,
       ]) : null,
-      h("div", { class: "graph-frame" }, [graph]),
+      expandable("graph-frame", graph),
       legend(edges),
       extra || null,
     ]);
@@ -1701,39 +1701,59 @@
     });
   }
 
-  function fullscreenTarget() {
-    return document.fullscreenElement || document.webkitFullscreenElement || null;
-  }
+  let expandedFrame = null;
 
-  function toggleFullscreen(frame) {
-    if (fullscreenTarget() === frame) {
-      if (document.exitFullscreen) document.exitFullscreen();
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      return;
-    }
-    if (frame.requestFullscreen) frame.requestFullscreen();
-    else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-  }
-
-  function syncFullscreenButtons() {
-    const current = fullscreenTarget();
-    document.querySelectorAll(".full-btn").forEach(function (btn) {
-      const frame = btn.closest(".diagram-frame");
-      btn.textContent = frame && current === frame ? "Exit full screen" : "Full screen";
+  function syncExpandButtons() {
+    document.querySelectorAll(".expand-btn").forEach(function (btn) {
+      const frame = btn.closest(".graph-frame, .diagram-frame");
+      btn.textContent = frame && frame === expandedFrame ? "Close" : "Expand";
     });
   }
 
-  function diagramFrame(picture) {
-    const frame = h("div", { class: "diagram-frame" }, [
+  function closeExpand() {
+    if (expandedFrame) expandedFrame.classList.remove("is-expanded");
+    expandedFrame = null;
+    document.body.classList.remove("is-expanded");
+    const backdrop = document.querySelector(".expand-backdrop");
+    if (backdrop) backdrop.hidden = true;
+    syncExpandButtons();
+  }
+
+  function toggleExpand(frame) {
+    if (expandedFrame === frame) {
+      closeExpand();
+      return;
+    }
+    if (expandedFrame) expandedFrame.classList.remove("is-expanded");
+    expandedFrame = frame;
+    frame.classList.add("is-expanded");
+    document.body.classList.add("is-expanded");
+    const backdrop = document.querySelector(".expand-backdrop");
+    if (backdrop) backdrop.hidden = false;
+    syncExpandButtons();
+    paintMapEdges();
+  }
+
+  function expandable(className, picture) {
+    const frame = h("div", { class: className });
+    frame.append(
       h("div", { class: "diagram-bar" }, [
         h("button", {
           type: "button",
-          class: "full-btn",
-          on: { click: function () { toggleFullscreen(frame); } },
-        }, ["Full screen"]),
+          class: "expand-btn",
+          on: { click: function (ev) {
+            ev.stopPropagation();
+            toggleExpand(frame);
+          } },
+        }, ["Expand"]),
       ]),
-      picture,
-    ]);
+      h("div", { class: "expand-stage" }, [picture])
+    );
+    return frame;
+  }
+
+  function diagramFrame(picture) {
+    const frame = expandable("diagram-frame", picture);
     releaseWheel(frame);
     return frame;
   }
@@ -1827,9 +1847,7 @@
       aboutBox([
         "Entities are declared on this id. A reference the model does not declare is left as written, not filled in.",
       ], "declared · data models"),
-      h("div", { class: "graph-frame" }, [
-        h("div", { class: "graph" }, cards),
-      ]),
+      expandable("graph-frame", h("div", { class: "graph" }, cards)),
     ]);
   }
 
@@ -2009,6 +2027,7 @@
   }
 
   function render() {
+    closeExpand();
     const route = parse();
     let body;
     if (route.kind === "changes") body = changesIndex();
@@ -2020,8 +2039,12 @@
     paintMapEdges();
   }
 
+  const expandBackdrop = h("div", { class: "expand-backdrop", on: { click: closeExpand } });
+  expandBackdrop.hidden = true;
+  document.body.appendChild(expandBackdrop);
   window.addEventListener("hashchange", function () { render(); });
-  document.addEventListener("fullscreenchange", syncFullscreenButtons);
-  document.addEventListener("webkitfullscreenchange", syncFullscreenButtons);
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") closeExpand();
+  });
   render();
 })();

@@ -45,7 +45,7 @@ specplane view --spec-root R   same as other kernel commands
 - No CDN. Offline / no-account / no-key is a Community property.
 - Rendering must not change because a CDN moved. The diagram frame does not listen for the wheel in a way that zooms or stops the page from scrolling.
 - Every picture stays in the column, including Map, Blast, Layers, Journey, Data, and Diagrams. The page scrolls. Cards have a minimum width. A picture wider than the column scrolls sideways inside the column. Nothing captures the wheel to zoom.
-- A declared diagram has an explicit Full screen control. That view fills the screen and still does not zoom on the wheel. Escape leaves it. The ordinary picture stays in the column.
+- Expand opens the current picture in the centre of the viewport with a 5% margin on every side. It is available on a declared diagram and on Map, Blast, Layers, Journey, and Data. It does not take over the browser. Escape or Close leaves it. The wheel does not zoom.
 
 ## Data (do not slurp)
 
