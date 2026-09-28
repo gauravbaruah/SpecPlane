@@ -1,0 +1,16 @@
+id: "try_path_view"
+kind: "learn"
+status: "in-flight"
+opened: "2026-09-28"
+promise_ids:
+  - "capability.specplane_init"
+why: >-
+  The try path ended in terminal output. A person following docs/try.md
+  should open the local viewer on the tiny-saas auth blast and see what
+  a 60→15 change puts at risk.
+non_goals:
+  - "more viewer chrome"
+  - "a watch mode"
+  - "REST impact"
+  - "a claim that a pull request was blocked"
+  - "editing live 5C YAML before accept"

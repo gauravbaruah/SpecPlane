@@ -28,4 +28,7 @@ From this folder, after `pip install -e ../..` from the SpecPlane checkout:
 specplane retrieve capability.authentication
 specplane blast component.password_reset
 specplane check_sync --changed-ids capability.billing
+specplane view
 ```
+
+`specplane view` prints a localhost URL. Open `#id/capability.authentication?proj=blast` on that page. That Blast is what a 60→15 change puts at risk. The walk-through is [`docs/try.md`](../../docs/try.md#5-what-the-change-puts-at-risk).

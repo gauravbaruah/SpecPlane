@@ -50,7 +50,23 @@ A one-line TTL is not a one-file idea. `blast` and `impact` of `capability.authe
 
 Maps stay optional on every other product. This demo declares one path so the try path can show the join.
 
-## 5. Your product
+## 5. What the change puts at risk
+
+From `examples/tiny-saas`, after the install above:
+
+```bash
+specplane view
+```
+
+The server prints a `http://127.0.0.1` URL. Open it, then open Blast for `capability.authentication`:
+
+```text
+#id/capability.authentication?proj=blast
+```
+
+That picture is the question: **what does a 60→15 change put at risk?** Farther hops stay collapsed until you expand them. `blast` of that id names `capability.notifications`, `capability.billing`, `component.notifier`, `component.password_reset`, `component.billing_api`, and `foundation.security_baseline`. It is the affected subgraph, not a tour of the architecture. It does not block a pull request.
+
+## 6. Your product
 
 ```bash
 cd /path/to/your-app

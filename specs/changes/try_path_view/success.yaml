@@ -1,0 +1,11 @@
+change_id: "try_path_view"
+kind: "learn"
+
+sensors:
+  - id: "try_path_ends_on_auth_blast"
+    promise: "capability.specplane_init"
+    must: "docs/try.md names specplane view and the tiny-saas auth blast ids, and does not claim a pull request was blocked"
+    run:
+      unittest: "tools.specplane.test_kernel.TryPathViewTests.test_try_path_ends_on_auth_blast"
+
+looks_fine_is_not_a_sensor: true
