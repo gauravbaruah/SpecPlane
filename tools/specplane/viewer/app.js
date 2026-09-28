@@ -2006,6 +2006,14 @@
     ]);
   }
 
+  function deltaClaim(key) {
+    if (key === "ADDED") return "not on the live spec yet";
+    if (key === "MODIFIED") return "the live promise changes";
+    if (key === "REMOVED") return "leaves the live spec";
+    if (key === "RENAMED") return "the name changes";
+    return "";
+  }
+
   function deltaBlock(delta) {
     const keys = delta ? Object.keys(delta) : [];
     if (!keys.length) return null;
@@ -2016,7 +2024,7 @@
         rows.push(h("div", { class: "item" }, [
           line.text ? h("div", {}, [line.text]) : null,
           h("div", {}, kvLines([
-            ["op", key],
+            ["claim", deltaClaim(key)],
             ["id", line.id ? idLink(line.id) : ""],
             ["group", line.group || ""],
           ])),

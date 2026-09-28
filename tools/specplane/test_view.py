@@ -254,7 +254,9 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn("What SpecPlane checked", script)
         self.assertIn("What SpecPlane infers", script)
         self.assertIn("the repository is the source", script)
-        self.assertIn('["op", key]', script)
+        self.assertIn('["claim", deltaClaim(key)]', script)
+        self.assertIn("the live promise changes", script)
+        self.assertNotIn('["op", key]', script)
         self.assertIn('["bound check", row.bound_check || "none · not_run"]', script)
 
     def test_viewer_sensor_rows_keep_id_promise_and_check(self) -> None:
