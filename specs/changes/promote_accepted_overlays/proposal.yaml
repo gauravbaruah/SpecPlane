@@ -1,0 +1,23 @@
+id: "promote_accepted_overlays"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-09-29"
+promise_ids:
+  - "capability.specplane_check_sync"
+  - "capability.specplane_init"
+  - "capability.specplane_viewer"
+  - "component.cli_check_sync"
+  - "component.cli_init"
+  - "component.cli_view"
+  - "container.specplane_tools"
+  - "foundation.design_system"
+  - "system.specplane_kernel"
+why: >-
+  The accepted init_journey, viewer_projections, and eval_papercuts deltas
+  are on the live graph. This folder exists so the pull-request gate can see
+  a covering change. Archive it after merge so retrieve shows one live graph.
+non_goals:
+  - "reopening the archived folders"
+  - "init --ci"
+  - "a required GitHub check as a product claim"
+  - "PyPI"
