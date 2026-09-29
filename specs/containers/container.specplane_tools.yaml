@@ -5,13 +5,17 @@ meta:
   type: "container"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "mcp"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-09-28"
   status: "draft"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "viewer_projections"
+    summary: "contains component.cli_view; implements capability.specplane_viewer. view is CLI-only."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "contains component.cli_reconcile; implements capability.specplane_reconcile. reconcile is CLI-only."
@@ -51,6 +55,7 @@ implements:
   - "capability.specplane_run"
   - "capability.specplane_promote"
   - "capability.specplane_reconcile"
+  - "capability.specplane_viewer"
 
 uses:
   - "foundation.epistemic_status"
@@ -62,7 +67,7 @@ container_architecture:
   type: ""
   technology_stack:
     - "Local Python CLI (existing tools/specplane/ grows after examination)"
-    - "stdio MCP: retrieve, blast, check_sync, list_gaps, run (validate, promote, and reconcile are CLI only)"
+    - "stdio MCP: retrieve, blast, check_sync, list_gaps, run (validate, promote, reconcile, and view are CLI only)"
   deployment_unit: "This repo's tools/specplane/ after implementation. Not copied with the kit. Not hosted."
   data_stores: []
   communication:
@@ -81,6 +86,7 @@ relationships:
     - "component.cli_run"
     - "component.cli_promote"
     - "component.cli_reconcile"
+    - "component.cli_view"
   depends_on: []
   used_by: []
   integrates_with: []

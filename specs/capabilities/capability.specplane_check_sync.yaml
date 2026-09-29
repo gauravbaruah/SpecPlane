@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "check_sync"]
   last_updated: "2026-09-28"
   status: "planned"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "eval_papercuts"
+    summary: "A mapped file under a nested spec root fails coverage. An id named on the scoped change, including one not on disk yet, is in-flight known and is not live."
+    breaking: false
   - date: "2026-09-28"
     author: "ci_compose"
     summary: "A paste-in pull-request workflow may call this command on the default changed-set, and again with --change when a change folder is in the diff. The command still does not execute sensors."
@@ -54,6 +58,8 @@ responsibilities:
   - "A coverage pass is declared coverage, not behavioral agreement"
   - "Default changed-set is spec YAML plus component ids whose declared realization.paths match a changed file. --changed-ids overrides that set."
   - "An unmapped changed app file is advisory and does not fail coverage. A missing declared path does not fail coverage."
+  - "A mapped file whose path is relative to a spec root below the git toplevel is in the default changed-set and fails coverage when no open change covers that component."
+  - "When --change is set, an id that folder names and that is not on disk yet is in-flight known. It must be covered by that slug. It is not live."
   - "Does not execute sensors. Compose with capability.specplane_run; do not absorb it."
 
 flows:
@@ -85,6 +91,8 @@ constraints:
     - "When decision_required and at least one id is uncovered, stdout names those ids and the resolve steps: retrieve each id, open or extend the change folder, then check_sync again. If --change was passed, name that slug. If it was not, do not invent one."
     - "Unknown change, unknown ids, empty blast, and Phase 1 advisory keep their existing lines and do not get the uncovered recipe. No --strict."
     - "A paste-in pull-request workflow may call this command. A required GitHub check is not a product claim."
+    - "Changed files are compared to declared realization.paths as paths relative to the config dir, including when that dir sits below the git toplevel."
+    - "With --change, an id in that folder's promise_ids or delta ADDED that is not a live file is in-flight known and must be covered by that slug. retrieve does not treat it as live. The same id with no --change, or with a different slug, stays unknown."
   data_classification: "internal"
 
 success_metrics:

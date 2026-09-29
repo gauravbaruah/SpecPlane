@@ -76,6 +76,54 @@ class InitKitTests(unittest.TestCase):
         self.assertIn("Keep this.", text)
         self.assertIn("SpecPlane (this product)", text)
 
+    def test_force_replaces_kit_keeps_specs_and_clears_view(self) -> None:
+        code, notes = init_kit(self.dest, KIT)
+        self.assertEqual(code, 0, notes)
+        kept = self.dest / "specs" / "capabilities" / "capability.mine.yaml"
+        kept.write_text("meta: {id: capability.mine}\n", encoding="utf-8")
+        other = self.dest / ".specplane" / "notes.txt"
+        other.parent.mkdir(parents=True)
+        other.write_text("keep\n", encoding="utf-8")
+        generated = self.dest / ".specplane" / "view" / "payload.js"
+        generated.parent.mkdir()
+        generated.write_text("stale\n", encoding="utf-8")
+        stale_skill = self.dest / ".agents" / "skills" / "specplane-retired"
+        stale_skill.mkdir()
+        (stale_skill / "SKILL.md").write_text("old\n", encoding="utf-8")
+        stale_cli = self.dest / "tools" / "specplane" / "old_kit.py"
+        stale_cli.write_text("old\n", encoding="utf-8")
+        (self.dest / "specplane" / "retired.txt").write_text("old\n", encoding="utf-8")
+
+        code, notes = init_kit(self.dest, KIT, force=True)
+        self.assertEqual(code, 0, notes)
+        self.assertTrue(kept.is_file())
+        self.assertEqual(kept.read_text(encoding="utf-8"), "meta: {id: capability.mine}\n")
+        self.assertTrue(other.is_file())
+        self.assertFalse(generated.exists())
+        self.assertFalse(stale_skill.exists())
+        self.assertFalse(stale_cli.exists())
+        self.assertFalse((self.dest / "specplane" / "retired.txt").exists())
+        self.assertTrue((self.dest / "tools" / "specplane" / "viewer" / "app.js").is_file())
+        self.assertTrue(any("next specplane view" in note for note in notes))
+        self.assertIn("SpecPlane (this product)", (self.dest / "AGENTS.md").read_text(encoding="utf-8"))
+
+    def test_partial_copy_names_what_to_delete(self) -> None:
+        kept = self.dest / "specs" / "capabilities" / "capability.mine.yaml"
+        kept.parent.mkdir(parents=True)
+        kept.write_text("meta: {id: capability.mine}\n", encoding="utf-8")
+        skills = self.dest / ".agents" / "skills"
+        skills.parent.mkdir()
+        skills.write_text("not a directory\n", encoding="utf-8")
+        code, notes = init_kit(self.dest, KIT)
+        self.assertEqual(code, 1, notes)
+        text = "\n".join(notes)
+        self.assertIn("Something went wrong", text)
+        self.assertIn("specplane/", text)
+        self.assertIn("tools/specplane/", text)
+        self.assertIn("Leave specs/ alone", text)
+        self.assertTrue((self.dest / "specplane").is_dir())
+        self.assertEqual(kept.read_text(encoding="utf-8"), "meta: {id: capability.mine}\n")
+
     def test_does_not_replace_existing_specplane_without_force(self) -> None:
         (self.dest / "specplane").mkdir()
         (self.dest / "specplane" / "marker.txt").write_text("mine", encoding="utf-8")
@@ -140,6 +188,29 @@ class InitKitTests(unittest.TestCase):
             os.chdir(old_cwd)
             BUNDLE.mkdir(parents=True, exist_ok=True)
             (BUNDLE / "__init__.py").write_text(stub_text, encoding="utf-8")
+
+
+class InitJourneyTests(unittest.TestCase):
+    def test_live_init_has_one_journey(self) -> None:
+        loaded = yaml_load(KIT / "specs" / "capabilities" / "capability.specplane_init.yaml")
+        flows = loaded["flows"]
+        mappings = [item for item in flows if isinstance(item, dict)]
+        strings = [item for item in flows if isinstance(item, str)]
+        self.assertEqual(len(mappings), 1)
+        self.assertEqual(mappings[0]["id"], "init_product_repo")
+        self.assertGreaterEqual(len(strings), 2)
+
+    def test_change_folders_stay_strings(self) -> None:
+        loaded = yaml_load(KIT / "specs" / "capabilities" / "capability.specplane_change_folders.yaml")
+        flows = loaded["flows"]
+        self.assertTrue(flows)
+        self.assertTrue(all(isinstance(item, str) for item in flows))
+
+
+def yaml_load(path: Path):
+    import yaml
+
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,7 @@
+# promote_accepted_overlays
+
+GB accepted the live overlays (PR #31). The gate failed because those files
+moved after the original folders were already in `_archive`.
+
+This folder covers the same ids so default `check_sync` and `run --change`
+can see an open change. Archive after merge.

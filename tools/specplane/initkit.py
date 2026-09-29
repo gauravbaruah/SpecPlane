@@ -82,19 +82,71 @@ def is_kit_root(path: Path) -> bool:
     ).is_dir()
 
 
+_RECOVERY = (
+    "Something went wrong. Delete specplane/, the specplane-* skills and rules, "
+    "tools/specplane/, and specplane.config.json, then run init again. Leave specs/ alone."
+)
+
+
 def _copy_named_dirs(src_parent: Path, dest_parent: Path, prefix: str) -> int:
     dest_parent.mkdir(parents=True, exist_ok=True)
     count = 0
     if not src_parent.is_dir():
         return 0
+    incoming: set[str] = set()
     for child in sorted(src_parent.iterdir()):
         if child.is_dir() and child.name.startswith(prefix):
+            incoming.add(child.name)
             target = dest_parent / child.name
             if target.exists():
                 shutil.rmtree(target)
             shutil.copytree(child, target)
             count += 1
+    for child in list(dest_parent.iterdir()):
+        if child.is_dir() and child.name.startswith(prefix) and child.name not in incoming:
+            shutil.rmtree(child)
     return count
+
+
+def _copy_rules(kit_root: Path, dest: Path) -> int:
+    rules_src = kit_root / ".cursor" / "rules"
+    rules_dest = dest / ".cursor" / "rules"
+    rules_dest.mkdir(parents=True, exist_ok=True)
+    incoming: set[str] = set()
+    if rules_src.is_dir():
+        for rule in sorted(rules_src.glob("specplane-*.mdc")):
+            incoming.add(rule.name)
+            shutil.copy2(rule, rules_dest / rule.name)
+    for rule in list(rules_dest.glob("specplane-*.mdc")):
+        if rule.name not in incoming:
+            rule.unlink()
+    return len(incoming)
+
+
+def _copy_cli(kit_root: Path, dest: Path, *, force: bool) -> None:
+    tools_dest = dest / "tools" / "specplane"
+    tools_dest.mkdir(parents=True, exist_ok=True)
+    tools_src = kit_root / "tools" / "specplane"
+    viewer_dest = tools_dest / "viewer"
+    if viewer_dest.exists():
+        shutil.rmtree(viewer_dest)
+    if force:
+        for child in list(tools_dest.iterdir()):
+            if child.is_file() and child.name not in CLI_FILES:
+                child.unlink()
+    for name in CLI_FILES:
+        src = tools_src / name
+        if src.is_file():
+            shutil.copy2(src, tools_dest / name)
+    viewer_src = tools_src / "viewer"
+    if viewer_src.is_dir():
+        shutil.copytree(viewer_src, viewer_dest)
+
+
+def _clear_generated_view(dest: Path) -> None:
+    generated = dest / ".specplane" / "view"
+    if generated.exists():
+        shutil.rmtree(generated)
 
 
 def _write_agents(dest: Path) -> str:
@@ -166,60 +218,55 @@ def init_kit(
     if specplane_dest.exists() and not force:
         return 1, [f"{specplane_dest} already exists (pass --force to replace the kit copy)"]
 
-    if specplane_dest.exists():
-        shutil.rmtree(specplane_dest)
-    shutil.copytree(kit_root / "specplane", specplane_dest)
-    notes.append("copied specplane/")
+    try:
+        if specplane_dest.exists():
+            shutil.rmtree(specplane_dest)
+        shutil.copytree(kit_root / "specplane", specplane_dest)
+        notes.append("copied specplane/")
 
-    skills = _copy_named_dirs(kit_root / ".agents" / "skills", dest / ".agents" / "skills", "specplane-")
-    cursor_skills = _copy_named_dirs(
-        kit_root / ".cursor" / "skills", dest / ".cursor" / "skills", "specplane-"
-    )
-    notes.append(f"copied {skills} agent skill(s), {cursor_skills} cursor skill(s)")
+        skills = _copy_named_dirs(
+            kit_root / ".agents" / "skills", dest / ".agents" / "skills", "specplane-"
+        )
+        cursor_skills = _copy_named_dirs(
+            kit_root / ".cursor" / "skills", dest / ".cursor" / "skills", "specplane-"
+        )
+        notes.append(f"copied {skills} agent skill(s), {cursor_skills} cursor skill(s)")
 
-    rules_src = kit_root / ".cursor" / "rules"
-    rules_dest = dest / ".cursor" / "rules"
-    rules_dest.mkdir(parents=True, exist_ok=True)
-    rule_count = 0
-    if rules_src.is_dir():
-        for rule in sorted(rules_src.glob("specplane-*.mdc")):
-            shutil.copy2(rule, rules_dest / rule.name)
-            rule_count += 1
-    notes.append(f"copied {rule_count} cursor rule(s)")
+        rule_count = _copy_rules(kit_root, dest)
+        notes.append(f"copied {rule_count} cursor rule(s)")
 
-    if with_cli:
-        tools_dest = dest / "tools" / "specplane"
-        tools_dest.mkdir(parents=True, exist_ok=True)
-        tools_src = kit_root / "tools" / "specplane"
-        for name in CLI_FILES:
-            src = tools_src / name
-            if src.is_file():
-                shutil.copy2(src, tools_dest / name)
-        viewer_src = tools_src / "viewer"
-        if viewer_src.is_dir():
-            shutil.copytree(viewer_src, tools_dest / "viewer")
-        notes.append("copied tools/specplane CLI (not testdata)")
-    else:
-        notes.append("skipped CLI (--kit-only)")
+        if with_cli:
+            _copy_cli(kit_root, dest, force=force)
+            notes.append("copied tools/specplane CLI (not testdata)")
+        else:
+            notes.append("skipped CLI (--kit-only)")
 
-    config = {
-        "version": 1,
-        "schemaVersion": "9.1.0",
-        "specRoot": "specs",
-        "strictMode": False,
-        "kitCommit": kit_commit(kit_root),
-    }
-    (dest / "specplane.config.json").write_text(
-        json.dumps(config, indent=2) + "\n", encoding="utf-8"
-    )
-    notes.append("wrote specplane.config.json")
-    _ensure_view_gitignore(dest)
-    notes.append("ignored generated **/.specplane/view/")
+        if force:
+            _clear_generated_view(dest)
+            notes.append("deleted generated .specplane/view/ so the next specplane view rebuilds")
 
-    notes.append(_write_agents(dest))
-    _write_claude(dest)
-    _empty_specs(dest)
-    notes.append("created empty specs/ folders (no example capability)")
+        config = {
+            "version": 1,
+            "schemaVersion": "9.1.0",
+            "specRoot": "specs",
+            "strictMode": False,
+            "kitCommit": kit_commit(kit_root),
+        }
+        (dest / "specplane.config.json").write_text(
+            json.dumps(config, indent=2) + "\n", encoding="utf-8"
+        )
+        notes.append("wrote specplane.config.json")
+        _ensure_view_gitignore(dest)
+        notes.append("ignored generated **/.specplane/view/")
+
+        notes.append(_write_agents(dest))
+        _write_claude(dest)
+        _empty_specs(dest)
+        notes.append("created empty specs/ folders (no example capability)")
+    except (OSError, shutil.Error) as exc:
+        notes.append(str(exc))
+        notes.append(_RECOVERY)
+        return 1, notes
 
     github = dest / ".github" / "workflows"
     if github.exists():

@@ -24,21 +24,24 @@ MODIFIED:
             - "kernel specs/ from this repo are not copied"
         exceptions:
           - "dest already contains specplane/ and --force was not passed"
+        recovery:
+          - "If init fails after copying some files, it does not roll back. Delete specplane/, the specplane-* skills and rules, tools/specplane/, and specplane.config.json, then run init again. Leave specs/ alone."
+          - "--force replaces the kit copy and does not keep a previous kit file the new copy no longer has. It does not delete or empty specs/. It deletes generated .specplane/view/ so the next specplane view rebuilds. It does not start the viewer."
       - "Re-run without --force when specplane/ already exists → fail"
       - "Ask the agent for a Phase 1 capability after folders exist"
     open_questions:
       - id: oq_init_partial_copy
         question: "If init fails after copying some files, what remains on disk and how does the developer recover?"
         raised_from: "flow.init_product_repo"
-        status: open
+        status: resolved
       - id: oq_init_force
         question: "When --force is passed and specplane/ already exists, what is replaced, and is anything from the previous kit retained?"
         raised_from: "flow.init_product_repo"
-        status: open
+        status: resolved
       - id: oq_init_terminate
         question: "Is there a supported way to remove the copied kit and empty specs/ tree, or does termination stay outside this capability?"
         raised_from: "flow.init_product_repo"
-        status: open
+        status: resolved
   - id: "component.cli_init"
     summary: "Point the existing user_flows sliver at the capability flow. Do not copy journey or lifecycle tables onto the component."
     planning:
@@ -46,5 +49,5 @@ MODIFIED:
         flow_ref: init_product_repo
 REMOVED: []
 notes:
-  - "Live capability.specplane_init.yaml and component.cli_init.yaml are unchanged until promote."
+  - "The journey mapping stays in this folder until promote. Live YAML does not gain this flow until then."
   - "kinds is journey only. capability.specplane_change_folders stays string-only."

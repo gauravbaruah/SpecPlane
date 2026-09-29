@@ -6,13 +6,21 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-25"
+  last_updated: "2026-09-28"
   status: "draft"
-  version: "1.4.0"
+  version: "1.6.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-09-28"
+    author: "init_journey"
+    summary: "The init command follows the init_product_repo journey. A failed copy names the kit folders. --force keeps specs/ and clears generated .specplane/view/."
+    breaking: false
+  - date: "2026-09-28"
+    author: "viewer_projections"
+    summary: "The copied CLI includes view.py and the viewer/ tree. --kit-only skips both."
+    breaking: false
   - date: "2026-09-25"
     author: "kernel-slice"
     summary: "CLI_FILES and the wheel bundle include impact.py"
@@ -42,6 +50,7 @@ uses:
 
 planning:
   user_flows:
+    flow_ref: init_product_repo
     actions:
       - "Point init at a destination repo; kit root is the SpecPlane checkout, or the bundled kit in a wheel install"
     success:
@@ -55,7 +64,9 @@ planning:
       - "Tests assert kit copied, kernel specs not copied, empty dirs, AGENTS append, no .github/workflows"
       - "Consuming AGENTS.md template states PRE retrieve / POST check_sync --change --changed-ids, then run --change. run invokes bound checks only and does not certify behavior."
       - "Does not stamp epistemic live"
-      - "Copied CLI files include impact.py"
+      - "Copied CLI files include impact.py, view.py, and the viewer/ tree. --kit-only copies neither."
+      - "A failed copy exits 1, names the kit folders to delete, and leaves specs/ in place."
+      - "--force keeps existing spec YAML, drops a kit file the new copy no longer has, and deletes generated .specplane/view/."
     open_questions: []
     readiness: "in-progress"
 

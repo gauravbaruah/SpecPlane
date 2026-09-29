@@ -1,0 +1,58 @@
+meta:
+  id: "component.cli_view"
+  purpose: "Local view command: generate the readout and serve it on 127.0.0.1"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "viewer"]
+  last_updated: "2026-09-28"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-09-28"
+    author: "viewer_projections"
+    summary: "specplane view generates the local readout and serves it. It is not an MCP tool."
+    breaking: false
+
+implements:
+  - "capability.specplane_viewer"
+
+uses:
+  - "foundation.design_system"
+
+planning:
+  user_flows:
+    actions:
+      - "specplane view"
+      - "specplane view --open"
+      - "specplane view --out DIR"
+    success:
+      - "Pages are generated and a 127.0.0.1 URL is printed"
+      - "An inferred id is not given a live slice"
+    errors:
+      - "Must not bind 0.0.0.0"
+      - "Must not write generated HTML under specs/"
+      - "Must not load Mermaid from a CDN"
+
+implementation:
+  realization:
+    paths:
+      - "tools/specplane/view.py"
+      - "tools/specplane/viewer/"
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components: []
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "A declared diagram is rendered by the vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves"
+      - "Blast columns follow impact distance. Distance 3 and beyond stays collapsed until expand"
+      - "The gaps lens matches list_gaps"
+    open_questions: []
+    readiness: "ready"

@@ -1,6 +1,6 @@
 id: "viewer_projections"
 kind: "learn"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-25"
 promise_ids:
   - "capability.specplane_viewer"
@@ -10,6 +10,9 @@ promise_ids:
   - "capability.specplane_init"
   - "component.cli_init"
   - "foundation.design_system"
+  - "component.cli_view"
+  - "container.specplane_tools"
+  - "system.specplane_kernel"
 why: >
   Human projection of retrieve / impact / gaps. Same install as the kernel.
   Generate into .specplane/view/. Serve 127.0.0.1 by default. Vendor Mermaid.

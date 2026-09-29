@@ -1,5 +1,17 @@
-id: "init_journey"
+change_id: "promote_accepted_overlays"
+kind: "evolve"
+
 sensors:
+  - id: "promoted_specs_validate"
+    promise: "capability.specplane_check_sync"
+    must: "The live spec root still validates after the accepted overlays land"
+    run:
+      argv:
+        - "python3"
+        - "tools/specplane/cli.py"
+        - "validate"
+        - "--spec-root"
+        - "specs"
   - id: "one_journey_mapping"
     promise: "capability.specplane_init"
     must: "Init has one journey mapping (init_product_repo) and the other flow items stay strings"
@@ -15,10 +27,10 @@ sensors:
     must: "--force replaces the kit, keeps specs/, and deletes generated .specplane/view/. There is no uninstall command."
     run:
       unittest: "tools.specplane.test_init.InitKitTests.test_force_replaces_kit_keeps_specs_and_clears_view"
-  - id: "neighbor_unchanged"
-    promise: "capability.specplane_change_folders"
-    must: "A string-only neighbor capability was left string-only"
+  - id: "init_copies_gate_not_workflow"
+    promise: "capability.specplane_init"
+    must: "Init copies ci_gate.py and still does not write GitHub Actions or git hooks"
     run:
-      unittest: "tools.specplane.test_init.InitJourneyTests.test_change_folders_stay_strings"
+      unittest: "tools.specplane.test_ci_gate.CiGateTests.test_init_does_not_write_workflow"
 
 looks_fine_is_not_a_sensor: true
