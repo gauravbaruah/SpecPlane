@@ -227,7 +227,10 @@ def activity_summary(now: float | None = None) -> dict[str, object]:
             text += f" · {bad} nonzero"
         lines.append(text)
     if callers:
-        parts = [f"{name} {callers[name]}" for name in sorted(callers)]
+        parts = [
+            f"{'unattributed' if name == 'unknown' else name} {callers[name]}"
+            for name in sorted(callers)
+        ]
         lines.append("caller · " + " · ".join(parts))
     for name in sorted(commands):
         saw_bad = False
