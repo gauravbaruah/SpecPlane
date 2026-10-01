@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-10-01"
   status: "draft"
-  version: "1.7.0"
+  version: "1.8.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "receipt_next_step"
+    summary: "The sync receipt names uncovered ids, or the run command for declared sensors, or the Phase 1 warning."
+    breaking: false
   - date: "2026-10-01"
     author: "local_command_events"
     summary: "check_sync completion can append one local command event. Nonzero is nonzero, not a prevented bug."
@@ -99,7 +103,7 @@ implementation:
       - "Never auto-write live. Does not parse source to learn values (e.g. timeout 60)"
       - "Uncovered failure prints retrieve, open or extend the change folder, and check_sync again. No --strict flag."
       - "Each sensor row prints evidence and status UNVERIFIED. check_sync does not run the bind."
-      - "Prints the sync receipt."
+      - "The sync receipt names uncovered ids and says to put them on an open change, or names the run command for declared sensors, or says a Phase 1 empty impact list is a warning."
       - "check_sync completion can append one local command event. Nonzero is nonzero, not a prevented bug."
     open_questions: []
     readiness: "ready"

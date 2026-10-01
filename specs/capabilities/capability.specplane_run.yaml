@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "mcp", "run"]
   last_updated: "2026-10-01"
   status: "planned"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "receipt_next_step"
+    summary: "A passing run still does not certify the spec, and says the human step is to accept the change or keep editing. A failure says to read the failed sensor and fix that check."
+    breaking: false
   - date: "2026-10-01"
     author: "command_receipts"
     summary: "run ends with one line. A pass does not certify the spec. No bind says no check was executed."
@@ -35,7 +39,7 @@ responsibilities:
   - "Exit 1 on an unknown or archived change, any fail, or any error. Exit 0 when every runnable bind passed, including when every row is not_run."
   - "Speech is evidence. Never certify that the implementation satisfies the spec."
   - "A bound command that passes is VERIFIED. A failure is FAILED. An English must with no bind is UNVERIFIED. VERIFIED means the bound command passed."
-  - "run ends with one line. A pass does not certify the spec. No bind says no check was executed."
+  - "run ends with one line. A passing run still does not certify the spec, and says the human step is to accept the change or keep editing. A failure says to read the failed sensor and fix that check. No bind says no check was executed."
   - "check_sync does not absorb this command. Compose with it; do not execute sensors there."
 
 flows:
