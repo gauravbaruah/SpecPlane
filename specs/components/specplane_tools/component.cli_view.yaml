@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "viewer"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-01"
   status: "draft"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "viewer_change_states"
+    summary: "The readout marks each change in-flight or archived. A folder under specs/changes/_archive stays out of the kernel open-change list."
+    breaking: false
   - date: "2026-09-28"
     author: "viewer_projections"
     summary: "specplane view generates the local readout and serves it. It is not an MCP tool."
@@ -54,5 +58,6 @@ implementation:
       - "A declared diagram is rendered by the vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves"
       - "Blast columns follow impact distance. Distance 3 and beyond stays collapsed until expand"
       - "The gaps lens matches list_gaps"
+      - "Each change in the readout is in-flight or archived. A folder under specs/changes/_archive is archived and is not an open kernel change."
     open_questions: []
     readiness: "ready"

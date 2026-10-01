@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "viewer"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-01"
   status: "planned"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "viewer_change_states"
+    summary: "The Changes tab has In-flight and Archived. In-flight is the open folders. Archived is specs/changes/_archive and is not open work."
+    breaking: false
   - date: "2026-09-28"
     author: "viewer_projections"
     summary: "Promoted the local viewer. It generates a readout, serves 127.0.0.1, and does not become a second product."
@@ -22,6 +26,7 @@ responsibilities:
   - "Show one projection at a time when the record has that data: Map, Blast, Layers, Journey, Diagrams, or Data"
   - "Render a declared diagram with the vendored Mermaid. Map, Blast, Layers, Journey, and Data stay cards and curves"
   - "Keep an inferred record from looking live"
+  - "The Changes tab lists in-flight folders and archived folders separately. Archived folders are not open work."
   - "Read Blast from impact distance and from the five perspectives on that same drawing"
 
 flows:
@@ -42,6 +47,7 @@ constraints:
     - "Bind 127.0.0.1 only. No API key. The page does not load Mermaid or fonts from a network"
   ux:
     - "Navbar is Live, Changes, Gaps, plus the open id, bit, and review_state. The five Blast readings are not navbar homes"
+    - "Changes has In-flight and Archived. In-flight is the open folders. Archived is specs/changes/_archive."
     - "Sequence is a diagram type inside Diagrams, not its own tab. A projection with nothing to draw is omitted"
     - "Empty perspective speech is not represented. It is never no security impact, no QA required, or no owner required"
     - "Expand shows the current picture in the centre of the viewport with a 5% margin. Escape or Close leaves it. The wheel does not zoom"
