@@ -5,7 +5,7 @@ ADDED: []
 
 MODIFIED:
   - id: "capability.specplane_viewer"
-    summary: "The navbar adds Activity beside Live, Changes, and Gaps. Activity is this machine for the last 30 days: counts of command, ok versus nonzero, and allowlisted caller. A Copy summary control copies those counts. Nothing is posted. A nonzero command followed later by an ok one is shown as that sequence, not as a catch."
+    summary: "The navbar adds Activity beside Live, Changes, and Gaps. Activity is this machine for the last 30 days: counts of command, ok versus nonzero, and allowlisted caller. Each row has a ? hover that explains the row. A Copy summary control copies the counts, not the hover text. Nothing is posted. A nonzero command followed later by an ok one is shown as that sequence, not as a catch."
   - id: "component.cli_view"
     summary: "The readout reads the local command log and summarizes the last 30 days into the Activity tab. The summary refreshes when that log is newer than the payload. The copy is the same sentences on the page. The command does not open a network connection to send it."
 

@@ -69,6 +69,7 @@
     if (p.src) node.setAttribute("src", p.src);
     if (p.alt != null) node.setAttribute("alt", p.alt);
     if (p.label) node.setAttribute("aria-label", p.label);
+    if (p.role) node.setAttribute("role", p.role);
     if (p.type) node.type = p.type;
     if (p.placeholder) node.placeholder = p.placeholder;
     if (p.value != null && String(tag).toLowerCase() === "input") node.value = p.value;
@@ -391,6 +392,25 @@
     }
   }
 
+  function activityExplain(line) {
+    if (line === "SpecPlane on this machine — last 30 days") {
+      return "Counts from the local command log on this machine. The window is 30 days. Nothing is uploaded.";
+    }
+    if (line === "No local events in the last 30 days.") {
+      return "The local log has no command events in this window.";
+    }
+    if (line === "Local command events are off.") {
+      return "Local command events are turned off, so nothing new is being recorded.";
+    }
+    if (line.indexOf("nonzero, then later ok") >= 0) {
+      return "This command exited nonzero, and a later run of the same command exited 0. That is the order of the exits.";
+    }
+    if (line.indexOf("caller · ") === 0) {
+      return "Who invoked the commands. The name is an allowlisted caller, such as cursor_skill, or unknown.";
+    }
+    return "How many times this command ran. ok means the exit code was 0. nonzero means it was not.";
+  }
+
   function activityIndex() {
     const activity = DATA.activity || {};
     const lines = activity.lines || [];
@@ -408,7 +428,15 @@
         }, ["Copy summary"]),
         h("span", { id: "copied", class: "quiet" }, [""]),
       ]),
-      h("pre", { class: "activity" }, [text]),
+      h("div", { class: "activity-rows" }, lines.map(function (line) {
+        return h("div", { class: "activity-row" }, [
+          h("span", { class: "activity" }, [line]),
+          h("button", { type: "button", class: "help", label: "What this row means" }, [
+            "?",
+            h("span", { class: "tip", role: "tooltip" }, [activityExplain(line)]),
+          ]),
+        ]);
+      })),
     ]);
   }
 

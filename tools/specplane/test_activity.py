@@ -79,6 +79,11 @@ class ActivityTests(unittest.TestCase):
         server = (ROOT / "view.py").read_text(encoding="utf-8")
         self.assertIn("navigator.clipboard.writeText", script)
         self.assertIn("activity.text", script)
+        self.assertIn("What this row means", script)
+        self.assertIn("How many times this command ran.", script)
+        self.assertIn("That is the order of the exits.", script)
+        self.assertNotIn("caught", script)
+        self.assertNotIn("corrected", script)
         for needle in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "urllib"):
             self.assertNotIn(needle, script)
             self.assertNotIn(needle, server)
