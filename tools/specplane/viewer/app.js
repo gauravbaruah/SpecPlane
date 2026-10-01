@@ -187,6 +187,7 @@
       ["live", "Live"],
       ["changes", "Changes"],
       ["gaps", "Gaps"],
+      ["activity", "Activity"],
     ];
     const nav = h("nav", { class: "nav" }, lenses.map(function (pair) {
       return h("a", { href: href(pair[0]), class: route.kind === pair[0] || (pair[0] === "live" && route.kind === "id") || (pair[0] === "changes" && route.kind === "change") ? "on" : "" }, [pair[1]]);
@@ -263,7 +264,7 @@
         h("div", { class: "pin" }, ["change · " + route.arg + " · " + changeState(changeById(route.arg))]),
       ]);
     }
-    if (route.kind === "live" || route.kind === "changes" || route.kind === "gaps") trail = [];
+    if (route.kind === "live" || route.kind === "changes" || route.kind === "gaps" || route.kind === "activity") trail = [];
     return null;
   }
 
@@ -378,6 +379,37 @@
 
   function changeById(id) {
     return (DATA.changes || []).find(function (c) { return c.id === id; }) || null;
+  }
+
+  function copySummary(text) {
+    function mark() {
+      const note = document.getElementById("copied");
+      if (note) note.textContent = "Copied.";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(mark);
+    }
+  }
+
+  function activityIndex() {
+    const activity = DATA.activity || {};
+    const lines = activity.lines || [];
+    const text = activity.text || lines.join("\n");
+    return h("section", { class: "activity-index" }, [
+      h("div", { class: "lede" }, [
+        h("h1", {}, ["Activity"]),
+        h("p", { class: "note" }, ["This machine, last 30 days. Nothing here is uploaded."]),
+      ]),
+      h("div", { class: "tools" }, [
+        h("button", {
+          type: "button",
+          class: "copy-btn",
+          on: { click: function () { copySummary(text); } },
+        }, ["Copy summary"]),
+        h("span", { id: "copied", class: "quiet" }, [""]),
+      ]),
+      h("pre", { class: "activity" }, [text]),
+    ]);
   }
 
   function gapsIndex() {
@@ -2105,6 +2137,7 @@
     let body;
     if (route.kind === "changes") body = changesIndex(route);
     else if (route.kind === "gaps") body = gapsIndex();
+    else if (route.kind === "activity") body = activityIndex();
     else if (route.kind === "id") body = recordPage(route);
     else if (route.kind === "change") body = changePage(route);
     else body = liveIndex(route);

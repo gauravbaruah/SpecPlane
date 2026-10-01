@@ -6,6 +6,7 @@ filenames, prompts, diffs, or environment values.
 
 from __future__ import annotations
 
+import calendar
 import json
 import os
 import re
@@ -28,6 +29,30 @@ _CALLERS = frozenset(
     }
 )
 _TOKEN = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
+_COMMANDS = frozenset(
+    {
+        "validate",
+        "retrieve",
+        "context",
+        "blast",
+        "impact",
+        "check_sync",
+        "reconcile",
+        "list_gaps",
+        "run",
+        "promote",
+        "init",
+        "view",
+        "mcp",
+        "telemetry",
+        "telemetry_status",
+        "telemetry_show",
+        "telemetry_enable",
+        "telemetry_disable",
+        "usage",
+    }
+)
+_WINDOW_S = 30 * 24 * 60 * 60
 _ON = frozenset({"1", "on", "true", "yes"})
 _OFF = frozenset({"0", "off", "false", "no"})
 
@@ -137,6 +162,85 @@ def read_events() -> str:
         return path.read_text(encoding="utf-8")
     except OSError:
         return ""
+
+
+def activity_mtime() -> float:
+    """Newest local telemetry file. The viewer refreshes when this moves."""
+    latest = 0.0
+    for path in (_events_path(), _config_path()):
+        try:
+            latest = max(latest, path.stat().st_mtime)
+        except OSError:
+            continue
+    return latest
+
+
+def _event_time(raw: object) -> float | None:
+    text = str(raw or "").strip()
+    try:
+        return float(calendar.timegm(time.strptime(text, "%Y-%m-%dT%H:%M:%SZ")))
+    except (TypeError, ValueError):
+        return None
+
+
+def activity_summary(now: float | None = None) -> dict[str, object]:
+    """Last-30-day counts. No ids, paths, or a claim that an agent fixed anything."""
+    if not enabled():
+        lines = ["Local command events are off."]
+        return {"enabled": False, "lines": lines, "text": "\n".join(lines)}
+    moment = time.time() if now is None else now
+    cutoff = moment - _WINDOW_S
+    commands: dict[str, list[tuple[float, str]]] = {}
+    callers: dict[str, int] = {}
+    for line in read_events().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(item, dict):
+            continue
+        when = _event_time(item.get("timestamp"))
+        if when is None or when < cutoff or when > moment + 60:
+            continue
+        command = str(item.get("command") or "")
+        if command not in _COMMANDS:
+            continue
+        result = "ok" if str(item.get("result") or "") == "ok" else "nonzero"
+        commands.setdefault(command, []).append((when, result))
+        caller = str(item.get("invoked_via") or "")
+        if caller not in _CALLERS:
+            caller = "unknown"
+        callers[caller] = callers.get(caller, 0) + 1
+    if not commands:
+        lines = ["No local events in the last 30 days."]
+        return {"enabled": True, "lines": lines, "text": "\n".join(lines)}
+    lines = ["SpecPlane on this machine — last 30 days"]
+    for name in sorted(commands):
+        rows = commands[name]
+        ok = sum(1 for _when, result in rows if result == "ok")
+        bad = len(rows) - ok
+        text = f"{name} {len(rows)} · {ok} ok"
+        if bad:
+            text += f" · {bad} nonzero"
+        lines.append(text)
+    if callers:
+        parts = [f"{name} {callers[name]}" for name in sorted(callers)]
+        lines.append("caller · " + " · ".join(parts))
+    for name in sorted(commands):
+        saw_bad = False
+        recoveries = 0
+        for _when, result in sorted(commands[name]):
+            if result == "nonzero":
+                saw_bad = True
+            elif saw_bad:
+                recoveries += 1
+                saw_bad = False
+        if recoveries:
+            lines.append(f"{name} nonzero, then later ok · {recoveries}")
+    return {"enabled": True, "lines": lines, "text": "\n".join(lines)}
 
 
 def status_lines() -> list[str]:

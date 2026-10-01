@@ -1,0 +1,18 @@
+id: "viewer_activity"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-10-01"
+promise_ids:
+  - "capability.specplane_viewer"
+  - "component.cli_view"
+why: >-
+  The person who owns the machine can see how SpecPlane was used here over
+  the last 30 days, and can copy that summary. The page does not upload it.
+non_goals:
+  - "an upload, opt-in or otherwise"
+  - "changing foundation.observability_standards"
+  - "a raw event log on the page"
+  - "spec ids, paths, prompts, or file names in the summary"
+  - "installation, session, or run ids in the copied summary"
+  - "saying a nonzero exit means a constraint was caught or that the agent corrected it"
+  - "editing live capability YAML before accept"

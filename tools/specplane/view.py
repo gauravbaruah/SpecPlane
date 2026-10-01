@@ -25,6 +25,7 @@ if str(ROOT) not in sys.path:
 
 from impact import impact  # noqa: E402
 from kernel import Change, check_sync, list_gaps, load_kernel, retrieve, success_sensors  # noqa: E402
+from telemetry import activity_mtime, activity_summary  # noqa: E402
 from validate import as_str_list, dig  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
@@ -174,6 +175,7 @@ def build_payload(kernel: Any) -> dict[str, Any]:
             "spec_root": kernel.spec_root.name,
             "branch": _branch(kernel.spec_root),
         },
+        "activity": activity_summary(),
     }
 
 
@@ -552,13 +554,17 @@ def _spec_mtime(spec_root: Path) -> float:
 _refresh_lock = threading.Lock()
 
 
+def _payload_sources_mtime(spec_root: Path) -> float:
+    return max(_spec_mtime(spec_root), activity_mtime())
+
+
 def refresh_payload(spec_root: Path, out: Path) -> bool:
-    """Rewrite payload.js when the spec root is newer than the generated file."""
+    """Rewrite payload.js when the spec root or the local event log is newer."""
     payload_path = out / "payload.js"
-    if payload_path.is_file() and _spec_mtime(spec_root) <= payload_path.stat().st_mtime:
+    if payload_path.is_file() and _payload_sources_mtime(spec_root) <= payload_path.stat().st_mtime:
         return False
     with _refresh_lock:
-        if payload_path.is_file() and _spec_mtime(spec_root) <= payload_path.stat().st_mtime:
+        if payload_path.is_file() and _payload_sources_mtime(spec_root) <= payload_path.stat().st_mtime:
             return False
         write_payload(build_payload(load_kernel(spec_root)), out)
         return True

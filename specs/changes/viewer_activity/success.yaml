@@ -1,0 +1,26 @@
+change_id: "viewer_activity"
+kind: "evolve"
+
+sensors:
+  - id: "counts-only"
+    promise: "capability.specplane_viewer"
+    must: "Activity shows last-30-day counts of command, ok versus nonzero, and caller, and does not show a spec id, path, prompt, or file name."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_counts_only"
+  - id: "copy-does-not-post"
+    promise: "component.cli_view"
+    must: "Copy summary places those same sentences on the clipboard and does not open a network connection."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_copy_does_not_post"
+  - id: "sequence-is-not-a-catch"
+    promise: "capability.specplane_viewer"
+    must: "A nonzero command followed later by an ok one is labeled as that sequence. The page does not say a constraint was caught or that the agent corrected it."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_sequence_is_not_a_catch"
+  - id: "empty-and-off"
+    promise: "component.cli_view"
+    must: "No events in the window says there are none. Events disabled says local command events are off."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_empty_and_off"
+
+looks_fine_is_not_a_sensor: true

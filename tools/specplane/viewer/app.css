@@ -193,6 +193,26 @@ a:hover { text-decoration: underline; }
   cursor: pointer;
 }
 .theme-btn:hover { background: var(--bg-hover); }
+.copy-btn {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-raised);
+  padding: 6px 12px;
+  color: var(--ink-1);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.copy-btn:hover { background: var(--bg-hover); }
+.activity {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-1);
+}
 .theme-btn svg { width: 16px; height: 16px; display: block; }
 .nav a {
   border: 0;
