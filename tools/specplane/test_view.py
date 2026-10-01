@@ -15,6 +15,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
+
 from cli import main as cli_main  # noqa: E402
 from kernel import Change, list_gaps, load_kernel  # noqa: E402
 from view import _delta, _opened, _viewer_sensors, build_payload, refresh_payload, write_site  # noqa: E402
@@ -164,10 +166,31 @@ class ViewerModelTests(unittest.TestCase):
         self.assertEqual(_opened(""), "")
         self.assertTrue(change["why"])
         self.assertEqual(change["delta"], {})
+        self.assertEqual(change["state"], "in-flight")
         self.assertIn("blast", change["projections"])
         graph = self.payload["impacts"]["change:billing_retry"]
         promised = next(node for node in graph["affected"] if node["id"] == "capability.billing")
         self.assertTrue(promised["path"])
+
+    def test_archived_folder_is_not_an_open_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(BILLING, root)
+            archive = root / "changes" / "_archive" / "old_retry"
+            archive.mkdir(parents=True)
+            (archive / "proposal.yaml").write_text(
+                "id: old_retry\nkind: fix\nstatus: archived\n"
+                "promise_ids:\n  - capability.billing\nwhy: Kept for the decision.\n",
+                encoding="utf-8",
+            )
+            payload = build_payload(load_kernel(root))
+            states = {item["id"]: item for item in payload["changes"]}
+            self.assertEqual(states["billing_retry"]["state"], "in-flight")
+            self.assertEqual(states["old_retry"]["state"], "archived")
+            self.assertEqual(states["old_retry"]["folder"], "specs/changes/_archive/old_retry/")
+            self.assertEqual(states["old_retry"]["why"], "Kept for the decision.")
+            kernel = load_kernel(root)
+            self.assertNotIn("old_retry", [change.path.name for change in kernel.changes])
 
     def test_site_is_local(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -368,6 +391,9 @@ class ViewerModelTests(unittest.TestCase):
         self.assertIn('label: next === "dark" ? "Dark" : "Light"', src)
         self.assertIn("theme-btn", (ASSETS / "app.css").read_text(encoding="utf-8"))
         self.assertIn("In flight is not a filter: an id is in flight when an open change names it.", src)
+        self.assertIn("In-flight", src)
+        self.assertIn("Archived", src)
+        self.assertIn("They are not open work.", src)
         self.assertIn("Inferred ids were recovered from code. They are explorable and stay marked until promoted.", src)
         self.assertIn("Replaced ids stay so history resolves. They are not part of the live model.", src)
 

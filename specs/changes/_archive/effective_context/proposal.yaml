@@ -1,0 +1,26 @@
+id: "effective_context"
+kind: "learn"
+status: "promoted"
+opened: "2026-10-01"
+promise_ids:
+  - "capability.specplane_retrieve"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+  - "component.cli_retrieve"
+  - "component.cli_check_sync"
+  - "component.cli_run"
+why: >-
+  Implementation context is the open change, labeled apart from live text.
+  A Phase 1 capability stays valid and warns when work is underway with no
+  relationships. An English sensor with no test reads as unverified. One
+  context command answers a task, and an undeclared file stays unmapped.
+non_goals:
+  - "merging an open change into the live slice"
+  - "an effective_promise field"
+  - "failing validate because Phase 1 has no realized_by"
+  - "failing run because a sensor has no bind"
+  - "inferring a test from an English must line"
+  - "inventing a component for an unmapped file"
+  - "parsing application source"
+  - "a fifth MCP tool"
+  - "editing live capability YAML before accept"

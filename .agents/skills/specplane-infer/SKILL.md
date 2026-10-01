@@ -106,12 +106,14 @@ After the handful, stop. Tell the human the ids and the cites. Ask which ids to 
 Only after the human names ids:
 
 ```bash
-python3 tools/specplane/cli.py promote --ids id1,id2 --spec-root specs
+SPECPLANE_CALLER=cursor_skill python3 tools/specplane/cli.py promote --ids id1,id2 --spec-root specs
 ```
 
 That command drops `inferred` on those files and adds a changelog row. It does not promote unnamed ids. Do not drop the tag yourself.
 
 `retrieve` prints `inferred (not live)` until then. `list_gaps` lists `inferred_unpromoted` and stays advisory.
+
+If a command prints a line that starts with `SpecPlane ·`, quote that line in the reply the user sees, unchanged. If it does not, do not invent a SpecPlane receipt. Do not say SpecPlane caught a bug or revised the code unless that printed line says so.
 
 ## Again later
 

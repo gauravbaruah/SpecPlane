@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "blast"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-01"
   status: "planned"
-  version: "1.2.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "command_receipts"
+    summary: "An empty blast ends with one line: no declared impact does not mean the code is unaffected. A blast that names impact does not add that line."
+    breaking: false
   - date: "2026-09-28"
     author: "projection_payload"
     summary: "Impact includes declared flow stages and outcomes, and declared contract data_models. blast buckets stay."
@@ -55,6 +59,7 @@ constraints:
     - "Five-second readable: change, affects tree, DECISION REQUIRED when ambiguity exists"
     - "If it needs a 1,500-word preamble, the command is not simple enough yet"
     - "Empty blast on a behavior-changing diff is a fail for check_sync, not a pass"
+    - "An empty blast ends with one line: no declared impact does not mean the code is unaffected. A blast that names impact does not add that line."
     - "v1: recursive component depends_on/depended_on_by; a used foundation is listed then STOP (do not follow used_by)"
     - "impact is one subgraph and five projections. blast buckets stay the check_sync tree"
     - "Declared flow stages and outcomes appear on the product projection. Declared contract data_models appear on the quality projection."

@@ -4,13 +4,17 @@ meta:
   level: "foundation"
   owner: "SpecPlane"
   tags: ["observability", "cli", "kernel"]
-  last_updated: "2026-09-24"
+  last_updated: "2026-10-01"
   status: "draft"
-  version: "1.0.1"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "local_command_events"
+    summary: "The local log is on unless a human disables it. Nothing is uploaded. Each CLI command appends one structural event. A failed write does not change the command result."
+    breaking: false
   - date: "2026-09-24"
     author: "kernel-slice"
     summary: "used_by lists component.cli_run; stdout face includes run"
@@ -23,7 +27,7 @@ changelog:
 provides:
   - "Stdout as the five-second face of retrieve / blast / check_sync / run"
   - "Findings join on SpecPlane ids"
-  - "No opt-in product telemetry in this slice"
+  - "The local log is on unless a human disables it. Nothing is uploaded. Each CLI command appends one structural event locally: command name, exit code, duration, version, and an allowlisted caller. A failed write does not change the command result."
 
 used_by:
   containers:

@@ -1,0 +1,11 @@
+change_id: "viewer_change_states"
+kind: "evolve"
+
+sensors:
+  - id: "archive-stays-closed"
+    promise: "component.cli_view"
+    must: "An archived folder appears as archived in the readout and is not an open kernel change."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_archived_folder_is_not_an_open_change"
+
+looks_fine_is_not_a_sensor: true

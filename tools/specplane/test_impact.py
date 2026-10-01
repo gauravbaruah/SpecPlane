@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import unittest
@@ -13,6 +14,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+
+os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
 
 from cli import main as cli_main  # noqa: E402
 from impact import (  # noqa: E402

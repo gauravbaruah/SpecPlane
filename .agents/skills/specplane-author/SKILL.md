@@ -31,4 +31,4 @@ Do not load `specplane_schema_prompt_v9.1.0.md` unless a field is missing from t
 6. If adding `implements`, `uses`, or internal dependencies, update the other side of the link in the same change.
 7. Add a `changelog` row and bump `meta.version` only on **live** 5C files. Change-folder YAML (`proposal` / `delta` / `success`) is not 5C meta.
 8. If `tools/specplane/cli.py` exists, run `validate` in this session. Do not add git hooks or CI.
-9. Summarize what was authored and what is still Phase-incomplete.
+9. Summarize what was authored and what is still Phase-incomplete. If validate prints a line that starts with `SpecPlane ·`, quote that line in the reply the user sees, unchanged. Do not invent a SpecPlane receipt.

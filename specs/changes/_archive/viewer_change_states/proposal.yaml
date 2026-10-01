@@ -1,0 +1,15 @@
+id: "viewer_change_states"
+kind: "evolve"
+status: "promoted"
+opened: "2026-10-01"
+promise_ids:
+  - "capability.specplane_viewer"
+  - "component.cli_view"
+why: >-
+  The Changes tab lists open work and archived folders with the same kind of
+  switch the Live tab uses for Live, Inferred, and Replaced. Archived folders
+  stay readable and are not open changes.
+non_goals:
+  - "putting specs/changes/_archive back into the kernel open-change list"
+  - "editing live capability YAML before accept"
+  - "a new navbar home"

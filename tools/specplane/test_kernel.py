@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 import tempfile
@@ -14,6 +15,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+
+os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
 
 from cli import git_changed_files, main as cli_main  # noqa: E402
 from kernel import (  # noqa: E402
@@ -209,7 +212,7 @@ class ScopedCoverageTests(unittest.TestCase):
         self.assertEqual(payload["behavior"], "unverified")
         text = format_check_sync(payload)
         self.assertIn("sensors: declared", text)
-        self.assertIn("not_executed", text)
+        self.assertIn("status: UNVERIFIED", text)
         self.assertIn("behavior: unverified", text)
         self.assertNotIn("result: pass", text)
 
@@ -745,7 +748,7 @@ class TestRun(unittest.TestCase):
             text = buf.getvalue()
         self.assertEqual(code, 0, text)
         self.assertIn("sensors: declared", text)
-        self.assertIn("not_executed", text)
+        self.assertIn("status: UNVERIFIED", text)
         self.assertIn("behavior: unverified", text)
         self.assertNotIn("sensors: executed", text)
         self.assertNotIn("result: pass", text)

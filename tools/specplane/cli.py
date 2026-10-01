@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, init.
+"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, init, context.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -18,16 +19,19 @@ if str(ROOT) not in sys.path:
 from impact import format_impact, impact  # noqa: E402
 from kernel import (  # noqa: E402
     blast,
+    build_context,
     check_sync,
     default_changed_ids,
     format_blast,
     format_check_sync,
+    format_context,
     format_list_gaps,
     format_promote,
     format_reconcile,
     format_retrieve,
     format_run,
     list_gaps,
+    receipt_validate,
     load_kernel,
     promote_ids,
     reconcile,
@@ -103,6 +107,9 @@ def cmd_validate(args: argparse.Namespace) -> int:
     print(
         f"Checked {report.file_count} spec(s): {error_count} error(s), {warn_count} warning(s)."
     )
+    receipt = receipt_validate(error_count)
+    if receipt:
+        print(receipt)
     if error_count:
         return 1
     if args.strict_warnings and warn_count:
@@ -123,6 +130,20 @@ def cmd_retrieve(args: argparse.Namespace) -> int:
     if payload["bit"] == "inferred":
         sys.stderr.write(f"inferred (not live): {args.spec_id}\n")
     print(format_retrieve(payload), end="")
+    return 0
+
+
+def cmd_context(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    payload = build_context(kernel, args.target, args.change or None)
+    print(format_context(kernel, payload), end="")
+    if payload.get("unknown"):
+        sys.stderr.write(f"not found: {args.target}\n")
+        return 1
     return 0
 
 
@@ -260,6 +281,31 @@ def cmd_view(args: argparse.Namespace) -> int:
     return serve(out, args.open_browser, spec_root)
 
 
+def cmd_telemetry(args: argparse.Namespace) -> int:
+    from telemetry import read_events, set_enabled, status_lines
+
+    action = args.telemetry_command
+    if action == "enable":
+        set_enabled(True)
+        sys.stdout.write("Local command events are on. Nothing is uploaded.\n")
+        sys.stdout.write("Turn off with: telemetry disable\n")
+        return 0
+    if action == "disable":
+        set_enabled(False)
+        sys.stdout.write("Local command events are off.\n")
+        return 0
+    if action == "show":
+        body = read_events()
+        if not body.strip():
+            sys.stdout.write("No local events.\n")
+            return 0
+        sys.stdout.write(body if body.endswith("\n") else body + "\n")
+        return 0
+    for line in status_lines():
+        sys.stdout.write(line + "\n")
+    return 0
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     dest = (args.dest or Path.cwd()).resolve()
     kit_root = (args.kit_root or default_kit_root()).resolve()
@@ -277,7 +323,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view)"
+        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view / telemetry)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -290,6 +336,19 @@ def build_parser() -> argparse.ArgumentParser:
     add_root_args(p_ret)
     p_ret.add_argument("spec_id", help="SpecPlane id (e.g. capability.authentication)")
     p_ret.set_defaults(func=cmd_retrieve)
+
+    p_ctx = sub.add_parser(
+        "context",
+        help="Task slice for one spec id or one file; an unmatched file stays unmapped",
+    )
+    add_root_args(p_ctx)
+    p_ctx.add_argument("target", help="SpecPlane id or a repo-relative file path")
+    p_ctx.add_argument(
+        "--change",
+        default="",
+        help="Name one open specs/changes/<slug> folder as the implementation context",
+    )
+    p_ctx.set_defaults(func=cmd_context)
 
     p_blast = sub.add_parser("blast", help="Computed affects tree; foundations are terminal")
     add_root_args(p_blast)
@@ -430,13 +489,52 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_view.set_defaults(func=cmd_view)
 
+    p_tel = sub.add_parser(
+        "telemetry",
+        help="Local command events. On by default. Nothing is uploaded.",
+    )
+    tel = p_tel.add_subparsers(dest="telemetry_command", required=True)
+    for name, help_text in (
+        ("status", "Whether the local log is on"),
+        ("show", "Print the local events"),
+        ("enable", "Turn the local log on"),
+        ("disable", "Turn the local log off"),
+    ):
+        tel.add_parser(name, help=help_text).set_defaults(func=cmd_telemetry, telemetry_command=name)
+
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    return int(args.func(args))
+    from telemetry import record_command
+
+    started = time.perf_counter()
+    command = "usage"
+    code = 1
+    try:
+        parser = build_parser()
+        args = parser.parse_args(argv)
+        command = str(args.command or "usage")
+        if command == "telemetry":
+            subcommand = str(getattr(args, "telemetry_command", "") or "")
+            if subcommand:
+                command = f"telemetry_{subcommand}"
+        code = int(args.func(args))
+        return code
+    except SystemExit as exc:
+        raw = exc.code
+        if isinstance(raw, int):
+            code = raw
+        elif raw is None:
+            code = 0
+        else:
+            code = 1
+        raise
+    except Exception:
+        code = 1
+        raise
+    finally:
+        record_command(command, code, started)
 
 
 if __name__ == "__main__":

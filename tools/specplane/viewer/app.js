@@ -69,6 +69,7 @@
     if (p.src) node.setAttribute("src", p.src);
     if (p.alt != null) node.setAttribute("alt", p.alt);
     if (p.label) node.setAttribute("aria-label", p.label);
+    if (p.role) node.setAttribute("role", p.role);
     if (p.type) node.type = p.type;
     if (p.placeholder) node.placeholder = p.placeholder;
     if (p.value != null && String(tag).toLowerCase() === "input") node.value = p.value;
@@ -128,9 +129,14 @@
     ]);
   }
 
+  function changeState(change) {
+    return change && change.state === "archived" ? "archived" : "in-flight";
+  }
+
   function changeStatus(change) {
+    const state = changeState(change);
     return h("div", { class: "statusline" }, [
-      h("span", { class: "bit inflight" }, ["in-flight"]),
+      h("span", { class: "bit " + (state === "archived" ? "archived" : "inflight") }, [state]),
       change.kind ? h("span", { class: "st" }, ["kind " + change.kind]) : null,
       change.opened ? h("span", { class: "st" }, ["opened " + change.opened]) : null,
     ]);
@@ -182,6 +188,7 @@
       ["live", "Live"],
       ["changes", "Changes"],
       ["gaps", "Gaps"],
+      ["activity", "Activity"],
     ];
     const nav = h("nav", { class: "nav" }, lenses.map(function (pair) {
       return h("a", { href: href(pair[0]), class: route.kind === pair[0] || (pair[0] === "live" && route.kind === "id") || (pair[0] === "changes" && route.kind === "change") ? "on" : "" }, [pair[1]]);
@@ -255,10 +262,10 @@
           h("a", { href: href("changes") }, ["← Changes"]),
           h("span", { class: "crumb" }, [h("span", { class: "sep" }, ["›"]), h("span", { class: "mono inflight" }, [breakable(route.arg)])]),
         ]),
-        h("div", { class: "pin" }, ["change · " + route.arg + " · in-flight"]),
+        h("div", { class: "pin" }, ["change · " + route.arg + " · " + changeState(changeById(route.arg))]),
       ]);
     }
-    if (route.kind === "live" || route.kind === "changes" || route.kind === "gaps") trail = [];
+    if (route.kind === "live" || route.kind === "changes" || route.kind === "gaps" || route.kind === "activity") trail = [];
     return null;
   }
 
@@ -324,17 +331,32 @@
     ]);
   }
 
-  function changesIndex() {
+  function changesIndex(route) {
+    const state = route.query.get("state") === "archived" ? "archived" : "in-flight";
     const q = findText.trim().toLowerCase();
+    const counts = { "in-flight": 0, archived: 0 };
+    (DATA.changes || []).forEach(function (c) { counts[changeState(c)] += 1; });
     const rows = (DATA.changes || []).filter(function (c) {
+      if (changeState(c) !== state) return false;
       return !q || c.id.toLowerCase().indexOf(q) >= 0 || (c.why || "").toLowerCase().indexOf(q) >= 0;
     });
+    const filters = h("div", { class: "seg" }, ["in-flight", "archived"].map(function (name) {
+      const label = name === "in-flight" ? "In-flight" : "Archived";
+      return h("button", {
+        class: state === name ? "on" : "",
+        on: { click: function () { go("changes", { state: name }); } },
+      }, [label + " ", h("span", { class: "count" }, [String(counts[name])])]);
+    }));
+    const feet = {
+      "in-flight": "Open change folders. Nothing here is live until it is promoted.",
+      archived: "Archived folders stay so the decision can be read. They are not open work.",
+    };
     return h("section", { class: "changes-index" }, [
       h("div", { class: "lede" }, [
         h("h1", {}, ["Changes"]),
-        h("p", { class: "note" }, ["Open change folders. Nothing here is live until it is promoted."]),
+        h("p", { class: "note" }, ["Change folders. In-flight is open work. Archived is a folder under specs/changes/_archive."]),
       ]),
-      h("div", { class: "tools" }, [h("input", {
+      h("div", { class: "tools" }, [filters, h("input", {
         id: "find", class: "find", type: "search", placeholder: "Find by slug or why", value: findText,
         on: { input: function (ev) { findText = ev.target.value; rerender(true); } },
       })]),
@@ -344,7 +366,7 @@
             ? (c.check_sync.sensor_rows || []).length + " sensors declared · not run"
             : "No success sensor declared";
           return h("tr", { on: { click: function () { go("change/" + c.id); } } }, [
-            h("td", {}, [h("a", { class: "mono inflight", href: href("change/" + c.id) }, [breakable(c.id)])]),
+            h("td", {}, [h("a", { class: "mono" + (changeState(c) === "archived" ? "" : " inflight"), href: href("change/" + c.id) }, [breakable(c.id)])]),
             h("td", { class: "quiet mono kind" }, [c.kind || ""]),
             h("td", { class: "promises" }, (c.promise_ids || []).map(function (id) { return idLink(id); })),
             h("td", { class: "quiet" }, [sensor]),
@@ -352,11 +374,70 @@
           ]);
         })),
       ]),
+      h("p", { class: "quiet" }, [feet[state]]),
     ]);
   }
 
   function changeById(id) {
     return (DATA.changes || []).find(function (c) { return c.id === id; }) || null;
+  }
+
+  function copySummary(text) {
+    function mark() {
+      const note = document.getElementById("copied");
+      if (note) note.textContent = "Copied.";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(mark);
+    }
+  }
+
+  function activityExplain(line) {
+    if (line === "SpecPlane on this machine — last 30 days") {
+      return "Counts from the local command log on this machine. The window is 30 days. Nothing is uploaded.";
+    }
+    if (line === "No local events in the last 30 days.") {
+      return "The local log has no command events in this window.";
+    }
+    if (line === "Local command events are off.") {
+      return "Local command events are turned off, so nothing new is being recorded.";
+    }
+    if (line.indexOf("nonzero, then later ok") >= 0) {
+      return "This command exited nonzero, and a later run of the same command exited 0. That is the order of the exits.";
+    }
+    if (line.indexOf("caller · ") === 0) {
+      return "Who invoked the commands. The name is an allowlisted caller, such as cursor_skill, or unknown.";
+    }
+    return "How many times this command ran. ok means the exit code was 0. nonzero means it was not.";
+  }
+
+  function activityIndex() {
+    const activity = DATA.activity || {};
+    const lines = activity.lines || [];
+    const text = activity.text || lines.join("\n");
+    return h("section", { class: "activity-index" }, [
+      h("div", { class: "lede" }, [
+        h("h1", {}, ["Activity"]),
+        h("p", { class: "note" }, ["This machine, last 30 days. Nothing here is uploaded."]),
+      ]),
+      h("div", { class: "tools" }, [
+        h("button", {
+          type: "button",
+          class: "copy-btn",
+          on: { click: function () { copySummary(text); } },
+        }, ["Copy summary"]),
+        h("span", { id: "copied", class: "quiet" }, [""]),
+      ]),
+      h("div", { class: "activity-rows" }, lines.map(function (line) {
+        return h("div", { class: "activity-row" }, [
+          h("span", { class: "activity" }, [line]),
+          h("button", { type: "button", class: "help", label: "What this row means" }, [
+            "?",
+            h("span", { class: "tip", role: "tooltip" }, [activityExplain(line)]),
+          ]),
+        ]);
+      })),
+    ]);
   }
 
   function gapsIndex() {
@@ -1943,7 +2024,7 @@
 
   function changePage(route) {
     const change = (DATA.changes || []).filter(function (item) { return item.id === route.arg; })[0];
-    if (!change) return h("p", {}, ["No open change named ", route.arg]);
+    if (!change) return h("p", {}, ["No change named ", route.arg]);
     const graph = (DATA.impacts || {})["change:" + change.id];
     const node = route.query.get("node") || "";
     const persp = route.query.get("persp") || "system";
@@ -1952,7 +2033,10 @@
       h("div", { class: "copy" }, [
         h("div", { class: "identity" }, [
           h("div", { class: "eyebrow" }, ["Change"]),
-          h("div", { class: "row" }, [bitMark("inflight"), h("span", { class: "id-title inflight" }, [breakable(change.id)])]),
+          h("div", { class: "row" }, [
+            bitMark(changeState(change) === "archived" ? "archived" : "inflight"),
+            h("span", { class: "id-title" + (changeState(change) === "archived" ? "" : " inflight") }, [breakable(change.id)]),
+          ]),
           changeStatus(change),
         ]),
         h("div", { class: "promise" }, [
@@ -1966,7 +2050,9 @@
         ], true),
         section("chk:" + change.id, "What SpecPlane checked", "check_sync · run", "", [
           block("Coverage", "check_sync", [
-            h("div", { class: "item" }, ["SpecPlane checked declared coverage. It did not verify behavior."]),
+            h("div", { class: "item" }, [changeState(change) === "archived"
+              ? "This folder is archived. It is not an open change."
+              : "SpecPlane checked declared coverage. It did not verify behavior."]),
             kvRow([
               ["coverage", sync.coverage || ""],
               ["sensors", sync.sensors || ""],
@@ -1982,7 +2068,7 @@
             h("div", { class: "item" }, ["Ids past the ones this change names are reached by the kernel from declared links. The change does not claim them."]),
           ]),
         ], true),
-        section("src:" + change.id, "Source", "the repository is the source", "specs/changes/" + change.id + "/", [
+        section("src:" + change.id, "Source", "the repository is the source", change.folder || ("specs/changes/" + change.id + "/"), [
           block("Files", "", changeFiles(change, sync).map(function (path) {
             return h("div", { class: "item quiet" }, [path]);
           })),
@@ -2053,7 +2139,7 @@
   }
 
   function changeFiles(change, sync) {
-    const folder = "specs/changes/" + change.id + "/";
+    const folder = change.folder || ("specs/changes/" + change.id + "/");
     const names = ["proposal.yaml"];
     if (change.delta && Object.keys(change.delta).length) names.push("delta.yaml");
     if (((sync && sync.sensor_rows) || []).length) names.push("success.yaml");
@@ -2077,8 +2163,9 @@
     closeExpand();
     const route = parse();
     let body;
-    if (route.kind === "changes") body = changesIndex();
+    if (route.kind === "changes") body = changesIndex(route);
     else if (route.kind === "gaps") body = gapsIndex();
+    else if (route.kind === "activity") body = activityIndex();
     else if (route.kind === "id") body = recordPage(route);
     else if (route.kind === "change") body = changePage(route);
     else body = liveIndex(route);

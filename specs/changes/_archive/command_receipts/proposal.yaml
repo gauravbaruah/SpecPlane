@@ -1,0 +1,23 @@
+id: "command_receipts"
+kind: "learn"
+status: "promoted"
+opened: "2026-10-01"
+promise_ids:
+  - "capability.specplane_blast"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+  - "capability.specplane_validate"
+  - "component.cli_blast"
+  - "component.cli_check_sync"
+  - "component.cli_run"
+  - "component.cli_validate"
+why: >-
+  A developer only notices SpecPlane when the command prints one consequential
+  line and the coding agent quotes it. The line states what was established.
+  It does not claim a bug was caught.
+non_goals:
+  - "a receipt on retrieve"
+  - "a receipt on a blast that already names impact"
+  - "pushing a message into Cursor, Claude, or Codex"
+  - "saying SpecPlane revised the code"
+  - "editing live capability YAML before accept"

@@ -24,10 +24,12 @@ Do not load the full master prompt.
 If `tools/specplane/cli.py` exists and you have a capability id:
 
 ```bash
-python3 tools/specplane/cli.py retrieve <id> --spec-root specs
+SPECPLANE_CALLER=cursor_skill python3 tools/specplane/cli.py retrieve <id> --spec-root specs
 ```
 
 Do not slurp `specs/`. Open only files the CLI named.
+
+If a command prints a line that starts with `SpecPlane ·`, quote that line in the reply the user sees, unchanged. If it does not, do not invent a SpecPlane receipt. Do not say SpecPlane caught a bug or revised the code unless that printed line says so.
 
 ## What to do
 
