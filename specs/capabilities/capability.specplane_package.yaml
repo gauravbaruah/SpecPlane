@@ -1,0 +1,229 @@
+meta:
+  id: "capability.specplane_package"
+  purpose: "Obtain the SpecPlane CLI from a published Python package that can run init"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "package", "install"]
+  last_updated: "2026-10-01"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-10-01"
+    author: "specplane_package"
+    summary: "Phase 1 draft. A published package named specplane installs the CLI and can run init. Install does not ask for consent, configure an agent host, or upload telemetry."
+    breaking: false
+
+responsibilities:
+  - "Publish a Python package named specplane that installs a specplane command"
+  - "Put the kit in that package so init can run without a clone of this repo"
+  - "Leave init as the copy into a product repo"
+  - "Leave the local command log on unless a human has disabled it, and upload nothing"
+  - "Keep a SpecPlane checkout able to install the same command for people working on this repo"
+
+flows:
+  - id: publish_to_pypi
+    kinds: [journey]
+    goal: "The specplane package is on PyPI only after a clean install can run init"
+    actors:
+      primary: maintainer
+    entry:
+      trigger: "maintainer publishes a releasable tree"
+      preconditions:
+        - "the built wheel contains the kit"
+        - "the built wheel does not contain this repo's specs/"
+    stages:
+      - build_wheel
+      - publish_test_index
+      - confirm_clean_install
+      - publish_pypi
+      - name_the_package_in_obtaining_docs
+    outcomes:
+      success:
+        - "PyPI has a specplane release whose install can run init"
+        - "a clean init destination has the kit and empty specs folders"
+        - "a clean init destination does not contain this repo's kernel specs"
+    exceptions:
+      - "the wheel lacks the kit"
+      - "the wheel contains this repo's specs/"
+      - "a clean install cannot run init"
+    recovery:
+      - "do not publish that wheel to PyPI"
+  - id: install_from_index
+    kinds: [journey, information]
+    goal: "A developer gets the specplane command from the Python package index"
+    actors:
+      primary: developer
+    entry:
+      trigger: "developer installs specplane with pip or uv tool"
+      preconditions:
+        - "Python 3.10 or newer is available"
+    stages:
+      - choose_pip_or_uv_tool
+      - install_package
+      - command_on_path
+    outcomes:
+      success:
+        - "the specplane command runs"
+        - "the working directory is unchanged"
+        - "no agent host configuration is written"
+        - "the local telemetry setting is unchanged"
+        - "nothing is uploaded"
+    exceptions:
+      - "the package name is missing from the index"
+    recovery:
+      - "the installer reports the failure and leaves the machine without a new specplane command"
+    information:
+      collected: []
+      moved:
+        - "the published wheel"
+      retained_until: "the developer removes the package with the same installer"
+  - id: init_from_installed_package
+    kinds: [journey]
+    goal: "An installed package can run init into a product repo"
+    actors:
+      primary: developer
+    entry:
+      trigger: "developer runs specplane init from a package install"
+      preconditions:
+        - "the specplane command came from the published package or from uvx specplane"
+    stages:
+      - run_init
+      - hand_copy_rules_to_capability_specplane_init
+    outcomes:
+      success:
+        - "the destination receives the kit, skills, rules, and empty specs folders"
+        - "the destination does not receive this repo's kernel specs"
+        - "skills land in the destination repo"
+        - "the agent host is still not configured by the package install"
+    exceptions:
+      - "init refuses or fails under capability.specplane_init"
+    recovery:
+      - "recovery stays the recovery of capability.specplane_init"
+  - id: install_from_checkout
+    kinds: [journey]
+    goal: "A SpecPlane clone can still install the command and run init"
+    actors:
+      primary: contributor
+    entry:
+      trigger: "contributor installs from a clone, or runs uvx --from git+ this repo"
+      preconditions:
+        - "the tree is a SpecPlane checkout, or git+ points at this repo"
+    stages:
+      - editable_install_or_git_plus
+      - command_on_path
+      - init_uses_that_tree
+    outcomes:
+      success:
+        - "pip install -e . provides the specplane command"
+        - "uvx --from git+ this repo specplane init still runs init"
+        - "the destination result matches init from the published package"
+    exceptions:
+      - "the checkout cannot build the package"
+    recovery:
+      - "the installer reports the failure"
+
+open_questions:
+  - id: oq_pypi_owner
+    question: "Which PyPI account or organization owns the specplane project?"
+    raised_from: "flow.publish_to_pypi"
+    status: open
+  - id: oq_first_version
+    question: "Is the first PyPI publish 0.1.0 or a pre-release?"
+    raised_from: "flow.publish_to_pypi"
+    status: open
+  - id: oq_uninstall
+    question: "Does this capability own an uninstall command, or is removal only the package manager?"
+    raised_from: "flow.install_from_index"
+    status: open
+
+business_value:
+  user_outcome: "A developer can install the SpecPlane CLI and run init without cloning this repo"
+  objective: "Make the kit obtainable, and let this repo dogfood the same package"
+  revenue_dependency: "low"
+  strategic_priority: "growth"
+
+constraints:
+  legal:
+    - "The published package stays Apache-2.0"
+  security:
+    - "The wheel contains the kit and does not contain this repo's specs/"
+    - "Install does not read a destination repo and does not send a command event anywhere"
+  ux:
+    - "The package name on the index is specplane"
+    - "pip install specplane and uv tool install specplane are the obtaining commands"
+    - "uvx specplane init is valid once the package is published"
+    - "uvx --from git+ this repo remains valid"
+    - "There is no npx package"
+    - "Install does not show a consent dialog"
+    - "Install does not write Cursor, Claude, or Codex configuration"
+    - "Install does not enable or disable telemetry and does not upload"
+    - "Init remains capability.specplane_init. This capability does not copy the kit by itself"
+    - "Docs that tell a developer how to obtain the CLI name the published package"
+    - "Requires Python 3.10 or newer"
+  data_classification: "public"
+
+success_metrics:
+  primary: "clean_install_can_init"
+  targets:
+    clean_install_can_init: "a clean environment can install specplane and init a destination that has the kit and lacks this repo's kernel specs"
+    upload_never: "telemetry status after install still reports upload never"
+  derived_from: {}
+
+roadmap:
+  phase: "before a public PyPI release"
+  priority: "P1"
+  depends_on:
+    - "capability.specplane_init"
+  enables: []
+
+diagrams:
+  - type: "flowchart"
+    title: "Publish to PyPI"
+    description: "Publish flow. A wheel reaches PyPI only after a clean install can run init and the wheel holds the kit without this repo's specs."
+    mermaid: |
+      flowchart TD
+        start[Maintainer has a releasable tree] --> wheel[Build a wheel]
+        wheel --> kit{Wheel contains the kit and omits this repo specs?}
+        kit -->|No| hold[Do not publish]
+        kit -->|Yes| test[Publish to TestPyPI]
+        test --> smoke{Clean install can run init?}
+        smoke -->|Kit missing or kernel specs present| hold
+        smoke -->|Kit present and kernel specs absent| prod[Publish specplane to PyPI]
+        prod --> docs[Obtaining docs name that package]
+  - type: "flowchart"
+    title: "Install from the index"
+    description: "Install flow. pip or uv tool installs the command. The working directory, agent host, and telemetry setting stay as they were."
+    mermaid: |
+      flowchart TD
+        start[Developer wants the CLI without cloning] --> how{Which installer?}
+        how -->|pip| pipcmd["pip install specplane"]
+        how -->|uv| uvcmd["uv tool install specplane"]
+        pipcmd --> ready[specplane is on PATH]
+        uvcmd --> ready
+        ready --> cwd[Working directory is unchanged]
+        ready --> telem[Telemetry setting is unchanged and upload stays never]
+        ready --> host[No agent host configuration is written]
+  - type: "flowchart"
+    title: "Init from the installed package"
+    description: "Init flow. The installed command runs init. Copy rules stay on capability.specplane_init."
+    mermaid: |
+      flowchart TD
+        start[specplane is installed from the published package] --> run["Developer runs specplane init"]
+        run --> handoff["Copy rules stay on capability.specplane_init"]
+        handoff --> dest[Destination receives the kit and empty specs folders]
+        handoff --> skip[This repo kernel specs stay out]
+        handoff --> skills[Skills are copied into the destination repo]
+        skills --> host[The package install still does not configure the agent host]
+  - type: "flowchart"
+    title: "Install from a checkout"
+    description: "Checkout flow. A clone can editable-install the command. git plus this repo can still run init."
+    mermaid: |
+      flowchart TD
+        start[Developer has a SpecPlane clone] --> editable["pip install -e ."]
+        editable --> cli[specplane is on PATH]
+        cli --> fromclone[Init reads the kit from that clone]
+        gitplus["uvx --from git+ this repo"] --> initrun["specplane init"]
+        initrun --> same[Destination result matches init from the published package]

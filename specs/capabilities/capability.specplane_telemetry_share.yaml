@@ -1,0 +1,182 @@
+meta:
+  id: "capability.specplane_telemetry_share"
+  purpose: "Remind a person to copy this project's activity summary to a GitHub issue, and ask for a star after two days of use"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "telemetry", "viewer"]
+  last_updated: "2026-10-01"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-10-01"
+    author: "telemetry_share"
+    summary: "Phase 1 draft. Recording starts with the first command and is attributed to the project, not the path. The viewer copies that project's counts from this machine and reminds the person to paste them on a GitHub issue. After two days it asks for a star. No email address is shown. Nothing is posted."
+    breaking: false
+
+responsibilities:
+  - "Keep recording structural command events from the first command, unless a human has turned the local log off"
+  - "Attribute each event to the project where the command ran, without storing the repository name or path"
+  - "Show and copy counts for the project the viewer was opened in, from this machine's log"
+  - "After that project's log on this machine is at least 7 days old, remind the person to paste the copied summary on a new GitHub issue"
+  - "After that project's log on this machine is at least 2 days old, ask in the viewer for a star on the SpecPlane repository"
+  - "Leave sending to the person. The viewer copies text and does not post it. The reminder names no email address"
+
+flows:
+  - id: record_from_the_first_command
+    kinds: [journey]
+    goal: "The local structural log exists from the first command"
+    actors:
+      primary: developer
+    entry:
+      trigger: "a SpecPlane command runs and the local log is on"
+      preconditions:
+        - "the human has not disabled the local log"
+    stages:
+      - run_command
+      - append_one_structural_event
+    outcomes:
+      success:
+        - "one local event is stored for that command"
+        - "the event is attributed to the project where the command ran"
+        - "the repository name and path are not stored"
+        - "nothing is uploaded"
+    exceptions:
+      - "the local log is off"
+      - "the event cannot be written"
+    recovery:
+      - "a failed write does not change the command result"
+      - "telemetry disable keeps later commands from recording"
+  - id: remind_to_copy
+    kinds: [journey, information]
+    goal: "About a week after this project has local events, the viewer asks the person to copy that project's counts and paste them on a GitHub issue"
+    actors:
+      primary: developer
+    entry:
+      trigger: "the viewer is open in a project whose oldest attributed event on this machine is at least 7 days old"
+      preconditions:
+        - "the local log is on"
+        - "Activity can copy the summary for this project"
+    stages:
+      - show_reminder_beside_activity
+      - person_copies_the_project_summary
+      - person_pastes_it_on_a_new_issue
+    outcomes:
+      success:
+        - "the counts are for this project on this machine, not for every project on the machine"
+        - "the reminder points at Copy summary and at https://github.com/gauravbaruah/SpecPlane/issues/new"
+        - "Copy summary still copies the counts, not the hover text"
+        - "the reminder names no email address"
+        - "the viewer does not post the summary"
+    abandonment:
+      - "the person does not paste it, and the reminder remains while this project's log on this machine stays at least 7 days old"
+    exceptions:
+      - "the local log is off"
+      - "this project's attributed log is younger than 7 days"
+      - "an event has no project attribution"
+    information:
+      collected: []
+      moved:
+        - "only the copy the person pastes onto GitHub"
+      retained_until: "the local log stays on the machine either way"
+  - id: ask_for_a_star
+    kinds: [journey]
+    goal: "After two days of use, the viewer asks for a star"
+    actors:
+      primary: developer
+    entry:
+      trigger: "the viewer is open in a project whose oldest attributed event on this machine is at least 2 days old"
+      preconditions:
+        - "the local log is on"
+    stages:
+      - show_star_request
+      - person_may_open_the_repository
+    outcomes:
+      success:
+        - "the request names https://github.com/gauravbaruah/SpecPlane"
+        - "the viewer does not star the repository itself"
+    abandonment:
+      - "the person does not star it, and the request remains while the log stays at least 2 days old"
+    exceptions:
+      - "the local log is off"
+      - "this project's attributed log is younger than 2 days"
+      - "an event has no project attribution"
+
+business_value:
+  user_outcome: "A person can copy this project's counts from this machine and paste them on a GitHub issue, and can see a star request after two days of use on that project"
+  objective: "Learn from real sessions when a person chooses to send the summary"
+  revenue_dependency: "low"
+  strategic_priority: "foundation"
+
+constraints:
+  legal: []
+  security:
+    - "The reminder copies this project's activity counts from this machine: counts, not hover text, not the repository name or path, and not spec contents, prompts, or environment values"
+    - "Events recorded before project attribution are omitted from that project's counts"
+    - "The viewer does not post or email that summary"
+    - "The product shows no personal email address"
+  ux:
+    - "Recording stays on from the first command. There is no telemetry share command and no telemetry decline command"
+    - "The share reminder appears in the viewer, beside Activity, when this project's oldest attributed event on this machine is at least 7 days old"
+    - "The star request appears in the viewer when this project's oldest attributed event on this machine is at least 2 days old"
+    - "Neither notice appears when the local log is off"
+    - "Neither notice blocks a command or changes command stdout"
+    - "The share reminder links to https://github.com/gauravbaruah/SpecPlane/issues/new"
+    - "The star request links to https://github.com/gauravbaruah/SpecPlane"
+  data_classification: "internal"
+
+success_metrics:
+  primary: "reminder_is_a_copy"
+  targets:
+    reminder_is_a_copy: "at 7 days the viewer shows this project's counts from this machine, links a new GitHub issue, and does not post or email them"
+    star_after_two_days: "at 2 days of this project's local use the viewer shows a star request and does not star the repository"
+  derived_from: {}
+
+roadmap:
+  phase: "before any shared telemetry"
+  priority: "P1"
+  depends_on:
+    - "capability.specplane_viewer"
+  enables: []
+
+diagrams:
+  - type: "flowchart"
+    title: "Record from the first command"
+    description: "Record flow. The first command appends a local structural event. Nothing is uploaded."
+    mermaid: |
+      flowchart TD
+        start[A SpecPlane command runs] --> on{Local log on?}
+        on -->|No| quiet[No event is written]
+        on -->|Yes| append[Append one structural event for this project]
+        append --> stay[Name and path are not stored]
+        append -->|Write fails| result[The command result is unchanged]
+  - type: "flowchart"
+    title: "Remind to copy"
+    description: "Share reminder. After 7 days of this project on this machine, the viewer asks the person to copy those counts and paste them on a new GitHub issue. It names no email address and does not post."
+    mermaid: |
+      flowchart TD
+        start[Viewer opens in a project] --> age{Project log at least 7 days old?}
+        age -->|No| quiet[No share reminder]
+        age -->|Yes| on{Local log on?}
+        on -->|No| quiet
+        on -->|Yes| remind[Show the reminder beside Activity]
+        remind --> copy[Copy summary copies this project's counts]
+        copy --> issue["Person may paste them on a new GitHub issue"]
+        remind --> skip[Person does not paste them]
+        issue --> stay[The viewer posted nothing and showed no email]
+        skip --> stay
+  - type: "flowchart"
+    title: "Ask for a star"
+    description: "Star request. After 2 days of use the viewer asks for a star and links the repository. It does not star the repository."
+    mermaid: |
+      flowchart TD
+        start[Viewer opens in a project] --> age{Project log at least 2 days old?}
+        age -->|No| quiet[No star request]
+        age -->|Yes| on{Local log on?}
+        on -->|No| quiet
+        on -->|Yes| ask[Show a star request]
+        ask --> link["Link to github.com/gauravbaruah/SpecPlane"]
+        link --> person[The person may star it]
+        person --> local[The viewer does not star it]

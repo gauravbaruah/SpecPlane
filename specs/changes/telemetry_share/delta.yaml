@@ -1,0 +1,16 @@
+change_id: "telemetry_share"
+kind: "evolve"
+
+ADDED:
+  - id: "capability.specplane_telemetry_share"
+    summary: "Phase 1 capability. Events are attributed to the project, not the path. The viewer counts and copies that project from this machine's log. After 7 days it reminds the person to paste the summary on a new GitHub issue. After 2 days it asks for a star. No email address is shown. Nothing is posted."
+
+MODIFIED:
+  - id: "capability.specplane_viewer"
+    summary: "On accept, Activity counts the open project on this machine, not every project on the machine. Events with no project attribution are omitted. Copy summary still copies counts and posts nothing. Add the 7-day reminder linking to https://github.com/gauravbaruah/SpecPlane/issues/new, and the 2-day star request linking to https://github.com/gauravbaruah/SpecPlane. The page shows no email address."
+  - id: "foundation.observability_standards"
+    summary: "On accept, keep the local log on unless a human disables it, and keep upload out. The share reminder is a viewer notice, not a command prompt and not an upload."
+
+REMOVED: []
+
+RENAMED: []
