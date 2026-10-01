@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-10-01"
   status: "draft"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "receipt_next_step"
+    summary: "The retrieve receipt names the open change and the keep-or-accept step."
+    breaking: false
   - date: "2026-10-01"
     author: "local_command_events"
     summary: "retrieve completion can append one local command event. The id is not in the event."
@@ -81,7 +85,7 @@ implementation:
       - "format_retrieve prints meta.review_state and meta.status next to bit; does not rename live"
       - "format_retrieve prints authored legal, security, and ux constraint lists, and omits business value, changelog, and data_classification"
       - "format_retrieve prints the spec path and declared diagrams, and an inferred declared slice that is not labeled live"
-      - "When an open change names the id, stdout labels that change as the implementation context and prints one retrieve line. context <target> prints specification, change, implementation, and evidence. An unmatched path stays unmapped."
+      - "When an open change names the id, stdout labels that change as the implementation context and the retrieve line says to keep working in that folder or accept it. context <target> prints specification, change, implementation, and evidence. An unmatched path stays unmapped."
       - "retrieve completion can append one local command event. The id is not in the event."
     open_questions:
       - "Pointer field name from live id to change object (Q71) — schema unfreeze"

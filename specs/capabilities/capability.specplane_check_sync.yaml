@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "check_sync"]
   last_updated: "2026-10-01"
   status: "planned"
-  version: "1.7.0"
+  version: "1.8.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "receipt_next_step"
+    summary: "An uncovered failure names the ids and says to put them on an open change, then check_sync again. A pass with declared sensors says to run them. A Phase 1 pass says Phase 1 is valid and an empty impact list is a warning."
+    breaking: false
   - date: "2026-10-01"
     author: "command_receipts"
     summary: "check_sync ends with one line. A failure names the count. A Phase 1 pass says no impact is declared. A pass with declared sensors says they were not executed."
@@ -70,7 +74,7 @@ responsibilities:
   - "When --change is set, an id that folder names and that is not on disk yet is in-flight known. It must be covered by that slug. It is not live."
   - "Does not execute sensors. Compose with capability.specplane_run; do not absorb it."
   - "Each declared sensor shows its evidence and status UNVERIFIED. check_sync does not run the bind."
-  - "check_sync ends with one line. A failure names the count. A Phase 1 pass says no impact is declared. A pass with declared sensors says they were not executed."
+  - "check_sync ends with one line. An uncovered failure names the ids and says to put them on an open change, then check_sync again. A pass with declared sensors says to run them. A Phase 1 pass says Phase 1 is valid and an empty impact list is a warning."
 
 flows:
   - "After implement: check_sync --change <slug> --changed-ids against live + that open delta"

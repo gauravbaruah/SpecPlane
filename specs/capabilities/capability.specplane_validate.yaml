@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "validate"]
-  last_updated: "2026-09-27"
+  last_updated: "2026-10-01"
   status: "planned"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "receipt_next_step"
+    summary: "An error line names the count and says to fix the errors and validate again. Zero errors still print no line."
+    breaking: false
   - date: "2026-09-27"
     author: "kernel-slice"
     summary: "A capability flow item is a non-empty string or a mapping with a non-empty id. goal stays optional."
@@ -30,6 +34,7 @@ responsibilities:
   - "Bidirectional links: implements ↔ realized_by, uses ↔ used_by, internal depends ↔ depended_on_by"
   - "Refuse to call a tree a map when YAML does not parse"
   - "A capability flow item is a non-empty string or a mapping with a non-empty id. goal stays optional. String items stay valid."
+  - "An error line names the count and says to fix the errors and validate again. Zero errors still print no line."
 
 flows:
   - "Point at a spec root and report errors/warnings"

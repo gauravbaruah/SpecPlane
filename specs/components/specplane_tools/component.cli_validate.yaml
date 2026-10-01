@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli"]
   last_updated: "2026-10-01"
   status: "draft"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "receipt_next_step"
+    summary: "The validate receipt names the error count and says to fix the errors and validate again."
+    breaking: false
   - date: "2026-10-01"
     author: "local_command_events"
     summary: "validate completion can append one local command event. Findings stay on stdout."
@@ -67,7 +71,7 @@ implementation:
       - "Existing tools/specplane testdata invalid fixtures still fail after this slice is implemented"
       - "A flow mapping without a non-empty id fails. String items, and a mapping with an id and no goal, still pass."
       - "Does not stamp epistemic live"
-      - "Prints the validate receipt only when there is at least one error."
+      - "The validate receipt names the error count and says to fix the errors and validate again. Zero errors print no line."
       - "validate completion can append one local command event. Findings stay on stdout."
     open_questions:
       - "Exact stdout/exit-code table is Build Pack work after examination"
