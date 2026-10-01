@@ -1,0 +1,36 @@
+change_id: "receipt_next_step"
+kind: "evolve"
+
+sensors:
+  - id: "uncovered-names-the-ids"
+    promise: "capability.specplane_check_sync"
+    must: "An uncovered sync check names the ids and says to put them on an open change, then check_sync again."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_sync_failure_is_a_receipt"
+  - id: "phase1-is-valid"
+    promise: "capability.specplane_check_sync"
+    must: "A Phase 1 pass says Phase 1 is valid and that an empty impact list is a warning."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_phase1_pass_admits_no_impact"
+  - id: "declared-sensors-say-run"
+    promise: "capability.specplane_check_sync"
+    must: "A coverage pass with declared sensors says they were not executed and names specplane run --change for that change."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_declared_sensors_are_not_called_executed"
+  - id: "run-pass-names-the-human-step"
+    promise: "capability.specplane_run"
+    must: "A passing run does not certify the spec and says to accept the change or keep editing."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_run_pass_does_not_certify"
+  - id: "validate-errors-say-fix"
+    promise: "capability.specplane_validate"
+    must: "Validate names an error count and says to fix the errors and validate again. Zero errors print no line."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_validate_receipt_only_on_errors"
+  - id: "retrieve-says-keep-or-accept"
+    promise: "capability.specplane_retrieve"
+    must: "An open change on retrieve says that change is still open, and to keep working or accept it."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_retrieve_labels_live_and_change"
+
+looks_fine_is_not_a_sensor: true

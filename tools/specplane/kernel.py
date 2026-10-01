@@ -1052,7 +1052,17 @@ def format_retrieve(payload: dict[str, Any]) -> str:
         if readiness:
             lines.append("readiness: warning")
             lines.append(f"  {readiness}")
-        receipt = f"SpecPlane · retrieve — implementation context is {names}. Canonical synchronization is pending."
+        if ", " in names:
+            follow = (
+                "Those changes are still open. "
+                "Keep working in those folders, or accept them so retrieve shows one live graph."
+            )
+        else:
+            follow = (
+                "That change is still open. "
+                "Keep working in that folder, or accept it so retrieve shows one live graph."
+            )
+        receipt = f"SpecPlane · retrieve — implementation context is {names}. {follow}"
         if readiness:
             receipt += " Readiness warning: no implementation relationships are declared."
         lines.append(receipt)
@@ -1397,16 +1407,40 @@ def format_check_sync(payload: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _run_commands(payload: dict[str, Any]) -> str:
+    slugs: list[str] = []
+    named = str(payload.get("change") or "").strip()
+    if named:
+        slugs.append(named)
+    for row in payload.get("sensor_rows") or []:
+        if not isinstance(row, dict):
+            continue
+        slug = str(row.get("change") or "").strip()
+        if slug and slug not in slugs:
+            slugs.append(slug)
+    if not slugs:
+        return "specplane run --change <slug>"
+    return ", ".join(f"specplane run --change {slug}" for slug in slugs)
+
+
 def receipt_check_sync(payload: dict[str, Any]) -> str:
     if not payload.get("ok"):
+        uncovered_ids = [str(item) for item in (payload.get("uncovered") or []) if item]
+        recipe = bool(uncovered_ids) and not payload.get("unknown_change") and not payload.get("unknown")
+        if recipe:
+            detail = f"{len(uncovered_ids)} uncovered: {', '.join(uncovered_ids)}"
+            empty = len(payload.get("empty_blast") or [])
+            if empty:
+                detail += f", {empty} empty blast"
+            return (
+                f"SpecPlane · sync check — {detail}. "
+                "Name them on an open change, then check_sync again."
+            )
         parts: list[str] = []
         if payload.get("unknown_change"):
             parts.append("unknown change")
-        uncovered = len(payload.get("uncovered") or [])
         empty = len(payload.get("empty_blast") or [])
         unknown = len(payload.get("unknown") or [])
-        if uncovered:
-            parts.append(f"{uncovered} uncovered")
         if empty:
             parts.append(f"{empty} empty blast")
         if unknown:
@@ -1415,18 +1449,26 @@ def receipt_check_sync(payload: dict[str, Any]) -> str:
         return f"SpecPlane · sync check — {detail}. Behavior was not verified."
     advisory = payload.get("phase1_advisory") or []
     if advisory:
-        return (
+        line = (
             "SpecPlane · sync check — passed as Phase 1 advisory "
-            f"({len(advisory)} with no declared impact). Behavior was not verified."
+            f"({len(advisory)} with no declared impact). "
+            "Phase 1 is valid. No component is linked yet, so an empty impact list is a warning."
         )
+        if payload.get("sensors") == "declared":
+            line += (
+                " Declared sensors were not executed. "
+                f"Run them with: {_run_commands(payload)}."
+            )
+        return line
     if payload.get("sensors") == "declared":
         return (
             "SpecPlane · sync check — coverage passed. "
-            "Declared sensors were not executed. Behavior was not verified."
+            "Declared sensors were not executed. "
+            f"Run them with: {_run_commands(payload)}."
         )
     return (
         "SpecPlane · sync check — coverage passed. "
-        "No sensors were executed. Behavior was not verified."
+        "No sensors were executed. There is no declared check to run."
     )
 
 
@@ -1669,7 +1711,7 @@ def receipt_run(payload: dict[str, Any]) -> str:
     if failed:
         return (
             f"SpecPlane · run — {len(failed)} bound check(s) failed. "
-            "This does not certify the spec."
+            "This does not certify the spec. Read the failed sensor and fix that check."
         )
     if not payload.get("invoked") or not results or all(item == "not_run" for item in results):
         unbound = [
@@ -1684,17 +1726,22 @@ def receipt_run(payload: dict[str, Any]) -> str:
     if any(item == "not_run" for item in results):
         return (
             "SpecPlane · run — some sensors were not executed. "
-            "This does not certify the spec."
+            "This does not certify the spec. "
+            "Bind run.unittest or run.argv on the sensors that were not executed."
         )
     return (
         "SpecPlane · run — bound checks passed. "
-        "This does not certify the implementation satisfies the spec."
+        "This does not certify the implementation satisfies the spec. "
+        "The next human step is to accept the change, or keep editing."
     )
 
 
 def receipt_validate(error_count: int) -> str:
     if error_count:
-        return f"SpecPlane · validate — {error_count} error(s)."
+        return (
+            f"SpecPlane · validate — {error_count} error(s). "
+            "Fix the errors and validate again."
+        )
     return ""
 
 

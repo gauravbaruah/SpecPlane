@@ -1,0 +1,23 @@
+id: "receipt_next_step"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-10-01"
+promise_ids:
+  - "capability.specplane_retrieve"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+  - "capability.specplane_validate"
+  - "component.cli_retrieve"
+  - "component.cli_check_sync"
+  - "component.cli_run"
+  - "component.cli_validate"
+why: >-
+  The SpecPlane line is the sentence a person actually sees. When the command
+  stopped short, that line names the next step. A finished pass still says
+  what was established.
+non_goals:
+  - "a second paragraph under the line"
+  - "pushing the line into chat"
+  - "editing live YAML before accept"
+  - "a next step on a blast that already names impact"
+  - "a next step on validate when there are zero errors"

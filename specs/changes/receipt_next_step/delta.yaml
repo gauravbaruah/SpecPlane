@@ -1,0 +1,26 @@
+change_id: "receipt_next_step"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_retrieve"
+    summary: "When an open change names the id, the retrieve line says that change is still open. Keep working in that folder, or accept it so retrieve shows one live graph."
+  - id: "capability.specplane_check_sync"
+    summary: "An uncovered failure names the ids and says to put them on an open change, then check_sync again. A pass with declared sensors says to run them. A Phase 1 pass says Phase 1 is valid and an empty impact list is a warning."
+  - id: "capability.specplane_run"
+    summary: "A passing run still does not certify the spec, and says the human step is to accept the change or keep editing. A failure says to read the failed sensor and fix that check."
+  - id: "capability.specplane_validate"
+    summary: "An error line names the count and says to fix the errors and validate again. Zero errors still print no line."
+  - id: "component.cli_retrieve"
+    summary: "The retrieve receipt names the open change and the keep-or-accept step."
+  - id: "component.cli_check_sync"
+    summary: "The sync receipt names uncovered ids, or the run command for declared sensors, or the Phase 1 warning."
+  - id: "component.cli_run"
+    summary: "The run receipt keeps the certify limit and adds the human step, or the failed-sensor step."
+  - id: "component.cli_validate"
+    summary: "The validate receipt names the error count and says to fix the errors and validate again."
+
+REMOVED: []
+
+RENAMED: []
