@@ -65,7 +65,8 @@ class ReceiptTests(unittest.TestCase):
             }
         )
         self.assertIn(
-            "SpecPlane · sync check — 1 uncovered. Behavior was not verified.",
+            "SpecPlane · sync check — 1 uncovered: capability.live_capture. "
+            "Name them on an open change, then check_sync again.",
             text,
         )
         self.assertNotIn("caught", text.lower())
@@ -88,6 +89,7 @@ class ReceiptTests(unittest.TestCase):
         )
         self.assertIn("passed as Phase 1 advisory", text)
         self.assertIn("no declared impact", text)
+        self.assertIn("Phase 1 is valid. No component is linked yet, so an empty impact list is a warning.", text)
 
     def test_declared_sensors_are_not_called_executed(self) -> None:
         text = format_check_sync(
@@ -106,6 +108,7 @@ class ReceiptTests(unittest.TestCase):
             }
         )
         self.assertIn("Declared sensors were not executed.", text)
+        self.assertIn("Run them with: specplane run --change local_command_events.", text)
 
     def test_run_pass_does_not_certify(self) -> None:
         text = format_run(
@@ -117,7 +120,8 @@ class ReceiptTests(unittest.TestCase):
         )
         self.assertIn(
             "SpecPlane · run — bound checks passed. "
-            "This does not certify the implementation satisfies the spec.",
+            "This does not certify the implementation satisfies the spec. "
+            "The next human step is to accept the change, or keep editing.",
             text,
         )
 
@@ -132,7 +136,10 @@ class ReceiptTests(unittest.TestCase):
         self.assertIn("SpecPlane · run — no bound check was executed.", text)
 
     def test_validate_receipt_only_on_errors(self) -> None:
-        self.assertEqual(receipt_validate(2), "SpecPlane · validate — 2 error(s).")
+        self.assertEqual(
+            receipt_validate(2),
+            "SpecPlane · validate — 2 error(s). Fix the errors and validate again.",
+        )
         self.assertEqual(receipt_validate(0), "")
 
 
