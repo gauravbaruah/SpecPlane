@@ -392,52 +392,195 @@
     }
   }
 
+  var LATER = "This command exited nonzero, and a later run of the same command exited 0. That is the order of the exits.";
   var COMMANDS = {
-    validate: "validate checks that the YAML names, links, and changelog are structurally honest. It is called before retrieve is trusted, and again after a change is written.",
-    retrieve: "retrieve returns the live promise for one id, with leftovers and any open change kept apart. It is called before a promise might move.",
-    context: "context prints specification, change, implementation, and evidence for one id or one declared file. It is called when someone asks how something works. An undeclared file stays unmapped.",
-    blast: "blast computes what a change hits from the declared links. It is called after retrieve, before implementation.",
-    impact: "impact explains that same affected set as system, product, quality, governance, and ownership. It is called when someone wants those five readings.",
-    check_sync: "check_sync checks that changed ids are named by an open change. It is called after implementation, before run. It does not execute the checks.",
-    reconcile: "reconcile compares declared realization paths with the files that changed. It is called when a component already declares those paths. The result is advisory.",
-    list_gaps: "list_gaps lists advisory gaps, such as a missing sensor. It is called when someone wants that queue. It does not fail the command.",
-    run: "run executes checks already bound on one change. It is called after check_sync. A pass does not certify the spec.",
-    promote: "promote drops the inferred mark on named ids and appends a changelog row. It is called from the CLI for those ids only. It does not accept an open change folder.",
-    init: "init copies the kit into a product repo and creates empty specs folders. It is called when a project is starting SpecPlane.",
-    view: "view generates the local readout and serves it on 127.0.0.1. It is called when a person wants the specs in a browser. The event is recorded when that process exits.",
-    mcp: "mcp starts the stdio server for retrieve, blast, impact, check_sync, list_gaps, and run. It is called when an agent host connects. The event is recorded when that process exits.",
-    telemetry_status: "telemetry status says whether the local log is on. It is called when someone wants that state. Nothing is uploaded.",
-    telemetry_show: "telemetry show prints the local event file. It is called when someone wants to read the log. Nothing is uploaded.",
-    telemetry_enable: "telemetry enable turns the local log on. It is called when a person wants recording resumed.",
-    telemetry_disable: "telemetry disable turns the local log off. It is called when a person wants recording stopped.",
-    usage: "usage is recorded when the CLI is started without a recognized command."
+    validate: {
+      about: "Checks that spec names, links, and the changelog are structurally honest. That keeps later commands from trusting broken YAML.",
+      ok: "Exit 0. No structural errors were found.",
+      bad: "Exit was not 0. At least one structural error was found, such as a broken link, a bad name, or a missing changelog entry."
+    },
+    retrieve: {
+      about: "Returns the live promise for one id, and keeps any open change apart from that promise. That is how you see what is live before you change it.",
+      ok: "Exit 0. The id was found and the live graph was printed.",
+      bad: "Exit was not 0. The id was unknown, so nothing was invented."
+    },
+    context: {
+      about: "Prints the specification, the open change, the declared implementation, and the evidence for one id or one declared file. That keeps those four sources apart when someone asks how something works.",
+      ok: "Exit 0. The four sources were printed, or the file was reported as unmapped.",
+      bad: "Exit was not 0. The id was unknown."
+    },
+    blast: {
+      about: "Computes which specs a change can affect, from the declared links. That shows the likely impact before you edit.",
+      ok: "Exit 0. The affected set was printed.",
+      bad: "Exit was not 0. The starting id was unknown, or the affected set could not be built."
+    },
+    impact: {
+      about: "Explains the same affected set as system, product, quality, governance, and ownership. That gives five readings of one blast.",
+      ok: "Exit 0. Those readings were printed.",
+      bad: "Exit was not 0. The starting id was unknown, or the readings could not be built."
+    },
+    check_sync: {
+      about: "Checks that changed specs are named by an open change. That keeps a merge from treating uncovered work as if the spec already covered it. It does not run the bound checks.",
+      ok: "Exit 0. Every changed id was covered, or the only notes were Phase 1 warnings.",
+      bad: "Exit was not 0. A changed id had no open change covering it, or an empty impact list failed the check."
+    },
+    reconcile: {
+      about: "Compares files a component declares with the files that changed. That shows a missing declared path, or a changed file no component declares. The result is advisory.",
+      ok: "Exit 0. The comparison was printed.",
+      bad: "Exit was not 0. The comparison could not be printed."
+    },
+    list_gaps: {
+      about: "Lists advisory gaps, such as a missing sensor or a Phase 1 spec with no relationships. That is a queue to look at. It does not fail the command.",
+      ok: "Exit 0. The queue was printed.",
+      bad: "Exit was not 0. The queue could not be printed."
+    },
+    run: {
+      about: "Runs checks already bound on one change and records the exits. That tells you whether those checks passed. A pass does not mean the whole spec is satisfied.",
+      ok: "Exit 0. Every bound check that ran exited 0, or nothing was bound to run.",
+      bad: "Exit was not 0. A bound check failed, or the change could not be run."
+    },
+    promote: {
+      about: "Drops the inferred mark on named ids and appends a changelog row. That is how those ids become live. It does not accept an open change folder, and it does not promote a whole inventory.",
+      ok: "Exit 0. The named ids were promoted.",
+      bad: "Exit was not 0. A named id could not be promoted."
+    },
+    init: {
+      about: "Copies the kit into a product repo and creates empty specs folders. That is how a project starts SpecPlane without copying this product's specs.",
+      ok: "Exit 0. The kit was copied.",
+      bad: "Exit was not 0. The copy did not finish."
+    },
+    view: {
+      about: "Generates the local readout and serves it on 127.0.0.1. That is the page a person reads. The count is recorded when that process exits.",
+      ok: "Exit 0. The server process ended with exit code 0.",
+      bad: "Exit was not 0. The server process ended some other way, including being stopped."
+    },
+    mcp: {
+      about: "Starts the stdio server for retrieve, blast, impact, check_sync, list_gaps, and run. That is how an agent host calls those commands. The count is recorded when that process exits.",
+      ok: "Exit 0. The server process ended with exit code 0.",
+      bad: "Exit was not 0. The server process ended some other way."
+    },
+    telemetry_status: {
+      about: "Says whether the local command log is on. Nothing is uploaded.",
+      ok: "Exit 0. The on or off state was printed.",
+      bad: "Exit was not 0. The state could not be printed."
+    },
+    telemetry_show: {
+      about: "Prints the local event file. Nothing is uploaded.",
+      ok: "Exit 0. The local file was printed.",
+      bad: "Exit was not 0. The local file could not be printed."
+    },
+    telemetry_enable: {
+      about: "Turns the local command log on. Nothing is uploaded.",
+      ok: "Exit 0. Recording was turned on.",
+      bad: "Exit was not 0. Recording could not be turned on."
+    },
+    telemetry_disable: {
+      about: "Turns the local command log off. Nothing is uploaded.",
+      ok: "Exit 0. Recording was turned off.",
+      bad: "Exit was not 0. Recording could not be turned off."
+    },
+    usage: {
+      about: "Recorded when the CLI is started without a recognized command. That is the help path.",
+      ok: "Exit 0. Help was printed.",
+      bad: "Exit was not 0. The CLI was started with arguments it did not recognize."
+    }
   };
 
-  function activityExplain(line) {
-    if (line === "SpecPlane on this machine — last 30 days") {
-      return "Counts from the local command log on this machine. The window is 30 days. Nothing is uploaded.";
-    }
-    if (line === "No local events in the last 30 days.") {
-      return "The local log has no command events in this window.";
-    }
-    if (line === "Local command events are off.") {
-      return "Local command events are turned off, so nothing new is being recorded.";
-    }
-    var about = COMMANDS[line.split(" ")[0]] || "";
-    if (line.indexOf("nonzero, then later ok") >= 0) {
-      return (about ? about + " " : "") + "This command exited nonzero, and a later run of the same command exited 0. That is the order of the exits.";
-    }
-    if (line.indexOf("caller · ") === 0) {
-      return "Who invoked the commands, recorded when the CLI exits. The name is an allowlisted caller, such as cursor_skill when a skill sets SPECPLANE_CALLER, or unknown when that variable was not set.";
-    }
-    var counts = "How many times this command ran. ok means the exit code was 0. nonzero means it was not.";
-    return about ? about + " " + counts : counts;
+  function helpButton(label, tip) {
+    return h("button", { type: "button", class: "help", label: label }, [
+      "?",
+      h("span", { class: "tip", role: "tooltip" }, [tip]),
+    ]);
+  }
+
+  function activityTable(lines) {
+    var byName = {};
+    var order = [];
+    var caller = "";
+    lines.forEach(function (line) {
+      var later = line.match(/^(\S+) nonzero, then later ok · (\d+)$/);
+      if (later) {
+        if (!byName[later[1]]) {
+          byName[later[1]] = { name: later[1], ok: "0", bad: "0", later: "0" };
+          order.push(later[1]);
+        }
+        byName[later[1]].later = later[2];
+        return;
+      }
+      if (line.indexOf("caller · ") === 0) {
+        caller = line.slice("caller · ".length);
+        return;
+      }
+      var row = line.match(/^(\S+) (\d+) · (\d+) ok(?: · (\d+) nonzero)?$/);
+      if (!row) return;
+      byName[row[1]] = {
+        name: row[1],
+        ok: row[3],
+        bad: row[4] || "0",
+        later: (byName[row[1]] && byName[row[1]].later) || "0",
+      };
+      if (order.indexOf(row[1]) < 0) order.push(row[1]);
+    });
+    var body = order.map(function (name) {
+      var row = byName[name];
+      var info = COMMANDS[name] || {
+        about: "A local command count.",
+        ok: "Exit 0.",
+        bad: "Exit was not 0.",
+      };
+      return h("tr", {}, [
+        h("td", { class: "mono" }, [name]),
+        h("td", { class: "about" }, [info.about]),
+        h("td", { class: "count" }, [
+          row.ok,
+          helpButton("What ok means", info.ok),
+        ]),
+        row.bad === "0"
+          ? h("td", { class: "count quiet" }, ["—"])
+          : h("td", { class: "count" }, [
+            row.bad,
+            helpButton("What a nonzero exit means", info.bad),
+          ]),
+        row.later === "0"
+          ? h("td", { class: "count quiet" }, ["—"])
+          : h("td", { class: "count" }, [
+            row.later,
+            helpButton("What this sequence means", LATER),
+          ]),
+      ]);
+    });
+    var table = h("table", { class: "index activity" }, [
+      h("thead", {}, [
+        h("tr", {}, [
+          h("th", {}, ["Command"]),
+          h("th", {}, ["What it does"]),
+          h("th", {}, ["OK"]),
+          h("th", {}, ["Nonzero"]),
+          h("th", {}, ["Later ok"]),
+        ]),
+      ]),
+      h("tbody", {}, body),
+    ]);
+    if (!caller) return table;
+    return h("div", { class: "activity-block" }, [
+      table,
+      h("p", { class: "callers" }, [
+        "Who called  ",
+        caller,
+        helpButton(
+          "What the caller names mean",
+          "Recorded when the CLI exits. cursor_skill means a skill set SPECPLANE_CALLER. unknown means that variable was not set, or the name is not allowlisted."
+        ),
+      ]),
+    ]);
   }
 
   function activityIndex() {
     const activity = DATA.activity || {};
     const lines = activity.lines || [];
     const text = activity.text || lines.join("\n");
+    const notice = lines.length === 1 ? lines[0] : "";
+    const showTable = notice !== "No local events in the last 30 days." && notice !== "Local command events are off.";
     return h("section", { class: "activity-index" }, [
       h("div", { class: "lede" }, [
         h("h1", {}, ["Activity"]),
@@ -451,15 +594,7 @@
         }, ["Copy summary"]),
         h("span", { id: "copied", class: "quiet" }, [""]),
       ]),
-      h("div", { class: "activity-rows" }, lines.map(function (line) {
-        return h("div", { class: "activity-row" }, [
-          h("span", { class: "activity" }, [line]),
-          h("button", { type: "button", class: "help", label: "What this row means" }, [
-            "?",
-            h("span", { class: "tip", role: "tooltip" }, [activityExplain(line)]),
-          ]),
-        ]);
-      })),
+      showTable ? activityTable(lines) : h("p", { class: "note" }, [notice]),
     ]);
   }
 

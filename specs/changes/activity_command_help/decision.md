@@ -1,5 +1,7 @@
 # Activity command help
 
-Class: **evolve.** The ? already explains a row. A command row must also say what the command is and when it is called.
+Class: **evolve.** Activity is a table, not a list of count lines.
 
-The count sentence stays. Copy summary stays the counts only. The hover does not list individual timestamps. The caller row says who invoked the CLI and when that label is recorded.
+The description column says what the command does, what it checks, and how that helps. The ? on OK says what exit 0 means for that command. The ? on a nonzero count says what that exit means. Later ok says a nonzero exit was followed by an exit of 0. That is the order of the exits. It does not say a constraint was found or that an agent revised the spec.
+
+Copy summary stays the count sentences. The hover text is not copied.
