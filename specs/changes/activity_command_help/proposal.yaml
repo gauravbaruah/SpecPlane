@@ -1,0 +1,15 @@
+id: "activity_command_help"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-10-01"
+promise_ids:
+  - "capability.specplane_viewer"
+  - "component.cli_view"
+why: >-
+  The Activity ? explains the row. For a command row it also says what that
+  command is and when it is called. Copy summary still copies the counts only.
+non_goals:
+  - "putting the hover text on the clipboard"
+  - "timestamps for each individual call"
+  - "editing live YAML before accept"
+  - "an upload"

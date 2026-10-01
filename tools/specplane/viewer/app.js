@@ -392,6 +392,27 @@
     }
   }
 
+  var COMMANDS = {
+    validate: "validate checks that the YAML names, links, and changelog are structurally honest. It is called before retrieve is trusted, and again after a change is written.",
+    retrieve: "retrieve returns the live promise for one id, with leftovers and any open change kept apart. It is called before a promise might move.",
+    context: "context prints specification, change, implementation, and evidence for one id or one declared file. It is called when someone asks how something works. An undeclared file stays unmapped.",
+    blast: "blast computes what a change hits from the declared links. It is called after retrieve, before implementation.",
+    impact: "impact explains that same affected set as system, product, quality, governance, and ownership. It is called when someone wants those five readings.",
+    check_sync: "check_sync checks that changed ids are named by an open change. It is called after implementation, before run. It does not execute the checks.",
+    reconcile: "reconcile compares declared realization paths with the files that changed. It is called when a component already declares those paths. The result is advisory.",
+    list_gaps: "list_gaps lists advisory gaps, such as a missing sensor. It is called when someone wants that queue. It does not fail the command.",
+    run: "run executes checks already bound on one change. It is called after check_sync. A pass does not certify the spec.",
+    promote: "promote drops the inferred mark on named ids and appends a changelog row. It is called from the CLI for those ids only. It does not accept an open change folder.",
+    init: "init copies the kit into a product repo and creates empty specs folders. It is called when a project is starting SpecPlane.",
+    view: "view generates the local readout and serves it on 127.0.0.1. It is called when a person wants the specs in a browser. The event is recorded when that process exits.",
+    mcp: "mcp starts the stdio server for retrieve, blast, impact, check_sync, list_gaps, and run. It is called when an agent host connects. The event is recorded when that process exits.",
+    telemetry_status: "telemetry status says whether the local log is on. It is called when someone wants that state. Nothing is uploaded.",
+    telemetry_show: "telemetry show prints the local event file. It is called when someone wants to read the log. Nothing is uploaded.",
+    telemetry_enable: "telemetry enable turns the local log on. It is called when a person wants recording resumed.",
+    telemetry_disable: "telemetry disable turns the local log off. It is called when a person wants recording stopped.",
+    usage: "usage is recorded when the CLI is started without a recognized command."
+  };
+
   function activityExplain(line) {
     if (line === "SpecPlane on this machine — last 30 days") {
       return "Counts from the local command log on this machine. The window is 30 days. Nothing is uploaded.";
@@ -402,13 +423,15 @@
     if (line === "Local command events are off.") {
       return "Local command events are turned off, so nothing new is being recorded.";
     }
+    var about = COMMANDS[line.split(" ")[0]] || "";
     if (line.indexOf("nonzero, then later ok") >= 0) {
-      return "This command exited nonzero, and a later run of the same command exited 0. That is the order of the exits.";
+      return (about ? about + " " : "") + "This command exited nonzero, and a later run of the same command exited 0. That is the order of the exits.";
     }
     if (line.indexOf("caller · ") === 0) {
-      return "Who invoked the commands. The name is an allowlisted caller, such as cursor_skill, or unknown.";
+      return "Who invoked the commands, recorded when the CLI exits. The name is an allowlisted caller, such as cursor_skill when a skill sets SPECPLANE_CALLER, or unknown when that variable was not set.";
     }
-    return "How many times this command ran. ok means the exit code was 0. nonzero means it was not.";
+    var counts = "How many times this command ran. ok means the exit code was 0. nonzero means it was not.";
+    return about ? about + " " + counts : counts;
   }
 
   function activityIndex() {

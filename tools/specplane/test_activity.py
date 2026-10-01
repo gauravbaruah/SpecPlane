@@ -82,6 +82,10 @@ class ActivityTests(unittest.TestCase):
         self.assertIn("What this row means", script)
         self.assertIn("How many times this command ran.", script)
         self.assertIn("That is the order of the exits.", script)
+        self.assertIn("retrieve returns the live promise for one id", script)
+        self.assertIn("It is called before a promise might move.", script)
+        self.assertIn("run executes checks already bound on one change.", script)
+        self.assertIn("It is called after check_sync.", script)
         self.assertNotIn("caught", script)
         self.assertNotIn("corrected", script)
         for needle in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "urllib"):

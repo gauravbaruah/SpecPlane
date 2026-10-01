@@ -1,0 +1,14 @@
+change_id: "activity_command_help"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_viewer"
+    summary: "Each Activity command row has a ? that names the command and when it is called, plus the count. Copy summary still copies the counts, not the hover text."
+  - id: "component.cli_view"
+    summary: "The Activity hover text for a command row describes that command and when it is called."
+
+REMOVED: []
+
+RENAMED: []
