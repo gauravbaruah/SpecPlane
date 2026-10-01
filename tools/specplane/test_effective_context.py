@@ -142,7 +142,8 @@ class EffectiveContextTests(unittest.TestCase):
         self.assertIn("readiness: warning", text)
         self.assertIn(
             "SpecPlane · retrieve — implementation context is phone_follow. "
-            "Canonical synchronization is pending. "
+            "That change is still open. "
+            "Keep working in that folder, or accept it so retrieve shows one live graph. "
             "Readiness warning: no implementation relationships are declared.",
             text,
         )
@@ -230,7 +231,8 @@ class EffectiveContextTests(unittest.TestCase):
         self.assertIn(sys.executable, text)
         self.assertIn(
             "SpecPlane · run — bound checks passed. "
-            "This does not certify the implementation satisfies the spec.",
+            "This does not certify the implementation satisfies the spec. "
+            "The next human step is to accept the change, or keep editing.",
             text,
         )
 
