@@ -1,6 +1,6 @@
 id: "local_command_events"
 kind: "learn"
-status: "in-flight"
+status: "promoted"
 opened: "2026-10-01"
 promise_ids:
   - "foundation.observability_standards"

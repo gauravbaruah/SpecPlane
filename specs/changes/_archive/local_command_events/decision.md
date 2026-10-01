@@ -2,7 +2,7 @@
 
 Retrieved `foundation.observability_standards` first. Its live purpose is stdout, exit code, and join-keyed findings, not hosted telemetry. It also says there is no opt-in product telemetry in the first slice.
 
-Class: **learn.** The live sentences stay until accept. The experiment is a local log.
+Class: **learn.** Accepted 2026-10-01. The local log is on the live observability foundation at 1.1.0. Nothing is uploaded. This folder is archived.
 
 ## What this slice does
 

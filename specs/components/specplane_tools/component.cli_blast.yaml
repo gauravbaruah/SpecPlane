@@ -6,13 +6,21 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-01"
   status: "draft"
-  version: "1.2.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "local_command_events"
+    summary: "blast completion can append one local command event."
+    breaking: false
+  - date: "2026-10-01"
+    author: "command_receipts"
+    summary: "Prints the blast receipt when the formatter emits one."
+    breaking: false
   - date: "2026-09-28"
     author: "projection_payload"
     summary: "impact includes declared flow stages, outcomes, and contract data_models. blast text is unchanged."
@@ -73,5 +81,7 @@ implementation:
       - "blast text and bucket membership stay the same"
       - "Missing ownership, governance, or verification is not represented, not a negative claim"
       - "Declared flow stages and outcomes, and declared contract data_models, are included when the spec has them"
+      - "Prints the blast receipt when the formatter emits one."
+      - "blast completion can append one local command event."
     open_questions: []
     readiness: "ready"

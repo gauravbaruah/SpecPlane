@@ -4,13 +4,21 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "mcp", "run"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-01"
   status: "planned"
-  version: "1.1.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "command_receipts"
+    summary: "run ends with one line. A pass does not certify the spec. No bind says no check was executed."
+    breaking: false
+  - date: "2026-10-01"
+    author: "effective_context"
+    summary: "A bound command that passes is VERIFIED. A failure is FAILED. An English must with no bind is UNVERIFIED. VERIFIED means the bound command passed."
+    breaking: false
   - date: "2026-09-28"
     author: "ci_compose"
     summary: "A paste-in pull-request workflow may call run --change only for a change folder in that diff. English must: is still not a command."
@@ -26,6 +34,8 @@ responsibilities:
   - "evaluator: is a join. No run: prints not_run. Do not load a harness from that id."
   - "Exit 1 on an unknown or archived change, any fail, or any error. Exit 0 when every runnable bind passed, including when every row is not_run."
   - "Speech is evidence. Never certify that the implementation satisfies the spec."
+  - "A bound command that passes is VERIFIED. A failure is FAILED. An English must with no bind is UNVERIFIED. VERIFIED means the bound command passed."
+  - "run ends with one line. A pass does not certify the spec. No bind says no check was executed."
   - "check_sync does not absorb this command. Compose with it; do not execute sensors there."
 
 flows:

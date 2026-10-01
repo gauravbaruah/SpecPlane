@@ -1,6 +1,6 @@
 # Viewer activity
 
-Class: **evolve.** Not built. Live viewer text stays until this is accepted.
+Class: **evolve.** Accepted 2026-10-01. The delta is on the live viewer specs at 1.2.0. This folder is archived.
 
 The tab is named **Activity**. It sits beside Live, Changes, and Gaps. Those three stay the spec. Activity is how SpecPlane was used on this machine.
 

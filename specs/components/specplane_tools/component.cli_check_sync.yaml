@@ -6,13 +6,25 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-01"
   status: "draft"
-  version: "1.4.0"
+  version: "1.7.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "local_command_events"
+    summary: "check_sync completion can append one local command event. Nonzero is nonzero, not a prevented bug."
+    breaking: false
+  - date: "2026-10-01"
+    author: "command_receipts"
+    summary: "Prints the sync receipt."
+    breaking: false
+  - date: "2026-10-01"
+    author: "effective_context"
+    summary: "Each sensor row prints evidence and status UNVERIFIED."
+    breaking: false
   - date: "2026-09-28"
     author: "eval_papercuts"
     summary: "Changed-file paths are relative to the repo, then to the config dir when that dir sits below the git toplevel."
@@ -86,5 +98,8 @@ implementation:
       - "Optional --change <slug> scopes coverage to that folder; unknown slug exits non-zero; default without --change remains any-open-change"
       - "Never auto-write live. Does not parse source to learn values (e.g. timeout 60)"
       - "Uncovered failure prints retrieve, open or extend the change folder, and check_sync again. No --strict flag."
+      - "Each sensor row prints evidence and status UNVERIFIED. check_sync does not run the bind."
+      - "Prints the sync receipt."
+      - "check_sync completion can append one local command event. Nonzero is nonzero, not a prevented bug."
     open_questions: []
     readiness: "ready"

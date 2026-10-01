@@ -1,6 +1,6 @@
 id: "effective_context"
 kind: "learn"
-status: "in-flight"
+status: "promoted"
 opened: "2026-10-01"
 promise_ids:
   - "capability.specplane_retrieve"

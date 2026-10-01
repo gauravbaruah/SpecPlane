@@ -1,6 +1,6 @@
 # Effective context
 
-Class: **learn.** Tooling on retrieve, check_sync, run, and one context command. Live capability text stays until accept.
+Class: **learn.** Accepted 2026-10-01. The delta is on the live retrieve, check_sync, and run specs. This folder is archived.
 
 Live text and the open change stay labeled. The implementation context is the change. Canonical synchronization is pending until accept. The open change is not merged into the live slice.
 

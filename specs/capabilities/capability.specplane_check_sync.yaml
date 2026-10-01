@@ -4,13 +4,21 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "check_sync"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-01"
   status: "planned"
-  version: "1.5.0"
+  version: "1.7.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-01"
+    author: "command_receipts"
+    summary: "check_sync ends with one line. A failure names the count. A Phase 1 pass says no impact is declared. A pass with declared sensors says they were not executed."
+    breaking: false
+  - date: "2026-10-01"
+    author: "effective_context"
+    summary: "Each declared sensor shows its evidence and status UNVERIFIED. check_sync does not run the bind."
+    breaking: false
   - date: "2026-09-28"
     author: "eval_papercuts"
     summary: "A mapped file under a nested spec root fails coverage. An id named on the scoped change, including one not on disk yet, is in-flight known and is not live."
@@ -61,6 +69,8 @@ responsibilities:
   - "A mapped file whose path is relative to a spec root below the git toplevel is in the default changed-set and fails coverage when no open change covers that component."
   - "When --change is set, an id that folder names and that is not on disk yet is in-flight known. It must be covered by that slug. It is not live."
   - "Does not execute sensors. Compose with capability.specplane_run; do not absorb it."
+  - "Each declared sensor shows its evidence and status UNVERIFIED. check_sync does not run the bind."
+  - "check_sync ends with one line. A failure names the count. A Phase 1 pass says no impact is declared. A pass with declared sensors says they were not executed."
 
 flows:
   - "After implement: check_sync --change <slug> --changed-ids against live + that open delta"
