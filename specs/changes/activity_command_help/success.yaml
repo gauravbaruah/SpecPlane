@@ -1,0 +1,11 @@
+change_id: "activity_command_help"
+kind: "evolve"
+
+sensors:
+  - id: "hover-names-command-and-when"
+    promise: "capability.specplane_viewer"
+    must: "The Activity hover for a command row names that command and when it is called. Copy summary still copies the counts, not the hover text."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_copy_does_not_post"
+
+looks_fine_is_not_a_sensor: true
