@@ -5,9 +5,9 @@ ADDED: []
 
 MODIFIED:
   - id: "capability.specplane_viewer"
-    summary: "Each Activity command row has a ? that names the command and when it is called, plus the count. Copy summary still copies the counts, not the hover text."
+    summary: "Activity is a table. Each command has a plain description of what it does, what it checks, and how that helps. A ? on OK says what an exit of 0 means. A ? on a nonzero count says what that exit means. Copy summary still copies the counts, not the hover text."
   - id: "component.cli_view"
-    summary: "The Activity hover text for a command row describes that command and when it is called."
+    summary: "The Activity page is a table of commands. The description is visible. OK and nonzero each have their own ?."
 
 REMOVED: []
 
