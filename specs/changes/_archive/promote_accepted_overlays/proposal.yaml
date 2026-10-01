@@ -1,6 +1,6 @@
 id: "promote_accepted_overlays"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-09-29"
 promise_ids:
   - "capability.specplane_check_sync"
