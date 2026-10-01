@@ -7,7 +7,7 @@ MODIFIED:
   - id: "capability.specplane_viewer"
     summary: "Activity is a table. Each command has a plain description of what it does, what it checks, and how that helps. A ? on OK says what an exit of 0 means. A ? on a nonzero count says what that exit means. Copy summary still copies the counts, not the hover text."
   - id: "component.cli_view"
-    summary: "The Activity page is a table of commands. The description is visible. OK and nonzero each have their own ?."
+    summary: "The Activity page is a table of commands. The description is visible. OK and nonzero each have their own ?. A missing caller label is shown as unattributed, not as a failed check."
 
 REMOVED: []
 

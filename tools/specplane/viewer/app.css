@@ -219,7 +219,7 @@ a:hover { text-decoration: underline; }
   color: var(--ink-2);
 }
 .index.activity td.count { display: flex; align-items: flex-start; gap: 6px; }
-.index.activity td:nth-child(n+4) .help .tip { left: auto; right: 0; }
+.index.activity td:nth-child(n+3) .help .tip { left: auto; right: 0; }
 .callers { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--ink-2); font-size: 13px; }
 .activity {
   margin: 0;
@@ -252,7 +252,9 @@ a:hover { text-decoration: underline; }
   left: 0;
   top: calc(100% + 6px);
   z-index: 3;
-  width: 360px;
+  width: 200px;
+  white-space: normal;
+  overflow-wrap: break-word;
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 8px;

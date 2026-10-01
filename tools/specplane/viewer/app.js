@@ -565,11 +565,11 @@
     return h("div", { class: "activity-block" }, [
       table,
       h("p", { class: "callers" }, [
-        "Who called  ",
+        "Started as  ",
         caller,
         helpButton(
-          "What the caller names mean",
-          "Recorded when the CLI exits. cursor_skill means a skill set SPECPLANE_CALLER. unknown means that variable was not set, or the name is not allowlisted."
+          "What these names mean",
+          "cursor_skill means a skill set SPECPLANE_CALLER when it ran the CLI. unattributed means that variable was not set. That is normal. It is not a failed check."
         ),
       ]),
     ]);
