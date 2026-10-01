@@ -1,0 +1,36 @@
+change_id: "effective_context"
+kind: "learn"
+
+sensors:
+  - id: "labeled-change"
+    promise: "capability.specplane_retrieve"
+    must: "Live text and the open-change summary stay in different sections, and implementation context names the change."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_retrieve_labels_live_and_change"
+  - id: "phase1-warning"
+    promise: "capability.specplane_retrieve"
+    must: "A capability that already declares a component does not get the readiness warning."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_related_capability_has_no_readiness_warning"
+  - id: "english-unverified"
+    promise: "capability.specplane_check_sync"
+    must: "An English sensor with no bind is evidence none and status UNVERIFIED."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_english_sensor_is_unverified"
+  - id: "bound-verified"
+    promise: "capability.specplane_run"
+    must: "A bound command that exits 0 is status VERIFIED and does not certify the spec."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_bound_run_is_verified"
+  - id: "unmapped-file"
+    promise: "component.cli_retrieve"
+    must: "A file no component declares stays unmapped and is not read."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_unmapped_file_stays_unmapped"
+  - id: "context-apart"
+    promise: "component.cli_retrieve"
+    must: "context keeps specification, change, implementation, and evidence apart, and omits diagrams."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_context_keeps_spec_change_and_evidence_apart"
+
+looks_fine_is_not_a_sensor: true

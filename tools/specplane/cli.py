@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, init.
+"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, init, context.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -19,10 +19,12 @@ if str(ROOT) not in sys.path:
 from impact import format_impact, impact  # noqa: E402
 from kernel import (  # noqa: E402
     blast,
+    build_context,
     check_sync,
     default_changed_ids,
     format_blast,
     format_check_sync,
+    format_context,
     format_list_gaps,
     format_promote,
     format_reconcile,
@@ -128,6 +130,20 @@ def cmd_retrieve(args: argparse.Namespace) -> int:
     if payload["bit"] == "inferred":
         sys.stderr.write(f"inferred (not live): {args.spec_id}\n")
     print(format_retrieve(payload), end="")
+    return 0
+
+
+def cmd_context(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    payload = build_context(kernel, args.target, args.change or None)
+    print(format_context(kernel, payload), end="")
+    if payload.get("unknown"):
+        sys.stderr.write(f"not found: {args.target}\n")
+        return 1
     return 0
 
 
@@ -307,7 +323,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view / telemetry)"
+        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view / telemetry)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -320,6 +336,19 @@ def build_parser() -> argparse.ArgumentParser:
     add_root_args(p_ret)
     p_ret.add_argument("spec_id", help="SpecPlane id (e.g. capability.authentication)")
     p_ret.set_defaults(func=cmd_retrieve)
+
+    p_ctx = sub.add_parser(
+        "context",
+        help="Task slice for one spec id or one file; an unmatched file stays unmapped",
+    )
+    add_root_args(p_ctx)
+    p_ctx.add_argument("target", help="SpecPlane id or a repo-relative file path")
+    p_ctx.add_argument(
+        "--change",
+        default="",
+        help="Name one open specs/changes/<slug> folder as the implementation context",
+    )
+    p_ctx.set_defaults(func=cmd_context)
 
     p_blast = sub.add_parser("blast", help="Computed affects tree; foundations are terminal")
     add_root_args(p_blast)

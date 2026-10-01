@@ -130,6 +130,31 @@ def open_changes_for(kernel: Kernel, spec_id: str) -> list[Change]:
     ]
 
 
+def change_statements_for(change: Change, spec_id: str) -> list[str]:
+    """Delta sentences for this id. The live slice is not rewritten."""
+
+    def rows_for(only_id: str | None) -> list[str]:
+        found: list[str] = []
+        for key in ("ADDED", "MODIFIED", "REMOVED"):
+            rows = change.data.get(key) or []
+            if not isinstance(rows, list):
+                continue
+            for item in rows:
+                if not isinstance(item, dict):
+                    continue
+                row_id = str(item.get("id") or "").strip()
+                summary = " ".join(str(item.get("summary") or "").split())
+                if only_id and row_id != only_id:
+                    continue
+                if not row_id and not summary:
+                    continue
+                found.append(f"{key} {row_id}: {summary}".strip())
+        return found
+
+    matched = rows_for(spec_id)
+    return matched or rows_for(None)
+
+
 def _relative_spec_path(spec_root: Path, path: Path) -> str:
     try:
         return path.resolve().relative_to(spec_root.resolve()).as_posix()
@@ -217,13 +242,22 @@ def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
         "replaced": leftovers_for(kernel, spec_id)
         + ([replaced_self] if replaced_self else []),
         "in_flight": [
-            {"id": c.change_id, "kind": c.kind, "path": str(c.path)}
+            {
+                "id": c.change_id,
+                "kind": c.kind,
+                "path": str(c.path),
+                "statements": change_statements_for(c, spec_id),
+            }
             for c in open_changes_for(kernel, spec_id)
         ],
         "inferred_as_live": False,
     }
     if declared is not None:
         payload["declared"] = declared
+    if bit == "live" and payload["in_flight"] and is_phase1_shaped(doc):
+        payload["readiness"] = (
+            "Implementation is underway and no implementation relationships are declared."
+        )
     return payload
 
 
@@ -382,12 +416,42 @@ def success_sensors(change: Change) -> list[dict[str, str]]:
         must = str(row.get("must") or "").strip()
         if not must:
             continue
-        item = {"must": must, "promise": str(row.get("promise") or "").strip()}
+        item = {
+            "must": must,
+            "promise": str(row.get("promise") or "").strip(),
+            "evidence": evidence_label(row),
+        }
         sensor_id = str(row.get("id") or "").strip()
         if sensor_id:
             item["id"] = sensor_id
         out.append(item)
     return out
+
+
+def evidence_label(row: dict[str, Any]) -> str:
+    """The bound command, or none. Does not run it."""
+    parts: list[str] = []
+    run = row.get("run")
+    if isinstance(run, dict):
+        for key in ("unittest", "test"):
+            text = str(run.get(key) or "").strip()
+            if text:
+                parts.append(text)
+        argv = run.get("argv")
+        if isinstance(argv, list) and argv and all(isinstance(part, str) for part in argv):
+            parts.append(" ".join(argv))
+    test = row.get("test")
+    if isinstance(test, str) and test.strip():
+        parts.append(test.strip())
+    return " | ".join(parts) if parts else "none"
+
+
+def status_for_result(result: str) -> str:
+    if result == "pass":
+        return "VERIFIED"
+    if result in {"fail", "error"}:
+        return "FAILED"
+    return "UNVERIFIED"
 
 
 def success_must_lines(change: Change) -> list[str]:
@@ -700,8 +764,16 @@ def check_sync(
         musts = success_must_lines(change)
         if not musts:
             missing_slugs.append(change.path.name)
-        for must in musts:
-            sensor_rows.append({"change": change.path.name, "must": must})
+        for row in success_sensors(change):
+            sensor_rows.append(
+                {
+                    "change": change.path.name,
+                    "must": row["must"],
+                    "id": row.get("id") or "",
+                    "evidence": row.get("evidence") or "none",
+                    "status": "UNVERIFIED",
+                }
+            )
     if unknown_change or not contributors or missing_slugs:
         sensors = "missing"
     else:
@@ -964,8 +1036,216 @@ def format_retrieve(payload: dict[str, Any]) -> str:
             kind = item.get("kind") or ""
             suffix = f" ({kind})" if kind else ""
             lines.append(f"  - {item['id']}{suffix}")
+        names = ", ".join(str(item.get("id") or "") for item in in_flight if item.get("id"))
+        lines.append(f"implementation context: {names}")
+        lines.append("canonical synchronization: pending")
+        lines.append("active change:")
+        for item in in_flight:
+            kind = item.get("kind") or ""
+            lines.append(f"  - {item['id']} ({kind})".rstrip())
+            statements = item.get("statements") or []
+            if not statements:
+                lines.append("    (no delta summary)")
+            for statement in statements:
+                lines.append(f"    {statement}")
+        readiness = str(payload.get("readiness") or "")
+        if readiness:
+            lines.append("readiness: warning")
+            lines.append(f"  {readiness}")
+        receipt = f"SpecPlane · retrieve — implementation context is {names}. Canonical synchronization is pending."
+        if readiness:
+            receipt += " Readiness warning: no implementation relationships are declared."
+        lines.append(receipt)
     else:
         lines.append("in-flight: (none)")
+    return "\n".join(lines) + "\n"
+
+
+_SPEC_ID_PREFIXES = ("capability.", "foundation.", "system.", "container.", "component.")
+
+
+def looks_like_spec_id(text: str) -> bool:
+    if "/" in text or "\\" in text:
+        return False
+    return text.startswith(_SPEC_ID_PREFIXES)
+
+
+def _context_sensors(spec_id: str, changes: list[Change]) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for change in changes:
+        for sensor in success_sensors(change):
+            promise = str(sensor.get("promise") or "").strip()
+            if promise and promise != spec_id:
+                continue
+            rows.append(
+                {
+                    "change": change.change_id,
+                    "id": str(sensor.get("id") or ""),
+                    "must": str(sensor.get("must") or ""),
+                    "evidence": str(sensor.get("evidence") or "none"),
+                    "status": "UNVERIFIED",
+                }
+            )
+    return rows
+
+
+def _context_body(kernel: Kernel, spec_id: str, change_slug: str | None) -> dict[str, Any] | None:
+    payload = retrieve(kernel, spec_id)
+    if payload is None:
+        return None
+    doc = kernel.by_id[spec_id]
+    in_flight = list(payload.get("in_flight") or [])
+    missing = ""
+    if change_slug:
+        known = any(change.change_id == change_slug for change in kernel.changes)
+        if not known:
+            missing = change_slug
+            in_flight = []
+        else:
+            in_flight = [item for item in in_flight if item.get("id") == change_slug]
+    covering = [
+        change
+        for change in open_changes_for(kernel, spec_id)
+        if not change_slug or change.change_id == change_slug
+    ]
+    live = payload.get("live") or payload.get("declared") or {}
+    readiness = ""
+    if payload.get("bit") == "live" and in_flight and is_phase1_shaped(doc):
+        readiness = str(payload.get("readiness") or "")
+    return {
+        "id": spec_id,
+        "bit": payload["bit"],
+        "purpose": str(live.get("purpose") or ""),
+        "responsibilities": list(live.get("responsibilities") or []),
+        "constraints": live.get("constraints") or {},
+        "implements": list(live.get("implements") or []),
+        "realized_by_components": list(live.get("realized_by_components") or []),
+        "in_flight": in_flight,
+        "readiness": readiness,
+        "sensors": _context_sensors(spec_id, covering),
+        "named_change_missing": missing,
+    }
+
+
+def _implementation_lines(kernel: Kernel, body: dict[str, Any]) -> list[str]:
+    if str(body.get("id") or "").startswith("component."):
+        wanted = {str(body["id"])}
+    else:
+        wanted = set(body.get("realized_by_components") or [])
+    lines: list[str] = []
+    for spec_id, path in component_realization_paths(kernel):
+        if spec_id in wanted:
+            lines.append(f"{spec_id}: {path}")
+    return lines
+
+
+def build_context(kernel: Kernel, target: str, change_slug: str | None = None) -> dict[str, Any]:
+    """Task slice. A path with no realization.paths match stays unmapped."""
+    text = target.strip()
+    if looks_like_spec_id(text):
+        body = _context_body(kernel, text, change_slug)
+        if body is None:
+            return {"target": text, "unknown": True, "unmapped": False, "bodies": []}
+        return {"target": text, "unknown": False, "unmapped": False, "bodies": [body]}
+    rel = _norm_rel(text)
+    matched = [
+        spec_id
+        for spec_id, declared in component_realization_paths(kernel)
+        if _declared_matches(declared, rel)
+    ]
+    components = sorted(set(matched))
+    if not components:
+        return {"target": rel or text, "unknown": False, "unmapped": True, "bodies": []}
+    bodies = [
+        body
+        for spec_id in components
+        if (body := _context_body(kernel, spec_id, change_slug)) is not None
+    ]
+    return {
+        "target": rel or text,
+        "unknown": False,
+        "unmapped": False,
+        "components": components,
+        "bodies": bodies,
+    }
+
+
+def _format_context_body(lines: list[str], kernel: Kernel, body: dict[str, Any]) -> None:
+    lines.append("specification:")
+    lines.append(f"  id: {body.get('id') or ''}")
+    lines.append(f"  bit: {body.get('bit') or ''}")
+    purpose = str(body.get("purpose") or "")
+    if purpose:
+        lines.append(f"  purpose: {purpose}")
+    for item in body.get("responsibilities") or []:
+        lines.append(f"  - {item}")
+    constraints = body.get("constraints") or {}
+    for key in CONSTRAINT_LIST_KEYS:
+        for item in constraints.get(key) or []:
+            lines.append(f"  constraint.{key}: {item}")
+    for item in body.get("implements") or []:
+        lines.append(f"  implements: {item}")
+    for item in body.get("realized_by_components") or []:
+        lines.append(f"  realized_by: {item}")
+    lines.append("change:")
+    missing = str(body.get("named_change_missing") or "")
+    in_flight = body.get("in_flight") or []
+    if missing:
+        lines.append(f"  unknown_change: {missing}")
+    elif not in_flight:
+        lines.append("  (none)")
+    else:
+        names = ", ".join(str(item.get("id") or "") for item in in_flight if item.get("id"))
+        lines.append(f"  implementation context: {names}")
+        lines.append("  canonical synchronization: pending")
+        for item in in_flight:
+            kind = item.get("kind") or ""
+            lines.append(f"  - {item.get('id') or ''} ({kind})".rstrip())
+            statements = item.get("statements") or []
+            if not statements:
+                lines.append("    (no delta summary)")
+            for statement in statements:
+                lines.append(f"    {statement}")
+    readiness = str(body.get("readiness") or "")
+    if readiness:
+        lines.append("  readiness: warning")
+        lines.append(f"    {readiness}")
+    lines.append("implementation:")
+    paths = _implementation_lines(kernel, body)
+    if paths:
+        for path in paths:
+            lines.append(f"  - {path}")
+    else:
+        lines.append("  (none declared)")
+    lines.append("evidence:")
+    sensors = body.get("sensors") or []
+    if not sensors:
+        lines.append("  (none)")
+    for sensor in sensors:
+        label = sensor.get("id") or sensor.get("must") or ""
+        lines.append(f"  - {label}")
+        if sensor.get("must") and sensor.get("id"):
+            lines.append(f"    must: {sensor.get('must')}")
+        lines.append(f"    evidence: {sensor.get('evidence') or 'none'}")
+        lines.append(f"    status: {sensor.get('status') or 'UNVERIFIED'}")
+
+
+def format_context(kernel: Kernel, payload: dict[str, Any]) -> str:
+    lines = [f"context {payload.get('target') or ''}"]
+    if payload.get("unknown"):
+        lines.append("unknown: true")
+        return "\n".join(lines) + "\n"
+    if payload.get("unmapped"):
+        lines.append("unmapped: true")
+        lines.append("SpecPlane · context — this file is unmapped. No component declares it.")
+        return "\n".join(lines) + "\n"
+    components = payload.get("components") or []
+    if components:
+        lines.append("mapped:")
+        for spec_id in components:
+            lines.append(f"  - {spec_id}")
+    for body in payload.get("bodies") or []:
+        _format_context_body(lines, kernel, body)
     return "\n".join(lines) + "\n"
 
 
@@ -1092,8 +1372,11 @@ def format_check_sync(payload: dict[str, Any]) -> str:
             if not must:
                 continue
             lines.append(f"  - change: {row.get('change')}")
+            if row.get("id"):
+                lines.append(f"    id: {row.get('id')}")
             lines.append(f"    must: {must}")
-            lines.append("    not_executed")
+            lines.append(f"    evidence: {row.get('evidence') or 'none'}")
+            lines.append(f"    status: {row.get('status') or 'UNVERIFIED'}")
     elif payload.get("missing_sensor_changes"):
         for slug in payload["missing_sensor_changes"]:
             lines.append(f"  - change: {slug}")
@@ -1338,6 +1621,8 @@ def run_sensors(
                     "must": str(row.get("must") or "").strip(),
                     "result": result,
                     "detail": detail,
+                    "evidence": evidence_label(row),
+                    "status": status_for_result(result),
                 }
             )
 
@@ -1364,6 +1649,8 @@ def format_run(payload: dict[str, Any]) -> str:
         must = str(row.get("must") or "")
         if must:
             lines.append(f"    must: {must}")
+        lines.append(f"    evidence: {row.get('evidence') or 'none'}")
+        lines.append(f"    status: {row.get('status') or status_for_result(str(row.get('result') or ''))}")
         lines.append(f"    result: {row.get('result') or ''}")
         detail = str(row.get("detail") or "")
         if detail and row.get("result") in {"fail", "error"}:
@@ -1385,7 +1672,15 @@ def receipt_run(payload: dict[str, Any]) -> str:
             "This does not certify the spec."
         )
     if not payload.get("invoked") or not results or all(item == "not_run" for item in results):
-        return "SpecPlane · run — no bound check was executed."
+        unbound = [
+            str(row.get("id") or "").strip()
+            for row in rows
+            if str(row.get("evidence") or "none") == "none" and str(row.get("id") or "").strip()
+        ]
+        base = "SpecPlane · run — no bound check was executed."
+        if unbound:
+            return base + " Add run.unittest or run.argv on sensor " + ", ".join(unbound) + "."
+        return base
     if any(item == "not_run" for item in results):
         return (
             "SpecPlane · run — some sensors were not executed. "

@@ -56,6 +56,8 @@ When you run the CLI, set `SPECPLANE_CALLER=cursor_skill`. That is the only sign
 
 If a command prints a line that starts with `SpecPlane ·`, quote that line in the reply the user sees, unchanged. If it does not, do not invent a SpecPlane receipt. Do not say SpecPlane caught a bug or revised the code unless that printed line says so.
 
+During an open change, the implementation context is that change. Live text and the change stay labeled. Canonical synchronization stays pending until the user accepts. For the file you are editing, run `context <path>`. If it says the file is unmapped, leave it unmapped. Do not invent a component.
+
 Do not invent a graph by reading the whole tree. You may open files the CLI already named.
 
 ## Procedure
