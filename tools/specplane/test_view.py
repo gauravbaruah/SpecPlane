@@ -15,6 +15,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
+os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
+
 from cli import main as cli_main  # noqa: E402
 from kernel import Change, list_gaps, load_kernel  # noqa: E402
 from view import _delta, _opened, _viewer_sensors, build_payload, refresh_payload, write_site  # noqa: E402

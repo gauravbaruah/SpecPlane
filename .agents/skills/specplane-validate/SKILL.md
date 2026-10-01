@@ -20,6 +20,8 @@ Read `specplane/core_prompt/applicable/08-validation-rules.md` and `11-guidance-
 
    `python3 tools/specplane/validate.py` is validate-only. Use `cli.py retrieve <id>` / `blast <id>` when the review is about one promise or impact, not the whole tree.
 
+   Set `SPECPLANE_CALLER=cursor_skill` on those commands. A local event is recorded unless `telemetry disable` was run. Nothing is uploaded.
+
 2. Optionally run `python3 tools/specplane/drift.py --scope changed` as a reminder, not as a required gate.
 
 3. Read sections 08 and 11 for findings the CLI cannot see (wording, completeness).

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 import tempfile
@@ -14,6 +15,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+
+os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
 
 from cli import git_changed_files, main as cli_main  # noqa: E402
 from kernel import (  # noqa: E402

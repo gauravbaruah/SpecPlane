@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -13,6 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 KIT = ROOT.parent.parent
 sys.path.insert(0, str(ROOT))
+
+os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
 
 from cli import main as cli_main  # noqa: E402
 from initkit import default_kit_root, init_kit  # noqa: E402
@@ -41,6 +44,7 @@ class InitKitTests(unittest.TestCase):
         self.assertTrue((self.dest / ".cursor" / "rules" / "specplane-core.mdc").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "cli.py").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "view.py").is_file())
+        self.assertTrue((self.dest / "tools" / "specplane" / "telemetry.py").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "ci_gate.py").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "viewer" / "app.js").is_file())
         self.assertTrue((self.dest / "tools" / "specplane" / "initkit.py").is_file())

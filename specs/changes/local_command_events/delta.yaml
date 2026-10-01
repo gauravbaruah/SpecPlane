@@ -1,0 +1,26 @@
+change_id: "local_command_events"
+kind: "learn"
+
+ADDED: []
+
+MODIFIED:
+  - id: "foundation.observability_standards"
+    summary: >-
+      The local log is on unless a human disables it. Nothing is uploaded.
+      Each CLI command appends one structural event locally: command name,
+      exit code, duration, version, and an allowlisted caller. A failed write
+      does not change the command result.
+  - id: "component.cli_validate"
+    summary: "validate completion can append that local event. Findings stay on stdout."
+  - id: "component.cli_retrieve"
+    summary: "retrieve completion can append that local event. The id is not in the event."
+  - id: "component.cli_blast"
+    summary: "blast completion can append that local event."
+  - id: "component.cli_check_sync"
+    summary: "check_sync completion can append that local event. Nonzero is nonzero, not a prevented bug."
+  - id: "component.cli_run"
+    summary: "run completion can append that local event."
+
+REMOVED: []
+
+RENAMED: []

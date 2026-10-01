@@ -1,0 +1,25 @@
+id: "local_command_events"
+kind: "learn"
+status: "in-flight"
+opened: "2026-10-01"
+promise_ids:
+  - "foundation.observability_standards"
+  - "capability.specplane_validate"
+  - "component.cli_validate"
+  - "component.cli_retrieve"
+  - "component.cli_blast"
+  - "component.cli_check_sync"
+  - "component.cli_run"
+why: >-
+  Know when the CLI ran, whether it exited 0, and which SpecPlane surface
+  invoked it. The live foundation still says this slice is stdout, exit code,
+  and findings, and that hosted telemetry is out. This learn is a local log
+  a human turns on. It does not upload.
+non_goals:
+  - "hosted upload or telemetry.specplane.ai"
+  - "recording spec text, ids, paths, filenames, prompts, diffs, or secrets"
+  - "detecting that a model read a skill file"
+  - "calling a nonzero exit a prevented bug"
+  - "shadow evaluation"
+  - "a new foundation.specplane_telemetry"
+  - "editing the live foundation before accept"

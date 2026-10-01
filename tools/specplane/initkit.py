@@ -20,6 +20,7 @@ CLI_FILES = (
     "specplane.config.json.example",
     "view.py",
     "ci_gate.py",
+    "telemetry.py",
 )
 
 SPEC_DIR_NAMES = (

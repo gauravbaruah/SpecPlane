@@ -106,7 +106,7 @@ After the handful, stop. Tell the human the ids and the cites. Ask which ids to 
 Only after the human names ids:
 
 ```bash
-python3 tools/specplane/cli.py promote --ids id1,id2 --spec-root specs
+SPECPLANE_CALLER=cursor_skill python3 tools/specplane/cli.py promote --ids id1,id2 --spec-root specs
 ```
 
 That command drops `inferred` on those files and adds a changelog row. It does not promote unnamed ids. Do not drop the tag yourself.

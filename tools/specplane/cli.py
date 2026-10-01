@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -260,6 +261,31 @@ def cmd_view(args: argparse.Namespace) -> int:
     return serve(out, args.open_browser, spec_root)
 
 
+def cmd_telemetry(args: argparse.Namespace) -> int:
+    from telemetry import read_events, set_enabled, status_lines
+
+    action = args.telemetry_command
+    if action == "enable":
+        set_enabled(True)
+        sys.stdout.write("Local command events are on. Nothing is uploaded.\n")
+        sys.stdout.write("Turn off with: telemetry disable\n")
+        return 0
+    if action == "disable":
+        set_enabled(False)
+        sys.stdout.write("Local command events are off.\n")
+        return 0
+    if action == "show":
+        body = read_events()
+        if not body.strip():
+            sys.stdout.write("No local events.\n")
+            return 0
+        sys.stdout.write(body if body.endswith("\n") else body + "\n")
+        return 0
+    for line in status_lines():
+        sys.stdout.write(line + "\n")
+    return 0
+
+
 def cmd_init(args: argparse.Namespace) -> int:
     dest = (args.dest or Path.cwd()).resolve()
     kit_root = (args.kit_root or default_kit_root()).resolve()
@@ -277,7 +303,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view)"
+        description="SpecPlane kernel CLI (validate / retrieve / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view / telemetry)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -430,13 +456,52 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_view.set_defaults(func=cmd_view)
 
+    p_tel = sub.add_parser(
+        "telemetry",
+        help="Local command events. On by default. Nothing is uploaded.",
+    )
+    tel = p_tel.add_subparsers(dest="telemetry_command", required=True)
+    for name, help_text in (
+        ("status", "Whether the local log is on"),
+        ("show", "Print the local events"),
+        ("enable", "Turn the local log on"),
+        ("disable", "Turn the local log off"),
+    ):
+        tel.add_parser(name, help=help_text).set_defaults(func=cmd_telemetry, telemetry_command=name)
+
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    return int(args.func(args))
+    from telemetry import record_command
+
+    started = time.perf_counter()
+    command = "usage"
+    code = 1
+    try:
+        parser = build_parser()
+        args = parser.parse_args(argv)
+        command = str(args.command or "usage")
+        if command == "telemetry":
+            subcommand = str(getattr(args, "telemetry_command", "") or "")
+            if subcommand:
+                command = f"telemetry_{subcommand}"
+        code = int(args.func(args))
+        return code
+    except SystemExit as exc:
+        raw = exc.code
+        if isinstance(raw, int):
+            code = raw
+        elif raw is None:
+            code = 0
+        else:
+            code = 1
+        raise
+    except Exception:
+        code = 1
+        raise
+    finally:
+        record_command(command, code, started)
 
 
 if __name__ == "__main__":

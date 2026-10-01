@@ -24,7 +24,7 @@ Do not load the full master prompt.
 If `tools/specplane/cli.py` exists and you have a capability id:
 
 ```bash
-python3 tools/specplane/cli.py retrieve <id> --spec-root specs
+SPECPLANE_CALLER=cursor_skill python3 tools/specplane/cli.py retrieve <id> --spec-root specs
 ```
 
 Do not slurp `specs/`. Open only files the CLI named.
