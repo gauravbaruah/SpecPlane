@@ -1,0 +1,26 @@
+change_id: "command_receipts"
+kind: "learn"
+
+sensors:
+  - id: "empty-blast-receipt"
+    promise: "capability.specplane_blast"
+    must: "An empty blast says no declared impact does not mean the code is unaffected. A blast that names impact prints no SpecPlane receipt."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_empty_blast_names_the_gap"
+  - id: "sync-failure-receipt"
+    promise: "capability.specplane_check_sync"
+    must: "A coverage failure ends with a sync receipt and does not say a bug was caught."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_sync_failure_is_a_receipt"
+  - id: "run-does-not-certify"
+    promise: "capability.specplane_run"
+    must: "A passing run says the bound checks passed and does not certify the spec."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_run_pass_does_not_certify"
+  - id: "validate-errors-only"
+    promise: "capability.specplane_validate"
+    must: "Validate names an error count and stays silent when there are zero errors."
+    run:
+      unittest: "tools.specplane.test_receipts.ReceiptTests.test_validate_receipt_only_on_errors"
+
+looks_fine_is_not_a_sensor: true

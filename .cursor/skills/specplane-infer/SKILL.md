@@ -113,6 +113,8 @@ That command drops `inferred` on those files and adds a changelog row. It does n
 
 `retrieve` prints `inferred (not live)` until then. `list_gaps` lists `inferred_unpromoted` and stays advisory.
 
+If a command prints a line that starts with `SpecPlane ·`, quote that line in the reply the user sees, unchanged. If it does not, do not invent a SpecPlane receipt. Do not say SpecPlane caught a bug or revised the code unless that printed line says so.
+
 ## Again later
 
 A later map is a new change folder under `specplane-implement` when a live promise would move. Do not re-infer on a schedule. Do not stamp live to match code.

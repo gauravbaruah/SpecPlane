@@ -1,0 +1,26 @@
+change_id: "command_receipts"
+kind: "learn"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_blast"
+    summary: "An empty blast ends with one line: no declared impact does not mean the code is unaffected. A blast that names impact does not add that line."
+  - id: "capability.specplane_check_sync"
+    summary: "check_sync ends with one line. A failure names the count. A Phase 1 pass says no impact is declared. A pass with declared sensors says they were not executed."
+  - id: "capability.specplane_run"
+    summary: "run ends with one line. A pass does not certify the spec. No bind says no check was executed."
+  - id: "capability.specplane_validate"
+    summary: "validate prints one line only when there is at least one error."
+  - id: "component.cli_blast"
+    summary: "Prints the blast receipt when the formatter emits one."
+  - id: "component.cli_check_sync"
+    summary: "Prints the sync receipt."
+  - id: "component.cli_run"
+    summary: "Prints the run receipt."
+  - id: "component.cli_validate"
+    summary: "Prints the validate receipt only for errors."
+
+REMOVED: []
+
+RENAMED: []

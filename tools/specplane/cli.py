@@ -29,6 +29,7 @@ from kernel import (  # noqa: E402
     format_retrieve,
     format_run,
     list_gaps,
+    receipt_validate,
     load_kernel,
     promote_ids,
     reconcile,
@@ -104,6 +105,9 @@ def cmd_validate(args: argparse.Namespace) -> int:
     print(
         f"Checked {report.file_count} spec(s): {error_count} error(s), {warn_count} warning(s)."
     )
+    receipt = receipt_validate(error_count)
+    if receipt:
+        print(receipt)
     if error_count:
         return 1
     if args.strict_warnings and warn_count:

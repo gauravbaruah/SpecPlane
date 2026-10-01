@@ -21,4 +21,4 @@ Read `specplane/core_prompt/applicable/02-file-layout.md` and `03-shared-meta.md
 3. If the user named capabilities or foundations, create those files; otherwise create one example capability and copy needed files from `specplane/foundations/`.
 4. Every **5C** file: `meta.id` equals filename without extension, semver `version`, `introduced_in`, at least one `changelog` entry. Do not invent fake 5C meta for files under `specs/changes/`.
 5. If `tools/specplane/cli.py` exists, run `validate` in this session; else `validate.py`. Do not add git hooks or CI.
-6. Report the tree. Next step is usually a Phase 1 capability. Daily product requests after that use `specplane-implement` (see [`docs/golden-journey.md`](../../../docs/golden-journey.md)), not more scaffolding.
+6. Report the tree. If validate prints a line that starts with `SpecPlane ·`, quote that line in the reply the user sees, unchanged. Do not invent a SpecPlane receipt. Next step is usually a Phase 1 capability. Daily product requests after that use `specplane-implement` (see [`docs/golden-journey.md`](../../../docs/golden-journey.md)), not more scaffolding.

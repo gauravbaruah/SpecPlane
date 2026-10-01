@@ -991,7 +991,24 @@ def format_blast(payload: dict[str, Any]) -> str:
     if payload.get("decision_required"):
         lines.append("DECISION REQUIRED")
         lines.append("  SpecPlane does not pick spec vs code.")
+    receipt = receipt_blast(payload)
+    if receipt:
+        lines.append(receipt)
     return "\n".join(lines) + "\n"
+
+
+def receipt_blast(payload: dict[str, Any]) -> str:
+    if payload.get("empty"):
+        return (
+            "SpecPlane · blast — no declared impact. "
+            "This does not mean the code is unaffected."
+        )
+    if payload.get("decision_required"):
+        return (
+            "SpecPlane · blast — decision required. "
+            "SpecPlane does not pick spec vs code."
+        )
+    return ""
 
 
 COVERAGE_NOTE = (
@@ -1093,7 +1110,41 @@ def format_check_sync(payload: dict[str, Any]) -> str:
             lines.append(f"  - {item}")
         lines.append("  advisory: unmapped app file; not a coverage failure")
     lines.append(f"note: {COVERAGE_NOTE}")
+    lines.append(receipt_check_sync(payload))
     return "\n".join(lines) + "\n"
+
+
+def receipt_check_sync(payload: dict[str, Any]) -> str:
+    if not payload.get("ok"):
+        parts: list[str] = []
+        if payload.get("unknown_change"):
+            parts.append("unknown change")
+        uncovered = len(payload.get("uncovered") or [])
+        empty = len(payload.get("empty_blast") or [])
+        unknown = len(payload.get("unknown") or [])
+        if uncovered:
+            parts.append(f"{uncovered} uncovered")
+        if empty:
+            parts.append(f"{empty} empty blast")
+        if unknown:
+            parts.append(f"{unknown} unknown")
+        detail = ", ".join(parts) if parts else "coverage failed"
+        return f"SpecPlane · sync check — {detail}. Behavior was not verified."
+    advisory = payload.get("phase1_advisory") or []
+    if advisory:
+        return (
+            "SpecPlane · sync check — passed as Phase 1 advisory "
+            f"({len(advisory)} with no declared impact). Behavior was not verified."
+        )
+    if payload.get("sensors") == "declared":
+        return (
+            "SpecPlane · sync check — coverage passed. "
+            "Declared sensors were not executed. Behavior was not verified."
+        )
+    return (
+        "SpecPlane · sync check — coverage passed. "
+        "No sensors were executed. Behavior was not verified."
+    )
 
 
 # Per sensor, shared across that sensor's binds. Not a product timeout knob.
@@ -1320,7 +1371,36 @@ def format_run(payload: dict[str, Any]) -> str:
     lines.append("behavior: evidence")
     note = RUN_INVOKED_NOTE if payload.get("invoked") else RUN_IDLE_NOTE
     lines.append(f"note: {note}")
+    lines.append(receipt_run(payload))
     return "\n".join(lines) + "\n"
+
+
+def receipt_run(payload: dict[str, Any]) -> str:
+    rows = payload.get("sensors") or []
+    results = [str(row.get("result") or "") for row in rows]
+    failed = [item for item in results if item in {"fail", "error"}]
+    if failed:
+        return (
+            f"SpecPlane · run — {len(failed)} bound check(s) failed. "
+            "This does not certify the spec."
+        )
+    if not payload.get("invoked") or not results or all(item == "not_run" for item in results):
+        return "SpecPlane · run — no bound check was executed."
+    if any(item == "not_run" for item in results):
+        return (
+            "SpecPlane · run — some sensors were not executed. "
+            "This does not certify the spec."
+        )
+    return (
+        "SpecPlane · run — bound checks passed. "
+        "This does not certify the implementation satisfies the spec."
+    )
+
+
+def receipt_validate(error_count: int) -> str:
+    if error_count:
+        return f"SpecPlane · validate — {error_count} error(s)."
+    return ""
 
 
 def structural_validate(spec_root: Path):
