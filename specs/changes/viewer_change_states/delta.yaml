@@ -1,0 +1,14 @@
+change_id: "viewer_change_states"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_viewer"
+    summary: "The Changes tab has In-flight and Archived. In-flight is the open folders. Archived is specs/changes/_archive. Archived folders are not open work."
+  - id: "component.cli_view"
+    summary: "The readout payload marks each change in-flight or archived and keeps _archive out of the kernel open-change list."
+
+REMOVED: []
+
+RENAMED: []

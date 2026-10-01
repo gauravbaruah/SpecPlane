@@ -24,8 +24,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from impact import impact  # noqa: E402
-from kernel import check_sync, list_gaps, load_kernel, retrieve, success_sensors  # noqa: E402
-from validate import dig  # noqa: E402
+from kernel import Change, check_sync, list_gaps, load_kernel, retrieve, success_sensors  # noqa: E402
+from validate import as_str_list, dig  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
 def assets_dir() -> Path:
@@ -57,6 +57,74 @@ def _branch(spec_root: Path) -> str:
     return "" if out in ("", "HEAD") else out
 
 
+def _read_change_folder(folder: Path) -> Change:
+    data: dict[str, Any] = {}
+    proposal = folder / "proposal.yaml"
+    if proposal.is_file():
+        loaded = yaml.safe_load(proposal.read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            data = loaded
+    delta_path = folder / "delta.yaml"
+    if delta_path.is_file():
+        delta = yaml.safe_load(delta_path.read_text(encoding="utf-8"))
+        if isinstance(delta, dict):
+            data = {**delta, **data}
+    return Change(
+        change_id=str(data.get("id") or data.get("change_id") or folder.name),
+        kind=str(data.get("kind") or ""),
+        status="archived",
+        promise_ids=as_str_list(data.get("promise_ids")),
+        path=folder,
+        data=data,
+    )
+
+
+def _archived_changes(spec_root: Path) -> list[Change]:
+    """Folders under changes/_archive. They are not open changes."""
+    root = spec_root / "changes" / "_archive"
+    if not root.is_dir():
+        return []
+    return [
+        _read_change_folder(folder)
+        for folder in sorted(path for path in root.iterdir() if path.is_dir() and not path.name.startswith("."))
+    ]
+
+
+def _public_change(kernel: Any, change: Change, state: str) -> dict[str, Any]:
+    slug = change.path.name
+    sensors = _viewer_sensors(change)
+    if state == "in-flight":
+        sync = check_sync(kernel, list(change.promise_ids), slug)
+        checked = {
+            "coverage": sync.get("coverage"),
+            "sensors": sync.get("sensors"),
+            "behavior": sync.get("behavior"),
+            "sensor_rows": sensors,
+            "ok": bool(sync.get("ok")),
+        }
+        folder = "specs/changes/" + slug + "/"
+    else:
+        checked = {
+            "coverage": "",
+            "sensors": "declared" if sensors else "missing",
+            "behavior": "unverified",
+            "sensor_rows": sensors,
+            "ok": False,
+        }
+        folder = "specs/changes/_archive/" + slug + "/"
+    return {
+        "id": slug,
+        "kind": change.kind,
+        "state": state,
+        "why": str(change.data.get("why") or "").strip(),
+        "promise_ids": list(change.promise_ids),
+        "opened": _opened(change.data.get("opened")),
+        "delta": _delta(change.data),
+        "folder": folder,
+        "check_sync": checked,
+    }
+
+
 def _opened(value: Any) -> str:
     text = value.isoformat() if hasattr(value, "isoformat") else str(value or "").strip()
     if len(text) >= 10 and text[4:5] == "-" and text[7:8] == "-":
@@ -76,24 +144,9 @@ def build_payload(kernel: Any) -> dict[str, Any]:
     for change in kernel.changes:
         if not change.open:
             continue
-        slug = change.path.name
-        sync = check_sync(kernel, list(change.promise_ids), slug)
-        public = {
-            "id": slug,
-            "kind": change.kind,
-            "why": str(change.data.get("why") or "").strip(),
-            "promise_ids": list(change.promise_ids),
-            "opened": _opened(change.data.get("opened")),
-            "delta": _delta(change.data),
-            "check_sync": {
-                "coverage": sync.get("coverage"),
-                "sensors": sync.get("sensors"),
-                "behavior": sync.get("behavior"),
-                "sensor_rows": _viewer_sensors(change),
-                "ok": bool(sync.get("ok")),
-            },
-        }
-        changes.append(public)
+        changes.append(_public_change(kernel, change, "in-flight"))
+    for change in _archived_changes(kernel.spec_root):
+        changes.append(_public_change(kernel, change, "archived"))
 
     impacts: dict[str, Any] = {}
     for spec_id in records:
