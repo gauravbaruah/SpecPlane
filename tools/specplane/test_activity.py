@@ -59,6 +59,12 @@ class ActivityTests(unittest.TestCase):
                     "path": "src/secret.py",
                 },
                 {
+                    "command": "validate",
+                    "result": "ok",
+                    "invoked_via": "not-a-label",
+                    "timestamp": _stamp(-8),
+                },
+                {
                     "command": "capability.secret_id",
                     "result": "ok",
                     "invoked_via": "cursor_skill",
@@ -69,7 +75,9 @@ class ActivityTests(unittest.TestCase):
         )
         text = str(activity_summary()["text"])
         self.assertIn("retrieve 1 · 1 ok", text)
-        self.assertIn("caller · cursor_skill 1", text)
+        self.assertIn("caller · cursor_skill 1 · unattributed 1", text)
+        self.assertNotIn("not-a-label", text)
+        self.assertNotIn("unknown", text)
         self.assertNotIn("capability.secret_id", text)
         self.assertNotIn("src/secret.py", text)
         self.assertNotIn("prompt", text)
@@ -86,6 +94,9 @@ class ActivityTests(unittest.TestCase):
         self.assertIn("Returns the live promise for one id", script)
         self.assertIn("Runs checks already bound on one change", script)
         self.assertIn("A changed id had no open change covering it", script)
+        self.assertIn("unattributed means that variable was not set", script)
+        self.assertIn("It is not a failed check.", script)
+        self.assertNotIn("allowlisted", script)
         self.assertNotIn("caught", script)
         self.assertNotIn("corrected", script)
         for needle in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "urllib"):
