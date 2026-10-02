@@ -8,6 +8,8 @@ Class: **evolve.** Retrieved `capability.specplane_init` first. Its live ux cons
 - The change blast is the one to review. It reaches init because this change promises `capability.specplane_init`.
 - Four flows, one flowchart each: publish, install from the index, init from the installed package, install from a checkout.
 
+The live sentences were applied on 2026-10-02. This folder stays open until the diff that contains those live edits has merged. Archive it after that. Do not treat the brief as a second, unaccepted copy of the same decision.
+
 ## Decided
 
 - The public GitHub repository and the PyPI project `specplane` stay on the personal account. Paid sections are sold by Nimble Notions. That does not transfer this repository. Paid code stays out of this public tree until a later change.

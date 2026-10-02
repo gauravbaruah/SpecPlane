@@ -23,6 +23,8 @@ The CLI, MCP, viewer, skills, and a pasted CI check are projections of one kerne
 
 **Free now:** kit, local kernel, skills, optional MCP, and `specplane view` (local, `127.0.0.1`, no API key).
 
+Command events stay on this machine. `specplane usage report` prints the counts. Nothing leaves automatically.
+
 **Later:** hosted share, a required GitHub check, and a spec coach. An optional paste-in check can ask whether a change is accounted for by declared intent and bound evidence. Init does not install it.
 
 <img src="./SpecPlane_Logo.png" alt="SpecPlane" width="160">

@@ -32,7 +32,7 @@ sensors:
       unittest: "tools.specplane.test_init.InitJourneyTests.test_uninstall_leaves_specs_and_removes_the_kit"
   - id: "init_sentence"
     promise: "capability.specplane_init"
-    must: "The open change says a published specplane package may run init, init does not publish, there is still no npx package, the first publish is 0.1.0a1, and uninstall leaves specs/ in place."
+    must: "Live init says a published specplane package may run init, init does not publish, there is no npx package, and uninstall leaves specs/ in place. The package capability names 0.1.0a1."
     run:
       unittest: "tools.specplane.test_init.InitJourneyTests.test_change_records_the_init_sentence"
 

@@ -51,6 +51,11 @@ _COMMANDS = frozenset(
         "telemetry_enable",
         "telemetry_disable",
         "usage",
+        "usage_status",
+        "usage_show",
+        "usage_enable",
+        "usage_disable",
+        "usage_report",
     }
 )
 _WINDOW_S = 30 * 24 * 60 * 60
@@ -330,9 +335,71 @@ def activity_summary(now: float | None = None, *, project_id: str | None = None)
     return payload
 
 
+def _report_command(command: str) -> str:
+    """Person-facing command name. Older log lines said telemetry."""
+    if command == "telemetry":
+        return "usage"
+    if command.startswith("telemetry_"):
+        return "usage_" + command[len("telemetry_") :]
+    return command
+
+
+def usage_report(now: float | None = None) -> dict[str, object]:
+    """Counts for this machine over the last 30 days.
+
+    The object has no installation id, project id, path, timestamp, or spec name.
+    """
+    moment = time.time() if now is None else now
+    cutoff = moment - _WINDOW_S
+    commands: dict[str, int] = {}
+    callers: dict[str, int] = {}
+    success = 0
+    failure = 0
+    for line in read_events().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(item, dict):
+            continue
+        when = _event_time(item.get("timestamp"))
+        if when is None or when > moment + 60 or when < cutoff:
+            continue
+        command = str(item.get("command") or "")
+        if command not in _COMMANDS:
+            continue
+        name = _report_command(command)
+        commands[name] = commands.get(name, 0) + 1
+        caller = str(item.get("invoked_via") or "")
+        if caller not in _CALLERS:
+            caller = "unknown"
+        callers[caller] = callers.get(caller, 0) + 1
+        if str(item.get("result") or "") == "ok":
+            success += 1
+        else:
+            failure += 1
+    return {
+        "schema": "specplane-usage/v1",
+        "specplane_version": VERSION,
+        "period_days": _WINDOW_S // _DAY_S,
+        "commands": {key: commands[key] for key in sorted(commands)},
+        "callers": {key: callers[key] for key in sorted(callers)},
+        "success": success,
+        "failure": failure,
+    }
+
+
+def usage_report_text(now: float | None = None) -> str:
+    body = json.dumps(usage_report(now), indent=2)
+    return "This is a local usage summary. Nothing is sent.\n" + body + "\n"
+
+
 def status_lines() -> list[str]:
     state = "on" if enabled() else "off"
-    lines = [f"telemetry: {state}", "upload: never"]
+    lines = [f"usage: {state}", "upload: never"]
     if _env_override() is not None:
         lines.append("source: SPECPLANE_TELEMETRY")
     elif _stored_enabled() is not None:

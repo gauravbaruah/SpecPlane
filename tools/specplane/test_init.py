@@ -253,12 +253,15 @@ class InitJourneyTests(unittest.TestCase):
         self.assertNotIn("mailto:", init_text)
 
     def test_change_records_the_init_sentence(self) -> None:
-        delta = (KIT / "specs" / "changes" / "specplane_package" / "delta.yaml").read_text(encoding="utf-8")
-        self.assertIn("A published specplane package may run init", delta)
-        self.assertIn("Init still does not publish", delta)
-        self.assertIn("There is still no npx package", delta)
-        self.assertIn("0.1.0a1", delta)
-        self.assertIn("leaves specs/ in place", delta)
+        init = (KIT / "specs" / "capabilities" / "capability.specplane_init.yaml").read_text(encoding="utf-8")
+        package = (KIT / "specs" / "capabilities" / "capability.specplane_package.yaml").read_text(encoding="utf-8")
+        self.assertIn("A published specplane package may run init", init)
+        self.assertIn("Init does not publish", init)
+        self.assertIn("There is no npx package", init)
+        self.assertIn("leaves specs/ in place", init)
+        self.assertIn("specplane uninstall removes the kit copy and leaves specs/ in place", init)
+        self.assertNotIn("Published PyPI / npx package is not this command", init)
+        self.assertIn("0.1.0a1", package)
 
     def test_change_folders_stay_strings(self) -> None:
         loaded = yaml_load(KIT / "specs" / "capabilities" / "capability.specplane_change_folders.yaml")

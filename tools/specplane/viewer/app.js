@@ -484,6 +484,31 @@
       ok: "Exit 0. Recording was turned off.",
       bad: "Exit was not 0. Recording could not be turned off."
     },
+    usage_status: {
+      about: "Says whether the local command log is on. Nothing is uploaded.",
+      ok: "Exit 0. The on or off state was printed.",
+      bad: "Exit was not 0. The state could not be printed."
+    },
+    usage_show: {
+      about: "Prints the local event file. Nothing is uploaded.",
+      ok: "Exit 0. The local file was printed.",
+      bad: "Exit was not 0. The local file could not be printed."
+    },
+    usage_enable: {
+      about: "Turns the local command log on. Nothing is uploaded.",
+      ok: "Exit 0. Recording was turned on.",
+      bad: "Exit was not 0. Recording could not be turned on."
+    },
+    usage_disable: {
+      about: "Turns the local command log off. Nothing is uploaded.",
+      ok: "Exit 0. Recording was turned off.",
+      bad: "Exit was not 0. Recording could not be turned off."
+    },
+    usage_report: {
+      about: "Prints counts for the last 30 days. The printout has no installation id and no project id. Nothing is sent.",
+      ok: "Exit 0. The counts were printed.",
+      bad: "Exit was not 0. The counts could not be printed."
+    },
     usage: {
       about: "Recorded when the CLI is started without a recognized command. That is the help path.",
       ok: "Exit 0. Help was printed.",

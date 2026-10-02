@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "package", "install"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "planned"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "specplane_package"
+    summary: "The first publish is the pre-release 0.1.0a1. specplane uninstall removes the kit copy and leaves specs/ in place. It does not remove the specplane command. The public repository and the PyPI project stay on the personal account."
+    breaking: false
   - date: "2026-10-01"
     author: "specplane_package"
     summary: "Phase 1 draft. A published package named specplane installs the CLI and can run init. Install does not ask for consent, configure an agent host, or upload telemetry."
@@ -22,6 +26,8 @@ responsibilities:
   - "Leave init as the copy into a product repo"
   - "Leave the local command log on unless a human has disabled it, and upload nothing"
   - "Keep a SpecPlane checkout able to install the same command for people working on this repo"
+  - "The first publish is the pre-release 0.1.0a1"
+  - "specplane uninstall removes the kit copy and leaves specs/ in place. It does not remove the specplane command"
 
 flows:
   - id: publish_to_pypi
@@ -129,15 +135,15 @@ open_questions:
   - id: oq_pypi_owner
     question: "Which PyPI account or organization owns the specplane project?"
     raised_from: "flow.publish_to_pypi"
-    status: open
+    status: resolved
   - id: oq_first_version
     question: "Is the first PyPI publish 0.1.0 or a pre-release?"
     raised_from: "flow.publish_to_pypi"
-    status: open
+    status: resolved
   - id: oq_uninstall
     question: "Does this capability own an uninstall command, or is removal only the package manager?"
     raised_from: "flow.install_from_index"
-    status: open
+    status: resolved
 
 business_value:
   user_outcome: "A developer can install the SpecPlane CLI and run init without cloning this repo"
@@ -163,6 +169,9 @@ constraints:
     - "Init remains capability.specplane_init. This capability does not copy the kit by itself"
     - "Docs that tell a developer how to obtain the CLI name the published package"
     - "Requires Python 3.10 or newer"
+    - "The first publish is the pre-release 0.1.0a1"
+    - "The public GitHub repository and the PyPI project specplane stay on the personal account"
+    - "specplane uninstall removes the kit copy from a destination and leaves specs/ in place. It does not remove the specplane command"
   data_classification: "public"
 
 success_metrics:
