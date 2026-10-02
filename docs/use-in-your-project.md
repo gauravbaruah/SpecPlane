@@ -9,13 +9,15 @@ This page puts the **kit** into *your* product repo. Your `specs/` is your overl
 In the **product** repo (must not be the SpecPlane kit root):
 
 ```bash
-uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
+pip install specplane
+# or: uv tool install specplane
+specplane init
 # optional: --kit-only   skip tools/specplane
 #           --force      replace dest/specplane
 #           --dest PATH  if you are not already in the product repo
 ```
 
-Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package; `uvx specplane` would fail.
+The current release is the pre-release `0.1.0a1`. Python 3.10 or newer. There is no `npx` package. To pin a commit: `uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init`.
 
 Fallback from a checkout (Python 3.10+ and PyYAML):
 
@@ -173,6 +175,6 @@ Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your
 
 ## Not included yet
 
-- A PyPI / `npx specplane` package (`uvx --from git+…@main` is the install that works today)
+- An `npx` package (`pip install specplane` and `uv tool install specplane` are the obtaining commands)
 - An init wizard that picks Cursor vs Claude vs Codex (all three get the same skills)
 - Copying this kit into an important product until a real session matches [`golden-journey.md`](./golden-journey.md)
