@@ -8,7 +8,7 @@ Class: **evolve.** Retrieved `capability.specplane_init` first. Its live ux cons
 - The change blast is the one to review. It reaches init because this change promises `capability.specplane_init`.
 - Four flows, one flowchart each: publish, install from the index, init from the installed package, install from a checkout.
 
-The live sentences were applied on 2026-10-02. This folder stays open until the diff that contains those live edits has merged. Archive it after that. Do not treat the brief as a second, unaccepted copy of the same decision.
+The live sentences were applied on 2026-10-02. Promoted and archived on 2026-10-02.
 
 ## Decided
 

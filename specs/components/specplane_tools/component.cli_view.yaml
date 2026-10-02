@@ -8,11 +8,15 @@ meta:
   tags: ["kernel", "cli", "viewer"]
   last_updated: "2026-10-02"
   status: "draft"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "usage_report"
+    summary: "The viewer describes usage status, show, enable, disable, and report. Older telemetry events still have descriptions. The seven-day GitHub notice and the star request stay."
+    breaking: false
   - date: "2026-10-02"
     author: "telemetry_share"
     summary: "Activity counts this project on this machine. After 7 days the page asks the person to paste the summary on a new GitHub issue. After 2 days it asks for a star. No email address is shown. Nothing is posted."
@@ -74,5 +78,6 @@ implementation:
       - "The gaps lens matches list_gaps"
       - "Each change in the readout is in-flight or archived. A folder under specs/changes/_archive is archived and is not an open kernel change."
       - "Activity counts this project on this machine for the last 30 days. Events with no project attribution are omitted. The description is visible. OK and nonzero each have their own ?. A missing caller label is shown as unattributed, not as a failed check. Copy summary copies the counts and does not open a network connection. After 7 days the page links a new GitHub issue. After 2 days it links the repository and asks for a star. The page shows no email address. The page refreshes when that log is newer than the payload."
+      - "The Activity table describes usage status, usage show, usage enable, usage disable, and usage report. Older telemetry events still have descriptions."
     open_questions: []
     readiness: "ready"

@@ -1,6 +1,6 @@
 id: "usage_report"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-10-02"
 promise_ids:
   - "capability.specplane_telemetry_share"

@@ -1,5 +1,7 @@
 # Local usage report
 
+Accepted onto the live specs on 2026-10-02.
+
 Class: **evolve.** Retrieved `capability.specplane_telemetry_share` and `foundation.observability_standards`. The live law is a local log, upload never, and a viewer reminder. There is no command that sends anything.
 
 ## Decided

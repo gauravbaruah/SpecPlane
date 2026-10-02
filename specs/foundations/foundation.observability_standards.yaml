@@ -6,11 +6,15 @@ meta:
   tags: ["observability", "cli", "kernel"]
   last_updated: "2026-10-02"
   status: "draft"
-  version: "1.2.0"
+  version: "1.3.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "usage_report"
+    summary: "A human turns the local log off with usage disable. SPECPLANE_TELEMETRY=0 still forces that process off. usage report prints counts and does not upload. The log file remains on this machine."
+    breaking: false
   - date: "2026-10-02"
     author: "telemetry_share"
     summary: "The local log stays on unless a human disables it, and upload stays out. Each event can carry a project token that is not the repository name or path. The share reminder is a viewer notice, not a command prompt and not an upload."
@@ -31,7 +35,7 @@ changelog:
 provides:
   - "Stdout as the five-second face of retrieve / blast / check_sync / run"
   - "Findings join on SpecPlane ids"
-  - "The local log is on unless a human disables it. Nothing is uploaded. Each CLI command appends one structural event locally: command name, exit code, duration, version, an allowlisted caller, and a project token that is not the repository name or path. A failed write does not change the command result. The share reminder is a viewer notice, not a command prompt and not an upload."
+  - "The local log is on unless a human disables it with usage disable. SPECPLANE_TELEMETRY=0 still forces that process off. Nothing is uploaded. Each CLI command appends one structural event locally: command name, exit code, duration, version, an allowlisted caller, and a project token that is not the repository name or path. A failed write does not change the command result. usage report prints counts for the last 30 days and does not upload. The share reminder is a viewer notice, not a command prompt and not an upload."
 
 used_by:
   containers:

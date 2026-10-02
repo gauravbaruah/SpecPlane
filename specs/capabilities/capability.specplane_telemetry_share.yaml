@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "telemetry", "viewer"]
   last_updated: "2026-10-02"
   status: "planned"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "usage_report"
+    summary: "The person-facing commands are usage status, show, enable, disable, and report. usage report prints counts for the last 30 days and sends nothing. The report has no installation id, project id, path, timestamp, or spec name. There is still no command that sends the report. The seven-day GitHub notice and the star request stay."
+    breaking: false
   - date: "2026-10-02"
     author: "telemetry_share"
     summary: "The reminder and the star request are the viewer page. This capability is realized by component.cli_view."
@@ -27,6 +31,7 @@ responsibilities:
   - "After that project's log on this machine is at least 7 days old, remind the person to paste the copied summary on a new GitHub issue"
   - "After that project's log on this machine is at least 2 days old, ask in the viewer for a star on the SpecPlane repository"
   - "Leave sending to the person. The viewer copies text and does not post it. The reminder names no email address"
+  - "usage report prints counts for this machine for the last 30 days and sends nothing"
 
 flows:
   - id: record_from_the_first_command
@@ -52,7 +57,7 @@ flows:
       - "the event cannot be written"
     recovery:
       - "a failed write does not change the command result"
-      - "telemetry disable keeps later commands from recording"
+      - "usage disable keeps later commands from recording. telemetry is an alias of usage."
   - id: remind_to_copy
     kinds: [journey, information]
     goal: "About a week after this project has local events, the viewer asks the person to copy that project's counts and paste them on a GitHub issue"
@@ -122,7 +127,7 @@ constraints:
     - "The viewer does not post or email that summary"
     - "The product shows no personal email address"
   ux:
-    - "Recording stays on from the first command. There is no telemetry share command and no telemetry decline command"
+    - "Recording stays on from the first command. The person-facing commands are usage status, usage show, usage enable, usage disable, and usage report. usage report prints counts for the last 30 days and sends nothing. The report has no installation id, project id, path, timestamp, or spec name. There is no command that sends the report. telemetry is an alias of usage."
     - "The share reminder appears in the viewer, beside Activity, when this project's oldest attributed event on this machine is at least 7 days old"
     - "The star request appears in the viewer when this project's oldest attributed event on this machine is at least 2 days old"
     - "Neither notice appears when the local log is off"

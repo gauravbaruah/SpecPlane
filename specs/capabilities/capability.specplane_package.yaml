@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "cli", "package", "install"]
   last_updated: "2026-10-02"
   status: "planned"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "usage_report"
+    summary: "Install still does not change the local log. usage status after install still reports upload never."
+    breaking: false
   - date: "2026-10-02"
     author: "specplane_package"
     summary: "The first publish is the pre-release 0.1.0a1. specplane uninstall removes the kit copy and leaves specs/ in place. It does not remove the specplane command. The public repository and the PyPI project stay on the personal account."
@@ -165,7 +169,7 @@ constraints:
     - "There is no npx package"
     - "Install does not show a consent dialog"
     - "Install does not write Cursor, Claude, or Codex configuration"
-    - "Install does not enable or disable telemetry and does not upload"
+    - "Install does not enable or disable the local log and does not upload"
     - "Init remains capability.specplane_init. This capability does not copy the kit by itself"
     - "Docs that tell a developer how to obtain the CLI name the published package"
     - "Requires Python 3.10 or newer"
@@ -178,7 +182,7 @@ success_metrics:
   primary: "clean_install_can_init"
   targets:
     clean_install_can_init: "a clean environment can install specplane and init a destination that has the kit and lacks this repo's kernel specs"
-    upload_never: "telemetry status after install still reports upload never"
+    upload_never: "usage status after install still reports upload never"
   derived_from: {}
 
 roadmap:
