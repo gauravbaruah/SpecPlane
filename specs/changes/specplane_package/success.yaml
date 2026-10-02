@@ -3,17 +3,37 @@ sensors:
   - id: "four_flows_four_diagrams"
     promise: "capability.specplane_package"
     must: "The package capability has four journey flows and one diagram whose title names each flow."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_package_has_four_flows_and_diagrams"
+  - id: "first_publish_is_a_prerelease"
+    promise: "capability.specplane_package"
+    must: "The first publish version is the pre-release 0.1.0a1."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_first_publish_is_a_prerelease"
   - id: "clean_install_can_init"
     promise: "capability.specplane_package"
     must: "A clean environment can install specplane and init a destination that has the kit and lacks this repo's kernel specs."
+    run:
+      unittest: "tools.specplane.test_init.InitKitTests.test_init_from_bundled_layout"
   - id: "install_is_quiet"
     promise: "capability.specplane_package"
     must: "Install does not show a consent dialog, does not write an agent host configuration, and does not upload."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_install_does_not_consent_or_configure_a_host"
   - id: "checkout_still_installs"
     promise: "capability.specplane_package"
     must: "pip install -e . from a SpecPlane checkout still provides the specplane command, and uvx --from git+ this repo can still run init."
+    run:
+      unittest: "tools.specplane.test_init.InitKitTests.test_editable_metadata_without_prebuilt_bundle"
+  - id: "uninstall_leaves_specs"
+    promise: "capability.specplane_init"
+    must: "specplane uninstall removes the kit copy and leaves specs/ in place. It does not remove the specplane command. It refuses this SpecPlane checkout."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_uninstall_leaves_specs_and_removes_the_kit"
   - id: "init_sentence"
     promise: "capability.specplane_init"
-    must: "Live init says a published specplane package may run init, init does not publish, and there is no npx package."
+    must: "The open change says a published specplane package may run init, init does not publish, there is still no npx package, the first publish is 0.1.0a1, and uninstall leaves specs/ in place."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_change_records_the_init_sentence"
 
 looks_fine_is_not_a_sensor: true

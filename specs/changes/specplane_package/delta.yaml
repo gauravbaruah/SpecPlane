@@ -3,11 +3,13 @@ kind: "evolve"
 
 ADDED:
   - id: "capability.specplane_package"
-    summary: "Phase 1 capability for a published Python package named specplane. Four flows, one diagram each. Install does not consent, configure an agent host, or upload."
+    summary: "Phase 1 capability for a published Python package named specplane. Four flows, one diagram each. The first publish is the pre-release 0.1.0a1. Install does not consent, configure an agent host, or upload. specplane uninstall removes the kit copy and leaves specs/ in place."
 
 MODIFIED:
   - id: "capability.specplane_init"
-    summary: "On accept, replace the ux sentence that a published PyPI package is not this command. Init still does not publish. A published specplane package may run init. There is still no npx package. uvx --from git+ this repo stays valid."
+    summary: "On accept, replace the ux sentence that a published PyPI package is not this command. Init still does not publish. A published specplane package may run init. There is still no npx package. uvx --from git+ this repo stays valid. specplane uninstall removes the kit copy and leaves specs/ in place. It does not remove the specplane command."
+  - id: "component.cli_init"
+    summary: "specplane uninstall removes the kit copy from a destination and leaves specs/ in place. It refuses this SpecPlane checkout."
   - id: "system.specplane_kernel"
     summary: "On accept, list capability.specplane_package beside capability.specplane_init."
 

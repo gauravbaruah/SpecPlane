@@ -18,7 +18,8 @@ sys.path.insert(0, str(ROOT))
 os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
 
 from cli import main as cli_main  # noqa: E402
-from initkit import default_kit_root, init_kit  # noqa: E402
+from initkit import default_kit_root, init_kit, uninstall_kit  # noqa: E402
+from telemetry import VERSION  # noqa: E402
 
 
 class InitKitTests(unittest.TestCase):
@@ -203,6 +204,61 @@ class InitJourneyTests(unittest.TestCase):
         self.assertEqual(len(mappings), 1)
         self.assertEqual(mappings[0]["id"], "init_product_repo")
         self.assertGreaterEqual(len(strings), 2)
+
+    def test_uninstall_leaves_specs_and_removes_the_kit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "product"
+            dest.mkdir()
+            code, notes = init_kit(dest, KIT)
+            self.assertEqual(code, 0, notes)
+            kept = dest / "specs" / "capabilities" / "capability.mine.yaml"
+            kept.write_text("mine: true\n", encoding="utf-8")
+            (dest / "tools" / "other.txt").write_text("keep\n", encoding="utf-8")
+            code, notes = uninstall_kit(dest)
+            self.assertEqual(code, 0, notes)
+            self.assertFalse((dest / "specplane").exists())
+            self.assertFalse((dest / "tools" / "specplane").exists())
+            self.assertFalse((dest / "specplane.config.json").exists())
+            self.assertFalse((dest / ".agents" / "skills" / "specplane-implement").exists())
+            self.assertEqual(kept.read_text(encoding="utf-8"), "mine: true\n")
+            self.assertEqual((dest / "tools" / "other.txt").read_text(encoding="utf-8"), "keep\n")
+            self.assertIn("left specs/ in place", notes)
+            self.assertIn("left the specplane command installed", notes)
+
+    def test_uninstall_refuses_this_checkout(self) -> None:
+        code, notes = uninstall_kit(KIT)
+        self.assertEqual(code, 1, notes)
+        self.assertTrue((KIT / "specplane" / "core_prompt").is_dir())
+
+    def test_first_publish_is_a_prerelease(self) -> None:
+        text = (KIT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn('version = "0.1.0a1"', text)
+        self.assertEqual(VERSION, "0.1.0a1")
+
+    def test_package_has_four_flows_and_diagrams(self) -> None:
+        loaded = yaml_load(KIT / "specs" / "capabilities" / "capability.specplane_package.yaml")
+        flows = [item for item in loaded["flows"] if isinstance(item, dict)]
+        titles = [item["title"] for item in loaded["diagrams"]]
+        self.assertEqual(len(flows), 4)
+        self.assertEqual(len(titles), 4)
+        named = " ".join(titles).lower()
+        for needle in ("publish", "install from the index", "init from the installed", "install from a checkout"):
+            self.assertIn(needle, named)
+
+    def test_install_does_not_consent_or_configure_a_host(self) -> None:
+        init_text = (KIT / "tools" / "specplane" / "initkit.py").read_text(encoding="utf-8").lower()
+        self.assertNotIn("consent", init_text)
+        self.assertNotIn("mcp.json", init_text)
+        self.assertNotIn("urllib", init_text)
+        self.assertNotIn("mailto:", init_text)
+
+    def test_change_records_the_init_sentence(self) -> None:
+        delta = (KIT / "specs" / "changes" / "specplane_package" / "delta.yaml").read_text(encoding="utf-8")
+        self.assertIn("A published specplane package may run init", delta)
+        self.assertIn("Init still does not publish", delta)
+        self.assertIn("There is still no npx package", delta)
+        self.assertIn("0.1.0a1", delta)
+        self.assertIn("leaves specs/ in place", delta)
 
     def test_change_folders_stay_strings(self) -> None:
         loaded = yaml_load(KIT / "specs" / "capabilities" / "capability.specplane_change_folders.yaml")

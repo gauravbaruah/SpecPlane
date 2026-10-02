@@ -39,7 +39,7 @@ from kernel import (  # noqa: E402
     retrieve,
     structural_validate,
 )
-from initkit import default_kit_root, init_kit  # noqa: E402
+from initkit import default_kit_root, init_kit, uninstall_kit  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
 
@@ -322,9 +322,18 @@ def cmd_init(args: argparse.Namespace) -> int:
     return code
 
 
+def cmd_uninstall(args: argparse.Namespace) -> int:
+    dest = (args.dest or Path.cwd()).resolve()
+    code, notes = uninstall_kit(dest)
+    stream = sys.stderr if code else sys.stdout
+    for note in notes:
+        stream.write(note + "\n")
+    return code
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view / telemetry)"
+        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / uninstall / view / telemetry)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -459,6 +468,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Replace dest/specplane if it already exists",
     )
     p_init.set_defaults(func=cmd_init)
+
+    p_uninstall = sub.add_parser(
+        "uninstall",
+        help="Remove the kit copy from a product repo. Leave specs/ in place.",
+    )
+    p_uninstall.add_argument(
+        "--dest",
+        type=Path,
+        default=None,
+        help="Product repo (default: cwd). Must not be this SpecPlane checkout.",
+    )
+    p_uninstall.set_defaults(func=cmd_uninstall)
 
     p_mcp = sub.add_parser(
         "mcp",

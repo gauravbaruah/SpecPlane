@@ -449,6 +449,11 @@
       ok: "Exit 0. The kit was copied.",
       bad: "Exit was not 0. The copy did not finish."
     },
+    uninstall: {
+      about: "Removes the kit copy from a product repo and leaves specs/ in place. That undoes init. It does not remove the specplane command from the machine.",
+      ok: "Exit 0. The kit copy was removed, or there was nothing to remove.",
+      bad: "Exit was not 0. The checkout was refused, or a file could not be removed."
+    },
     view: {
       about: "Generates the local readout and serves it on 127.0.0.1. That is the page a person reads. The count is recorded when that process exits.",
       ok: "Exit 0. The server process ended with exit code 0.",

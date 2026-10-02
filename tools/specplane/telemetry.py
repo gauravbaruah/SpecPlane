@@ -14,7 +14,7 @@ import time
 import uuid
 from pathlib import Path
 
-VERSION = "0.1.0"
+VERSION = "0.1.0a1"
 
 _CALLERS = frozenset(
     {
@@ -42,6 +42,7 @@ _COMMANDS = frozenset(
         "run",
         "promote",
         "init",
+        "uninstall",
         "view",
         "mcp",
         "telemetry",

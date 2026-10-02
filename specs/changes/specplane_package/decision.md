@@ -8,11 +8,11 @@ Class: **evolve.** Retrieved `capability.specplane_init` first. Its live ux cons
 - The change blast is the one to review. It reaches init because this change promises `capability.specplane_init`.
 - Four flows, one flowchart each: publish, install from the index, init from the installed package, install from a checkout.
 
-## Left open
+## Decided
 
-- Which PyPI account owns the name.
-- Whether the first publish is `0.1.0` or a pre-release.
-- Whether uninstall is only the package manager.
+- The public GitHub repository and the PyPI project `specplane` stay on the personal account. Paid sections are sold by Nimble Notions. That does not transfer this repository. Paid code stays out of this public tree until a later change.
+- The first publish is the pre-release `0.1.0a1`, not `0.1.0`.
+- `specplane uninstall` removes the kit init copied into a destination and leaves `specs/` in place. It does not remove the `specplane` command. That stays a package-manager uninstall.
 
 ## Not in this change
 

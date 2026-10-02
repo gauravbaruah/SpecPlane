@@ -5,6 +5,7 @@ opened: "2026-10-01"
 promise_ids:
   - "capability.specplane_package"
   - "capability.specplane_init"
+  - "component.cli_init"
 why: >-
   The CLI is already built as a wheel and can init from a git install.
   A published specplane package is how a developer obtains that command
@@ -16,5 +17,5 @@ non_goals:
   - "hosted telemetry upload"
   - "splitting execution status from SpecPlane outcome"
   - "an npx package"
-  - "a specplane uninstall command"
+  - "removing the specplane command from the machine"
   - "changing what specplane init copies"
