@@ -1,0 +1,30 @@
+id: "practitioner_brief"
+kind: "learn"
+status: "in-flight"
+opened: "2026-10-02"
+promise_ids:
+  - "capability.specplane_retrieve"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+  - "capability.specplane_blast"
+  - "component.cli_retrieve"
+  - "component.cli_check_sync"
+  - "component.cli_run"
+  - "component.cli_blast"
+why: >-
+  A practitioner used the kit on a phone feature. Labeling the open change
+  beside the live text made the disagreement visible and did not change
+  what they coded against. An empty Phase 1 blast still passed. An English
+  sensor with no bind still left check_sync green. context on an undeclared
+  file stopped with no lines.
+non_goals:
+  - "writing the applied brief back into the live YAML file"
+  - "blending two open changes into one brief"
+  - "failing every Phase 1 capability that has no links"
+  - "discovering services by reading application source"
+  - "executing an English must: line"
+  - "inferring a test from prose"
+  - "inventing a component for an unmapped file"
+  - "reading a source file to choose which constraints touch it"
+  - "putting a second copy of the promise into the skill text"
+  - "editing live capability YAML before accept"
