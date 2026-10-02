@@ -284,6 +284,8 @@ class ScopedCoverageTests(unittest.TestCase):
                         "  - id: named",
                         "    promise: capability.specplane_viewer",
                         "    must: The new id is named on this change",
+                        "    run:",
+                        "      unittest: tools.specplane.test_kernel.ScopedCoverageTests.test_default_any_open_change_still_covers",
                         "looks_fine_is_not_a_sensor: true",
                         "",
                     ]

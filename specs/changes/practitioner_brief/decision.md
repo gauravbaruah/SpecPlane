@@ -1,6 +1,6 @@
 # Practitioner brief
 
-Class: **learn.** Not accepted. Do not implement until these four choices are confirmed.
+Class: **learn.** The four recommendations below were confirmed for implementation. The live files stay unchanged until accept.
 
 Source: a practitioner pass on Where the Heck, then the household keep on a Pixel. `b85d7c4` made the disagreement visible. It did not change what they coded against.
 

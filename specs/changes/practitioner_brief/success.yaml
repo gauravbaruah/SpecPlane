@@ -5,14 +5,22 @@ sensors:
   - id: "brief-applies-one-change"
     promise: "capability.specplane_retrieve"
     must: "When one open change names the id, retrieve prints the live slice with that change applied, labeled in-flight, before the untouched live text. The live file is not rewritten. Two open changes are not blended."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_retrieve_labels_live_and_change"
   - id: "empty-blast-names-the-other-ids"
     promise: "capability.specplane_check_sync"
     must: "An empty blast fails when the open change names other ids and the live graph does not reach them. The line names those ids. A Phase 1 id that names nothing else stays a warning."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_empty_blast_names_other_ids"
   - id: "unbound-sensor-fails-scoped-sync"
     promise: "capability.specplane_check_sync"
     must: "check_sync --change fails when that change declares a sensor with no bind, names the sensor, and names the bind to add. It does not execute the English. Default check_sync without --change does not fail for unbound sentences elsewhere."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_english_sensor_is_unverified"
   - id: "unmapped-file-stays-unmapped"
     promise: "capability.specplane_retrieve"
     must: "context on an undeclared path says unmapped. When one change is open it also prints that change and says the path is not declared. It does not read the file or invent a component."
+    run:
+      unittest: "tools.specplane.test_effective_context.EffectiveContextTests.test_unmapped_with_one_open_change"
 
 looks_fine_is_not_a_sensor: true
