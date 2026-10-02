@@ -1,0 +1,26 @@
+change_id: "practitioner_brief"
+kind: "learn"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_retrieve"
+    summary: "When one open change names the id, the first slice is the live text with that change applied, labeled in-flight. The untouched live text follows it. The file on disk is not rewritten. Two open changes are not blended."
+  - id: "capability.specplane_blast"
+    summary: "An empty blast stays a warning for a Phase 1 id that names nothing else. It fails when the open change names other ids and the live graph has no path to them. The failure names those ids."
+  - id: "capability.specplane_check_sync"
+    summary: "check_sync --change fails when that change declares a sensor with no run.unittest, run.argv, or test:. The line names the sensor and the bind to add. It does not execute the English. A change with no sensors stays a coverage check. Default check_sync without --change does not fail for unbound sentences elsewhere in the tree."
+  - id: "capability.specplane_run"
+    summary: "run still does not execute English must:. No bind stays UNVERIFIED. Exit 0 when every row is not_run remains, and that receipt is not a coverage pass."
+  - id: "component.cli_retrieve"
+    summary: "The retrieve brief is the applied in-flight slice when one change names the id. context on an undeclared path still says unmapped. If one change is open, it also prints that change and says the path is not declared. It does not read the file or name a component it did not find."
+  - id: "component.cli_blast"
+    summary: "The empty-blast line names the other ids from the open change when those ids are why the blast failed."
+  - id: "component.cli_check_sync"
+    summary: "A scoped check with an unbound sensor exits non-zero and names the bind to add."
+  - id: "component.cli_run"
+    summary: "An unbound sensor stays UNVERIFIED. The command does not turn that into a failed test."
+
+REMOVED: []
+
+RENAMED: []

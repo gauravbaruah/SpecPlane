@@ -5,9 +5,9 @@ backend-path = ["packaging"]
 
 [project]
 name = "specplane"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "Keep coding agents aligned with what you actually meant to build."
-readme = "README.md"
+readme = "PYPI.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 dependencies = ["pyyaml>=6.0"]

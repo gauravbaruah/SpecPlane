@@ -475,6 +475,44 @@ def covering_changes(
     return found
 
 
+def _spec_ids_from_change(change: Change) -> set[str]:
+    found = {item for item in change.promise_ids if looks_like_spec_id(item)}
+    for key in ("ADDED", "MODIFIED", "REMOVED"):
+        rows = change.data.get(key) or []
+        if not isinstance(rows, list):
+            continue
+        for item in rows:
+            raw = ""
+            if isinstance(item, dict):
+                raw = str(item.get("id") or "").strip()
+            elif isinstance(item, str):
+                raw = item.strip()
+            if looks_like_spec_id(raw):
+                found.add(raw)
+    return found
+
+
+def _unreached_named_ids(kernel: Kernel, spec_id: str) -> list[str]:
+    """Other ids named beside a Phase 1 id that the live blast does not reach."""
+    named: set[str] = set()
+    for change in open_changes_for(kernel, spec_id):
+        named |= _spec_ids_from_change(change)
+    named.discard(spec_id)
+    if not named:
+        return []
+    result = blast(kernel, spec_id)
+    reached: set[str] = set()
+    if result:
+        for values in (result.get("affects") or {}).values():
+            reached.update(values)
+    return sorted(item for item in named if item not in reached)
+
+
+def _unbound_sensors(change: Change) -> list[dict[str, str]]:
+    """Declared sensors with no run.unittest, run.argv, or test:. Does not execute them."""
+    return [row for row in success_sensors(change) if str(row.get("evidence") or "none") == "none"]
+
+
 def is_phase1_shaped(doc: SpecDoc) -> bool:
     """No join edges: no realized_by, uses, or component implements (Q116)."""
     realized = doc.data.get("realized_by") if isinstance(doc.data.get("realized_by"), dict) else {}
@@ -722,6 +760,7 @@ def check_sync(
 
     phase1_advisory: list[str] = []
     linked: list[str] = []
+    unreached: list[str] = []
     known = change_known_ids(scoped) if scoped is not None else set()
     unknown = [
         cid
@@ -733,7 +772,11 @@ def check_sync(
         if not doc:
             continue
         if is_phase1_shaped(doc):
-            phase1_advisory.append(cid)
+            missing = _unreached_named_ids(kernel, cid)
+            if missing:
+                unreached.extend(missing)
+            else:
+                phase1_advisory.append(cid)
         else:
             linked.append(cid)
 
@@ -754,8 +797,17 @@ def check_sync(
 
     fail_uncovered = bool(uncovered)
     fail_empty = bool(empty_blasts)
+    fail_unreached = bool(unreached)
+    unbound = _unbound_sensors(scoped) if scoped is not None else []
     decision = fail_uncovered or fail_empty
-    ok = not fail_uncovered and not fail_empty and not unknown and not unknown_change
+    ok = (
+        not fail_uncovered
+        and not fail_empty
+        and not fail_unreached
+        and not unbound
+        and not unknown
+        and not unknown_change
+    )
 
     contributors = covering_changes(kernel, changed_ids, scoped) if not unknown_change else []
     sensor_rows: list[dict[str, str]] = []
@@ -786,6 +838,8 @@ def check_sync(
         "uncovered": uncovered,
         "unknown": unknown,
         "empty_blast": empty_blasts,
+        "unreached": unreached,
+        "unbound": unbound,
         "phase1_advisory": phase1_advisory,
         "ok": ok,
         "coverage": "pass" if ok else "fail",
@@ -1010,6 +1064,29 @@ def _format_slice(lines: list[str], label: str, fields: dict[str, Any]) -> None:
                     lines.append(f"        {line}")
 
 
+def _format_brief(lines: list[str], live: dict[str, Any], item: dict[str, Any]) -> None:
+    """One open change applied onto the live slice. The live file is not rewritten."""
+    lines.append("brief:")
+    lines.append("  label: in-flight")
+    lines.append(f"  change: {item.get('id') or ''}")
+    lines.append("  accepted: false")
+    purpose = str(live.get("purpose") or "")
+    if purpose:
+        lines.append(f"  purpose: {purpose}")
+    for responsibility in live.get("responsibilities") or []:
+        lines.append(f"  - {responsibility}")
+    constraints = live.get("constraints") or {}
+    for key in CONSTRAINT_LIST_KEYS:
+        for value in constraints.get(key) or []:
+            lines.append(f"  constraint.{key}: {value}")
+    lines.append("  applied:")
+    statements = item.get("statements") or []
+    if not statements:
+        lines.append("    (no delta summary)")
+    for statement in statements:
+        lines.append(f"    {statement}")
+
+
 def format_retrieve(payload: dict[str, Any]) -> str:
     lines = [f"retrieve {payload['id']}", f"bit: {payload['bit']}"]
     review_state = str(payload.get("review_state") or "")
@@ -1019,6 +1096,9 @@ def format_retrieve(payload: dict[str, Any]) -> str:
     if status:
         lines.append(f"status: {status}")
     live = payload.get("live")
+    in_flight = payload.get("in_flight") or []
+    if live and payload["bit"] != "inferred" and len(in_flight) == 1:
+        _format_brief(lines, live, in_flight[0])
     if live and payload["bit"] != "inferred":
         _format_slice(lines, "live", live)
     declared = payload.get("declared")
@@ -1059,8 +1139,7 @@ def format_retrieve(payload: dict[str, Any]) -> str:
             )
         else:
             follow = (
-                "That change is still open. "
-                "Keep working in that folder, or accept it so retrieve shows one live graph."
+                "The brief is the open change applied to the live slice. It is not accepted."
             )
         receipt = f"SpecPlane · retrieve — implementation context is {names}. {follow}"
         if readiness:
@@ -1247,7 +1326,19 @@ def format_context(kernel: Kernel, payload: dict[str, Any]) -> str:
         return "\n".join(lines) + "\n"
     if payload.get("unmapped"):
         lines.append("unmapped: true")
-        lines.append("SpecPlane · context — this file is unmapped. No component declares it.")
+        opens = [change for change in kernel.changes if change.open]
+        if len(opens) == 1:
+            change = opens[0]
+            lines.append(f"open change: {change.change_id}")
+            lines.append("This path is not declared.")
+            for statement in change_statements_for(change, ""):
+                lines.append(f"  {statement}")
+            lines.append(
+                "SpecPlane · context — this file is unmapped. No component declares it. "
+                f"Open change {change.change_id} is not accepted. This path is not declared."
+            )
+        else:
+            lines.append("SpecPlane · context — this file is unmapped. No component declares it.")
         return "\n".join(lines) + "\n"
     components = payload.get("components") or []
     if components:
@@ -1365,11 +1456,22 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         lines.append("empty_blast:")
         for item in payload["empty_blast"]:
             lines.append(f"  - {item}")
+    if payload.get("unreached"):
+        lines.append("unreached:")
+        for item in payload["unreached"]:
+            lines.append(f"  - {item}")
+        lines.append("  The live graph does not reach these ids.")
+    if payload.get("unbound"):
+        lines.append("unbound:")
+        for row in payload["unbound"]:
+            lines.append(f"  - {row.get('id') or row.get('must') or 'sensor'}")
+        lines.append("  Add run.unittest or run.argv. The English line was not executed.")
     if payload.get("phase1_advisory"):
         lines.append("phase1_advisory:")
         for item in payload["phase1_advisory"]:
             lines.append(f"  - {item}")
-        lines.append("  Phase 1 ids have no join edges; uncovered / empty blast do not fail.")
+        if not payload.get("unreached"):
+            lines.append("  Phase 1 ids have no join edges; uncovered / empty blast do not fail.")
     if payload.get("unknown"):
         lines.append("unknown_ids:")
         for item in payload["unknown"]:
@@ -1445,6 +1547,22 @@ def receipt_check_sync(payload: dict[str, Any]) -> str:
             parts.append(f"{empty} empty blast")
         if unknown:
             parts.append(f"{unknown} unknown")
+        unreached = [str(item) for item in (payload.get("unreached") or []) if item]
+        if unreached:
+            return (
+                "SpecPlane · sync check — the live graph does not reach: "
+                + ", ".join(unreached)
+                + "."
+            )
+        unbound = payload.get("unbound") or []
+        if unbound:
+            names = ", ".join(
+                str(row.get("id") or row.get("must") or "sensor") for row in unbound
+            )
+            return (
+                f"SpecPlane · sync check — {names} has no bind. "
+                "Add run.unittest or run.argv. The English line was not executed."
+            )
         detail = ", ".join(parts) if parts else "coverage failed"
         return f"SpecPlane · sync check — {detail}. Behavior was not verified."
     advisory = payload.get("phase1_advisory") or []

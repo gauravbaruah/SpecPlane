@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "draft"
-  version: "1.8.0"
+  version: "1.9.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "practitioner_brief"
+    summary: "A scoped check with an unbound sensor exits non-zero and names the bind to add."
+    breaking: false
   - date: "2026-10-01"
     author: "receipt_next_step"
     summary: "The sync receipt names uncovered ids, or the run command for declared sensors, or the Phase 1 warning."
@@ -102,7 +106,7 @@ implementation:
       - "Optional --change <slug> scopes coverage to that folder; unknown slug exits non-zero; default without --change remains any-open-change"
       - "Never auto-write live. Does not parse source to learn values (e.g. timeout 60)"
       - "Uncovered failure prints retrieve, open or extend the change folder, and check_sync again. No --strict flag."
-      - "Each sensor row prints evidence and status UNVERIFIED. check_sync does not run the bind."
+      - "Each sensor row prints evidence and status UNVERIFIED. check_sync does not run the bind. A scoped check with an unbound sensor exits non-zero and names the bind to add. Default check_sync without --change does not fail for unbound sentences elsewhere."
       - "The sync receipt names uncovered ids and says to put them on an open change, or names the run command for declared sensors, or says a Phase 1 empty impact list is a warning."
       - "check_sync completion can append one local command event. Nonzero is nonzero, not a prevented bug."
     open_questions: []

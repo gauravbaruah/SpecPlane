@@ -1,0 +1,19 @@
+id: "usage_report"
+kind: "evolve"
+status: "promoted"
+opened: "2026-10-02"
+promise_ids:
+  - "capability.specplane_telemetry_share"
+  - "foundation.observability_standards"
+  - "component.cli_view"
+why: >-
+  The local log is on and nothing is uploaded. The command was named
+  telemetry, which implies a server. The person-facing command is usage.
+  usage report prints counts for this machine and stops. It does not send
+  them.
+non_goals:
+  - "a hosted collector or a usage URL"
+  - "usage share, a POST, or a yes/no prompt"
+  - "an installation id, project id, path, timestamp, or spec name in the report"
+  - "renaming the capability id"
+  - "changing the seven-day GitHub notice or the star request"

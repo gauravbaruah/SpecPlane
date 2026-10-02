@@ -1,0 +1,24 @@
+id: "telemetry_share"
+sensors:
+  - id: "records_from_the_first_command"
+    promise: "foundation.observability_standards"
+    must: "With no telemetry setting, a CLI command appends one local event and uploads nothing."
+    run:
+      unittest: "tools.specplane.test_telemetry.TelemetryTests.test_default_writes_an_event"
+  - id: "reminder_after_seven_days"
+    promise: "capability.specplane_viewer"
+    must: "When this project's oldest attributed event on this machine is at least 7 days old and the log is on, the viewer shows that project's counts, links a new GitHub issue, shows no email address, and does not post."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_reminder_after_seven_days"
+  - id: "star_after_two_days"
+    promise: "capability.specplane_viewer"
+    must: "When this project's oldest attributed event on this machine is at least 2 days old and the log is on, the viewer shows a star request for https://github.com/gauravbaruah/SpecPlane and does not star it."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_star_after_two_days"
+  - id: "quiet_when_young_or_off"
+    promise: "capability.specplane_viewer"
+    must: "The share reminder is absent before 7 days of this project's attributed events. The star request is absent before 2 days. Both are absent when the local log is off. Events with no project attribution are omitted from the project counts."
+    run:
+      unittest: "tools.specplane.test_activity.ActivityTests.test_quiet_before_two_days"
+
+looks_fine_is_not_a_sensor: true

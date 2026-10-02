@@ -276,3 +276,146 @@ def init_kit(
     notes.append("did not write GitHub Actions or git hooks")
     notes.append("next: open this repo in your editor and ask for a Phase 1 capability")
     return 0, notes
+
+
+def _remove_tree(path: Path) -> None:
+    if path.is_dir():
+        shutil.rmtree(path)
+    elif path.exists():
+        path.unlink()
+
+
+def _remove_prefixed_dirs(parent: Path, prefix: str) -> list[str]:
+    removed: list[str] = []
+    if not parent.is_dir():
+        return removed
+    for child in list(parent.iterdir()):
+        if child.is_dir() and child.name.startswith(prefix):
+            shutil.rmtree(child)
+            removed.append(child.name)
+    return removed
+
+
+def _prune_empty(path: Path) -> None:
+    if path.is_dir() and not any(path.iterdir()):
+        path.rmdir()
+
+
+def _strip_block(path: Path, block: str) -> str:
+    """Remove one exact block. Delete the file when nothing else remains."""
+    if not path.is_file():
+        return ""
+    text = path.read_text(encoding="utf-8")
+    if block.strip() not in text:
+        return ""
+    updated = text.replace(block, "")
+    updated = updated.replace("\n\n\n", "\n\n").strip()
+    if not updated:
+        path.unlink()
+        return f"removed {path.name}"
+    path.write_text(updated + "\n", encoding="utf-8")
+    return f"removed the SpecPlane block from {path.name}"
+
+
+def _strip_claude_pointer(dest: Path) -> str:
+    path = dest / "CLAUDE.md"
+    if not path.is_file():
+        return ""
+    text = path.read_text(encoding="utf-8")
+    if text.strip() == "@AGENTS.md":
+        path.unlink()
+        return "removed CLAUDE.md"
+    return ""
+
+
+def _strip_view_gitignore(dest: Path) -> str:
+    path = dest / ".gitignore"
+    if not path.is_file():
+        return ""
+    lines = [
+        line
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip() != _VIEW_IGNORE
+    ]
+    if len(lines) == len(path.read_text(encoding="utf-8").splitlines()):
+        return ""
+    if not any(line.strip() for line in lines):
+        path.unlink()
+    else:
+        path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return "removed the generated-view gitignore line"
+
+
+def _is_product_checkout(dest: Path) -> bool:
+    """This repo, not a destination init copied into."""
+    return (dest / "pyproject.toml").is_file() and (
+        dest / "specs" / "capabilities" / "capability.specplane_retrieve.yaml"
+    ).is_file()
+
+
+def uninstall_kit(dest: Path) -> tuple[int, list[str]]:
+    """Remove the kit init copied. Leave specs/ in place. Do not remove the Python package."""
+    dest = dest.resolve()
+    if _is_product_checkout(dest):
+        return 1, ["dest is the SpecPlane checkout; refuse to uninstall it"]
+
+    notes: list[str] = []
+    try:
+        kit = dest / "specplane"
+        if kit.exists():
+            _remove_tree(kit)
+            notes.append("removed specplane/")
+
+        for parent in (
+            dest / ".agents" / "skills",
+            dest / ".cursor" / "skills",
+        ):
+            for name in _remove_prefixed_dirs(parent, "specplane-"):
+                notes.append(f"removed {parent.relative_to(dest) / name}")
+            _prune_empty(parent)
+            _prune_empty(parent.parent)
+
+        rules = dest / ".cursor" / "rules"
+        if rules.is_dir():
+            for rule in list(rules.glob("specplane-*.mdc")):
+                rule.unlink()
+                notes.append(f"removed .cursor/rules/{rule.name}")
+            _prune_empty(rules)
+            _prune_empty(rules.parent)
+
+        tools = dest / "tools" / "specplane"
+        if tools.exists():
+            _remove_tree(tools)
+            notes.append("removed tools/specplane/")
+            _prune_empty(tools.parent)
+
+        config = dest / "specplane.config.json"
+        if config.is_file():
+            config.unlink()
+            notes.append("removed specplane.config.json")
+
+        generated = dest / ".specplane" / "view"
+        if generated.exists():
+            _clear_generated_view(dest)
+            notes.append("removed generated .specplane/view/")
+        _prune_empty(dest / ".specplane")
+
+        agents = _strip_block(dest / "AGENTS.md", CONSUMING_AGENTS)
+        if agents:
+            notes.append(agents)
+        claude = _strip_claude_pointer(dest)
+        if claude:
+            notes.append(claude)
+        ignore = _strip_view_gitignore(dest)
+        if ignore:
+            notes.append(ignore)
+    except (OSError, shutil.Error) as exc:
+        notes.append(str(exc))
+        return 1, notes
+
+    if not notes:
+        notes.append("nothing to remove")
+    if (dest / "specs").exists():
+        notes.append("left specs/ in place")
+    notes.append("left the specplane command installed")
+    return 0, notes

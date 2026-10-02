@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-02"
   status: "planned"
-  version: "1.8.0"
+  version: "1.9.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "specplane_package"
+    summary: "Init does not publish. A published specplane package may run init. There is no npx package. specplane uninstall removes the kit copy and leaves specs/ in place. It does not remove the specplane command."
+    breaking: false
   - date: "2026-09-28"
     author: "init_journey"
     summary: "A failed copy names the kit folders to delete and leaves specs/ alone. --force replaces the kit, keeps specs/, and deletes generated .specplane/view/. There is no uninstall command."
@@ -107,13 +111,13 @@ constraints:
     - "A paste-in pull-request workflow may call validate, check_sync, and run. Init does not write that file. It is not a required GitHub check."
     - "Does not invent an example capability (bootstrap does that)"
     - "Does not infer or scan the destination. Brownfield mapping is the specplane-infer skill."
-    - "Published PyPI / npx package is not this command"
+    - "Init does not publish. A published specplane package may run init. There is no npx package."
     - "uvx --from git+ this repo may run init because the installed wheel bundles the kit"
     - "Copied CLI siblings include impact.py, ci_gate.py, view.py, and the viewer/ tree. --kit-only copies neither the CLI nor the viewer."
     - "Appends **/.specplane/view/ to the destination .gitignore when that line is missing. Does not ignore every path under .specplane/."
     - "No interactive agent-picker"
     - "A failed copy does not roll back. It names specplane/, the specplane-* skills and rules, tools/specplane/, and specplane.config.json, and says to run init again. It says to leave specs/ alone."
-    - "--force replaces the kit copy. It does not delete or empty specs/. It deletes generated .specplane/view/ and does not start the viewer. There is no uninstall command."
+    - "--force replaces the kit copy. It does not delete or empty specs/. It deletes generated .specplane/view/ and does not start the viewer. specplane uninstall removes the kit copy and leaves specs/ in place. It does not remove the specplane command."
   data_classification: "internal"
 
 success_metrics:

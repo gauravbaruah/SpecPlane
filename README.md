@@ -23,6 +23,8 @@ The CLI, MCP, viewer, skills, and a pasted CI check are projections of one kerne
 
 **Free now:** kit, local kernel, skills, optional MCP, and `specplane view` (local, `127.0.0.1`, no API key).
 
+Command events stay on this machine. `specplane usage report` prints the counts. Nothing leaves automatically.
+
 **Later:** hosted share, a required GitHub check, and a spec coach. An optional paste-in check can ask whether a change is accounted for by declared intent and bound evidence. Init does not install it.
 
 <img src="./SpecPlane_Logo.png" alt="SpecPlane" width="160">
@@ -137,15 +139,29 @@ From a checkout where `specplane` is not on PATH, `python3 tools/specplane/mcp_s
 
 ## Use it in your product
 
+Python 3.10 or newer. The current release is the pre-release `0.1.0a1`.
+
+```bash
+pip install specplane
+# or
+uv tool install specplane
+```
+
 From **your** app repo (not onto SpecPlane itself):
+
+```bash
+specplane init
+```
+
+That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. If the repo already has an `AGENTS.md`, init appends a block and leaves the rest of the file in place. Other skills stay. There is no `npx` package.
+
+To pin a commit instead of the published release:
 
 ```bash
 uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 ```
 
-That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. Pin `@main` (or a commit SHA). There is no PyPI / `npx specplane` package.
-
-Then ask for a Phase 1 capability. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
+Then ask for a capability: what the product should do, before any architecture. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
 
 ### Advanced
 
@@ -157,7 +173,7 @@ specplane init --dest /path/to/your-app
 # or: python3 /path/to/SpecPlane/tools/specplane/cli.py init --dest /path/to/your-app
 ```
 
-A hand copy of the toolkit (including `impact.py`, `view.py`, and `viewer/`) is the rsync fallback in [`docs/use-in-your-project.md`](./docs/use-in-your-project.md). There is no `uvx specplane` and no `pip install specplane`.
+A hand copy of the toolkit (including `impact.py`, `view.py`, and `viewer/`) is the rsync fallback in [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
 
 Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `promote --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
 

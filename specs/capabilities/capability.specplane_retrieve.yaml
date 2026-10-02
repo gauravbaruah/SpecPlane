@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "retrieve"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "planned"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "practitioner_brief"
+    summary: "When one open change names the id, the first slice is the live text with that change applied, labeled in-flight. The untouched live text follows it. The file on disk is not rewritten. Two open changes are not blended."
+    breaking: false
   - date: "2026-10-01"
     author: "receipt_next_step"
     summary: "When an open change names the id, the retrieve line says that change is still open. Keep working in that folder, or accept it so retrieve shows one live graph."
@@ -44,7 +48,7 @@ responsibilities:
   - "Default graph for an id is live — one live graph, not three"
   - "Mark leftovers as replaced so they stay visible and not default"
   - "Show the open in-flight change that points at this id"
-  - "When an open change names the id, live text stays labeled and that change is the implementation context. The retrieve line says that change is still open: keep working in that folder, or accept it so retrieve shows one live graph. Canonical synchronization is pending. A Phase 1 id warns that no implementation relationships are declared."
+  - "When one open change names the id, the first slice is the live text with that change applied, labeled in-flight and not accepted. The untouched live text follows it. The file on disk is not rewritten. Two open changes are not blended. Canonical synchronization stays pending until accept. A Phase 1 id warns that no implementation relationships are declared."
   - "Never present inferred as live"
   - "Join on capability.* / component.* / foundation.*"
   - "bit live is graph membership, not approval; print review_state and status next to bit"

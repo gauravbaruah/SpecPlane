@@ -1,0 +1,16 @@
+change_id: "usage_report"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_telemetry_share"
+    summary: "On accept, the person-facing commands are usage status, usage show, usage enable, usage disable, and usage report. usage report prints counts for the last 30 days and sends nothing. The report has no installation id, project id, path, timestamp, or spec name. There is still no command that sends the report. The seven-day GitHub notice and the star request stay as they are."
+  - id: "foundation.observability_standards"
+    summary: "On accept, a human turns the local log off with usage disable. SPECPLANE_TELEMETRY=0 still forces that process off. usage report prints counts and does not upload. The log file remains on this machine."
+  - id: "component.cli_view"
+    summary: "On accept, the viewer describes usage status, usage show, usage enable, usage disable, and usage report. Older telemetry_* events still have descriptions. The seven-day GitHub notice and the star request stay as they are."
+
+REMOVED: []
+
+RENAMED: []

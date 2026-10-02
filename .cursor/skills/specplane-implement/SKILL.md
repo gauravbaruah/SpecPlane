@@ -52,7 +52,7 @@ python3 tools/specplane/cli.py reconcile --spec-root specs
 python3 tools/specplane/cli.py run --spec-root specs --change <slug>
 ```
 
-When you run the CLI, set `SPECPLANE_CALLER=cursor_skill`. That is the only signal that a skill invoked it. A local event is recorded unless the human has run `telemetry disable`. Nothing is uploaded. Do not put a path, a spec id, or a secret in `SPECPLANE_CALLER`, `SPECPLANE_RUN_ID`, or `SPECPLANE_SESSION_ID`.
+When you run the CLI, set `SPECPLANE_CALLER=cursor_skill`. That is the only signal that a skill invoked it. A local event is recorded unless the human has run `usage disable`. Nothing is uploaded. Do not put a path, a spec id, or a secret in `SPECPLANE_CALLER`, `SPECPLANE_RUN_ID`, or `SPECPLANE_SESSION_ID`.
 
 If a command prints a line that starts with `SpecPlane ·`, quote that line in the reply the user sees, unchanged. If it does not, do not invent a SpecPlane receipt. Do not say SpecPlane caught a bug or revised the code unless that printed line says so.
 

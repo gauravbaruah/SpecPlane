@@ -5,13 +5,17 @@ meta:
   type: "system"
   owner: "SpecPlane"
   tags: ["kernel", "first-slice"]
-  last_updated: "2026-09-28"
+  last_updated: "2026-10-02"
   status: "draft"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "specplane_package"
+    summary: "The kernel lists capability.specplane_package beside capability.specplane_init."
+    breaking: false
   - date: "2026-09-28"
     author: "viewer_projections"
     summary: "specplane view is a local read-only command. MCP does not expose it."
@@ -61,6 +65,7 @@ system_context:
     - "capability.specplane_list_gaps"
     - "capability.specplane_change_folders"
     - "capability.specplane_init"
+    - "capability.specplane_package"
     - "capability.specplane_run"
     - "capability.specplane_promote"
     - "capability.specplane_reconcile"

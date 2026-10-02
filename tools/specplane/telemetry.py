@@ -14,7 +14,7 @@ import time
 import uuid
 from pathlib import Path
 
-VERSION = "0.1.0"
+VERSION = "0.1.0a1"
 
 _CALLERS = frozenset(
     {
@@ -42,6 +42,7 @@ _COMMANDS = frozenset(
         "run",
         "promote",
         "init",
+        "uninstall",
         "view",
         "mcp",
         "telemetry",
@@ -50,11 +51,57 @@ _COMMANDS = frozenset(
         "telemetry_enable",
         "telemetry_disable",
         "usage",
+        "usage_status",
+        "usage_show",
+        "usage_enable",
+        "usage_disable",
+        "usage_report",
     }
 )
 _WINDOW_S = 30 * 24 * 60 * 60
+_DAY_S = 24 * 60 * 60
+_STAR_AFTER_S = 2 * _DAY_S
+_REMIND_AFTER_S = 7 * _DAY_S
+STAR_URL = "https://github.com/gauravbaruah/SpecPlane"
+ISSUE_URL = "https://github.com/gauravbaruah/SpecPlane/issues/new"
 _ON = frozenset({"1", "on", "true", "yes"})
 _OFF = frozenset({"0", "off", "false", "no"})
+
+
+def project_root(start: Path | None = None) -> Path | None:
+    """Directory this command belongs to. Not written into an event."""
+    raw = os.environ.get("SPECPLANE_PROJECT_DIR", "").strip()
+    if raw:
+        path = Path(raw).expanduser()
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            return None
+        return path
+    origin = (start or Path.cwd()).resolve()
+    for candidate in (origin, *origin.parents):
+        if (candidate / "specplane.config.json").is_file():
+            return candidate
+    return origin
+
+
+def project_token(root: Path | None = None) -> str | None:
+    """Opaque id for this project. The repository name and path are not stored."""
+    home = root if root is not None else project_root()
+    if home is None:
+        return None
+    path = home / ".specplane" / "project_id"
+    try:
+        if path.is_file():
+            existing = path.read_text(encoding="utf-8").strip()
+            if _TOKEN.fullmatch(existing):
+                return existing
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fresh = uuid.uuid4().hex
+        path.write_text(fresh + "\n", encoding="utf-8")
+        return fresh
+    except OSError:
+        return None
 
 
 def specplane_home() -> Path:
@@ -183,15 +230,39 @@ def _event_time(raw: object) -> float | None:
         return None
 
 
-def activity_summary(now: float | None = None) -> dict[str, object]:
-    """Last-30-day counts. No ids, paths, or a claim that an agent fixed anything."""
+def _for_project(item: dict[str, object], project_id: str | None) -> bool:
+    if project_id is None:
+        return True
+    token = str(item.get("project_id") or "")
+    return bool(project_id) and token == project_id and bool(_TOKEN.fullmatch(token))
+
+
+def _asks(oldest: float | None, moment: float, scoped: bool) -> dict[str, object]:
+    age = None if oldest is None else moment - oldest
+    return {
+        "star": bool(scoped and age is not None and age >= _STAR_AFTER_S),
+        "remind": bool(scoped and age is not None and age >= _REMIND_AFTER_S),
+        "star_url": STAR_URL,
+        "issue_url": ISSUE_URL,
+    }
+
+
+def activity_summary(now: float | None = None, *, project_id: str | None = None) -> dict[str, object]:
+    """Last-30-day counts. No ids, paths, or a claim that an agent fixed anything.
+
+    Pass project_id to count one project. Events with no matching attribution are omitted.
+    """
+    scoped = project_id is not None
     if not enabled():
         lines = ["Local command events are off."]
-        return {"enabled": False, "lines": lines, "text": "\n".join(lines)}
+        payload: dict[str, object] = {"enabled": False, "lines": lines, "text": "\n".join(lines)}
+        payload.update(_asks(None, 0, False))
+        return payload
     moment = time.time() if now is None else now
     cutoff = moment - _WINDOW_S
     commands: dict[str, list[tuple[float, str]]] = {}
     callers: dict[str, int] = {}
+    oldest: float | None = None
     for line in read_events().splitlines():
         line = line.strip()
         if not line:
@@ -200,10 +271,14 @@ def activity_summary(now: float | None = None) -> dict[str, object]:
             item = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if not isinstance(item, dict):
+        if not isinstance(item, dict) or not _for_project(item, project_id):
             continue
         when = _event_time(item.get("timestamp"))
-        if when is None or when < cutoff or when > moment + 60:
+        if when is None or when > moment + 60:
+            continue
+        if oldest is None or when < oldest:
+            oldest = when
+        if when < cutoff:
             continue
         command = str(item.get("command") or "")
         if command not in _COMMANDS:
@@ -214,10 +289,22 @@ def activity_summary(now: float | None = None) -> dict[str, object]:
         if caller not in _CALLERS:
             caller = "unknown"
         callers[caller] = callers.get(caller, 0) + 1
+    asks = _asks(oldest, moment, scoped)
     if not commands:
-        lines = ["No local events in the last 30 days."]
-        return {"enabled": True, "lines": lines, "text": "\n".join(lines)}
-    lines = ["SpecPlane on this machine — last 30 days"]
+        empty = (
+            "No local events for this project in the last 30 days."
+            if scoped
+            else "No local events in the last 30 days."
+        )
+        lines = [empty]
+        payload = {"enabled": True, "lines": lines, "text": "\n".join(lines)}
+        payload.update(asks)
+        return payload
+    lines = [
+        "SpecPlane on this project — last 30 days"
+        if scoped
+        else "SpecPlane on this machine — last 30 days"
+    ]
     for name in sorted(commands):
         rows = commands[name]
         ok = sum(1 for _when, result in rows if result == "ok")
@@ -243,12 +330,76 @@ def activity_summary(now: float | None = None) -> dict[str, object]:
                 saw_bad = False
         if recoveries:
             lines.append(f"{name} nonzero, then later ok · {recoveries}")
-    return {"enabled": True, "lines": lines, "text": "\n".join(lines)}
+    payload = {"enabled": True, "lines": lines, "text": "\n".join(lines)}
+    payload.update(asks)
+    return payload
+
+
+def _report_command(command: str) -> str:
+    """Person-facing command name. Older log lines said telemetry."""
+    if command == "telemetry":
+        return "usage"
+    if command.startswith("telemetry_"):
+        return "usage_" + command[len("telemetry_") :]
+    return command
+
+
+def usage_report(now: float | None = None) -> dict[str, object]:
+    """Counts for this machine over the last 30 days.
+
+    The object has no installation id, project id, path, timestamp, or spec name.
+    """
+    moment = time.time() if now is None else now
+    cutoff = moment - _WINDOW_S
+    commands: dict[str, int] = {}
+    callers: dict[str, int] = {}
+    success = 0
+    failure = 0
+    for line in read_events().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(item, dict):
+            continue
+        when = _event_time(item.get("timestamp"))
+        if when is None or when > moment + 60 or when < cutoff:
+            continue
+        command = str(item.get("command") or "")
+        if command not in _COMMANDS:
+            continue
+        name = _report_command(command)
+        commands[name] = commands.get(name, 0) + 1
+        caller = str(item.get("invoked_via") or "")
+        if caller not in _CALLERS:
+            caller = "unknown"
+        callers[caller] = callers.get(caller, 0) + 1
+        if str(item.get("result") or "") == "ok":
+            success += 1
+        else:
+            failure += 1
+    return {
+        "schema": "specplane-usage/v1",
+        "specplane_version": VERSION,
+        "period_days": _WINDOW_S // _DAY_S,
+        "commands": {key: commands[key] for key in sorted(commands)},
+        "callers": {key: callers[key] for key in sorted(callers)},
+        "success": success,
+        "failure": failure,
+    }
+
+
+def usage_report_text(now: float | None = None) -> str:
+    body = json.dumps(usage_report(now), indent=2)
+    return "This is a local usage summary. Nothing is sent.\n" + body + "\n"
 
 
 def status_lines() -> list[str]:
     state = "on" if enabled() else "off"
-    lines = [f"telemetry: {state}", "upload: never"]
+    lines = [f"usage: {state}", "upload: never"]
     if _env_override() is not None:
         lines.append("source: SPECPLANE_TELEMETRY")
     elif _stored_enabled() is not None:
@@ -285,6 +436,9 @@ def record_command(command: str, exit_code: int, started: float) -> None:
         run = _token("SPECPLANE_RUN_ID")
         if run:
             payload["run_id"] = run
+        project = project_token()
+        if project:
+            payload["project_id"] = project
         path = _events_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as handle:

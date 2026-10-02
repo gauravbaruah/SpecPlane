@@ -20,6 +20,7 @@ CLI_FILES = (
     "requirements.txt",
     "specplane.config.json.example",
     "view.py",
+    "ci_gate.py",
     "telemetry.py",
 )
 

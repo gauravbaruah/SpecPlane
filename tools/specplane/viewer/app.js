@@ -222,7 +222,7 @@
         theme,
       ]),
     ]);
-    return h("div", { class: "shell" }, [top, honesty(route), h("main", { class: "page" }, [body])]);
+    return h("div", { class: "shell" }, [top, honesty(route), h("main", { class: "page" }, [starAsk(), body])]);
   }
 
   let trail = [];
@@ -449,6 +449,11 @@
       ok: "Exit 0. The kit was copied.",
       bad: "Exit was not 0. The copy did not finish."
     },
+    uninstall: {
+      about: "Removes the kit copy from a product repo and leaves specs/ in place. That undoes init. It does not remove the specplane command from the machine.",
+      ok: "Exit 0. The kit copy was removed, or there was nothing to remove.",
+      bad: "Exit was not 0. The checkout was refused, or a file could not be removed."
+    },
     view: {
       about: "Generates the local readout and serves it on 127.0.0.1. That is the page a person reads. The count is recorded when that process exits.",
       ok: "Exit 0. The server process ended with exit code 0.",
@@ -478,6 +483,31 @@
       about: "Turns the local command log off. Nothing is uploaded.",
       ok: "Exit 0. Recording was turned off.",
       bad: "Exit was not 0. Recording could not be turned off."
+    },
+    usage_status: {
+      about: "Says whether the local command log is on. Nothing is uploaded.",
+      ok: "Exit 0. The on or off state was printed.",
+      bad: "Exit was not 0. The state could not be printed."
+    },
+    usage_show: {
+      about: "Prints the local event file. Nothing is uploaded.",
+      ok: "Exit 0. The local file was printed.",
+      bad: "Exit was not 0. The local file could not be printed."
+    },
+    usage_enable: {
+      about: "Turns the local command log on. Nothing is uploaded.",
+      ok: "Exit 0. Recording was turned on.",
+      bad: "Exit was not 0. Recording could not be turned on."
+    },
+    usage_disable: {
+      about: "Turns the local command log off. Nothing is uploaded.",
+      ok: "Exit 0. Recording was turned off.",
+      bad: "Exit was not 0. Recording could not be turned off."
+    },
+    usage_report: {
+      about: "Prints counts for the last 30 days. The printout has no installation id and no project id. Nothing is sent.",
+      ok: "Exit 0. The counts were printed.",
+      bad: "Exit was not 0. The counts could not be printed."
     },
     usage: {
       about: "Recorded when the CLI is started without a recognized command. That is the help path.",
@@ -575,17 +605,45 @@
     ]);
   }
 
+  function starAsk() {
+    const activity = DATA.activity || {};
+    if (!activity.star) return null;
+    return h("div", { class: "star-ask" }, [
+      h("p", {}, ["You have used SpecPlane on this project for a couple of days."]),
+      h("a", {
+        href: activity.star_url || "https://github.com/gauravbaruah/SpecPlane",
+        target: "_blank",
+        rel: "noreferrer",
+      }, ["Star SpecPlane on GitHub"]),
+    ]);
+  }
+
+  function shareAsk(activity) {
+    if (!activity.remind) return null;
+    return h("div", { class: "share-ask" }, [
+      h("p", {}, ["These counts are for this project on this machine. Copy the summary and paste it on a new GitHub issue if you want SpecPlane's developers to see it."]),
+      h("a", {
+        href: activity.issue_url || "https://github.com/gauravbaruah/SpecPlane/issues/new",
+        target: "_blank",
+        rel: "noreferrer",
+      }, ["Open a GitHub issue"]),
+    ]);
+  }
+
   function activityIndex() {
     const activity = DATA.activity || {};
     const lines = activity.lines || [];
     const text = activity.text || lines.join("\n");
     const notice = lines.length === 1 ? lines[0] : "";
-    const showTable = notice !== "No local events in the last 30 days." && notice !== "Local command events are off.";
+    const showTable = notice !== "No local events in the last 30 days."
+      && notice !== "No local events for this project in the last 30 days."
+      && notice !== "Local command events are off.";
     return h("section", { class: "activity-index" }, [
       h("div", { class: "lede" }, [
         h("h1", {}, ["Activity"]),
-        h("p", { class: "note" }, ["This machine, last 30 days. Nothing here is uploaded."]),
+        h("p", { class: "note" }, ["This project on this machine, last 30 days. Nothing here is uploaded."]),
       ]),
+      shareAsk(activity),
       h("div", { class: "tools" }, [
         h("button", {
           type: "button",

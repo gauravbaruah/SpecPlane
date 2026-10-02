@@ -133,17 +133,19 @@ class EffectiveContextTests(unittest.TestCase):
             _tree(root)
             code, text, err = _cli(["retrieve", "capability.capture", "--spec-root", str(root)])
         self.assertEqual(code, 0, text + err)
-        live, _, change = text.partition("active change:")
-        self.assertIn("Live promise stays on the live slice.", live)
-        self.assertNotIn("household label", live)
-        self.assertIn("MODIFIED capability.capture: The phone keeps the household label.", change)
+        brief, _, after = text.partition("\nlive:")
+        self.assertIn("brief:", brief)
+        self.assertIn("label: in-flight", brief)
+        self.assertIn("accepted: false", brief)
+        self.assertIn("MODIFIED capability.capture: The phone keeps the household label.", brief)
+        self.assertLess(text.index("brief:"), text.index("\nlive:"))
+        self.assertIn("purpose: Live promise stays on the live slice.", after)
         self.assertIn("implementation context: phone_follow", text)
         self.assertIn("canonical synchronization: pending", text)
         self.assertIn("readiness: warning", text)
         self.assertIn(
             "SpecPlane · retrieve — implementation context is phone_follow. "
-            "That change is still open. "
-            "Keep working in that folder, or accept it so retrieve shows one live graph. "
+            "The brief is the open change applied to the live slice. It is not accepted. "
             "Readiness warning: no implementation relationships are declared.",
             text,
         )
@@ -171,6 +173,35 @@ class EffectiveContextTests(unittest.TestCase):
         self.assertNotIn("SpecPlane · retrieve", text)
         self.assertNotIn("implementation context:", text)
 
+    def test_two_changes_are_not_blended(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            _tree(root)
+            _write(
+                root / "changes" / "second_follow" / "proposal.yaml",
+                """id: second_follow
+kind: learn
+status: in-flight
+promise_ids:
+  - capability.capture
+""",
+            )
+            _write(
+                root / "changes" / "second_follow" / "delta.yaml",
+                """MODIFIED:
+  - id: capability.capture
+    summary: "A second keep rule."
+ADDED: []
+REMOVED: []
+""",
+            )
+            code, text, err = _cli(["retrieve", "capability.capture", "--spec-root", str(root)])
+        self.assertEqual(code, 0, text + err)
+        self.assertNotIn("brief:", text)
+        self.assertIn("phone_follow", text)
+        self.assertIn("second_follow", text)
+        self.assertIn("Those changes are still open.", text)
+
     def test_english_sensor_is_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "specs"
@@ -186,10 +217,78 @@ class EffectiveContextTests(unittest.TestCase):
                     "capability.capture",
                 ]
             )
-        self.assertEqual(code, 0, text + err)
+        self.assertEqual(code, 1, text + err)
         self.assertIn("evidence: none", text)
         self.assertIn("status: UNVERIFIED", text)
         self.assertNotIn("status: VERIFIED", text)
+        self.assertIn("unbound:", text)
+        self.assertIn("english-only", text)
+        self.assertIn(
+            "SpecPlane · sync check — english-only has no bind. "
+            "Add run.unittest or run.argv. The English line was not executed.",
+            text,
+        )
+
+    def test_default_sync_does_not_fail_unbound(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            _tree(root)
+            code, text, err = _cli(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(root),
+                    "--changed-ids",
+                    "capability.capture",
+                ]
+            )
+        self.assertEqual(code, 0, text + err)
+        self.assertNotIn("has no bind", text)
+        self.assertIn("Phase 1 is valid.", text)
+
+    def test_empty_blast_names_other_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            _tree(root)
+            _write(
+                root / "changes" / "phone_follow" / "proposal.yaml",
+                """id: phone_follow
+kind: learn
+status: in-flight
+promise_ids:
+  - capability.capture
+  - capability.places
+""",
+            )
+            _write(
+                root / "changes" / "phone_follow" / "success.yaml",
+                f"""sensors:
+  - id: english-only
+    promise: capability.capture
+    must: "The household label is kept."
+    run:
+      argv: [{sys.executable!r}, "-c", "raise SystemExit(0)"]
+""",
+            )
+            code, text, err = _cli(
+                [
+                    "check_sync",
+                    "--spec-root",
+                    str(root),
+                    "--change",
+                    "phone_follow",
+                    "--changed-ids",
+                    "capability.capture",
+                ]
+            )
+        self.assertEqual(code, 1, text + err)
+        self.assertIn("unreached:", text)
+        self.assertIn("capability.places", text)
+        self.assertIn(
+            "SpecPlane · sync check — the live graph does not reach: capability.places.",
+            text,
+        )
+        self.assertNotIn("Phase 1 is valid.", text)
 
     def test_unbound_run_stays_unverified(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -252,6 +351,27 @@ class EffectiveContextTests(unittest.TestCase):
         self.assertNotIn("component.widget", text)
         self.assertNotIn("SECRET_BODY", text)
         self.assertNotIn("capability.capture", text)
+        self.assertNotIn("open change:", text)
+
+    def test_unmapped_with_one_open_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            _tree(root)
+            shutil.rmtree(root / "changes" / "widget_follow")
+            secret = Path(tmp) / "src" / "nobody.py"
+            _write(secret, "SECRET_BODY = 'do not invent a component'\n")
+            code, text, err = _cli(["context", "src/nobody.py", "--spec-root", str(root)])
+        self.assertEqual(code, 0, text + err)
+        self.assertIn("unmapped: true", text)
+        self.assertIn("open change: phone_follow", text)
+        self.assertIn("This path is not declared.", text)
+        self.assertIn(
+            "SpecPlane · context — this file is unmapped. No component declares it. "
+            "Open change phone_follow is not accepted. This path is not declared.",
+            text,
+        )
+        self.assertNotIn("SECRET_BODY", text)
+        self.assertNotIn("component.widget", text)
 
     def test_mapped_file_names_the_component(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

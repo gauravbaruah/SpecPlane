@@ -1,0 +1,25 @@
+id: "telemetry_share"
+kind: "evolve"
+status: "promoted"
+opened: "2026-10-01"
+promise_ids:
+  - "capability.specplane_telemetry_share"
+  - "capability.specplane_viewer"
+  - "component.cli_view"
+  - "foundation.observability_standards"
+why: >-
+  The local log already records a structural event from the first command
+  and uploads nothing. Activity currently counts every project on this
+  machine. Count the project the viewer was opened in, still without the
+  repository name or path. About a week later, remind the person to paste
+  that summary on a new GitHub issue. After two days of that project's
+  use, ask for a star. Show no email address.
+non_goals:
+  - "a hosted collector or a telemetry URL"
+  - "showing a personal email address"
+  - "the viewer emailing or posting the summary"
+  - "a telemetry share or telemetry decline command"
+  - "an install-time consent dialog"
+  - "recording spec text, paths, prompts, or secrets"
+  - "publishing the specplane package"
+  - "turning the local log off by default"

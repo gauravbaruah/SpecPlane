@@ -39,7 +39,7 @@ from kernel import (  # noqa: E402
     retrieve,
     structural_validate,
 )
-from initkit import default_kit_root, init_kit  # noqa: E402
+from initkit import default_kit_root, init_kit, uninstall_kit  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
 
@@ -269,7 +269,7 @@ def cmd_mcp(args: argparse.Namespace) -> int:
 
 
 def cmd_view(args: argparse.Namespace) -> int:
-    from view import build_payload, serve, write_site
+    from view import build_payload, current_project_id, serve, write_site
 
     spec_root = resolve_spec_root(args.spec_root, args.config_dir)
     if not spec_root.is_dir():
@@ -277,18 +277,22 @@ def cmd_view(args: argparse.Namespace) -> int:
         return 1
     out = args.out if args.out is not None else args.config_dir / ".specplane" / "view"
     kernel = load_kernel(spec_root)
-    write_site(build_payload(kernel), out)
-    return serve(out, args.open_browser, spec_root)
+    project_id = current_project_id(args.config_dir.resolve())
+    write_site(build_payload(kernel, project_id), out)
+    return serve(out, args.open_browser, spec_root, project_id)
 
 
-def cmd_telemetry(args: argparse.Namespace) -> int:
-    from telemetry import read_events, set_enabled, status_lines
+def cmd_usage(args: argparse.Namespace) -> int:
+    from telemetry import read_events, set_enabled, status_lines, usage_report_text
 
-    action = args.telemetry_command
+    action = args.usage_command
+    if action == "report":
+        sys.stdout.write(usage_report_text())
+        return 0
     if action == "enable":
         set_enabled(True)
         sys.stdout.write("Local command events are on. Nothing is uploaded.\n")
-        sys.stdout.write("Turn off with: telemetry disable\n")
+        sys.stdout.write("Turn off with: usage disable\n")
         return 0
     if action == "disable":
         set_enabled(False)
@@ -321,9 +325,18 @@ def cmd_init(args: argparse.Namespace) -> int:
     return code
 
 
+def cmd_uninstall(args: argparse.Namespace) -> int:
+    dest = (args.dest or Path.cwd()).resolve()
+    code, notes = uninstall_kit(dest)
+    stream = sys.stderr if code else sys.stdout
+    for note in notes:
+        stream.write(note + "\n")
+    return code
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / view / telemetry)"
+        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / uninstall / view / usage)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -459,6 +472,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_init.set_defaults(func=cmd_init)
 
+    p_uninstall = sub.add_parser(
+        "uninstall",
+        help="Remove the kit copy from a product repo. Leave specs/ in place.",
+    )
+    p_uninstall.add_argument(
+        "--dest",
+        type=Path,
+        default=None,
+        help="Product repo (default: cwd). Must not be this SpecPlane checkout.",
+    )
+    p_uninstall.set_defaults(func=cmd_uninstall)
+
     p_mcp = sub.add_parser(
         "mcp",
         help="Start the stdio MCP server (retrieve, blast, impact, check_sync, list_gaps, run)",
@@ -489,18 +514,28 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_view.set_defaults(func=cmd_view)
 
-    p_tel = sub.add_parser(
-        "telemetry",
-        help="Local command events. On by default. Nothing is uploaded.",
+    def add_usage_command(name: str, help_text: str) -> None:
+        parser = sub.add_parser(name, help=help_text)
+        actions = parser.add_subparsers(dest="usage_command", required=True)
+        for action, action_help in (
+            ("status", "Whether the local log is on"),
+            ("show", "Print the local events. They stay on this machine."),
+            ("enable", "Turn the local log on"),
+            ("disable", "Turn the local log off"),
+            ("report", "Print counts for the last 30 days. Nothing is sent."),
+        ):
+            actions.add_parser(action, help=action_help).set_defaults(
+                func=cmd_usage, usage_command=action
+            )
+
+    add_usage_command(
+        "usage",
+        "Local command events. On by default. Nothing is uploaded.",
     )
-    tel = p_tel.add_subparsers(dest="telemetry_command", required=True)
-    for name, help_text in (
-        ("status", "Whether the local log is on"),
-        ("show", "Print the local events"),
-        ("enable", "Turn the local log on"),
-        ("disable", "Turn the local log off"),
-    ):
-        tel.add_parser(name, help=help_text).set_defaults(func=cmd_telemetry, telemetry_command=name)
+    add_usage_command(
+        "telemetry",
+        "Alias of usage. Local command events. Nothing is uploaded.",
+    )
 
     return parser
 
@@ -515,10 +550,10 @@ def main(argv: list[str] | None = None) -> int:
         parser = build_parser()
         args = parser.parse_args(argv)
         command = str(args.command or "usage")
-        if command == "telemetry":
-            subcommand = str(getattr(args, "telemetry_command", "") or "")
+        if command in {"usage", "telemetry"}:
+            subcommand = str(getattr(args, "usage_command", "") or "")
             if subcommand:
-                command = f"telemetry_{subcommand}"
+                command = f"usage_{subcommand}"
         code = int(args.func(args))
         return code
     except SystemExit as exc:
