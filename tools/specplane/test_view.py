@@ -234,8 +234,14 @@ class ViewerModelTests(unittest.TestCase):
             self.assertFalse(refresh_payload(root, out))
             seen: dict[str, Path] = {}
 
-            def fake_serve(site: Path, open_browser: bool, spec_root: Path | None = None) -> int:
+            def fake_serve(
+                site: Path,
+                open_browser: bool,
+                spec_root: Path | None = None,
+                project_id: str | None = None,
+            ) -> int:
                 seen["spec_root"] = spec_root
+                seen["project_id"] = project_id
                 return 0
 
             real_serve = view_mod.serve

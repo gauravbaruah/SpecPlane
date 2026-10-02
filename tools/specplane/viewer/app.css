@@ -205,6 +205,19 @@ a:hover { text-decoration: underline; }
   cursor: pointer;
 }
 .copy-btn:hover { background: var(--bg-hover); }
+.star-ask, .share-ask {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-raised);
+}
+.star-ask p, .share-ask p { margin: 0; color: var(--ink-2); }
+.star-ask a, .share-ask a { font-weight: 600; white-space: nowrap; }
 .activity-index { max-width: 1100px; }
 .activity-block { display: flex; flex-direction: column; gap: 16px; }
 .index.activity tr {

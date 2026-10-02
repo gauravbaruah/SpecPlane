@@ -25,7 +25,7 @@ if str(ROOT) not in sys.path:
 
 from impact import impact  # noqa: E402
 from kernel import Change, check_sync, list_gaps, load_kernel, retrieve, success_sensors  # noqa: E402
-from telemetry import activity_mtime, activity_summary  # noqa: E402
+from telemetry import activity_mtime, activity_summary, project_root, project_token  # noqa: E402
 from validate import as_str_list, dig  # noqa: E402
 from validate import resolve_spec_root  # noqa: E402
 
@@ -133,7 +133,7 @@ def _opened(value: Any) -> str:
     return ""
 
 
-def build_payload(kernel: Any) -> dict[str, Any]:
+def build_payload(kernel: Any, project_id: str | None = None) -> dict[str, Any]:
     records: dict[str, Any] = {}
     for doc in sorted(kernel.docs, key=lambda item: item.spec_id):
         row = retrieve(kernel, doc.spec_id)
@@ -175,7 +175,7 @@ def build_payload(kernel: Any) -> dict[str, Any]:
             "spec_root": kernel.spec_root.name,
             "branch": _branch(kernel.spec_root),
         },
-        "activity": activity_summary(),
+        "activity": activity_summary(project_id=project_id) if project_id is not None else activity_summary(),
     }
 
 
@@ -558,7 +558,12 @@ def _payload_sources_mtime(spec_root: Path) -> float:
     return max(_spec_mtime(spec_root), activity_mtime())
 
 
-def refresh_payload(spec_root: Path, out: Path) -> bool:
+def current_project_id(start: Path) -> str:
+    token = project_token(project_root(start))
+    return token or ""
+
+
+def refresh_payload(spec_root: Path, out: Path, project_id: str | None = None) -> bool:
     """Rewrite payload.js when the spec root or the local event log is newer."""
     payload_path = out / "payload.js"
     if payload_path.is_file() and _payload_sources_mtime(spec_root) <= payload_path.stat().st_mtime:
@@ -566,11 +571,11 @@ def refresh_payload(spec_root: Path, out: Path) -> bool:
     with _refresh_lock:
         if payload_path.is_file() and _payload_sources_mtime(spec_root) <= payload_path.stat().st_mtime:
             return False
-        write_payload(build_payload(load_kernel(spec_root)), out)
+        write_payload(build_payload(load_kernel(spec_root), project_id), out)
         return True
 
 
-def serve(out: Path, open_browser: bool, spec_root: Path | None = None) -> int:
+def serve(out: Path, open_browser: bool, spec_root: Path | None = None, project_id: str | None = None) -> int:
     out = out.resolve()
 
     class Handler(SimpleHTTPRequestHandler):
@@ -579,7 +584,7 @@ def serve(out: Path, open_browser: bool, spec_root: Path | None = None) -> int:
 
         def do_GET(self) -> None:
             if spec_root is not None:
-                refresh_payload(spec_root, out)
+                refresh_payload(spec_root, out, project_id)
             super().do_GET()
 
         def end_headers(self) -> None:
@@ -619,8 +624,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     out = args.out if args.out is not None else args.config_dir / ".specplane" / "view"
     kernel = load_kernel(spec_root)
-    write_site(build_payload(kernel), out)
-    return serve(out, args.open_browser, spec_root)
+    project_id = current_project_id(args.config_dir.resolve())
+    write_site(build_payload(kernel, project_id), out)
+    return serve(out, args.open_browser, spec_root, project_id)
 
 
 if __name__ == "__main__":

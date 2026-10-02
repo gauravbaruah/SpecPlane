@@ -53,8 +53,49 @@ _COMMANDS = frozenset(
     }
 )
 _WINDOW_S = 30 * 24 * 60 * 60
+_DAY_S = 24 * 60 * 60
+_STAR_AFTER_S = 2 * _DAY_S
+_REMIND_AFTER_S = 7 * _DAY_S
+STAR_URL = "https://github.com/gauravbaruah/SpecPlane"
+ISSUE_URL = "https://github.com/gauravbaruah/SpecPlane/issues/new"
 _ON = frozenset({"1", "on", "true", "yes"})
 _OFF = frozenset({"0", "off", "false", "no"})
+
+
+def project_root(start: Path | None = None) -> Path | None:
+    """Directory this command belongs to. Not written into an event."""
+    raw = os.environ.get("SPECPLANE_PROJECT_DIR", "").strip()
+    if raw:
+        path = Path(raw).expanduser()
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            return None
+        return path
+    origin = (start or Path.cwd()).resolve()
+    for candidate in (origin, *origin.parents):
+        if (candidate / "specplane.config.json").is_file():
+            return candidate
+    return origin
+
+
+def project_token(root: Path | None = None) -> str | None:
+    """Opaque id for this project. The repository name and path are not stored."""
+    home = root if root is not None else project_root()
+    if home is None:
+        return None
+    path = home / ".specplane" / "project_id"
+    try:
+        if path.is_file():
+            existing = path.read_text(encoding="utf-8").strip()
+            if _TOKEN.fullmatch(existing):
+                return existing
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fresh = uuid.uuid4().hex
+        path.write_text(fresh + "\n", encoding="utf-8")
+        return fresh
+    except OSError:
+        return None
 
 
 def specplane_home() -> Path:
@@ -183,15 +224,39 @@ def _event_time(raw: object) -> float | None:
         return None
 
 
-def activity_summary(now: float | None = None) -> dict[str, object]:
-    """Last-30-day counts. No ids, paths, or a claim that an agent fixed anything."""
+def _for_project(item: dict[str, object], project_id: str | None) -> bool:
+    if project_id is None:
+        return True
+    token = str(item.get("project_id") or "")
+    return bool(project_id) and token == project_id and bool(_TOKEN.fullmatch(token))
+
+
+def _asks(oldest: float | None, moment: float, scoped: bool) -> dict[str, object]:
+    age = None if oldest is None else moment - oldest
+    return {
+        "star": bool(scoped and age is not None and age >= _STAR_AFTER_S),
+        "remind": bool(scoped and age is not None and age >= _REMIND_AFTER_S),
+        "star_url": STAR_URL,
+        "issue_url": ISSUE_URL,
+    }
+
+
+def activity_summary(now: float | None = None, *, project_id: str | None = None) -> dict[str, object]:
+    """Last-30-day counts. No ids, paths, or a claim that an agent fixed anything.
+
+    Pass project_id to count one project. Events with no matching attribution are omitted.
+    """
+    scoped = project_id is not None
     if not enabled():
         lines = ["Local command events are off."]
-        return {"enabled": False, "lines": lines, "text": "\n".join(lines)}
+        payload: dict[str, object] = {"enabled": False, "lines": lines, "text": "\n".join(lines)}
+        payload.update(_asks(None, 0, False))
+        return payload
     moment = time.time() if now is None else now
     cutoff = moment - _WINDOW_S
     commands: dict[str, list[tuple[float, str]]] = {}
     callers: dict[str, int] = {}
+    oldest: float | None = None
     for line in read_events().splitlines():
         line = line.strip()
         if not line:
@@ -200,10 +265,14 @@ def activity_summary(now: float | None = None) -> dict[str, object]:
             item = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if not isinstance(item, dict):
+        if not isinstance(item, dict) or not _for_project(item, project_id):
             continue
         when = _event_time(item.get("timestamp"))
-        if when is None or when < cutoff or when > moment + 60:
+        if when is None or when > moment + 60:
+            continue
+        if oldest is None or when < oldest:
+            oldest = when
+        if when < cutoff:
             continue
         command = str(item.get("command") or "")
         if command not in _COMMANDS:
@@ -214,10 +283,22 @@ def activity_summary(now: float | None = None) -> dict[str, object]:
         if caller not in _CALLERS:
             caller = "unknown"
         callers[caller] = callers.get(caller, 0) + 1
+    asks = _asks(oldest, moment, scoped)
     if not commands:
-        lines = ["No local events in the last 30 days."]
-        return {"enabled": True, "lines": lines, "text": "\n".join(lines)}
-    lines = ["SpecPlane on this machine — last 30 days"]
+        empty = (
+            "No local events for this project in the last 30 days."
+            if scoped
+            else "No local events in the last 30 days."
+        )
+        lines = [empty]
+        payload = {"enabled": True, "lines": lines, "text": "\n".join(lines)}
+        payload.update(asks)
+        return payload
+    lines = [
+        "SpecPlane on this project — last 30 days"
+        if scoped
+        else "SpecPlane on this machine — last 30 days"
+    ]
     for name in sorted(commands):
         rows = commands[name]
         ok = sum(1 for _when, result in rows if result == "ok")
@@ -243,7 +324,9 @@ def activity_summary(now: float | None = None) -> dict[str, object]:
                 saw_bad = False
         if recoveries:
             lines.append(f"{name} nonzero, then later ok · {recoveries}")
-    return {"enabled": True, "lines": lines, "text": "\n".join(lines)}
+    payload = {"enabled": True, "lines": lines, "text": "\n".join(lines)}
+    payload.update(asks)
+    return payload
 
 
 def status_lines() -> list[str]:
@@ -285,6 +368,9 @@ def record_command(command: str, exit_code: int, started: float) -> None:
         run = _token("SPECPLANE_RUN_ID")
         if run:
             payload["run_id"] = run
+        project = project_token()
+        if project:
+            payload["project_id"] = project
         path = _events_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as handle:

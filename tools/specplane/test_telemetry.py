@@ -25,6 +25,7 @@ class TelemetryTests(unittest.TestCase):
             os.environ,
             {
                 "SPECPLANE_HOME": str(self.home),
+                "SPECPLANE_PROJECT_DIR": str(self.home / "repo-secret-path"),
                 "SPECPLANE_TELEMETRY": "",
                 "SPECPLANE_CALLER": "",
                 "SPECPLANE_RUN_ID": "",
@@ -52,6 +53,9 @@ class TelemetryTests(unittest.TestCase):
         event = json.loads(raw.splitlines()[-1])
         self.assertEqual(event["command"], "telemetry_status")
         self.assertEqual(event["result"], "ok")
+        self.assertNotIn("repo-secret-path", raw)
+        self.assertNotIn("path", event)
+        self.assertRegex(event["project_id"], r"^[a-f0-9]{32}$")
 
     def test_disabled_writes_nothing(self) -> None:
         os.environ["SPECPLANE_TELEMETRY"] = "0"

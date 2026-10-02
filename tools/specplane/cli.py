@@ -269,7 +269,7 @@ def cmd_mcp(args: argparse.Namespace) -> int:
 
 
 def cmd_view(args: argparse.Namespace) -> int:
-    from view import build_payload, serve, write_site
+    from view import build_payload, current_project_id, serve, write_site
 
     spec_root = resolve_spec_root(args.spec_root, args.config_dir)
     if not spec_root.is_dir():
@@ -277,8 +277,9 @@ def cmd_view(args: argparse.Namespace) -> int:
         return 1
     out = args.out if args.out is not None else args.config_dir / ".specplane" / "view"
     kernel = load_kernel(spec_root)
-    write_site(build_payload(kernel), out)
-    return serve(out, args.open_browser, spec_root)
+    project_id = current_project_id(args.config_dir.resolve())
+    write_site(build_payload(kernel, project_id), out)
+    return serve(out, args.open_browser, spec_root, project_id)
 
 
 def cmd_telemetry(args: argparse.Namespace) -> int:

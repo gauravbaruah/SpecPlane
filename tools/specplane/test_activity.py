@@ -143,6 +143,68 @@ class ActivityTests(unittest.TestCase):
         )
         os.environ["SPECPLANE_TELEMETRY"] = "0"
         self.assertEqual(activity_summary()["text"], "Local command events are off.")
+        self.assertFalse(activity_summary(project_id="abc")["star"])
+        self.assertFalse(activity_summary(project_id="abc")["remind"])
+
+    def _row(self, command: str, project: str | None, age_s: float) -> dict[str, object]:
+        row: dict[str, object] = {
+            "command": command,
+            "result": "ok",
+            "invoked_via": "human_cli",
+            "timestamp": _stamp(-age_s),
+        }
+        if project is not None:
+            row["project_id"] = project
+        return row
+
+    def test_project_counts_omit_other_projects(self) -> None:
+        self._write(
+            [
+                self._row("retrieve", "proj-a", 10),
+                self._row("blast", "proj-b", 10),
+                self._row("validate", None, 10),
+                self._row("run", "src/secret.py", 10),
+            ]
+        )
+        text = str(activity_summary(project_id="proj-a")["text"])
+        self.assertIn("SpecPlane on this project — last 30 days", text)
+        self.assertIn("retrieve 1 · 1 ok", text)
+        self.assertNotIn("blast", text)
+        self.assertNotIn("validate", text)
+        self.assertNotIn("run", text)
+        self.assertNotIn("src/secret.py", text)
+        self.assertNotIn("proj-a", text)
+
+    def test_star_after_two_days(self) -> None:
+        self._write([self._row("retrieve", "proj-a", 3 * 24 * 60 * 60)])
+        summary = activity_summary(project_id="proj-a")
+        self.assertTrue(summary["star"])
+        self.assertFalse(summary["remind"])
+        self.assertEqual(summary["star_url"], "https://github.com/gauravbaruah/SpecPlane")
+
+    def test_reminder_after_seven_days(self) -> None:
+        self._write([self._row("retrieve", "proj-a", 8 * 24 * 60 * 60)])
+        summary = activity_summary(project_id="proj-a")
+        self.assertTrue(summary["star"])
+        self.assertTrue(summary["remind"])
+        self.assertEqual(
+            summary["issue_url"],
+            "https://github.com/gauravbaruah/SpecPlane/issues/new",
+        )
+        self.assertNotIn("proj-a", str(summary["text"]))
+
+    def test_quiet_before_two_days(self) -> None:
+        self._write([self._row("retrieve", "proj-a", 60 * 60)])
+        summary = activity_summary(project_id="proj-a")
+        self.assertFalse(summary["star"])
+        self.assertFalse(summary["remind"])
+        script = (ROOT / "viewer" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("https://github.com/gauravbaruah/SpecPlane", script)
+        self.assertIn("https://github.com/gauravbaruah/SpecPlane/issues/new", script)
+        self.assertIn("This project on this machine", script)
+        self.assertNotIn("mailto:", script)
+        lowered = script.lower()
+        self.assertNotIn("email", lowered)
 
 
 if __name__ == "__main__":
