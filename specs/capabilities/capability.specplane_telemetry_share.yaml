@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "telemetry", "viewer"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "planned"
-  version: "1.0.0"
+  version: "1.1.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "telemetry_share"
+    summary: "The reminder and the star request are the viewer page. This capability is realized by component.cli_view."
+    breaking: false
   - date: "2026-10-01"
     author: "telemetry_share"
     summary: "Phase 1 draft. Recording starts with the first command and is attributed to the project, not the path. The viewer copies that project's counts from this machine and reminds the person to paste them on a GitHub issue. After two days it asks for a star. No email address is shown. Nothing is posted."
@@ -133,6 +137,10 @@ success_metrics:
     reminder_is_a_copy: "at 7 days the viewer shows this project's counts from this machine, links a new GitHub issue, and does not post or email them"
     star_after_two_days: "at 2 days of this project's local use the viewer shows a star request and does not star the repository"
   derived_from: {}
+
+realized_by:
+  components:
+    - "component.cli_view"
 
 roadmap:
   phase: "before any shared telemetry"

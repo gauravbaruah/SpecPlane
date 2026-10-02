@@ -1,6 +1,6 @@
 id: "practitioner_brief"
 kind: "learn"
-status: "in-flight"
+status: "promoted"
 opened: "2026-10-02"
 promise_ids:
   - "capability.specplane_retrieve"

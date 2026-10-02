@@ -1,10 +1,11 @@
 id: "telemetry_share"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-10-01"
 promise_ids:
   - "capability.specplane_telemetry_share"
   - "capability.specplane_viewer"
+  - "component.cli_view"
   - "foundation.observability_standards"
 why: >-
   The local log already records a structural event from the first command

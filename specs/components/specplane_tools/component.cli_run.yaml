@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "run"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "draft"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "practitioner_brief"
+    summary: "An unbound sensor stays UNVERIFIED. The command does not turn that into a failed test."
+    breaking: false
   - date: "2026-10-01"
     author: "receipt_next_step"
     summary: "The run receipt keeps the certify limit and adds the human step, or the failed-sensor step."
@@ -68,7 +72,7 @@ implementation:
     acceptance_criteria:
       - "run.argv is a list of strings invoked with shell false; cwd is --repo or the process cwd; env is inherited; timeout is 120s per sensor"
       - "run.unittest, run.test, or test: invokes that unittest id and does not write the test"
-      - "No bind, including evaluator without run:, prints not_run"
+      - "No bind, including evaluator without run:, prints not_run. An unbound sensor stays UNVERIFIED. The command does not turn that into a failed test."
       - "Stdout says behavior: evidence and does not certify that the implementation satisfies the spec"
       - "Does not replace pytest, Playwright, an eval harness, or CI"
       - "Each sensor row prints evidence and status. An unbound sensor names the id to bind."

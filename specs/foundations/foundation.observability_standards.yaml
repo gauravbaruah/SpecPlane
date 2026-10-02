@@ -4,13 +4,17 @@ meta:
   level: "foundation"
   owner: "SpecPlane"
   tags: ["observability", "cli", "kernel"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "draft"
-  version: "1.1.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "telemetry_share"
+    summary: "The local log stays on unless a human disables it, and upload stays out. Each event can carry a project token that is not the repository name or path. The share reminder is a viewer notice, not a command prompt and not an upload."
+    breaking: false
   - date: "2026-10-01"
     author: "local_command_events"
     summary: "The local log is on unless a human disables it. Nothing is uploaded. Each CLI command appends one structural event. A failed write does not change the command result."
@@ -27,7 +31,7 @@ changelog:
 provides:
   - "Stdout as the five-second face of retrieve / blast / check_sync / run"
   - "Findings join on SpecPlane ids"
-  - "The local log is on unless a human disables it. Nothing is uploaded. Each CLI command appends one structural event locally: command name, exit code, duration, version, and an allowlisted caller. A failed write does not change the command result."
+  - "The local log is on unless a human disables it. Nothing is uploaded. Each CLI command appends one structural event locally: command name, exit code, duration, version, an allowlisted caller, and a project token that is not the repository name or path. A failed write does not change the command result. The share reminder is a viewer notice, not a command prompt and not an upload."
 
 used_by:
   containers:
@@ -39,6 +43,7 @@ used_by:
     - "component.cli_check_sync"
     - "component.cli_run"
     - "component.mcp_stdio"
+    - "component.cli_view"
 
 extends: []
 

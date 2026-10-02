@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "viewer"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "draft"
-  version: "1.3.0"
+  version: "1.4.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "telemetry_share"
+    summary: "Activity counts this project on this machine. After 7 days the page asks the person to paste the summary on a new GitHub issue. After 2 days it asks for a star. No email address is shown. Nothing is posted."
+    breaking: false
   - date: "2026-10-01"
     author: "activity_command_help"
     summary: "The Activity page is a table. OK and nonzero each have their own ?. A missing caller label is shown as unattributed, not as a failed check."
@@ -32,9 +36,11 @@ changelog:
 
 implements:
   - "capability.specplane_viewer"
+  - "capability.specplane_telemetry_share"
 
 uses:
   - "foundation.design_system"
+  - "foundation.observability_standards"
 
 planning:
   user_flows:
@@ -67,6 +73,6 @@ implementation:
       - "Blast columns follow impact distance. Distance 3 and beyond stays collapsed until expand"
       - "The gaps lens matches list_gaps"
       - "Each change in the readout is in-flight or archived. A folder under specs/changes/_archive is archived and is not an open kernel change."
-      - "Activity is a table of the local command log for the last 30 days. The description is visible. OK and nonzero each have their own ?. A missing caller label is shown as unattributed, not as a failed check. Copy summary copies the counts and does not open a network connection. The page refreshes when that log is newer than the payload."
+      - "Activity counts this project on this machine for the last 30 days. Events with no project attribution are omitted. The description is visible. OK and nonzero each have their own ?. A missing caller label is shown as unattributed, not as a failed check. Copy summary copies the counts and does not open a network connection. After 7 days the page links a new GitHub issue. After 2 days it links the repository and asks for a star. The page shows no email address. The page refreshes when that log is newer than the payload."
     open_questions: []
     readiness: "ready"

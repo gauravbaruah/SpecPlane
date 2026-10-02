@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "check_sync"]
-  last_updated: "2026-10-01"
+  last_updated: "2026-10-02"
   status: "planned"
-  version: "1.8.0"
+  version: "1.9.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-02"
+    author: "practitioner_brief"
+    summary: "check_sync --change fails when that change declares a sensor with no run.unittest, run.argv, or test:. The line names the sensor and the bind to add. It does not execute the English. Default check_sync without --change does not fail for unbound sentences elsewhere."
+    breaking: false
   - date: "2026-10-01"
     author: "receipt_next_step"
     summary: "An uncovered failure names the ids and says to put them on an open change, then check_sync again. A pass with declared sensors says to run them. A Phase 1 pass says Phase 1 is valid and an empty impact list is a warning."
@@ -75,6 +79,7 @@ responsibilities:
   - "Does not execute sensors. Compose with capability.specplane_run; do not absorb it."
   - "Each declared sensor shows its evidence and status UNVERIFIED. check_sync does not run the bind."
   - "check_sync ends with one line. An uncovered failure names the ids and says to put them on an open change, then check_sync again. A pass with declared sensors says to run them. A Phase 1 pass says Phase 1 is valid and an empty impact list is a warning."
+  - "check_sync --change fails when that change declares a sensor with no run.unittest, run.argv, or test:. The line names the sensor and the bind to add. It does not execute the English. A change with no sensors stays a coverage check. Default check_sync without --change does not fail for unbound sentences elsewhere."
 
 flows:
   - "After implement: check_sync --change <slug> --changed-ids against live + that open delta"
@@ -95,7 +100,7 @@ constraints:
     - "Fail closed on moved named behavior and on empty blast"
     - "Default changed-set = git diff (staged+unstaged) plus untracked specs/**/*.yaml, excluding specs/changes/, plus component ids for declared realization.paths hits. --changed-ids is an explicit override and does not add mapped ids."
     - "Unmapped changed app files print as advisory and do not fail coverage. Missing declared paths do not fail coverage."
-    - "Phase-1-shaped id (no realized_by, uses, or component implements): do not fail empty_blast or uncovered; print phase1_advisory; exit 0 if those are the only issues."
+    - "Phase-1-shaped id (no realized_by, uses, or component implements): do not fail empty_blast or uncovered when the open change names no other ids; print phase1_advisory. Fail and name the other ids when the open change names ids the live graph does not reach."
     - "Ids that have join edges still need an open change covering the id; empty blast still fails."
     - "Coverage = open change promise_ids (or a component that implements a promised capability). Does not parse application source."
     - "Optional --change <slug> scopes coverage to that folder. Default without --change remains any-open-change."
