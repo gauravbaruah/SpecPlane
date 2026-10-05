@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "viewer"]
-  last_updated: "2026-10-02"
+  last_updated: "2026-10-05"
   status: "planned"
-  version: "1.4.0"
+  version: "1.5.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-05"
+    author: "viewer_stills"
+    summary: "README Try it, docs/try.md, and the tiny-saas example README show stills of Blast for capability.authentication and the open add_dunning change. specplane view is unchanged."
+    breaking: false
   - date: "2026-10-02"
     author: "telemetry_share"
     summary: "Activity counts the open project on this machine, not every project. Events with no project attribution are omitted. After 7 days the page reminds the person to paste the summary on a new GitHub issue. After 2 days it asks for a star. The page shows no email address. Nothing is posted."
