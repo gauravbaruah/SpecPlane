@@ -9,6 +9,10 @@ Load this file for the task in the [loading contract](README.md). Do not load th
 
 Canonical source: `../specplane_schema_prompt_v9.1.0.md` (same content, one file).
 
+For how little YAML is enough, read `specplane/dialect.md`.
+This file is schema philosophy.
+The rest of this section stays the schema split.
+
 ---
 
 # SpecPlane v9.1.0 Master Schema Guide for Cursor and VSCode

@@ -1,0 +1,21 @@
+id: "minimal_dialect"
+kind: "evolve"
+status: "promoted"
+opened: "2026-10-05"
+promise_ids:
+  - "capability.specplane_init"
+  - "component.cli_init"
+why: >-
+  A developer can get utility from SpecPlane without loading the schema
+  encyclopedia. The kit includes specplane/dialect.md, a one-screen field
+  card of the nouns. Consuming AGENTS, applicable first-orientation, and
+  the bootstrap and author skills point at it. Init still copies specplane/
+  and still does not copy this repo's specs/ or write workflows.
+non_goals:
+  - "a specplane-practices or specplane-bind skill"
+  - "docs/best-practices.md"
+  - "rewriting applicable 01 or the v9.1 master prompt"
+  - "numbering dialect as applicable section 00"
+  - "expanding 11-guidance"
+  - "init copying the docs/ tree"
+  - "schema fields, kernel exit codes, or verify.runner"
