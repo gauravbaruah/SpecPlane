@@ -210,7 +210,6 @@
     }).sort();
     const top = h("header", { class: "top" }, [
       h("div", { class: "brand" }, [
-        h("img", { src: "logo.png", alt: "" }),
         "SpecPlane",
         ...systems.map(function (id) {
           return h("a", { class: "sys", href: href("id/" + encodeURIComponent(id)) }, [breakable(id)]);

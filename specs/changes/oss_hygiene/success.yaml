@@ -1,0 +1,24 @@
+id: "oss_hygiene"
+sensors:
+  - id: "readme_consumer_before_clone"
+    promise: "capability.specplane_package"
+    must: "README consumer block (pip install specplane and uv tool install specplane, then init) appears before the try-path clone. pip install pyyaml is not documented as installing SpecPlane."
+    run:
+      unittest: "tools.specplane.test_init.OssHygieneTests.test_readme_consumer_install_precedes_clone"
+  - id: "contributing_exists"
+    promise: "capability.specplane_package"
+    must: "CONTRIBUTING.md exists and says pull requests go against main, do not copy specs/, and Apache 2.0 with no CLA."
+    run:
+      unittest: "tools.specplane.test_init.OssHygieneTests.test_contributing_exists"
+  - id: "security_exists"
+    promise: "capability.specplane_package"
+    must: "SECURITY.md exists and points vulnerability reports at GitHub private vulnerability reporting, with no bounty."
+    run:
+      unittest: "tools.specplane.test_init.OssHygieneTests.test_security_exists"
+  - id: "viewer_has_no_logo"
+    promise: "component.cli_view"
+    must: "The generated view does not copy logo.png and the viewer script does not reference it."
+    run:
+      unittest: "tools.specplane.test_view.ViewerModelTests.test_site_is_local"
+
+looks_fine_is_not_a_sensor: true

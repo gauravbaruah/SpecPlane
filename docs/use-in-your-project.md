@@ -6,6 +6,8 @@ This page puts the **kit** into *your* product repo. Your `specs/` is your overl
 
 ## Setup (once)
 
+The consumer obtain path is `pip install specplane`.
+
 In the **product** repo (must not be the SpecPlane kit root):
 
 ```bash
@@ -19,12 +21,14 @@ specplane init
 
 The current release is the pre-release `0.1.0a1`. Python 3.10 or newer. There is no `npx` package. To pin a commit: `uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init`.
 
-Fallback from a checkout (Python 3.10+ and PyYAML):
+Fallback from a checkout (Python 3.10+):
 
 ```bash
-pip install -e /path/to/SpecPlane    # or: pip install pyyaml
+pip install -e /path/to/SpecPlane
 python3 /path/to/SpecPlane/tools/specplane/cli.py init
 ```
+
+`pip install pyyaml` does not install the `specplane` command. Running `cli.py` directly still needs PyYAML importable by that `python3`.
 
 That copies `specplane/`, skills, rules, and the CLI; writes or appends `AGENTS.md`; creates empty `specs/` folders (`capabilities`, `foundations`, `containers`, `components`, `changes`). It does **not** copy this repo’s kernel `specs/`, does not add an example capability, and does not write GitHub Actions. It does not ask which coding agent you use — skills for Cursor, Claude Code, and Codex are copied together.
 

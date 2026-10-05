@@ -2,6 +2,38 @@
 
 **Keep coding agents aligned with what you actually meant to build.**
 
+[![CI](https://github.com/gauravbaruah/SpecPlane/actions/workflows/specplane-toolkit.yml/badge.svg)](https://github.com/gauravbaruah/SpecPlane/actions/workflows/specplane-toolkit.yml)
+[![PyPI](https://img.shields.io/pypi/v/specplane)](https://pypi.org/project/specplane/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+
+## Install
+
+**In your app**
+
+Python 3.10 or newer. The current release is the pre-release `0.1.0a1`. There is no `npx` package.
+
+```bash
+pip install specplane
+# or: uv tool install specplane
+specplane init
+```
+
+`specplane init` copies the kit into your app and creates empty `specs/` folders. It does not copy this repo’s kernel `specs/`. To pin a commit: `uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@<sha> specplane init`. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
+
+**This demo**
+
+Clone, then try the 60→15 loop on `examples/tiny-saas`.
+
+```bash
+git clone https://github.com/gauravbaruah/SpecPlane.git
+cd SpecPlane
+pip install -e .
+```
+
+PyYAML is a library. `pip install pyyaml` does not install a `specplane` command. The command needs the package above, `pip install -e .` from this checkout, or `python3 tools/specplane/cli.py` once PyYAML is importable. Walkthrough: [`docs/try.md`](./docs/try.md).
+
+Issues are welcome when the try path or `pip install specplane` fails.
+
 > We built SpecPlane because AI coding agents can write code faster than humans can maintain a coherent model of what the system is supposed to be. SpecPlane gives that model a structure—business capabilities, architecture, components, contracts, constraints, dependencies and evidence—and makes it explorable by humans and usable by agents.
 
 SpecPlane is a git-native specification graph for software built by humans and AI agents.
@@ -26,8 +58,6 @@ The CLI, MCP, viewer, skills, and a pasted CI check are projections of one kerne
 Command events stay on this machine. `specplane usage report` prints the counts. Nothing leaves automatically.
 
 **Later:** hosted share, a required GitHub check, and a spec coach. An optional paste-in check can ask whether a change is accounted for by declared intent and bound evidence. Init does not install it.
-
-<img src="./SpecPlane_Logo.png" alt="SpecPlane" width="160">
 
 ## The loop
 
@@ -95,10 +125,10 @@ Synthetic example — not a real product, not this repo’s kernel `specs/`.
 ```bash
 git clone https://github.com/gauravbaruah/SpecPlane.git
 cd SpecPlane
-pip install -e .    # or: pip install pyyaml
+pip install -e .
 ```
 
-Python 3.10+ and PyYAML. Without that install, `python3 tools/specplane/cli.py --help` fails on a bare system.
+Python 3.10+. `pip install pyyaml` does not install a `specplane` command. Without the package, `python3 tools/specplane/cli.py --help` needs PyYAML importable and is still not `specplane` on PATH.
 
 You say the change. The agent retrieves, blasts, and implements. You look at blast in `specplane view`.
 
@@ -120,7 +150,7 @@ This example already has an open billing change:
 
 Skills already call the kernel. MCP is optional. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate, promote, and reconcile stay CLI-only.
 
-After `pip install -e .` (or `pip install pyyaml`) from this checkout, `specplane mcp` starts that server. Optional `--spec-root` is the default when a tool call omits `spec_root`.
+After `pip install -e .` from this checkout, `specplane mcp` starts that server. Optional `--spec-root` is the default when a tool call omits `spec_root`.
 
 **Cursor** (`~/.cursor/mcp.json`) or **Claude Desktop** (`claude_desktop_config.json`):
 

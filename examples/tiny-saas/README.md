@@ -9,8 +9,10 @@ Live auth promise: **password reset links expire in 60 minutes**. `retrieve` pri
 ```bash
 git clone https://github.com/gauravbaruah/SpecPlane.git
 cd SpecPlane
-pip install -e .    # or: pip install pyyaml
+pip install -e .
 ```
+
+`pip install pyyaml` does not install a `specplane` command. The consumer obtain path, outside this demo, is `pip install specplane`.
 
 Open **`examples/tiny-saas`** as the workspace (File → Open Folder). Then ask Cursor:
 

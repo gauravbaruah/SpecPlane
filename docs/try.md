@@ -2,6 +2,8 @@
 
 You say the change in product language. The agent retrieves, blasts, and implements. You look at blast in `specplane view`.
 
+The consumer obtain path is `pip install specplane` (or `uv tool install specplane`). This page stays the clone.
+
 Synthetic sandbox: [`examples/tiny-saas`](../examples/tiny-saas/). Auth, billing, notifications, one open billing change. Live promise: **reset links expire in 60 minutes**. Leave `testdata/golden/messy_auth` for kernel tests.
 
 ## 1. Clone and open the example
@@ -9,10 +11,10 @@ Synthetic sandbox: [`examples/tiny-saas`](../examples/tiny-saas/). Auth, billing
 ```bash
 git clone https://github.com/gauravbaruah/SpecPlane.git
 cd SpecPlane
-pip install -e .    # or: pip install pyyaml
+pip install -e .
 ```
 
-Python 3.10+ and PyYAML. Without that install, `python3 tools/specplane/cli.py` fails on a bare system.
+Python 3.10+. `pip install pyyaml` does not install a `specplane` command. `python3 tools/specplane/cli.py` needs PyYAML importable and is still not `specplane` on PATH.
 
 Open **`examples/tiny-saas`** as the workspace (File → Open Folder). Skills and the kit are already linked there.
 

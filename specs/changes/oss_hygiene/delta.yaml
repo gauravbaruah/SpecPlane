@@ -1,0 +1,25 @@
+change_id: "oss_hygiene"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_package"
+    summary: >-
+      Public README leads with pip install specplane / uv tool install specplane
+      then specplane init. Clone is the try path, after that block. pip install
+      pyyaml is not a SpecPlane install. CONTRIBUTING and SECURITY exist.
+      Docs still name the pre-release 0.1.0a1. There is no npx package.
+  - id: "capability.specplane_init"
+    summary: >-
+      Init still does not write workflows, does not copy kernel specs/, and
+      does not publish. A published specplane package may run init. The try
+      path stays clone plus examples/tiny-saas.
+  - id: "component.cli_view"
+    summary: >-
+      The local viewer header no longer shows the stacked-cards logo. The
+      generated site does not copy logo.png. The readout stays on 127.0.0.1.
+
+REMOVED: []
+
+RENAMED: []
