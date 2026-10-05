@@ -368,19 +368,20 @@ class OssHygieneTests(unittest.TestCase):
 
     def test_contributing_exists(self) -> None:
         text = (KIT / "CONTRIBUTING.md").read_text(encoding="utf-8")
-        self.assertIn("Pull requests go against `main`", text)
-        self.assertIn("Do not push to `main`", text)
+        self.assertIn("Pull requests are welcome against `main`", text)
+        self.assertIn("Please do not push directly to `main`", text)
         self.assertIn("specs/", text)
-        self.assertIn("Do not slurp `specs/`", text)
+        self.assertIn("no need to copy these specs", text)
+        self.assertIn("Please do not slurp `specs/`", text)
         self.assertIn("design-docs/", text)
         self.assertIn("Apache 2.0", text)
         self.assertIn("no CLA", text)
-        self.assertIn("Do not use Discussions for bugs", text)
+        self.assertIn("Please do not use Discussions for bugs", text)
 
     def test_security_exists(self) -> None:
         text = (KIT / "SECURITY.md").read_text(encoding="utf-8")
         self.assertIn("private vulnerability reporting", text)
-        self.assertIn("Do not file public issues", text)
+        self.assertIn("Please do not file public issues", text)
         self.assertIn("does not pay a bounty", text)
 
 

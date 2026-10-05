@@ -7,7 +7,7 @@ sensors:
       unittest: "tools.specplane.test_init.OssHygieneTests.test_readme_consumer_install_precedes_clone"
   - id: "contributing_exists"
     promise: "capability.specplane_package"
-    must: "CONTRIBUTING.md exists and says pull requests go against main, do not copy specs/, and Apache 2.0 with no CLA."
+    must: "CONTRIBUTING.md exists and says pull requests go against main, there is no need to copy this repo's specs/, and Apache 2.0 with no CLA."
     run:
       unittest: "tools.specplane.test_init.OssHygieneTests.test_contributing_exists"
   - id: "security_exists"
