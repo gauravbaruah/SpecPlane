@@ -29,7 +29,7 @@ Always start from this table. Read **only** the listed sections unless a field y
 
 | Task | Read (in order) |
 |---|---|
-| First orientation | this file, then [`01-philosophy-and-5c.md`](01-philosophy-and-5c.md) |
+| First orientation | this file, then [`specplane/dialect.md`](../../dialect.md), then [`01-philosophy-and-5c.md`](01-philosophy-and-5c.md) |
 | Product request (feature, bug, experiment) | skill `specplane-implement`; [`docs/golden-journey.md`](../../../docs/golden-journey.md); then `06` when coding |
 | New `specs/` tree / naming | [`02-file-layout.md`](02-file-layout.md) |
 | Any new spec (required meta) | [`03-shared-meta.md`](03-shared-meta.md) |
@@ -51,6 +51,7 @@ Always start from this table. Read **only** the listed sections unless a field y
 
 ## Related
 
+- Nouns, verbs, and the loop: [`specplane/dialect.md`](../../dialect.md)
 - Using SpecPlane in a product repo: [`docs/use-in-your-project.md`](../../../docs/use-in-your-project.md)
 - Agent ritual (golden journey): [`docs/golden-journey.md`](../../../docs/golden-journey.md)
 - Repo router: [`AGENTS.md`](../../../AGENTS.md)

@@ -1,0 +1,14 @@
+change_id: "minimal_dialect"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_init"
+    summary: "The kit includes specplane/dialect.md, an index of nouns, verbs, and the loops that join them, including that a change stays off the live file until the human accepts and the agent promotes. Consuming AGENTS, applicable first-orientation, and the bootstrap and author skills point at that card. Init still copies specplane/ and does not copy this repo's specs/. Init still does not write GitHub workflows."
+  - id: "component.cli_init"
+    summary: "The AGENTS.md template init writes names specplane/dialect.md as the index of nouns, verbs, and the loop. Init still copies the specplane/ tree, which is how the card ships. It does not gain a rule to copy docs/."
+
+REMOVED: []
+
+RENAMED: []

@@ -119,8 +119,10 @@ This project uses SpecPlane v9.1.0. Specs live in `specs/`. Schema files live in
 
 Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a coding session.
 
+Nouns, verbs, and the loop are in `specplane/dialect.md`.
+
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
-2. Skills: specplane-bootstrap, specplane-author, specplane-flows, specplane-implement, specplane-validate, specplane-infer.
+2. Skills: specplane-bootstrap, specplane-author, specplane-flows, specplane-implement, specplane-validate, specplane-infer, specplane-explain.
 3. Product requests in natural language use **specplane-implement**. PRE: retrieve when a promise might move (if unsure, retrieve). POST: check_sync --change <slug> --changed-ids, then run --change <slug>. If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate. `run` invokes bound checks only; it does not create tests or certify behavior. Typos skip retrieve. Do not slurp `specs/`.
 4. Optional: if `tools/specplane/cli.py` is present, the agent runs it in-session. Do not add git hooks or CI jobs unless you choose to.
 
@@ -167,7 +169,7 @@ You speak product language. The agent should run the ritual in [`golden-journey.
 | Review / validate specs | `specplane-validate` → `cli.py validate` / `check_sync`, then sections 08 and 11 |
 | “Ship it” / accept the change | Promote delta into live YAML, archive the change folder |
 
-Authoring order for a **new** tree: **capability Phase 1** → foundations you actually need → system/containers → components with `implements` / `uses`. After that, in-flight work belongs in `specs/changes/`.
+Authoring order for a **new** tree: **capability Phase 1** → foundations you actually need → system/containers → components with `implements` / `uses`. After that, in-flight work belongs in `specs/changes/`. Index of nouns, verbs, and the loop: [`specplane/dialect.md`](../specplane/dialect.md).
 
 ## Updating SpecPlane
 

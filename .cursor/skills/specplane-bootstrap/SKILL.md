@@ -7,7 +7,7 @@ description: Initialize a SpecPlane specs/ tree (capabilities, foundations, syst
 
 ## Load
 
-Read `specplane/core_prompt/applicable/02-file-layout.md` and `03-shared-meta.md`. Do not load the full master prompt.
+Read `specplane/core_prompt/applicable/02-file-layout.md` and `03-shared-meta.md`, then `specplane/dialect.md` for how little YAML is enough. Do not load the full master prompt.
 
 ## Procedure
 
