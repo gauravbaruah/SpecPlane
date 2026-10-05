@@ -193,7 +193,7 @@ Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework
 | `tools/specplane/viewer/` | The shipping local viewer |
 | `examples/tiny-saas/` | Synthetic overlay + small `src/` for the try path |
 | `.agents/skills/` and `.cursor/skills/` | Same skills (keep identical) |
-| `specplane/dialect.md` | Nouns and how little YAML is enough |
+| `specplane/dialect.md` | Index of nouns, verbs, and the loop |
 | `docs/dialect.md` | Pointer to that card |
 | `docs/golden-journey.md` | Intended human+agent loop |
 | `legacy/` | Archived viewer — not the product path |

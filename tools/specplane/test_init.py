@@ -41,6 +41,11 @@ class InitKitTests(unittest.TestCase):
         self.assertTrue(card.startswith("# SpecPlane dialect\n"))
         self.assertNotIn("# Best Practices", card)
         self.assertIn("Specs say **what** and **how well**, not **how**.", card)
+        self.assertIn("## Verbs", card)
+        self.assertIn("## Workflows", card)
+        self.assertIn("| **promote** |", card)
+        self.assertIn("Until you accept, the live file is unchanged.", card)
+        self.assertIn("`promote --ids` is a different verb.", card)
         for noun in (
             "**Capability**",
             "**Constraint**",
@@ -70,7 +75,7 @@ class InitKitTests(unittest.TestCase):
             agents = (KIT / ".agents" / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertEqual(cursor, agents, name)
             self.assertIn("specplane/dialect.md", cursor, name)
-        nouns = "Usable nouns are in `specplane/dialect.md`."
+        nouns = "Nouns, verbs, and the loop are in `specplane/dialect.md`."
         self.assertIn(nouns, (KIT / "tools" / "specplane" / "initkit.py").read_text(encoding="utf-8"))
         self.assertIn(nouns, (KIT / "docs" / "use-in-your-project.md").read_text(encoding="utf-8"))
         code, notes = init_kit(self.dest, KIT)

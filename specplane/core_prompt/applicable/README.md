@@ -51,7 +51,7 @@ Always start from this table. Read **only** the listed sections unless a field y
 
 ## Related
 
-- Nouns and how little YAML is enough: [`specplane/dialect.md`](../../dialect.md)
+- Nouns, verbs, and the loop: [`specplane/dialect.md`](../../dialect.md)
 - Using SpecPlane in a product repo: [`docs/use-in-your-project.md`](../../../docs/use-in-your-project.md)
 - Agent ritual (golden journey): [`docs/golden-journey.md`](../../../docs/golden-journey.md)
 - Repo router: [`AGENTS.md`](../../../AGENTS.md)

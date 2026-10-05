@@ -7,7 +7,7 @@ description: Create or expand SpecPlane YAML specs (capability, foundation, syst
 
 ## Load
 
-1. Read `specplane/dialect.md` for the nouns and how little YAML is enough.
+1. Read `specplane/dialect.md` for the nouns, verbs, and how little YAML is enough.
 2. Read `specplane/core_prompt/applicable/README.md`.
 3. Read `03-shared-meta.md`.
 4. Read **only** the type section:

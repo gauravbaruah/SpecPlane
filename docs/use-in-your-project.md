@@ -119,7 +119,7 @@ This project uses SpecPlane v9.1.0. Specs live in `specs/`. Schema files live in
 
 Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a coding session.
 
-Usable nouns are in `specplane/dialect.md`.
+Nouns, verbs, and the loop are in `specplane/dialect.md`.
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-flows, specplane-implement, specplane-validate, specplane-infer, specplane-explain.
@@ -169,7 +169,7 @@ You speak product language. The agent should run the ritual in [`golden-journey.
 | Review / validate specs | `specplane-validate` → `cli.py validate` / `check_sync`, then sections 08 and 11 |
 | “Ship it” / accept the change | Promote delta into live YAML, archive the change folder |
 
-Authoring order for a **new** tree: **capability Phase 1** → foundations you actually need → system/containers → components with `implements` / `uses`. After that, in-flight work belongs in `specs/changes/`. Nouns and how little YAML is enough: [`specplane/dialect.md`](../specplane/dialect.md).
+Authoring order for a **new** tree: **capability Phase 1** → foundations you actually need → system/containers → components with `implements` / `uses`. After that, in-flight work belongs in `specs/changes/`. Index of nouns, verbs, and the loop: [`specplane/dialect.md`](../specplane/dialect.md).
 
 ## Updating SpecPlane
 

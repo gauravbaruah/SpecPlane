@@ -1,6 +1,6 @@
 # Golden journey — agent ritual
 
-Nouns live in [`specplane/dialect.md`](../specplane/dialect.md). This page is the change ritual.
+Nouns, verbs, and the loop live in [`specplane/dialect.md`](../specplane/dialect.md). This page is the long form of that change ritual.
 
 This is what a SpecPlane-aware coding agent should do when someone describes a product change in plain language.
 

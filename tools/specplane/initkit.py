@@ -39,7 +39,7 @@ This project uses SpecPlane v9.1.0. Specs live in `specs/`. Schema files live in
 
 Do not ingest `specplane/core_prompt/specplane_schema_prompt_v9.1.0.md` into a coding session.
 
-Usable nouns are in `specplane/dialect.md`.
+Nouns, verbs, and the loop are in `specplane/dialect.md`.
 
 1. For spec work, open `specplane/core_prompt/applicable/README.md` and load only the section for the task.
 2. Skills: specplane-bootstrap, specplane-author, specplane-flows, specplane-implement, specplane-validate, specplane-infer, specplane-explain.

@@ -1,6 +1,6 @@
 # Dialect
 
-How little YAML is enough.
+Index of nouns, verbs, and the loop.
 
 The card is [`specplane/dialect.md`](../specplane/dialect.md).
 

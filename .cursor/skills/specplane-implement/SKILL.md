@@ -34,7 +34,7 @@ If `tools/specplane/cli.py` is missing, say so and stop implementing product beh
 
 ## Load
 
-Read `specplane/core_prompt/applicable/README.md`. Nouns: [`specplane/dialect.md`](../../../specplane/dialect.md). When writing code, load `06-system-container-component.md` for contracts. Load `08-validation-rules.md` only if live links/versions will change **at promote**.
+Read `specplane/core_prompt/applicable/README.md`. Nouns, verbs, and the loop: [`specplane/dialect.md`](../../../specplane/dialect.md). When writing code, load `06-system-container-component.md` for contracts. Load `08-validation-rules.md` only if live links/versions will change **at promote**.
 
 Do not load the full master prompt.
 

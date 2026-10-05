@@ -2,7 +2,7 @@ id: "minimal_dialect"
 sensors:
   - id: "dialect_card_names_the_nouns"
     promise: "capability.specplane_init"
-    must: "specplane/dialect.md names the six nouns, says what and how well not how, and is not titled Best Practices. Applicable README, bootstrap, and author point at it. Init copies the card with specplane/."
+    must: "specplane/dialect.md names the six nouns and the verbs retrieve, blast, check_sync, run, and promote. It says a change stays off the live file until the human accepts. It says what and how well, not how, and is not titled Best Practices. Applicable README, bootstrap, and author point at it. Init copies the card with specplane/."
     run:
       unittest: "tools.specplane.test_init.InitKitTests.test_dialect_card_is_shipped"
 
