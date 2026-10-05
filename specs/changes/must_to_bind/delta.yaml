@@ -1,0 +1,14 @@
+change_id: "must_to_bind"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_init"
+    summary: "Consuming AGENTS.md and the implement POST that init copies say: if this change already has a check, bind it (run.unittest or run.argv). Do not invent a test so SpecPlane has something to run. Do not parse test_strategy. Unbound must: is not_run on run, not a pass and not a certificate. English must: stays enough when there is no check yet."
+  - id: "component.cli_init"
+    summary: "The AGENTS.md template init writes or appends carries that bind reminder. The obtain-doc quote of that template matches it."
+
+REMOVED: []
+
+RENAMED: []

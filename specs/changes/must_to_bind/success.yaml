@@ -1,0 +1,9 @@
+id: "must_to_bind"
+sensors:
+  - id: "post_surfaces_bind_reminder"
+    promise: "capability.specplane_init"
+    must: "POST surfaces say: if this change already has a check, bind it (run.unittest or run.argv). Do not invent a test so SpecPlane has something to run. Do not parse test_strategy. Unbound must: is not_run on run, not a pass and not a certificate. Golden journey does not say to add tests that match success.yaml."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_post_surfaces_remind_to_bind"
+
+looks_fine_is_not_a_sensor: true

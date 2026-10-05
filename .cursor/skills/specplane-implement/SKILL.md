@@ -25,7 +25,7 @@ Developers paste a prompt and expect codegen. You still run SpecPlane **when a p
 
 1. `validate`.
 2. `check_sync --change <slug> --changed-ids` with every id you retrieved, blasted, or whose realization files you edited. `<slug>` is this request’s `specs/changes/<slug>/` folder. The default changed-set is spec YAML in git, plus component ids whose declared `implementation.realization.paths` match a changed file. `--changed-ids` is an explicit override. An empty default is not a pass if you touched app code or `tools/specplane/`. If a map exists, run `reconcile` or report missing and unmapped paths. Maps are optional: do not require one to implement, and do not copy inferred cites into `realization.paths`. A coverage pass is declared coverage, not behavioral agreement.
-3. `run --change <slug>`. This invokes binds already on that change (`run.argv` or `run.unittest` / `test:`). It does not create tests, exec English `must:` lines, or certify that the implementation satisfies the spec. No bind → `not_run` (exit 0 when nothing failed or errored).
+3. `run --change <slug>`. This invokes binds already on that change (`run.argv` or `run.unittest` / `test:`). It does not create tests, exec English `must:` lines, or certify that the implementation satisfies the spec. If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate. Exit 0 when nothing failed or errored.
 4. Do not silently pick spec vs code. Do not edit live 5C YAML until the user accepts (promote).
 
 The kernel does not watch the chat. If you do not call retrieve/check_sync, SpecPlane is silent. Clarifying questions are the coding agent following this skill, not a SpecPlane daemon.
@@ -77,7 +77,7 @@ Do not invent a graph by reading the whole tree. You may open files the CLI alre
 3. **Open a change** unless trivial. Create `specs/changes/<slug>/`:
    - `proposal.yaml` — `kind`, `promise_ids`, `why`
    - `delta.yaml` — ADDED / MODIFIED / REMOVED
-   - `success.yaml` — named sensors (`must:` lines are enough)
+   - `success.yaml` — named sensors (`must:` lines are enough). If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate.
    - `decision.md` — only if a human must choose
 
    Do **not** edit live `capability.*.yaml` / `foundation.*.yaml` until promote. New capabilities with no live id: Phase 1 live file **or** ADDED in this folder; prefer a change folder if this request is an evolve of something that exists.
@@ -86,9 +86,9 @@ Do not invent a graph by reading the whole tree. You may open files the CLI alre
 
 5. **Interrupt sparingly.** Ask only unresolved consequential questions (prefer one). Record the answer in `decision.md`. **Wait** before implementing. Isolated UI nits are not interruptions; a global foundation/token used by many ids is.
 
-6. **Implement** from the projection: live promise + delta + blast + decisions. Match capabilities, errors, events, and `success.yaml`. Keep bidirectional links if you touch `implements` / `uses` (on files in the change, or at promote).
+6. **Implement** from the projection: live promise + delta + blast + decisions. Match capabilities, errors, events, and `success.yaml`. If the work needs a check, add **the product’s** check and bind it (`run.unittest` or `run.argv`). If this change already has a check, bind it (`run.unittest` or `run.argv`). English `must:` is enough when there is no check yet. Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Keep bidirectional links if you touch `implements` / `uses` (on files in the change, or at promote).
 
-7. **POST reconcile.** Run `validate`, `check_sync --change <slug> --changed-ids` for ids you touched (including realization files), then `run --change <slug>`. When a component already declares `realization.paths`, also run `reconcile` or report missing / unmapped_changed. Maps are optional. Do not invent one by copying inferred cites. Coverage pass is declared coverage, not behavioral agreement. A `run` pass means bound checks exited 0, not that the implementation satisfies the spec. Optionally `python3 tools/specplane/drift.py --scope changed` as a coarse reminder; `reconcile` is the declared-path check. Do not pick spec vs code when they disagree — report it.
+7. **POST reconcile.** Run `validate`, `check_sync --change <slug> --changed-ids` for ids you touched (including realization files), then `run --change <slug>`. If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate. When a component already declares `realization.paths`, also run `reconcile` or report missing / unmapped_changed. Maps are optional. Do not invent one by copying inferred cites. Coverage pass is declared coverage, not behavioral agreement. A `run` pass means bound checks exited 0, not that the implementation satisfies the spec. Optionally `python3 tools/specplane/drift.py --scope changed` as a coarse reminder; `reconcile` is the declared-path check. Do not pick spec vs code when they disagree — report it.
 
 8. **Promote only after the user accepts.** Then: apply the delta to live YAML, bump `meta.version` + changelog on those live files, move the folder to `specs/changes/_archive/<slug>/`. Retrieve should then show one live graph.
 
