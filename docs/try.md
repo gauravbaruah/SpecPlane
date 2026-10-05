@@ -24,7 +24,7 @@ Open **`examples/tiny-saas`** as the workspace (File → Open Folder). Skills an
 
 You should not type `retrieve` or `blast`. The agent should **retrieve** `capability.authentication`, **classify evolve**, **blast** `component.password_reset`, open a change folder (leave `add_dunning` alone), implement `src/auth.py`, then **check_sync**, then **run --change** if that folder binds a check. `run` does not create the test.
 
-Intended chat shape: [`golden-journey.md`](./golden-journey.md). Do not paste the master schema prompt into chat.
+Intended chat shape: [`golden-journey.md`](./golden-journey.md). Please leave the master schema prompt out of chat.
 
 | Agent | What to open |
 |---|---|
@@ -85,7 +85,7 @@ cd /path/to/your-app
 uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
 ```
 
-Details: [`use-in-your-project.md`](./use-in-your-project.md). Do not copy this repo’s `specs/` (those YAML files specify SpecPlane’s own CLI).
+Details: [`use-in-your-project.md`](./use-in-your-project.md). `specplane init` creates a `specs/` directory in your project. The `specs/` directory here specifies SpecPlane’s own CLI. There is no need to copy these specs into your project.
 
 Local MCP is optional. After install, `specplane mcp` starts the same stdio server. Skills already call the kernel. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate stays CLI-only. `reconcile` is CLI-only: optional declared file maps, including greenfield with no infer. `run` joins a bound check; it is not a test runner. `impact` explains one affected subgraph; it does not replace `blast`.
 

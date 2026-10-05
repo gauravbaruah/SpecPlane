@@ -217,14 +217,14 @@ Already know which files realize a component? Declare them as `implementation.re
 
 ## Not this
 
-Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework by 50%.” Not a toy app you deploy. The Docusaurus viewer under `legacy/` is archived — do not resurrect it.
+Not a GRC or HIPAA company. Not OpenAPI-as-source-of-truth. Not “we cut rework by 50%.” Not a toy app you deploy. The Docusaurus viewer under `legacy/` is archived. Please leave it there.
 
 ## This repository
 
 | Path | What it is |
 |---|---|
 | `specplane/` | Kit — schema, applicable sections, foundation boilerplates |
-| `specs/` | Kernel product — SpecPlane specifying its CLI. **Do not copy into other apps.** |
+| `specs/` | Kernel product — SpecPlane specifying its own CLI. Your project gets its own `specs/`. Please leave this one here. |
 | `tools/specplane/` | Local CLI, MCP, and `specplane view` |
 | `tools/specplane/viewer/` | The shipping local viewer |
 | `examples/tiny-saas/` | Synthetic overlay + small `src/` for the try path |

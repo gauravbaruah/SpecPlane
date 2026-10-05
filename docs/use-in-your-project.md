@@ -159,7 +159,7 @@ specs/
 
 Daily requests after that are product language, not more scaffolding. See [`golden-journey.md`](./golden-journey.md).
 
-Do **not** paste the full master prompt into chat.
+Please leave the full master prompt out of chat.
 
 ## Daily use
 
@@ -177,7 +177,7 @@ Authoring order for a **new** tree: **capability Phase 1** → foundations you a
 
 ## Updating SpecPlane
 
-Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your consuming `AGENTS.md` if the loading contract changed. Do not merge `legacy/`, `specs/` (this repo’s kernel product), or private folders.
+Re-copy `specplane/`, skills, and rules from a newer SpecPlane commit. Diff your consuming `AGENTS.md` if the loading contract changed. Please leave `legacy/`, this repo’s `specs/`, and private folders out of that copy. Your project already has its own `specs/`.
 
 ## Not included yet
 
