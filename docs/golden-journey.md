@@ -1,5 +1,7 @@
 # Golden journey — agent ritual
 
+Nouns live in [`specplane/dialect.md`](../specplane/dialect.md). This page is the change ritual.
+
 This is what a SpecPlane-aware coding agent should do when someone describes a product change in plain language.
 
 **Intended experience:** you talk about the product. The coding agent uses SpecPlane. You never type `retrieve` or `blast`. You answer only consequential decisions. Agents implement. SpecPlane reconciles.

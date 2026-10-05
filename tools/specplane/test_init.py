@@ -36,6 +36,51 @@ class InitKitTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertTrue(any("kit root" in n for n in notes))
 
+    def test_dialect_card_is_shipped(self) -> None:
+        card = (KIT / "specplane" / "dialect.md").read_text(encoding="utf-8")
+        self.assertTrue(card.startswith("# SpecPlane dialect\n"))
+        self.assertNotIn("# Best Practices", card)
+        self.assertIn("Specs say **what** and **how well**, not **how**.", card)
+        for noun in (
+            "**Capability**",
+            "**Constraint**",
+            "**Foundation**",
+            "**System / container / component**",
+            "**Change**",
+            "**Bind**",
+        ):
+            self.assertIn(noun, card, noun)
+        readme = (
+            KIT / "specplane" / "core_prompt" / "applicable" / "README.md"
+        ).read_text(encoding="utf-8")
+        row = next(line for line in readme.splitlines() if line.startswith("| First orientation"))
+        self.assertLess(row.find("dialect.md"), row.find("01-philosophy-and-5c.md"))
+        philosophy = (
+            KIT / "specplane" / "core_prompt" / "applicable" / "01-philosophy-and-5c.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("For how little YAML is enough, read `specplane/dialect.md`.", philosophy)
+        self.assertIn("# SpecPlane Philosophy", philosophy)
+        pairs = (
+            "specplane-bootstrap",
+            "specplane-author",
+            "specplane-implement",
+        )
+        for name in pairs:
+            cursor = (KIT / ".cursor" / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            agents = (KIT / ".agents" / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            self.assertEqual(cursor, agents, name)
+            self.assertIn("specplane/dialect.md", cursor, name)
+        nouns = "Usable nouns are in `specplane/dialect.md`."
+        self.assertIn(nouns, (KIT / "tools" / "specplane" / "initkit.py").read_text(encoding="utf-8"))
+        self.assertIn(nouns, (KIT / "docs" / "use-in-your-project.md").read_text(encoding="utf-8"))
+        code, notes = init_kit(self.dest, KIT)
+        self.assertEqual(code, 0, notes)
+        copied = self.dest / "specplane" / "dialect.md"
+        self.assertEqual(copied.read_text(encoding="utf-8"), card)
+        self.assertFalse(
+            (self.dest / "specs" / "capabilities" / "capability.specplane_retrieve.yaml").exists()
+        )
+
     def test_copies_kit_not_kernel_specs(self) -> None:
         code, notes = init_kit(self.dest, KIT)
         self.assertEqual(code, 0, notes)

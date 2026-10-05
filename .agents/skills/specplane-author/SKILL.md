@@ -7,15 +7,16 @@ description: Create or expand SpecPlane YAML specs (capability, foundation, syst
 
 ## Load
 
-1. Read `specplane/core_prompt/applicable/README.md`.
-2. Read `03-shared-meta.md`.
-3. Read **only** the type section:
+1. Read `specplane/dialect.md` for the nouns and how little YAML is enough.
+2. Read `specplane/core_prompt/applicable/README.md`.
+3. Read `03-shared-meta.md`.
+4. Read **only** the type section:
    - capability → `04-capability.md`
    - foundation → `05-foundation.md` and copy shape from `specplane/foundations/` if starting from boilerplate
    - system / container / component → `06-system-container-component.md`
    - agent / tool / workflow / evaluator / tool_registry / state_store → `06` then `07-ai-native.md`
-4. Skim the matching example in `10-worked-examples.md` if the type is capability or component.
-5. If the user wants journey / lifecycle / information-flow richness or “what’s missing on this flow,” also load `specplane-flows`. String `flows` remain valid; mappings are optional.
+5. Skim the matching example in `10-worked-examples.md` if the type is capability or component.
+6. If the user wants journey / lifecycle / information-flow richness or “what’s missing on this flow,” also load `specplane-flows`. String `flows` remain valid; mappings are optional.
 
 Do not load `specplane_schema_prompt_v9.1.0.md` unless a field is missing from those sections.
 
