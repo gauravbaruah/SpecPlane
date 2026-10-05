@@ -31,4 +31,12 @@ specplane check_sync --changed-ids capability.billing
 specplane view
 ```
 
-`specplane view` prints a localhost URL. Open `#id/capability.authentication?proj=blast` on that page. That Blast is what a 60→15 change puts at risk. The walk-through is [`docs/try.md`](../../docs/try.md#5-what-the-change-puts-at-risk).
+`specplane view` prints a localhost URL. Open `#id/capability.authentication?proj=blast` on that page. That Blast is what a 60→15 change puts at risk.
+
+![Blast of capability.authentication: what a 60→15 change puts at risk](../../docs/view-blast.png)
+
+This example already has an open billing change (`add_dunning`). Leave it; 60→15 is a new folder.
+
+![Open change add_dunning. Reset-link expiry stays 60 minutes.](../../docs/view-change.png)
+
+The walk-through is [`docs/try.md`](../../docs/try.md#5-what-the-change-puts-at-risk).

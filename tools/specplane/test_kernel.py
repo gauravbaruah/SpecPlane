@@ -1453,5 +1453,41 @@ class TryPathViewTests(unittest.TestCase):
         self.assertIn("#id/capability.authentication?proj=blast", example)
 
 
+class ViewerStillsTests(unittest.TestCase):
+    def test_try_path_shows_viewer_stills(self) -> None:
+        docs = REPO / "docs"
+        blast = docs / "view-blast.png"
+        change = docs / "view-change.png"
+        self.assertTrue(blast.is_file() and blast.stat().st_size > 0)
+        self.assertTrue(change.is_file() and change.stat().st_size > 0)
+        png = b"\x89PNG\r\n\x1a\n"
+        self.assertEqual(blast.read_bytes()[:8], png)
+        self.assertEqual(change.read_bytes()[:8], png)
+        try_doc = (docs / "try.md").read_text(encoding="utf-8")
+        readme = (REPO / "README.md").read_text(encoding="utf-8")
+        example = (REPO / "examples" / "tiny-saas" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("#id/capability.authentication?proj=blast", try_doc)
+        self.assertIn("view-blast.png", try_doc)
+        self.assertIn("view-change.png", try_doc)
+        self.assertIn("add_dunning", try_doc)
+        for name in ("view-blast.png", "view-change.png"):
+            self.assertIn(name, readme)
+            self.assertIn(name, example)
+        for gif in ("docs/ask.gif", "docs/impact.gif", "docs/ship.gif", "docs/blast.gif"):
+            self.assertIn(gif, readme)
+        changes = REPO / "examples" / "tiny-saas" / "specs" / "changes"
+        names = {path.name for path in changes.iterdir() if path.is_dir()}
+        self.assertEqual(names, {"add_dunning"})
+        auth = (
+            REPO
+            / "examples"
+            / "tiny-saas"
+            / "specs"
+            / "capabilities"
+            / "capability.authentication.yaml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("60 minutes", auth)
+
+
 if __name__ == "__main__":
     unittest.main()

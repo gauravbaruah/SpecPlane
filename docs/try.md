@@ -68,6 +68,12 @@ The server prints a `http://127.0.0.1` URL. Open it, then open Blast for `capabi
 #id/capability.authentication?proj=blast
 ```
 
+![Blast of capability.authentication: what a 60→15 change puts at risk](./view-blast.png)
+
+Changes → `add_dunning`. Leave it; 60→15 is a new folder.
+
+![Open change add_dunning. Reset-link expiry stays 60 minutes.](./view-change.png)
+
 That picture is the question: **what does a 60→15 change put at risk?** Farther hops stay collapsed until you expand them. `blast` of that id names `capability.notifications`, `capability.billing`, `component.notifier`, `component.password_reset`, `component.billing_api`, and `foundation.security_baseline`. It is the affected subgraph, not a tour of the architecture. It does not block a pull request.
 
 ## 6. Your product
