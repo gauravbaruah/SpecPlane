@@ -1,0 +1,11 @@
+change_id: "viewer_stills"
+kind: "evolve"
+
+sensors:
+  - id: "try_path_shows_viewer_stills"
+    promise: "capability.specplane_viewer"
+    must: "docs/view-blast.png and docs/view-change.png exist. README, docs/try.md, and examples/tiny-saas/README.md reference both. docs/try.md section 5 still names #id/capability.authentication?proj=blast. examples/tiny-saas/specs/changes/ has no 60-to-15 folder. The CLI GIFs stay in the README. Live password reset links in the example still expire in 60 minutes."
+    run:
+      unittest: "tools.specplane.test_kernel.ViewerStillsTests.test_try_path_shows_viewer_stills"
+
+looks_fine_is_not_a_sensor: true

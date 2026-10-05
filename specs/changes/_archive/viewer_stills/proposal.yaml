@@ -1,0 +1,18 @@
+id: "viewer_stills"
+kind: "evolve"
+status: "promoted"
+opened: "2026-10-05"
+promise_ids:
+  - "capability.specplane_viewer"
+why: >-
+  The try path already opens the local viewer, but README still illustrates
+  only the CLI. Two stills from examples/tiny-saas show Blast of
+  capability.authentication and the open add_dunning change.
+non_goals:
+  - "a 60 to 15 change folder in examples/tiny-saas"
+  - "replacing the CLI GIFs"
+  - "screenshot CI or a pixel diff of the viewer"
+  - "viewer chrome, a sixth projection, or Cmd+K"
+  - "view --build or GitHub Pages"
+  - "kernel specs/ as the demo graph"
+  - "editing live 5C YAML before accept"

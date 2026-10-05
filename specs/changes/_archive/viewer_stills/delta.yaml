@@ -1,0 +1,17 @@
+change_id: "viewer_stills"
+kind: "evolve"
+
+ADDED:
+  - "docs/view-blast.png: tiny-saas Blast of capability.authentication"
+  - "docs/view-change.png: the open add_dunning change in that same example"
+
+MODIFIED:
+  - id: "capability.specplane_viewer"
+    summary: >-
+      README Try it, docs/try.md section 5, and examples/tiny-saas/README.md
+      include those two stills. Local specplane view is unchanged. No Pages.
+      No --build. Live auth TTL in the example stays 60 minutes.
+
+REMOVED: []
+
+RENAMED: []
