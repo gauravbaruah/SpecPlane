@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-10-02"
+  last_updated: "2026-10-05"
   status: "draft"
-  version: "1.7.0"
+  version: "1.8.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-05"
+    author: "must_to_bind"
+    summary: "The AGENTS.md template init writes says to bind an existing check. Do not invent a test so SpecPlane has something to run. Do not parse test_strategy. Unbound must: is not_run on run, not a pass and not a certificate."
+    breaking: false
   - date: "2026-10-02"
     author: "specplane_package"
     summary: "specplane uninstall removes the kit copy, leaves specs/ in place, and refuses this SpecPlane checkout. It does not remove the specplane command."
@@ -67,6 +71,7 @@ planning:
     acceptance_criteria:
       - "Tests assert kit copied, kernel specs not copied, empty dirs, AGENTS append, no .github/workflows"
       - "Consuming AGENTS.md template states PRE retrieve / POST check_sync --change --changed-ids, then run --change. run invokes bound checks only and does not certify behavior."
+      - "That template says: if this change already has a check, bind it (run.unittest or run.argv). Do not invent a test so SpecPlane has something to run. Do not parse test_strategy. Unbound must: is not_run on run, not a pass and not a certificate."
       - "Does not stamp epistemic live"
       - "Copied CLI files include impact.py, view.py, and the viewer/ tree. --kit-only copies neither."
       - "A failed copy exits 1, names the kit folders to delete, and leaves specs/ in place."

@@ -252,6 +252,36 @@ class InitJourneyTests(unittest.TestCase):
         self.assertNotIn("urllib", init_text)
         self.assertNotIn("mailto:", init_text)
 
+    def test_post_surfaces_remind_to_bind(self) -> None:
+        reminder = (
+            "If this change already has a check, bind it (`run.unittest` or `run.argv`). "
+            "Do not invent a test so SpecPlane has something to run. "
+            "Do not parse `test_strategy`. "
+            "Unbound `must:` is `not_run` on `run`, not a pass and not a certificate."
+        )
+        surfaces = (
+            "tools/specplane/initkit.py",
+            ".cursor/skills/specplane-implement/SKILL.md",
+            ".agents/skills/specplane-implement/SKILL.md",
+            "AGENTS.md",
+            ".cursor/rules/specplane-core.mdc",
+            "docs/golden-journey.md",
+            "docs/use-in-your-project.md",
+        )
+        cursor = (KIT / ".cursor/skills/specplane-implement/SKILL.md").read_text(encoding="utf-8")
+        agents = (KIT / ".agents/skills/specplane-implement/SKILL.md").read_text(encoding="utf-8")
+        self.assertEqual(cursor, agents)
+        self.assertIn("`must:` lines are enough", cursor)
+        journey = (KIT / "docs/golden-journey.md").read_text(encoding="utf-8")
+        self.assertNotIn("Add tests that match", journey)
+        initkit = (KIT / "tools/specplane/initkit.py").read_text(encoding="utf-8")
+        item3 = next(line for line in initkit.splitlines() if line.startswith("3. Product requests"))
+        use = (KIT / "docs/use-in-your-project.md").read_text(encoding="utf-8")
+        self.assertIn(item3, use)
+        for rel in surfaces:
+            text = (KIT / rel).read_text(encoding="utf-8")
+            self.assertIn(reminder, text, rel)
+
     def test_change_records_the_init_sentence(self) -> None:
         init = (KIT / "specs" / "capabilities" / "capability.specplane_init.yaml").read_text(encoding="utf-8")
         package = (KIT / "specs" / "capabilities" / "capability.specplane_package.yaml").read_text(encoding="utf-8")

@@ -62,7 +62,7 @@ Private and gitignored (do not commit, do not publish): `trial-implementations/`
 - Changelog entry whenever `meta.version` changes **on live 5C files**.
 - In-flight writes go in `specs/changes/<id>/`. Do not turn live YAML into diaries.
 - Call `tools/specplane/cli.py retrieve|blast|check_sync|run`; do not slurp `specs/`.
-- **PRE / POST:** retrieve when a promise might move (if unsure, retrieve); `check_sync --change <slug> --changed-ids`, then `run --change <slug>`, after those changes. Typos/renames skip retrieve. Ceremony scales with semantic consequence, not diff size. A coverage pass is declared coverage, not behavioral agreement. `run` invokes bound checks only; it does not create tests or certify behavior.
+- **PRE / POST:** retrieve when a promise might move (if unsure, retrieve); `check_sync --change <slug> --changed-ids`, then `run --change <slug>`, after those changes. If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate. Typos/renames skip retrieve. Ceremony scales with semantic consequence, not diff size. A coverage pass is declared coverage, not behavioral agreement. `run` invokes bound checks only; it does not create tests or certify behavior.
 - Specs before code when behavior, contracts, events, rollout, security, **or how the product is obtained** (init/install/README CLI claims) change.
 
 ## Working on SpecPlane itself
