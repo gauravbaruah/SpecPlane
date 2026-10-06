@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "init"]
-  last_updated: "2026-10-05"
+  last_updated: "2026-10-06"
   status: "planned"
-  version: "1.12.0"
+  version: "1.13.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-06"
+    author: "intent_and_reuse"
+    summary: "Consuming AGENTS.md says a new capability waits on meaning, then on reuse, before YAML or code."
+    breaking: false
   - date: "2026-10-05"
     author: "oss_hygiene"
     summary: "Init still does not write a workflow, does not copy kernel specs/, and does not publish. A published specplane package may run init. The public try path stays a clone plus examples/tiny-saas."
@@ -80,6 +84,7 @@ responsibilities:
   - "Refuse dest equal to the kit root; do not write GitHub Actions or hooks"
   - "Consuming AGENTS.md points an existing repo at specplane-infer. Greenfield stays bootstrap. There is no scan CLI."
   - "Consuming AGENTS.md and the copied implement skill say: if this change already has a check, bind it (run.unittest or run.argv). Do not invent a test so SpecPlane has something to run. Do not parse test_strategy. Unbound must: is not_run on run, not a pass and not a certificate. English must: stays enough when there is no check yet."
+  - "Consuming AGENTS.md says a new capability waits on meaning, then on reuse, before YAML or code."
   - "The kit includes specplane/dialect.md, an index of nouns, verbs, and the loops that join them. A change stays off the live file until the human accepts and the agent promotes. Consuming AGENTS, applicable first-orientation, and the bootstrap and author skills point at that card."
 
 flows:

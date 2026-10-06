@@ -1,6 +1,6 @@
 id: "intent_and_reuse"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-10-06"
 promise_ids:
   - "capability.specplane_change_folders"
