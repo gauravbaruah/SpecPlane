@@ -4,17 +4,13 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "package", "install"]
-  last_updated: "2026-10-05"
+  last_updated: "2026-10-02"
   status: "planned"
-  version: "1.3.0"
+  version: "1.2.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
-  - date: "2026-10-05"
-    author: "oss_hygiene"
-    summary: "Public docs lead with pip install specplane and uv tool install specplane, then specplane init. The clone is the try path after that block. pip install pyyaml is not a SpecPlane install. CONTRIBUTING and SECURITY exist. The first publish is still the pre-release 0.1.0a1. There is no npx package."
-    breaking: false
   - date: "2026-10-02"
     author: "usage_report"
     summary: "Install still does not change the local log. usage status after install still reports upload never."
@@ -175,7 +171,7 @@ constraints:
     - "Install does not write Cursor, Claude, or Codex configuration"
     - "Install does not enable or disable the local log and does not upload"
     - "Init remains capability.specplane_init. This capability does not copy the kit by itself"
-    - "Docs that tell a developer how to obtain the CLI lead with pip install specplane and uv tool install specplane, then specplane init. The clone is the try path, after that block. pip install pyyaml is not a SpecPlane install. CONTRIBUTING and SECURITY exist."
+    - "Docs that tell a developer how to obtain the CLI name the published package"
     - "Requires Python 3.10 or newer"
     - "The first publish is the pre-release 0.1.0a1"
     - "The public GitHub repository and the PyPI project specplane stay on the personal account"

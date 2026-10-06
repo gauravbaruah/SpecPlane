@@ -6,15 +6,11 @@ meta:
   tags: ["kernel", "cli", "init"]
   last_updated: "2026-10-05"
   status: "planned"
-  version: "1.12.0"
+  version: "1.11.0"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
-  - date: "2026-10-05"
-    author: "oss_hygiene"
-    summary: "Init still does not write a workflow, does not copy kernel specs/, and does not publish. A published specplane package may run init. The public try path stays a clone plus examples/tiny-saas."
-    breaking: false
   - date: "2026-10-05"
     author: "minimal_dialect"
     summary: "The kit includes specplane/dialect.md, an index of nouns, verbs, and the loops that join them. A change stays off the live file until the human accepts and the agent promotes. Init still copies specplane/ and does not copy this repo's specs/ or write a workflow."
@@ -126,7 +122,6 @@ constraints:
     - "Does not invent an example capability (bootstrap does that)"
     - "Does not infer or scan the destination. Brownfield mapping is the specplane-infer skill."
     - "Init does not publish. A published specplane package may run init. There is no npx package."
-    - "The public try path is a clone of this repo plus examples/tiny-saas. It is not the obtaining command."
     - "uvx --from git+ this repo may run init because the installed wheel bundles the kit"
     - "Copied CLI siblings include impact.py, ci_gate.py, view.py, and the viewer/ tree. --kit-only copies neither the CLI nor the viewer."
     - "Appends **/.specplane/view/ to the destination .gitignore when that line is missing. Does not ignore every path under .specplane/."
