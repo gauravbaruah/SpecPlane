@@ -1,6 +1,6 @@
 id: "oss_hygiene"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-10-05"
 promise_ids:
   - "capability.specplane_package"
