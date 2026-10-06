@@ -21,20 +21,22 @@ os.environ.setdefault("SPECPLANE_TELEMETRY", "0")
 from cli import git_changed_files, main as cli_main  # noqa: E402
 from kernel import (  # noqa: E402
     SENSOR_TIMEOUT_S,
+    RECONCILE_NOTE,
+    accept_ids,
     blast,
     check_sync,
+    default_changed_ids,
+    format_accept,
     format_check_sync,
     format_list_gaps,
     format_promote,
+    format_reconcile,
     format_retrieve,
     format_run,
     list_gaps,
     load_kernel,
-    RECONCILE_NOTE,
-    default_changed_ids,
-    format_reconcile,
     map_changed_files,
-    promote_ids,
+    promote_change,
     reconcile,
     retrieve,
     run_sensors,
@@ -673,9 +675,33 @@ class TestRun(unittest.TestCase):
             self.assertIn("unknown change: does_not_exist", err)
             self.assertIn("unknown_change: does_not_exist", text)
             code, text, err = _cli_run(root, "old_run", tmp_path)
-        self.assertEqual(code, 1, text + err)
-        self.assertIn("unknown change: old_run", err)
-        self.assertFalse(marker.exists())
+            self.assertEqual(code, 0, text + err)
+            self.assertIn("result: pass", text)
+            self.assertTrue(marker.exists())
+
+    def test_promoted_change_runs_binds(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            marker = tmp_path / "promoted_ran"
+            root = tmp_path / "specs"
+            script = "import sys; from pathlib import Path; Path(sys.argv[1]).write_text('x')"
+            _write_change(
+                root,
+                "shipped",
+                [
+                    {
+                        "id": "shipped",
+                        "must": "promoted binds still run",
+                        "run": {"argv": [sys.executable, "-c", script, str(marker)]},
+                    }
+                ],
+                archive=True,
+            )
+            code, text, err = _cli_run(root, "shipped", tmp_path)
+            self.assertEqual(code, 0, text + err)
+            self.assertTrue(marker.exists())
+            self.assertIn("result: pass", text)
+            _no_bare_result(text)
 
     def test_sensor_fail_exits_nonzero(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -826,21 +852,21 @@ class TestPromote(unittest.TestCase):
         self.assertIn("bit: inferred", out.getvalue())
         self.assertNotIn("bit: live", out.getvalue())
 
-    def test_promote_named_ids_become_live(self) -> None:
+    def test_accept_named_ids_become_live(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             product = _copy_inferred_product(Path(tmp))
             spec_root = product / "specs"
             before = (spec_root / "capabilities" / "capability.billing_checkout.yaml").read_text(
                 encoding="utf-8"
             )
-            payload = promote_ids(
+            payload = accept_ids(
                 load_kernel(spec_root),
                 ["capability.billing_checkout"],
                 today="2026-09-24",
             )
             self.assertTrue(payload["ok"], payload)
-            self.assertEqual(payload["promoted"], ["capability.billing_checkout"])
-            text = format_promote(payload)
+            self.assertEqual(payload["accepted"], ["capability.billing_checkout"])
+            text = format_accept(payload)
             self.assertIn("capability.billing_checkout", text)
             path = spec_root / "capabilities" / "capability.billing_checkout.yaml"
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -849,7 +875,7 @@ class TestPromote(unittest.TestCase):
             self.assertIn("billing", tags)
             self.assertEqual(data["meta"]["version"], "1.0.1")
             self.assertEqual(data["changelog"][0]["date"], "2026-09-24")
-            self.assertEqual(data["changelog"][0]["summary"], "Promoted from inferred to live")
+            self.assertEqual(data["changelog"][0]["summary"], "Accepted from inferred to live")
             self.assertIn("cite_checkout", before)
             self.assertEqual(
                 data["refs"][0]["path"],
@@ -859,7 +885,7 @@ class TestPromote(unittest.TestCase):
             assert again is not None
             self.assertEqual(again["bit"], "live")
             self.assertIsNotNone(again["live"])
-            second = promote_ids(
+            second = accept_ids(
                 load_kernel(spec_root),
                 ["capability.billing_checkout"],
                 today="2026-09-24",
@@ -886,15 +912,15 @@ class TestPromote(unittest.TestCase):
                 encoding="utf-8",
             )
             live_before = live.read_bytes()
-            missing = promote_ids(
+            missing = accept_ids(
                 load_kernel(spec_root),
                 ["capability.billing_checkout", "capability.missing"],
             )
             self.assertFalse(missing["ok"])
-            self.assertEqual(missing["promoted"], [])
+            self.assertEqual(missing["accepted"], [])
             self.assertIn("not found: capability.missing", missing["problems"])
             self.assertEqual(path.read_bytes(), original)
-            already = promote_ids(load_kernel(spec_root), ["capability.already"])
+            already = accept_ids(load_kernel(spec_root), ["capability.already"])
             self.assertFalse(already["ok"])
             self.assertEqual(already["problems"], ["not inferred: capability.already"])
             self.assertEqual(live.read_bytes(), live_before)
@@ -906,9 +932,9 @@ class TestPromote(unittest.TestCase):
             spec_root = product / "specs"
             path = spec_root / "capabilities" / "capability.billing_checkout.yaml"
             original = path.read_bytes()
-            payload = promote_ids(load_kernel(spec_root), [])
+            payload = accept_ids(load_kernel(spec_root), [])
             self.assertFalse(payload["ok"])
-            self.assertEqual(payload["problems"], ["promote requires named ids"])
+            self.assertEqual(payload["problems"], ["accept requires named ids"])
             self.assertEqual(path.read_bytes(), original)
 
             from io import StringIO
@@ -916,9 +942,9 @@ class TestPromote(unittest.TestCase):
 
             err = StringIO()
             with patch("sys.stderr", err):
-                code = cli_main(["promote", "--spec-root", str(spec_root)])
+                code = cli_main(["accept", "--spec-root", str(spec_root)])
             self.assertEqual(code, 1)
-            self.assertIn("promote requires named ids", err.getvalue())
+            self.assertIn("accept requires named ids", err.getvalue())
             self.assertEqual(path.read_bytes(), original)
 
     def test_does_not_read_source_to_invent_ids(self) -> None:
@@ -931,7 +957,7 @@ class TestPromote(unittest.TestCase):
             self.assertEqual(payload["inferred_unpromoted"], ["capability.billing_checkout"])
             self.assertNotIn("capability.parsed_from_checkout", payload["inferred_unpromoted"])
             self.assertTrue(payload["advisory"])
-            invented = promote_ids(
+            invented = accept_ids(
                 load_kernel(spec_root),
                 ["capability.parsed_from_checkout"],
             )
@@ -957,7 +983,7 @@ class TestPromote(unittest.TestCase):
             self.assertIn("inferred_unpromoted:", out.getvalue())
             self.assertIn("advisory: true", out.getvalue())
 
-    def test_promote_cli_then_retrieve_is_live(self) -> None:
+    def test_accept_cli_then_retrieve_is_live(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             product = _copy_inferred_product(Path(tmp))
             spec_root = product / "specs"
@@ -968,7 +994,7 @@ class TestPromote(unittest.TestCase):
             with patch("sys.stdout", out), patch("sys.stderr", err):
                 code = cli_main(
                     [
-                        "promote",
+                        "accept",
                         "--ids",
                         "capability.billing_checkout",
                         "--spec-root",
@@ -991,12 +1017,221 @@ class TestPromote(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn("bit: live", out2.getvalue())
             self.assertNotIn("inferred (not live)", err2.getvalue())
-            promoted = yaml.safe_load(
+            accepted = yaml.safe_load(
                 (spec_root / "capabilities" / "capability.billing_checkout.yaml").read_text(
                     encoding="utf-8"
                 )
             )
-            self.assertEqual(promoted["changelog"][0]["date"], date.today().isoformat())
+            self.assertEqual(accepted["changelog"][0]["date"], date.today().isoformat())
+
+            err3 = StringIO()
+            with patch("sys.stderr", err3):
+                code = cli_main(
+                    [
+                        "promote",
+                        "--ids",
+                        "capability.billing_checkout",
+                        "--spec-root",
+                        str(spec_root),
+                    ]
+                )
+            self.assertEqual(code, 1)
+            self.assertIn("promote --ids is now accept --ids", err3.getvalue())
+
+
+class TestPromoteChange(unittest.TestCase):
+    def _live_text(self) -> str:
+        return (
+            'meta:\n'
+            '  id: "capability.demo"\n'
+            '  level: "capability"\n'
+            '  purpose: "Demo"\n'
+            '  version: "1.0.0"\n'
+            '  introduced_in: "1.0.0"\n'
+            '  last_updated: "2026-01-01"\n'
+            '  status: "planned"\n'
+            "# keep this comment\n"
+            "changelog:\n"
+            '  - date: "2026-01-01"\n'
+            '    author: "old"\n'
+            '    summary: "original"\n'
+            "    breaking: false\n"
+            "responsibilities:\n"
+            '  - "old sentence"\n'
+            "flows:\n"
+            '  - "stay put"\n'
+        )
+
+    def _open_change(self, spec_root: Path, delta: str) -> Path:
+        folder = spec_root / "changes" / "ship_demo"
+        folder.mkdir(parents=True)
+        (folder / "proposal.yaml").write_text(
+            'id: "ship_demo"\nkind: "evolve"\nstatus: "in-flight"\n'
+            "promise_ids:\n  - capability.demo\n",
+            encoding="utf-8",
+        )
+        (folder / "delta.yaml").write_text(delta, encoding="utf-8")
+        (folder / "success.yaml").write_text("sensors: []\n", encoding="utf-8")
+        return folder
+
+    def test_promote_open_then_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_root = Path(tmp) / "specs"
+            cap_dir = spec_root / "capabilities"
+            cap_dir.mkdir(parents=True)
+            live_path = cap_dir / "capability.demo.yaml"
+            live_path.write_text(self._live_text(), encoding="utf-8")
+            folder = self._open_change(
+                spec_root,
+                "MODIFIED:\n  - id: capability.demo\n    summary: new promise sentence\n"
+                "ADDED: []\nREMOVED: []\nRENAMED: []\n",
+            )
+            first = promote_change(load_kernel(spec_root), "ship_demo", today="2026-10-06")
+            self.assertTrue(first["ok"], first)
+            self.assertFalse(first.get("noop"))
+            self.assertFalse(folder.exists())
+            archive = spec_root / "changes" / "_archive" / "ship_demo"
+            self.assertTrue(archive.is_dir())
+            text = live_path.read_text(encoding="utf-8")
+            self.assertIn("# keep this comment", text)
+            self.assertIn('purpose: "Demo"', text)
+            self.assertIn('version: "1.0.1"', text)
+            self.assertIn('last_updated: "2026-10-06"', text)
+            self.assertIn('  - "stay put"', text)
+            self.assertIn('  - "old sentence"', text)
+            self.assertIn('  - "new promise sentence"', text)
+            live = yaml.safe_load(text)
+            self.assertEqual(live["meta"]["version"], "1.0.1")
+            self.assertEqual(live["changelog"][0]["author"], "ship_demo")
+            self.assertEqual(live["changelog"][0]["summary"], "new promise sentence")
+            self.assertEqual(live["changelog"][1]["summary"], "original")
+            proposal = yaml.safe_load((archive / "proposal.yaml").read_text(encoding="utf-8"))
+            self.assertEqual(proposal["status"], "promoted")
+            before_second = live_path.read_bytes()
+            second = promote_change(load_kernel(spec_root), "ship_demo", today="2026-10-07")
+            self.assertTrue(second["ok"], second)
+            self.assertTrue(second.get("noop"))
+            self.assertEqual(live_path.read_bytes(), before_second)
+            mixed_open = spec_root / "changes" / "ship_demo"
+            mixed_open.mkdir()
+            (mixed_open / "proposal.yaml").write_text(
+                'id: "ship_demo"\nkind: "evolve"\nstatus: "in-flight"\n',
+                encoding="utf-8",
+            )
+            before_mixed = live_path.read_bytes()
+            third = promote_change(load_kernel(spec_root), "ship_demo")
+            self.assertFalse(third["ok"])
+            self.assertEqual(third["state"], "MIXED")
+            self.assertEqual(live_path.read_bytes(), before_mixed)
+
+    def test_partial_archive_writes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_root = Path(tmp) / "specs"
+            cap_dir = spec_root / "capabilities"
+            cap_dir.mkdir(parents=True)
+            live_path = cap_dir / "capability.demo.yaml"
+            live_path.write_text(self._live_text(), encoding="utf-8")
+            folder = self._open_change(
+                spec_root,
+                "MODIFIED:\n  - id: capability.demo\n    summary: new promise sentence\n"
+                "ADDED: []\nREMOVED: []\nRENAMED: []\n",
+            )
+            archive = spec_root / "changes" / "_archive" / "ship_demo"
+            archive.parent.mkdir(parents=True)
+            folder.rename(archive)
+            before = live_path.read_bytes()
+            payload = promote_change(load_kernel(spec_root), "ship_demo", today="2026-10-06")
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["state"], "PARTIAL")
+            self.assertEqual(live_path.read_bytes(), before)
+            self.assertTrue(archive.is_dir())
+
+    def test_missing_added_writes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_root = Path(tmp) / "specs"
+            cap_dir = spec_root / "capabilities"
+            cap_dir.mkdir(parents=True)
+            live_path = cap_dir / "capability.demo.yaml"
+            live_path.write_text(self._live_text(), encoding="utf-8")
+            folder = self._open_change(
+                spec_root,
+                "MODIFIED: []\n"
+                "ADDED:\n  - id: component.cli_accept\n"
+                "REMOVED: []\nRENAMED: []\n",
+            )
+            before = live_path.read_bytes()
+            payload = promote_change(load_kernel(spec_root), "ship_demo")
+            self.assertFalse(payload["ok"])
+            self.assertEqual(payload["state"], "OPEN")
+            self.assertIn("missing live file: component.cli_accept", payload["problems"])
+            self.assertEqual(live_path.read_bytes(), before)
+            self.assertTrue(folder.is_dir())
+
+    def test_renamed_modified_applies_to_the_new_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_root = Path(tmp) / "specs"
+            cap_dir = spec_root / "capabilities"
+            cap_dir.mkdir(parents=True)
+            old_path = cap_dir / "capability.specplane_promote.yaml"
+            new_path = cap_dir / "capability.specplane_accept.yaml"
+            old_path.write_text(
+                self._live_text()
+                .replace("capability.demo", "capability.specplane_promote"),
+                encoding="utf-8",
+            )
+            new_path.write_text(
+                self._live_text()
+                .replace("capability.demo", "capability.specplane_accept"),
+                encoding="utf-8",
+            )
+            folder = self._open_change(
+                spec_root,
+                "MODIFIED:\n"
+                "  - id: capability.specplane_promote\n"
+                "    summary: inferred ids use accept\n"
+                "ADDED: []\nREMOVED: []\n"
+                "RENAMED:\n"
+                "  - from: capability.specplane_promote\n"
+                "    to: capability.specplane_accept\n",
+            )
+            old_before = old_path.read_bytes()
+            new_before = new_path.read_bytes()
+            blocked = promote_change(load_kernel(spec_root), "ship_demo", today="2026-10-06")
+            self.assertFalse(blocked["ok"])
+            self.assertTrue(folder.is_dir())
+            self.assertEqual(old_path.read_bytes(), old_before)
+            self.assertEqual(new_path.read_bytes(), new_before)
+            old_path.unlink()
+            done = promote_change(load_kernel(spec_root), "ship_demo", today="2026-10-06")
+            self.assertTrue(done["ok"], done)
+            text = new_path.read_text(encoding="utf-8")
+            self.assertIn('version: "1.0.1"', text)
+            self.assertIn('  - "inferred ids use accept"', text)
+            self.assertIn("# keep this comment", text)
+            self.assertFalse(old_path.exists())
+
+    def test_validate_failure_is_not_a_later_noop(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_root = Path(tmp) / "specs"
+            cap_dir = spec_root / "capabilities"
+            cap_dir.mkdir(parents=True)
+            live_path = cap_dir / "capability.demo.yaml"
+            broken = self._live_text().replace('  introduced_in: "1.0.0"\n', "")
+            live_path.write_text(broken, encoding="utf-8")
+            self._open_change(
+                spec_root,
+                "MODIFIED:\n  - id: capability.demo\n    summary: new promise sentence\n"
+                "ADDED: []\nREMOVED: []\nRENAMED: []\n",
+            )
+            first = promote_change(load_kernel(spec_root), "ship_demo", today="2026-10-06")
+            self.assertFalse(first["ok"], first)
+            self.assertEqual(first["state"], "PROMOTED")
+            self.assertTrue(any("introduced_in" in item for item in first["problems"]))
+            archived = live_path.read_bytes()
+            second = promote_change(load_kernel(spec_root), "ship_demo", today="2026-10-07")
+            self.assertFalse(second["ok"], second)
+            self.assertFalse(second.get("noop"))
+            self.assertEqual(live_path.read_bytes(), archived)
 
 
 class TestReconcile(unittest.TestCase):

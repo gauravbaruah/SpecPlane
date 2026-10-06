@@ -27,9 +27,10 @@ Code is realization (C4 level 4), not a fifth C.
 | **validate** | Agent | Check YAML shape, links, and changelog. |
 | **check_sync** | Agent | Check that this change names the ids that moved. A pass is declared coverage, not proof the product behaves. |
 | **run** | Agent | Invoke a check already bound on this change. English `must:` is not executed. |
-| **promote** | Agent, after you accept | Write that change into the live spec and archive the folder. Until you accept, the live file is unchanged. |
+| **promote** | Agent, after you say ship it | Write that change into the live spec and archive the folder (`promote <slug>`). Until you say ship it, the live file is unchanged. |
+| **accept** | Agent, after you name inferred ids | Drop `inferred` on those ids (`accept --ids`). Not the change packet. |
 
-`promote --ids` is a different verb. It drops the inferred mark on capabilities you name. It does not accept an open change.
+A SpecPlane change is complete when its canonical specifications have been updated, its change packet has been archived, and the resulting repository state passes validation. Completion occurs before merge; merge publishes that completed state.
 
 ## Workflows
 
@@ -51,7 +52,7 @@ Code is realization (C4 level 4), not a fifth C.
 6. The agent implements. If a check already exists, **bind** it. Do not invent a test so SpecPlane has something to run.
 7. The agent runs **validate**, **check_sync**, then **run**. Unbound `must:` is `not_run`, not a pass and not a certificate.
 8. You say whether this is the new live promise.
-9. Only then does the agent **promote**. Retrieve shows one graph.
+9. Only then does the agent **promote** (`specplane promote <slug>`). Retrieve shows one graph. The PR that merges is already that completed state.
 
 ### Leave it alone
 

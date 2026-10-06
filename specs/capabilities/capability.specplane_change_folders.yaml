@@ -6,11 +6,15 @@ meta:
   tags: ["kernel", "changes", "in-flight"]
   last_updated: "2026-10-06"
   status: "planned"
-  version: "1.3.0"
+  version: "1.3.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-06"
+    author: "promote_change"
+    summary: "A change is complete when live specs are updated, the packet is archived, and HEAD validates. Completion is before merge. specplane promote <slug> applies MODIFIED without rewriting unrelated lines, archives, and is idempotent only when already promoted and consistent. MIXED and PARTIAL fail and write nothing. retrieve and list_gaps still skip _archive as open work."
+    breaking: false
   - date: "2026-10-06"
     author: "intent_and_reuse"
     summary: "On a retrieve miss, wait on interpretations before the change folder, then on reuse, extend, compose, or build. A new component still lists connections, constraints, and what not to duplicate. On a hit, do not add a parallel capability or component. Do not parse source in the kernel."
@@ -46,6 +50,7 @@ responsibilities:
   - "On a retrieve miss, wait on two or three interpretations before the change folder. Draft the spec from that choice and from ids the graph already has. After blast, wait on reuse, extend, compose, or build. A new component still lists connections, constraints, and what not to duplicate. On a hit, do not recommend a parallel capability or component. A known-id fix is one wait. Do not parse source in the kernel."
   - "retrieve and list_gaps skip specs/changes/_archive/"
   - "success.yaml sensors may bind run.argv (a list, no shell), run.unittest or test:, and an optional evaluator id. must: stays the claim and is never the command."
+  - "A change is complete when live specs are updated, the packet is archived, and HEAD validates. Completion is before merge. specplane promote <slug> applies MODIFIED without rewriting unrelated lines, archives, and is idempotent only when already promoted and consistent. MIXED and PARTIAL fail and write nothing. retrieve and list_gaps still skip _archive as open work."
 
 flows:
   - "Open specs/changes/<id>/ for a signal (bug, eval fail, this kernel slice)"
@@ -88,4 +93,5 @@ roadmap:
 
 realized_by:
   containers: []
-  components: []
+  components:
+    - "component.cli_promote"

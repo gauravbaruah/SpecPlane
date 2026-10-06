@@ -44,8 +44,11 @@ class InitKitTests(unittest.TestCase):
         self.assertIn("## Verbs", card)
         self.assertIn("## Workflows", card)
         self.assertIn("| **promote** |", card)
-        self.assertIn("Until you accept, the live file is unchanged.", card)
-        self.assertIn("`promote --ids` is a different verb.", card)
+        self.assertIn("| **accept** |", card)
+        self.assertIn("Until you say ship it, the live file is unchanged.", card)
+        self.assertNotIn("Until you accept, the live file is unchanged.", card)
+        self.assertIn("`accept --ids`", card)
+        self.assertNotIn("`promote --ids` is a different verb.", card)
         for noun in (
             "**Capability**",
             "**Constraint**",
@@ -119,7 +122,7 @@ class InitKitTests(unittest.TestCase):
         self.assertIn("SpecPlane (this product)", agents)
         self.assertIn("specplane-infer", agents)
         self.assertIn("Brownfield", agents)
-        self.assertIn("promote --ids", agents)
+        self.assertIn("`accept --ids`", agents)
         self.assertEqual((self.dest / "CLAUDE.md").read_text(encoding="utf-8").strip(), "@AGENTS.md")
 
     def test_appends_existing_agents(self) -> None:
@@ -412,6 +415,28 @@ class InitJourneyTests(unittest.TestCase):
             self.assertIn("two or three interpretations", text, rel)
             self.assertIn("reuse, extend, compose, or build", text, rel)
             self.assertIn("Do not parse source in the kernel", text, rel)
+
+    def test_promote_is_the_change(self) -> None:
+        card = (KIT / "specplane" / "dialect.md").read_text(encoding="utf-8")
+        self.assertIn("| **promote** |", card)
+        self.assertIn("| **accept** |", card)
+        self.assertIn("`accept --ids`", card)
+        self.assertNotIn("`promote --ids` is a different verb.", card)
+        self.assertIn(
+            "Completion occurs before merge; merge publishes that completed state.",
+            card,
+        )
+        self.assertIn("Until you say ship it, the live file is unchanged.", card)
+        self.assertNotIn("Until you accept, the live file is unchanged.", card)
+        infer_cursor = (KIT / ".cursor/skills/specplane-infer/SKILL.md").read_text(encoding="utf-8")
+        infer_agents = (KIT / ".agents/skills/specplane-infer/SKILL.md").read_text(encoding="utf-8")
+        self.assertEqual(infer_cursor, infer_agents)
+        self.assertIn("accept --ids", infer_cursor)
+        self.assertNotIn("promote --ids", infer_cursor)
+        agents = (KIT / "tools" / "specplane" / "initkit.py").read_text(encoding="utf-8")
+        self.assertIn("`accept --ids`", agents)
+        implement = (KIT / ".cursor/skills/specplane-implement/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("specplane promote <slug>", implement)
 
 
 class OssHygieneTests(unittest.TestCase):

@@ -1,0 +1,30 @@
+id: "promote_change"
+kind: "evolve"
+status: "promoted"
+opened: "2026-10-06"
+promise_ids:
+  - "capability.specplane_change_folders"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+  - "capability.specplane_accept"
+  - "capability.specplane_init"
+  - "component.cli_promote"
+  - "component.cli_accept"
+  - "component.cli_check_sync"
+  - "component.cli_run"
+  - "container.specplane_tools"
+  - "system.specplane_kernel"
+  - "foundation.epistemic_status"
+why: >-
+  Merge must mean the change is complete: live specs updated, packet archived,
+  HEAD valid. promote is that operation. Inferred ids use accept --ids.
+  The paste-in gate must treat a promoted HEAD as a terminal state, not uncovered.
+  No merge bot. No init --ci.
+non_goals:
+  - "a GitHub Action that archives after merge"
+  - "init --ci"
+  - "keeping promote --ids as a synonym"
+  - "weakening coverage so archive is ignored"
+  - "MCP promote or accept"
+  - "auto-renaming live spec files inside promote"
+  - "editing live 5C YAML before ship-it"

@@ -66,7 +66,7 @@ specplane init --dest /path/to/your-app
 
 A hand copy of the toolkit (including `impact.py`, `view.py`, and `viewer/`) is the rsync fallback in [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
 
-Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `promote --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
+Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `accept --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
 
 Already know which files realize a component? Declare them as `implementation.realization.paths` (a repo-relative file, or a directory prefix ending in `/`). Maps are optional. Greenfield can declare maps without infer. `reconcile` reports a missing declared path and an unmapped changed app file. SpecPlane does not write your code, does not parse source to learn values, and does not turn an infer cite into a map. When a mapped file changes, `check_sync`'s default changed-set can include that component id. `--changed-ids` still overrides. A coverage pass is still declared coverage, not behavioral agreement. `reconcile` is a CLI command, not an MCP tool.
 
@@ -90,7 +90,7 @@ You do not operate the CLI. The coding agent does.
 | :--- | :--- | :--- |
 | **Request:** *"Reset links expire in 15m"* | Agent edits `auth.py`, changes `60` → `15`, says "Done." | Agent calls `retrieve`, classifies **evolve**, and isolates the work in `specs/changes/`. |
 | **Cross-system impact** | Tunnel vision. Misses who else is tied to that promise. | `blast` of the auth id names `capability.notifications`, `capability.billing`, `component.notifier`, and `foundation.security_baseline`. |
-| **Documentation & audit** | Specs rot; live docs still say 60m. | In-flight change stays off live YAML. At accept, live spec gets a version bump and changelog. |
+| **Documentation & audit** | Specs rot; live docs still say 60m. | In-flight change stays off live YAML. When you say ship it, `promote <slug>` writes the version bump and changelog. |
 | **Verification** | Agent says everything looks good. | `check_sync` checks declared coverage. `run` invokes bound checks only and refuses to call that certification. |
 
 ### How the pieces fit
@@ -151,7 +151,7 @@ This example already has an open billing change:
 
 ## Optional: local MCP
 
-Skills already call the kernel. MCP is optional. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate, promote, and reconcile stay CLI-only.
+Skills already call the kernel. MCP is optional. Same six tools: retrieve, blast, impact, check_sync, list_gaps, run. Validate, promote, accept, and reconcile stay CLI-only.
 
 After `pip install -e .` from this checkout, `specplane mcp` starts that server. Optional `--spec-root` is the default when a tool call omits `spec_root`.
 

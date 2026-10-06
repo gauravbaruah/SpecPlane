@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "mcp", "run"]
-  last_updated: "2026-10-02"
+  last_updated: "2026-10-06"
   status: "planned"
-  version: "1.5.0"
+  version: "1.5.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-06"
+    author: "promote_change"
+    summary: "run --change <slug> validates that change in OPEN or PROMOTED. MIXED and MISSING exit non-zero. Archived is no longer unknown when the packet is in _archive."
+    breaking: false
   - date: "2026-10-02"
     author: "practitioner_brief"
     summary: "run still does not execute English must:. No bind stays UNVERIFIED. Exit 0 when every row is not_run remains, and that receipt is not a coverage pass."
@@ -45,6 +49,7 @@ responsibilities:
   - "A bound command that passes is VERIFIED. A failure is FAILED. An English must with no bind is UNVERIFIED. VERIFIED means the bound command passed."
   - "run ends with one line. A passing run still does not certify the spec, and says the human step is to accept the change or keep editing. A failure says to read the failed sensor and fix that check. No bind says no check was executed."
   - "check_sync does not absorb this command. Compose with it; do not execute sensors there."
+  - "run --change <slug> validates that change in OPEN or PROMOTED. MIXED and MISSING exit non-zero. Archived is no longer unknown when the packet is in _archive."
 
 flows:
   - "After check_sync --change <slug>: run --change <slug>"

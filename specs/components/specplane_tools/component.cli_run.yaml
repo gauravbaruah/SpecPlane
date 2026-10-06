@@ -6,13 +6,17 @@ meta:
   domain: "infrastructure"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "run"]
-  last_updated: "2026-10-02"
+  last_updated: "2026-10-06"
   status: "draft"
-  version: "1.5.0"
+  version: "1.5.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-06"
+    author: "promote_change"
+    summary: "Unknown change is MISSING or MIXED. A promoted slug invokes binds from the archive."
+    breaking: false
   - date: "2026-10-02"
     author: "practitioner_brief"
     summary: "An unbound sensor stays UNVERIFIED. The command does not turn that into a failed test."

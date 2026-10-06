@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "check_sync"]
-  last_updated: "2026-10-02"
+  last_updated: "2026-10-06"
   status: "planned"
-  version: "1.9.0"
+  version: "1.9.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-06"
+    author: "promote_change"
+    summary: "resolve_change is OPEN, PROMOTED, MIXED, or MISSING. PARTIAL is an archived packet whose live specs do not match it. --change works on OPEN or PROMOTED. Default coverage also accepts a promoted packet whose archive path is in this changed-set. MIXED and PARTIAL fail. Old archives not in the diff do not cover. Do not treat a promoted HEAD as uncovered."
+    breaking: false
   - date: "2026-10-02"
     author: "practitioner_brief"
     summary: "check_sync --change fails when that change declares a sensor with no run.unittest, run.argv, or test:. The line names the sensor and the bind to add. It does not execute the English. Default check_sync without --change does not fail for unbound sentences elsewhere."
@@ -80,6 +84,7 @@ responsibilities:
   - "Each declared sensor shows its evidence and status UNVERIFIED. check_sync does not run the bind."
   - "check_sync ends with one line. An uncovered failure names the ids and says to put them on an open change, then check_sync again. A pass with declared sensors says to run them. A Phase 1 pass says Phase 1 is valid and an empty impact list is a warning."
   - "check_sync --change fails when that change declares a sensor with no run.unittest, run.argv, or test:. The line names the sensor and the bind to add. It does not execute the English. A change with no sensors stays a coverage check. Default check_sync without --change does not fail for unbound sentences elsewhere."
+  - "resolve_change is OPEN, PROMOTED, MIXED, or MISSING. PARTIAL is an archived packet whose live specs do not match it. --change works on OPEN or PROMOTED. Default coverage also accepts a promoted packet whose archive path is in this changed-set. MIXED and PARTIAL fail. Old archives not in the diff do not cover. Do not treat a promoted HEAD as uncovered."
 
 flows:
   - "After implement: check_sync --change <slug> --changed-ids against live + that open delta"

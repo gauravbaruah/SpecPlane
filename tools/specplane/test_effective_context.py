@@ -331,7 +331,7 @@ promise_ids:
         self.assertIn(
             "SpecPlane · run — bound checks passed. "
             "This does not certify the implementation satisfies the spec. "
-            "The next human step is to accept the change, or keep editing.",
+            "The next human step is to say ship it, or keep editing.",
             text,
         )
 

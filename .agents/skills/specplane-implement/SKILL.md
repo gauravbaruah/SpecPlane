@@ -115,7 +115,7 @@ Do not invent a graph by reading the whole tree. You may open files the CLI alre
 
 8. **POST reconcile.** Run `validate`, `check_sync --change <slug> --changed-ids` for ids you touched (including realization files), then `run --change <slug>`. If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate. When a component already declares `realization.paths`, also run `reconcile` or report missing / unmapped_changed. Maps are optional. Do not invent one by copying inferred cites. Coverage pass is declared coverage, not behavioral agreement. A `run` pass means bound checks exited 0, not that the implementation satisfies the spec. Optionally `python3 tools/specplane/drift.py --scope changed` as a coarse reminder; `reconcile` is the declared-path check. Do not pick spec vs code when they disagree — report it.
 
-9. **Promote only after the user accepts.** Then: apply the delta to live YAML, bump `meta.version` + changelog on those live files, move the folder to `specs/changes/_archive/<slug>/`. Retrieve should then show one live graph.
+9. **Promote only after the user accepts.** Run `specplane promote <slug>`: apply the delta to live YAML, bump `meta.version` + changelog on those live files, move the folder to `specs/changes/_archive/<slug>/`. Retrieve should then show one live graph. Do not `git mv` by hand unless the command is missing.
 
 If this repo has no `specs/`, say so and point at bootstrap. Do not copy SpecPlane’s own `specs/` into another app.
 

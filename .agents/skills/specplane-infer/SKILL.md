@@ -99,14 +99,14 @@ Do not set `realized_by`. Do not omit `inferred`. Do not overwrite a file that i
 
 ## Stop
 
-After the handful, stop. Tell the human the ids and the cites. Ask which ids to promote. Wait.
+After the handful, stop. Tell the human the ids and the cites. Ask which ids to accept. Wait.
 
-## Promote
+## Accept
 
 Only after the human names ids:
 
 ```bash
-SPECPLANE_CALLER=cursor_skill python3 tools/specplane/cli.py promote --ids id1,id2 --spec-root specs
+SPECPLANE_CALLER=cursor_skill python3 tools/specplane/cli.py accept --ids id1,id2 --spec-root specs
 ```
 
 That command drops `inferred` on those files and adds a changelog row. It does not promote unnamed ids. Do not drop the tag yourself.

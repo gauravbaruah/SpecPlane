@@ -182,7 +182,7 @@ python3 tools/specplane/cli.py run --spec-root specs \
 
 **User:** Ship it.
 
-**Agent:** Promoted the delta into live `capability.adaptive_reminders` (version bump + changelog). Archived `specs/changes/observation_triggered_reminders/`. Retrieve now shows one live graph, no leftover “scheduled-only” promise.
+**Agent:** Ran `specplane promote observation_triggered_reminders`. Promoted the delta into live `capability.adaptive_reminders` (version bump + changelog). Archived `specs/changes/observation_triggered_reminders/`. Retrieve now shows one live graph, no leftover “scheduled-only” promise.
 
 ---
 
