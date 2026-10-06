@@ -6,34 +6,6 @@
 [![PyPI](https://img.shields.io/pypi/v/specplane)](https://pypi.org/project/specplane/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
-## Install
-
-**In your app**
-
-Python 3.10 or newer. The current release is the pre-release `0.1.0a1`. There is no `npx` package.
-
-```bash
-pip install specplane
-# or: uv tool install specplane
-specplane init
-```
-
-`specplane init` copies the kit into your app and creates empty `specs/` folders. It does not copy this repo’s kernel `specs/`. To pin a commit: `uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@<sha> specplane init`. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
-
-**This demo**
-
-Clone, then try the 60→15 loop on `examples/tiny-saas`.
-
-```bash
-git clone https://github.com/gauravbaruah/SpecPlane.git
-cd SpecPlane
-pip install -e .
-```
-
-PyYAML is a library. `pip install pyyaml` does not install a `specplane` command. The command needs the package above, `pip install -e .` from this checkout, or `python3 tools/specplane/cli.py` once PyYAML is importable. Walkthrough: [`docs/try.md`](./docs/try.md).
-
-Issues are welcome when the try path or `pip install specplane` fails.
-
 > We built SpecPlane because AI coding agents can write code faster than humans can maintain a coherent model of what the system is supposed to be. SpecPlane gives that model a structure—business capabilities, architecture, components, contracts, constraints, dependencies and evidence—and makes it explorable by humans and usable by agents.
 
 SpecPlane is a git-native specification graph for software built by humans and AI agents.
@@ -58,6 +30,47 @@ The CLI, MCP, viewer, skills, and a pasted CI check are projections of one kerne
 Command events stay on this machine. `specplane usage report` prints the counts. Nothing leaves automatically.
 
 **Later:** hosted share, a required GitHub check, and a spec coach. An optional paste-in check can ask whether a change is accounted for by declared intent and bound evidence. Init does not install it.
+
+## Contents
+
+- [Use it in your project](#use-it-in-your-project)
+- [The loop](#the-loop)
+- [Try the demo](#try-the-demo)
+- [Optional: local MCP](#optional-local-mcp)
+- [Not this](#not-this)
+- [This repository](#this-repository)
+
+## Use it in your project
+
+Python 3.10 or newer. The current release is the pre-release `0.1.0a1`. There is no `npx` package.
+
+```bash
+pip install specplane
+# or: uv tool install specplane
+specplane init
+```
+
+From **your** app repo (not onto SpecPlane itself). `specplane init` copies the kit and creates empty `specs/` folders. It does not copy this repo’s kernel `specs/`. If the repo already has an `AGENTS.md`, init appends a block and leaves the rest of the file in place. Other skills stay.
+
+To pin a commit instead of the published release: `uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@<sha> specplane init`. The same shape with `@main` also works. Then ask for a capability: what the product should do, before any architecture. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
+
+### Advanced
+
+If `uvx` is not installed, from a SpecPlane checkout:
+
+```bash
+pip install -e .
+specplane init --dest /path/to/your-app
+# or: python3 /path/to/SpecPlane/tools/specplane/cli.py init --dest /path/to/your-app
+```
+
+A hand copy of the toolkit (including `impact.py`, `view.py`, and `viewer/`) is the rsync fallback in [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
+
+Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `promote --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
+
+Already know which files realize a component? Declare them as `implementation.realization.paths` (a repo-relative file, or a directory prefix ending in `/`). Maps are optional. Greenfield can declare maps without infer. `reconcile` reports a missing declared path and an unmapped changed app file. SpecPlane does not write your code, does not parse source to learn values, and does not turn an infer cite into a map. When a mapped file changes, `check_sync`'s default changed-set can include that component id. `--changed-ids` still overrides. A coverage pass is still declared coverage, not behavioral agreement. `reconcile` is a CLI command, not an MCP tool.
+
+Issues are welcome when `pip install specplane` or the try path fails.
 
 ## The loop
 
@@ -92,17 +105,9 @@ flowchart LR
   A -->|check_sync · run| K
 ```
 
-**Ask** — you speak product language.
+**Ask** — you speak product language. **Impact** — blast names who else is tied to that id. The same subgraph can be read as system, product, quality, governance, or ownership. **Ship** — implement, then check_sync.
 
-![Ask: reset links 60 to 15, retrieve, classify evolve](./docs/ask.gif)
-
-**Impact** — blast names who else is tied to that id. The same subgraph can be read as system, product, quality, governance, or ownership.
-
-![Impact: blast component.password_reset](./docs/impact.gif)
-
-**Ship** — implement, then check_sync.
-
-![Ship: check_sync pass](./docs/ship.gif)
+The terminal recordings are optional: [ask](./docs/ask.gif), [impact](./docs/impact.gif), [ship](./docs/ship.gif), [blast](./docs/blast.gif).
 
 ### SpecPlane should stay out of your way
 
@@ -118,7 +123,7 @@ Ceremony scales with **semantic consequence**, not diff size. Full transcript: [
 
 **Works with your coding agent.** Cursor, Claude Code, and Codex use the same deterministic kernel through **skills** today. Local MCP exposes retrieve, blast, impact, check_sync, list_gaps, and run when you want tool-native calls. You are not meant to type those commands.
 
-## Try it
+## Try the demo
 
 Synthetic example — not a real product, not this repo’s kernel `specs/`.
 
@@ -128,7 +133,7 @@ cd SpecPlane
 pip install -e .
 ```
 
-Python 3.10+. `pip install pyyaml` does not install a `specplane` command. Without the package, `python3 tools/specplane/cli.py --help` needs PyYAML importable and is still not `specplane` on PATH.
+Python 3.10+. `pip install pyyaml` does not install a `specplane` command. Without the package, `python3 tools/specplane/cli.py --help` needs PyYAML importable and is still not `specplane` on PATH. The command needs the package above, `pip install -e .` from this checkout, or `python3 tools/specplane/cli.py` once PyYAML is importable. Walkthrough: [`docs/try.md`](./docs/try.md).
 
 You say the change. The agent retrieves, blasts, and implements. You look at blast in `specplane view`.
 
@@ -143,8 +148,6 @@ Auth, billing, notifications, one open billing change, and `src/auth.py` with a 
 This example already has an open billing change:
 
 ![Open change add_dunning. Reset-link expiry stays 60 minutes.](./docs/view-change.png)
-
-`blast` of a single id (not the whole loop): [docs/blast.gif](./docs/blast.gif).
 
 ## Optional: local MCP
 
@@ -172,48 +175,6 @@ claude mcp add specplane -- specplane mcp
 ```
 
 From a checkout where `specplane` is not on PATH, `python3 tools/specplane/mcp_stdio.py` is the same server. In a product repo after `specplane init`, that script is `tools/specplane/mcp_stdio.py`. It adds its own directory to `sys.path`; PyYAML still has to be importable by that `python3`.
-
-## Use it in your product
-
-Python 3.10 or newer. The current release is the pre-release `0.1.0a1`.
-
-```bash
-pip install specplane
-# or
-uv tool install specplane
-```
-
-From **your** app repo (not onto SpecPlane itself):
-
-```bash
-specplane init
-```
-
-That command copies the kit and creates empty `specs/` folders. It does not copy SpecPlane’s own kernel `specs/`. If the repo already has an `AGENTS.md`, init appends a block and leaves the rest of the file in place. Other skills stay. There is no `npx` package.
-
-To pin a commit instead of the published release:
-
-```bash
-uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init
-```
-
-Then ask for a capability: what the product should do, before any architecture. Schema **v9.1.0**. More: [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
-
-### Advanced
-
-If `uvx` is not installed, from a SpecPlane checkout:
-
-```bash
-pip install -e .
-specplane init --dest /path/to/your-app
-# or: python3 /path/to/SpecPlane/tools/specplane/cli.py init --dest /path/to/your-app
-```
-
-A hand copy of the toolkit (including `impact.py`, `view.py`, and `viewer/`) is the rsync fallback in [`docs/use-in-your-project.md`](./docs/use-in-your-project.md).
-
-Already have a repo? Ask the agent to map what is here. That uses the **specplane-infer** skill: the agent walks one named root and writes at most seven Phase 1 capabilities tagged `inferred`, with path cites. You name which ids become live. The agent then runs `promote --ids`. SpecPlane does not ship a scan command. The coding agent does the walk.
-
-Already know which files realize a component? Declare them as `implementation.realization.paths` (a repo-relative file, or a directory prefix ending in `/`). Maps are optional. Greenfield can declare maps without infer. `reconcile` reports a missing declared path and an unmapped changed app file. SpecPlane does not write your code, does not parse source to learn values, and does not turn an infer cite into a map. When a mapped file changes, `check_sync`'s default changed-set can include that component id. `--changed-ids` still overrides. A coverage pass is still declared coverage, not behavioral agreement. `reconcile` is a CLI command, not an MCP tool.
 
 ## Not this
 
