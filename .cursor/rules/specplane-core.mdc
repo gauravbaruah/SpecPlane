@@ -15,7 +15,7 @@ Specs describe what and how well, not how. Keep bidirectional links in sync. Add
 
 Product requests in natural language use the change ritual in `specplane-implement` ([`docs/golden-journey.md`](docs/golden-journey.md)).
 
-**PRE:** If the request could move a promise, `retrieve` before writing, then change folder + blast; ask and **wait** if a decision is unresolved. Typos/renames: no retrieve. If unsure, retrieve.
+**PRE:** If the request could move a promise, `retrieve` before writing. If no live capability matches, do not open a change yet: offer two or three interpretations and the likely flows, and **wait**. Draft the spec from that choice and from ids `blast` already knows. After blast, classify reuse, extend, compose, or build (build last), and **wait** before code. Even a new component lists connections, constraints, and what not to duplicate. If retrieve hit, do not add a parallel capability or component for the same job. Typos/renames: no retrieve. If unsure, retrieve. Do not slurp the tree. Do not parse source in the kernel.
 
 **POST:** After non-trivial work, `validate`, `check_sync --change <slug> --changed-ids`, then `run --change <slug>`. If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate. Default check_sync (spec YAML in git only) is not a pass if you touched `tools/specplane/` or app code. Coverage pass is not behavioral agreement. `run` invokes bound checks only; it does not create tests or certify behavior. The kernel does not watch the chat.
 

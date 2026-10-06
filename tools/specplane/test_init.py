@@ -349,6 +349,70 @@ class InitJourneyTests(unittest.TestCase):
         self.assertTrue(flows)
         self.assertTrue(all(isinstance(item, str) for item in flows))
 
+    def test_intent_and_reuse_gates(self) -> None:
+        expected = {
+            "specplane-author",
+            "specplane-bootstrap",
+            "specplane-explain",
+            "specplane-flows",
+            "specplane-implement",
+            "specplane-infer",
+            "specplane-validate",
+        }
+        for parent in (".cursor/skills", ".agents/skills"):
+            names = {
+                path.name
+                for path in (KIT / parent).iterdir()
+                if path.is_dir() and path.name.startswith("specplane-")
+            }
+            self.assertEqual(names, expected, parent)
+
+        cursor = (KIT / ".cursor/skills/specplane-implement/SKILL.md").read_text(encoding="utf-8")
+        agents = (KIT / ".agents/skills/specplane-implement/SKILL.md").read_text(encoding="utf-8")
+        self.assertEqual(cursor, agents)
+        for needle in (
+            "two or three interpretations",
+            "before any YAML",
+            "do not open a change yet",
+            "reuse, extend, compose, or build",
+            "parallel capability or component",
+            "what not to duplicate",
+            "Do not slurp",
+            "connections, constraints",
+        ):
+            self.assertIn(needle, cursor, needle)
+
+        journey = (KIT / "docs/golden-journey.md").read_text(encoding="utf-8")
+        self.assertIn("## If none exists", journey)
+        self.assertIn("two or three interpretations", journey)
+        self.assertIn("reuse, extend, compose, or build", journey)
+        self.assertIn("what not to duplicate", journey)
+        self.assertIn("observation_triggered_reminders", journey)
+
+        dialect = (KIT / "specplane/dialect.md").read_text(encoding="utf-8")
+        self.assertIn("two or three interpretations", dialect)
+        self.assertIn("reuse, extend, compose, or build", dialect)
+        self.assertIn("parallel capability or component", dialect)
+
+        sentence = "A new capability waits on meaning, then on reuse, before YAML or code."
+        initkit = (KIT / "tools/specplane/initkit.py").read_text(encoding="utf-8")
+        use = (KIT / "docs/use-in-your-project.md").read_text(encoding="utf-8")
+        self.assertIn(sentence, initkit)
+        self.assertIn(sentence, use)
+        item3 = next(line for line in initkit.splitlines() if line.startswith("3. Product requests"))
+        self.assertIn(item3, use)
+
+        author_cursor = (KIT / ".cursor/skills/specplane-author/SKILL.md").read_text(encoding="utf-8")
+        author_agents = (KIT / ".agents/skills/specplane-author/SKILL.md").read_text(encoding="utf-8")
+        self.assertEqual(author_cursor, author_agents)
+        self.assertIn("intent gate", author_cursor)
+
+        for rel in ("AGENTS.md", ".cursor/rules/specplane-core.mdc"):
+            text = (KIT / rel).read_text(encoding="utf-8")
+            self.assertIn("two or three interpretations", text, rel)
+            self.assertIn("reuse, extend, compose, or build", text, rel)
+            self.assertIn("Do not parse source in the kernel", text, rel)
+
 
 class OssHygieneTests(unittest.TestCase):
     def test_readme_consumer_install_precedes_clone(self) -> None:

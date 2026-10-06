@@ -1,0 +1,16 @@
+id: "intent_and_reuse"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-10-06"
+promise_ids:
+  - "capability.specplane_change_folders"
+  - "capability.specplane_init"
+why: "Agents hear a new request and author a new capability, often a new component, and clobber or duplicate the graph. Guide the spec from what is already there. On a retrieve miss, wait on interpretations before YAML; after blast, wait on reuse, extend, compose, or build. On a hit, do not add a parallel stack. No new skill. The kernel does not scan source."
+non_goals:
+  - "a new specplane-reuse, specplane-brainstorm, or SpecBrain skill"
+  - "a kernel or MCP grep of application source"
+  - "a seven-way reuse enum in YAML"
+  - "two waits on a known-id fix or a typo"
+  - "failing validate because a new component appears"
+  - "minting a component from a class name"
+  - "editing live 5C YAML before accept"

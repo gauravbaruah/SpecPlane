@@ -1,0 +1,16 @@
+change_id: "intent_and_reuse"
+kind: "evolve"
+
+sensors:
+  - id: "intent_and_realization_gates"
+    promise: "capability.specplane_change_folders"
+    must: "The implement skill and the golden journey contain an intent gate (interpretations, wait before YAML) and a realization gate (reuse, extend, compose, build, wait before code). A hit does not add a parallel capability or component. .cursor and .agents implement skills match. Do not slurp remains. No new specplane-* skill directory."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_intent_and_reuse_gates"
+  - id: "consuming_agents_waits_on_meaning"
+    promise: "capability.specplane_init"
+    must: "Consuming AGENTS.md says a new capability waits on meaning, then on reuse, before YAML or code. The quoted copy in use-in-your-project matches initkit."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_intent_and_reuse_gates"
+
+looks_fine_is_not_a_sensor: true
