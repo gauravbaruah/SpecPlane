@@ -526,7 +526,7 @@ def write_payload(payload: dict[str, Any], out: Path) -> None:
 
 def write_site(payload: dict[str, Any], out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
-    for name in ("index.html", "app.js", "app.css", "logo.png"):
+    for name in ("index.html", "app.js", "app.css"):
         shutil.copy2(assets_dir() / name, out / name)
     for folder in ("vendor", "fonts"):
         src = assets_dir() / folder

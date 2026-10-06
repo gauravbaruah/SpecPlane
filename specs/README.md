@@ -4,7 +4,7 @@
 
 `specplane/` is the **kit** — schema, applicable sections, foundation boilerplates. Copy the kit into other apps.
 
-**Do not copy this `specs/` tree into other apps.** It is not a starter product. Consumers write their own `specs/` against the kit. `capability.specplane_retrieve` is namespaced on purpose.
+`specplane init` creates a `specs/` directory in your project. This `specs/` tree specifies SpecPlane’s own CLI. There is no need to copy it into your project. It is not a starter product. `capability.specplane_retrieve` is namespaced on purpose.
 
 `design-docs/` is gitignored strategy, not specs. H01’s location is superseded; YAML lives here and is committed. Schema v9.1.0. Default branch: `main`. Handoff: [`../design-docs/handoffs/H02-relocate-specs.md`](../design-docs/handoffs/H02-relocate-specs.md) (local).
 

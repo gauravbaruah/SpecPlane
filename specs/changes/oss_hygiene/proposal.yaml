@@ -1,0 +1,22 @@
+id: "oss_hygiene"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-10-05"
+promise_ids:
+  - "capability.specplane_package"
+  - "capability.specplane_init"
+  - "component.cli_view"
+why: >-
+  Public docs led with a clone and treated pip install pyyaml as enough
+  for a specplane command. The obtaining commands are pip install specplane
+  and uv tool install specplane, then init. Clone stays the try path.
+  CONTRIBUTING and SECURITY name how to send a change and a vulnerability.
+  The stacked-cards logo is removed from the README and the local viewer.
+non_goals:
+  - "enabling GitHub rulesets or required checks"
+  - "filing brainstorm themes as issues"
+  - "a code of conduct, CLA, GOVERNANCE, or RFC"
+  - "an npx package"
+  - "init writing GitHub workflows"
+  - "editing live 5C YAML until accept"
+  - "a Dependabot config that scans legacy/"

@@ -350,6 +350,41 @@ class InitJourneyTests(unittest.TestCase):
         self.assertTrue(all(isinstance(item, str) for item in flows))
 
 
+class OssHygieneTests(unittest.TestCase):
+    def test_readme_consumer_install_precedes_clone(self) -> None:
+        readme = (KIT / "README.md").read_text(encoding="utf-8")
+        consumer = readme.find("pip install specplane")
+        uv = readme.find("uv tool install specplane")
+        clone = readme.find("git clone https://github.com/gauravbaruah/SpecPlane.git")
+        self.assertGreaterEqual(consumer, 0)
+        self.assertGreaterEqual(uv, 0)
+        self.assertGreater(clone, consumer)
+        self.assertGreater(clone, uv)
+        self.assertIn("specplane init", readme[:clone])
+        self.assertNotIn("# or: pip install pyyaml", readme)
+        self.assertNotIn("(or `pip install pyyaml`)", readme)
+        self.assertIn("does not install a `specplane` command", readme)
+        self.assertNotIn("npx", readme[consumer:clone].split("This demo", 1)[0])
+
+    def test_contributing_exists(self) -> None:
+        text = (KIT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+        self.assertIn("Pull requests are welcome against `main`", text)
+        self.assertIn("Please do not push directly to `main`", text)
+        self.assertIn("specs/", text)
+        self.assertIn("no need to copy these specs", text)
+        self.assertIn("Please do not slurp `specs/`", text)
+        self.assertIn("design-docs/", text)
+        self.assertIn("Apache 2.0", text)
+        self.assertIn("no CLA", text)
+        self.assertIn("Please do not use Discussions for bugs", text)
+
+    def test_security_exists(self) -> None:
+        text = (KIT / "SECURITY.md").read_text(encoding="utf-8")
+        self.assertIn("private vulnerability reporting", text)
+        self.assertIn("Please do not file public issues", text)
+        self.assertIn("does not pay a bounty", text)
+
+
 def yaml_load(path: Path):
     import yaml
 

@@ -8,7 +8,7 @@ Master schema, applicable split, and foundation boilerplates.
 
 | | File | When to use |
 |---|---|---|
-| **Reference** | [`core_prompt/specplane_schema_prompt_v9.1.0.md`](core_prompt/specplane_schema_prompt_v9.1.0.md) | Complete prompt in one file. Humans browsing. Schema changes. Do **not** dump into an agent session. |
+| **Reference** | [`core_prompt/specplane_schema_prompt_v9.1.0.md`](core_prompt/specplane_schema_prompt_v9.1.0.md) | Complete prompt in one file. Humans browsing. Schema changes. Please leave it out of an agent session. |
 | **Applicable** | [`core_prompt/applicable/README.md`](core_prompt/applicable/README.md) | Split of the same prompt. Agents load **one section per task**. |
 
 v6.1.0 (C4 only): [`core_prompt/specplane_schema_prompt_v6.1.0_progressive_disclosure.md`](core_prompt/specplane_schema_prompt_v6.1.0_progressive_disclosure.md) — [`README_v6.1.0.md`](core_prompt/README_v6.1.0.md)
@@ -36,7 +36,7 @@ Repo root [`AGENTS.md`](../AGENTS.md) is the router. [`CLAUDE.md`](../CLAUDE.md)
 **In this schema repo:**
 
 1. Open [`AGENTS.md`](../AGENTS.md) or [`core_prompt/README_START_HERE.md`](core_prompt/README_START_HERE.md).
-2. Follow the applicable loading contract — do not attach the full v9.1.0 file.
+2. Follow the applicable loading contract. Please leave the full v9.1.0 file out of the session.
 3. Capability-first: Phase 1 (`responsibilities`, `flows`, `business_value`, `constraints`) is enough to start.
 
 Specs capture **what** and **how well**, not **how**. Same spec can guide web, mobile, and API implementations.
