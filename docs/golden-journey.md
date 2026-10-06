@@ -22,10 +22,10 @@ The transcript below is a **scripted example** (a reminders capability). Kernel 
    - **evolve** — the promise itself changes (including install / init / what the README says the CLI does).
    - **learn** — experiment; we do not know yet whether this becomes law.
 4. Ceremony scales with **semantic consequence**, not diff size. A one-line token change can be evolve. A 2,000-line refactor can be trivial.
-5. If not trivial: open `specs/changes/<id>/` (`proposal.yaml`, `delta.yaml`, `success.yaml`; `decision.md` only if a human must choose). Do **not** turn the live capability into a changelog novel.
-6. Call `blast`. Translate to “likely affected.”
-7. Ask **only** unresolved consequential questions (prefer one). Record the answer in `decision.md`. Wait.
-8. Give the coding agent a **minimal projection** (live promise + delta + blast + decision). Implement the product. If the work needs a check, add **the product’s** check and bind it (`run.unittest` or `run.argv`). If this change already has a check, bind it (`run.unittest` or `run.argv`). English `must:` is enough when there is no check yet. Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate.
+5. **Retrieve miss** (no live capability): do **not** open a change yet. Offer two or three interpretations and the likely flows. Wait. A narrower reading may mean no new capability.
+6. Open `specs/changes/<id>/` (`proposal.yaml`, `delta.yaml`, `success.yaml`; `decision.md` only if a human must choose). On a miss, draft it from the chosen interpretation and from ids the graph already has (`implements` / `realized_by` / `uses`, declared `realization.paths`). On a hit, draft the delta on the existing promise. Do not add a parallel capability or component for the same job. Do **not** turn the live capability into a changelog novel. Do not invent a stack.
+7. Call `blast` (and `impact` when retrieve missed). Translate to “likely affected.”
+8. **Before code.** On a miss, classify reuse, extend, compose, or build (build last). Even a new component lists connections, constraints, and what not to duplicate. Wait. On a hit, ask **only** one unresolved consequential question and wait once — a known-id fix does not get a second gate. Then give the coding agent a **minimal projection** (live promise + delta + blast + decision). Implement the product. If the work needs a check, add **the product’s** check and bind it (`run.unittest` or `run.argv`). If this change already has a check, bind it (`run.unittest` or `run.argv`). English `must:` is enough when there is no check yet. Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate.
 9. **POST:** `validate` + `check_sync --change <slug> --changed-ids` on the ids you touched (and whose realization files you edited), then `run --change <slug>`. If this change already has a check, bind it (`run.unittest` or `run.argv`). Do not invent a test so SpecPlane has something to run. Do not parse `test_strategy`. Unbound `must:` is `not_run` on `run`, not a pass and not a certificate. The default changed-set is spec YAML plus declared path matches — do not treat an empty default as a pass. `--changed-ids` overrides that set. When a map exists, `reconcile` reports missing and unmapped paths; maps are optional and do not require infer. Coverage pass is declared coverage, not behavioral agreement. `run` invokes checks already bound on that change (`run.argv` or `run.unittest` / `test:`). It does not create tests, execute English `must:` lines, or certify that the implementation satisfies the spec. Do not silently pick spec vs code.
 10. **Promote** into live YAML only after the human accepts. Archive the change folder.
 
@@ -186,6 +186,14 @@ python3 tools/specplane/cli.py run --spec-root specs \
 
 ---
 
+## If none exists
+
+The transcript above is an **evolve hit**: retrieve found a live capability, so there is one wait and no parallel capability.
+
+If retrieve finds nothing live, stop before YAML. Offer two or three interpretations and the likely flows, and wait. Then open the change from that choice, blast, and name reuse, extend, compose, or build (build last). Even a new component lists connections, constraints, and what not to duplicate. Wait again before code.
+
+---
+
 ## Counter-examples (must stay boring)
 
 | User says | Agent does |
@@ -194,7 +202,7 @@ python3 tools/specplane/cli.py run --spec-root specs \
 | Fix this typo | Just do it. |
 | Rename this internal helper | Just do it. |
 | Refactor this class; same behavior | Just do it. If unsure whether behavior moved, retrieve — do not guess trivial. |
-| Password reset is broken | **fix** — live spec already promises reset. Thin change folder if the path is non-trivial; then implement. No new promise. |
+| Password reset is broken | **fix** — live spec already promises reset. Thin change folder if the path is non-trivial; then implement. No new promise. One wait. Do not add a parallel component. |
 | Reset links expire in 15 minutes, not 60 | **evolve** — same shape as the journey above. |
 | Try an AI-generated recovery flow and see if completion rises | **learn** — hypothesis + success sensor; may not promote to live. |
 | Make destructive actions green instead of red | Retrieve `foundation.design_system`. If `danger = red` is used broadly: **interrupt** — this instance only, or the global token? That one-line CSS can be evolve. |

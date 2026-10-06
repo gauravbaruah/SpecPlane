@@ -45,12 +45,13 @@ Code is realization (C4 level 4), not a fifth C.
 
 1. You say what should be true.
 2. The agent **retrieves** the capability, or says none exists.
-3. If the promise moves, the agent opens a **change**. It does not edit the live file.
-4. The agent **blasts**. It asks you only when a real decision is open. You answer. It waits.
-5. The agent implements. If a check already exists, **bind** it. Do not invent a test so SpecPlane has something to run.
-6. The agent runs **validate**, **check_sync**, then **run**. Unbound `must:` is `not_run`, not a pass and not a certificate.
-7. You say whether this is the new live promise.
-8. Only then does the agent **promote**. Retrieve shows one graph.
+3. If none exists, the agent offers two or three interpretations and the likely flows. It waits. It does not open a change yet. A narrower reading may mean no new capability.
+4. The agent opens a **change** from that choice, or from the live promise when retrieve hit. It drafts from ids the graph already has. It does not edit the live file. On a hit it does not add a parallel capability or component for the same job.
+5. The agent **blasts**. It classifies the realization as reuse, extend, compose, or build (build last). Even a new component lists connections, constraints, and what not to duplicate. On a miss it waits again before code. On a hit it asks only when a real decision is open, and it waits once.
+6. The agent implements. If a check already exists, **bind** it. Do not invent a test so SpecPlane has something to run.
+7. The agent runs **validate**, **check_sync**, then **run**. Unbound `must:` is `not_run`, not a pass and not a certificate.
+8. You say whether this is the new live promise.
+9. Only then does the agent **promote**. Retrieve shows one graph.
 
 ### Leave it alone
 

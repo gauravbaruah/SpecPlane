@@ -1,0 +1,14 @@
+change_id: "intent_and_reuse"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_change_folders"
+    summary: "On a retrieve miss, wait on two or three interpretations before the change folder. Draft the spec from that choice and from ids the graph already has. After blast, wait on reuse, extend, compose, or build. A new component still lists connections, constraints, and what not to duplicate. On a hit, do not recommend a parallel capability or component. A known-id fix is one wait. Do not parse source in the kernel."
+  - id: "capability.specplane_init"
+    summary: "Consuming AGENTS.md says a new capability waits on meaning, then on reuse, before YAML or code."
+
+REMOVED: []
+
+RENAMED: []

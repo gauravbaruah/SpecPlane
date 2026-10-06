@@ -22,11 +22,11 @@ Do not load `specplane_schema_prompt_v9.1.0.md` unless a field is missing from t
 
 ## Procedure
 
-1. If this is a **behavior change to something that already exists**, stop and follow `specplane-implement` (retrieve, classify, change folder). Do not silently patch live YAML.
+1. If this is a **product change** (behavior, or a new promise in natural language), stop and follow `specplane-implement`. Do not write a new capability file until that skill’s intent gate has an answer, unless the human pasted a decided spec. Do not silently patch live YAML.
 2. If `tools/specplane/cli.py` exists and you have an id, `retrieve` it first. Do not slurp `specs/`.
 3. Identify level and (for components) `meta.type` / `meta.domain`.
 4. **Where to write:**
-   - Brand-new capability with no live id: Phase 1 live file is OK (`responsibilities`, `flows`, `business_value`, `constraints`).
+   - The human pasted a decided spec, and there is no live id: Phase 1 live file is OK (`responsibilities`, `flows`, `business_value`, `constraints`).
    - In-flight work or an open change: put ADDED/MODIFIED YAML in `specs/changes/<id>/`, not as a changelog novel on the live file.
 5. Set `meta.id` to the filename without extension. Use snake_case ids.
 6. If adding `implements`, `uses`, or internal dependencies, update the other side of the link in the same change.
