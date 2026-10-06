@@ -91,7 +91,7 @@ If you already have an `AGENTS.md`, keep your project rules and append the SpecP
 
 ### Optional local MCP
 
-Skills already call the kernel. To expose retrieve, blast, impact, check_sync, list_gaps, and run as tools, start the same server with `specplane mcp`. Validate, promote, and reconcile stay CLI-only.
+Skills already call the kernel. To expose retrieve, blast, impact, check_sync, list_gaps, and run as tools, start the same server with `specplane mcp`. Validate, promote, accept, and reconcile stay CLI-only.
 
 **Cursor** (`~/.cursor/mcp.json`) or **Claude Desktop** (`claude_desktop_config.json`):
 
@@ -135,7 +135,7 @@ Rules:
 - Capability Phase 1 is valid without architecture.
 - Bidirectional links in the same change (`implements` ↔ `realized_by`, `uses` ↔ `used_by`).
 - Changelog on live 5C files when `meta.version` changes. In-flight work lives in `specs/changes/`.
-- Brownfield (an existing repo): use specplane-infer. The coding agent walks one named root and writes Phase 1 YAML tagged inferred. Greenfield stays specplane-bootstrap. There is no scan CLI and no infer CLI. `promote --ids` makes named inferred ids live. Greenfield can declare `implementation.realization.paths` without infer. `reconcile` checks that join; it does not write code or parse source. It is CLI-only.
+- Brownfield (an existing repo): use specplane-infer. The coding agent walks one named root and writes Phase 1 YAML tagged inferred. Greenfield stays specplane-bootstrap. There is no scan CLI and no infer CLI. `accept --ids` makes named inferred ids live. Greenfield can declare `implementation.realization.paths` without infer. `reconcile` checks that join; it does not write code or parse source. It is CLI-only.
 - Specs before code when behavior, contracts, events, rollout, security, or how the product is obtained change. Trivial work (typo/4px/rename): no retrieve. If unsure, retrieve.
 ```
 
@@ -171,7 +171,7 @@ You speak product language. The agent should run the ritual in [`golden-journey.
 | Move that button 4px / typo / rename helper | No retrieve. Just do it. “No spec impact.” |
 | Add a capability / foundation / component (explicit spec work) | `specplane-author` → applicable sections 03 + 04–07. If the thing already exists and behavior is changing, switch to implement. |
 | Review / validate specs | `specplane-validate` → `cli.py validate` / `check_sync`, then sections 08 and 11 |
-| “Ship it” / accept the change | Promote delta into live YAML, archive the change folder |
+| “Ship it” | Run `specplane promote <slug>`: apply the delta into live YAML and archive the folder |
 
 Authoring order for a **new** tree: **capability Phase 1** → foundations you actually need → system/containers → components with `implements` / `uses`. After that, in-flight work belongs in `specs/changes/`. Index of nouns, verbs, and the loop: [`specplane/dialect.md`](../specplane/dialect.md).
 

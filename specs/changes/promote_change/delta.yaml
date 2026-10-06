@@ -1,0 +1,36 @@
+change_id: "promote_change"
+kind: "evolve"
+
+ADDED:
+  - id: "component.cli_accept"
+    summary: "accept --ids drops inferred on named ids, bumps the changelog, and retrieve then shows live. CLI only. Not MCP. Does not parse application source."
+
+MODIFIED:
+  - id: "capability.specplane_change_folders"
+    summary: "A change is complete when live specs are updated, the packet is archived, and HEAD validates. Completion is before merge. specplane promote <slug> applies MODIFIED without rewriting unrelated lines, archives, and is idempotent only when already promoted and consistent. MIXED and PARTIAL fail and write nothing. retrieve and list_gaps still skip _archive as open work."
+  - id: "capability.specplane_check_sync"
+    summary: "resolve_change is OPEN, PROMOTED, MIXED, or MISSING. PARTIAL is an archived packet whose live specs do not match it. --change works on OPEN or PROMOTED. Default coverage also accepts a promoted packet whose archive path is in this changed-set. MIXED and PARTIAL fail. Old archives not in the diff do not cover. Do not treat a promoted HEAD as uncovered."
+  - id: "capability.specplane_run"
+    summary: "run --change <slug> validates that change in OPEN or PROMOTED. MIXED and MISSING exit non-zero. Archived is no longer unknown when the packet is in _archive."
+  - id: "capability.specplane_promote"
+    summary: "This capability becomes capability.specplane_accept. The inferred writer is accept --ids, not promote --ids."
+  - id: "capability.specplane_init"
+    summary: "Consuming AGENTS.md and the dialect say promote is the change and accept --ids makes named inferred ids live."
+  - id: "component.cli_promote"
+    summary: "promote <slug> applies the open change into live YAML, archives the folder, validates. Idempotent if already promoted. MIXED fails. CLI only. promote --ids is an error that names accept --ids."
+  - id: "component.cli_check_sync"
+    summary: "Scoped --change resolves OPEN or PROMOTED. Default covering includes archive-in-this-diff."
+  - id: "component.cli_run"
+    summary: "Unknown change is MISSING or MIXED. A promoted slug invokes binds from the archive."
+  - id: "container.specplane_tools"
+    summary: "contains component.cli_accept; implements capability.specplane_accept. promote <slug> is CLI-only. accept --ids is CLI-only."
+  - id: "system.specplane_kernel"
+    summary: "accept --ids is a CLI command. promote <slug> is a CLI command. MCP does not infer, promote, or accept."
+  - id: "foundation.epistemic_status"
+    summary: "Inferred writer is the one-shot skill/agent. accept --ids is the live writer. used_by lists component.cli_accept."
+
+REMOVED: []
+
+RENAMED:
+  - from: "capability.specplane_promote"
+    to: "capability.specplane_accept"

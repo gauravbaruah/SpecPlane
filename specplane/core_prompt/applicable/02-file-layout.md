@@ -46,7 +46,7 @@ specs/
         └── decision.md                       # only if a human must choose
 ```
 
-`validate` skips path parts named `changes`. Live capabilities stay small; in-flight narrative lives on the change object. Promote into live YAML after the human accepts, then archive under `specs/changes/_archive/`.
+`validate` skips path parts named `changes`. Live capabilities stay small; in-flight narrative lives on the change object. After the human says ship it, `specplane promote <slug>` applies the delta into live YAML and archives under `specs/changes/_archive/`.
 
 ### **Complete Example Structure**
 

@@ -67,7 +67,7 @@ class CiGateTests(unittest.TestCase):
                 "notes/changes/nope/proposal.yaml",
             ]
         )
-        self.assertEqual(slugs, ["ci_compose"])
+        self.assertEqual(slugs, ["ci_compose", "old"])
 
     def test_archived_folder_is_not_an_open_slug(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -77,6 +77,71 @@ class CiGateTests(unittest.TestCase):
                 ["specs/changes/promote_completed/proposal.yaml"],
             )
         self.assertEqual(slugs, [])
+
+    def test_promoted_head_is_covered(self) -> None:
+        repo = _repo_with_golden()
+        try:
+            banner = next((repo / "specs").rglob("component.banner.yaml"))
+            banner.write_text(banner.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+            folder = repo / "specs" / "changes" / "_archive" / "cover_banner"
+            folder.mkdir(parents=True)
+            (folder / "proposal.yaml").write_text(
+                'id: "cover_banner"\nkind: "fix"\nstatus: "promoted"\n'
+                "promise_ids:\n  - component.banner\n",
+                encoding="utf-8",
+            )
+            (folder / "success.yaml").write_text(
+                "sensors:\n"
+                "  - id: ok\n"
+                "    must: bound argv exits 0\n"
+                "    run:\n"
+                "      argv:\n"
+                f'        - "{sys.executable}"\n'
+                '        - "-c"\n'
+                '        - "raise SystemExit(0)"\n',
+                encoding="utf-8",
+            )
+            _git(repo, "add", "specs")
+            _git(repo, "commit", "-m", "promoted cover banner")
+            result = _run_gate(repo)
+        finally:
+            shutil.rmtree(repo)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("ci_gate slugs: cover_banner", result.stdout)
+        self.assertIn("change: cover_banner", result.stdout)
+        self.assertIn("\nrun\n", result.stdout)
+        self.assertIn("result: pass", result.stdout)
+        self.assertNotIn("ci_gate partial:", result.stdout)
+
+    def test_partial_promoted_head_fails(self) -> None:
+        repo = _repo_with_golden()
+        try:
+            banner = next((repo / "specs").rglob("component.banner.yaml"))
+            banner.write_text(banner.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+            folder = repo / "specs" / "changes" / "_archive" / "cover_banner"
+            folder.mkdir(parents=True)
+            (folder / "proposal.yaml").write_text(
+                'id: "cover_banner"\nkind: "fix"\nstatus: "promoted"\n'
+                "promise_ids:\n  - component.banner\n",
+                encoding="utf-8",
+            )
+            (folder / "delta.yaml").write_text(
+                "MODIFIED:\n  - id: component.banner\n"
+                "    summary: this sentence was never applied\n",
+                encoding="utf-8",
+            )
+            (folder / "success.yaml").write_text(
+                "sensors:\n  - id: ok\n    must: would have run\n",
+                encoding="utf-8",
+            )
+            _git(repo, "add", "specs")
+            _git(repo, "commit", "-m", "partial cover banner")
+            result = _run_gate(repo)
+        finally:
+            shutil.rmtree(repo)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("ci_gate partial: cover_banner", result.stdout)
+        self.assertNotIn("\nrun\n", result.stdout)
 
     def test_skip_skill_spec_edit_fails(self) -> None:
         repo = _repo_with_golden()

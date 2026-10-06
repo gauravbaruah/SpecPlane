@@ -1,6 +1,7 @@
 """Thin stdio MCP wrapping the same kernel as the CLI.
 
-Catalog: retrieve, blast, impact, check_sync, list_gaps, run. Validate, promote, and reconcile are CLI-only.
+Catalog: retrieve, blast, impact, check_sync, list_gaps, run.
+Validate, promote, accept, and reconcile are CLI-only.
 No infer, specify, or implement tools.
 """
 

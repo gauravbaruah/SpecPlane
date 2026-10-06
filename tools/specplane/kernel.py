@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import time
@@ -28,6 +31,11 @@ REPLACED_STATUSES = {"deprecated", "archived"}
 INFERRED_MARKERS = {"inferred"}
 # Capability Phase 1 lists. data_classification is a label, not a promise sentence.
 CONSTRAINT_LIST_KEYS = ("legal", "security", "ux")
+CHANGE_OPEN = "OPEN"
+CHANGE_PROMOTED = "PROMOTED"
+CHANGE_MISSING = "MISSING"
+CHANGE_MIXED = "MIXED"
+CHANGE_PARTIAL = "PARTIAL"
 
 
 @dataclass
@@ -50,6 +58,33 @@ class Kernel:
     docs: list[SpecDoc]
     by_id: dict[str, SpecDoc]
     changes: list[Change]
+    archived: list[Change] = field(default_factory=list)
+
+
+def _read_change_folder(folder: Path) -> Change:
+    data: dict[str, Any] = {}
+    proposal = folder / "proposal.yaml"
+    if proposal.is_file():
+        loaded = yaml.safe_load(proposal.read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            data = loaded
+    delta_path = folder / "delta.yaml"
+    if delta_path.is_file():
+        delta = yaml.safe_load(delta_path.read_text(encoding="utf-8"))
+        if isinstance(delta, dict):
+            data = {**delta, **data}
+    change_id = str(data.get("id") or data.get("change_id") or folder.name)
+    kind = str(data.get("kind") or "")
+    status = str(data.get("status") or "in-flight")
+    promise_ids = as_str_list(data.get("promise_ids"))
+    return Change(
+        change_id=change_id,
+        kind=kind,
+        status=status,
+        promise_ids=promise_ids,
+        path=folder,
+        data=data,
+    )
 
 
 def load_changes(spec_root: Path) -> list[Change]:
@@ -60,31 +95,17 @@ def load_changes(spec_root: Path) -> list[Change]:
     for folder in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
         if folder.name == "_archive":
             continue
-        proposal = folder / "proposal.yaml"
-        data: dict[str, Any] = {}
-        if proposal.is_file():
-            loaded = yaml.safe_load(proposal.read_text(encoding="utf-8"))
-            if isinstance(loaded, dict):
-                data = loaded
-        delta_path = folder / "delta.yaml"
-        if delta_path.is_file():
-            delta = yaml.safe_load(delta_path.read_text(encoding="utf-8"))
-            if isinstance(delta, dict):
-                data = {**delta, **data}
-        change_id = str(data.get("id") or data.get("change_id") or folder.name)
-        kind = str(data.get("kind") or "")
-        status = str(data.get("status") or "in-flight")
-        promise_ids = as_str_list(data.get("promise_ids"))
-        out.append(
-            Change(
-                change_id=change_id,
-                kind=kind,
-                status=status,
-                promise_ids=promise_ids,
-                path=folder,
-                data=data,
-            )
-        )
+        out.append(_read_change_folder(folder))
+    return out
+
+
+def load_archived_changes(spec_root: Path) -> list[Change]:
+    root = spec_root / "changes" / "_archive"
+    if not root.is_dir():
+        return []
+    out: list[Change] = []
+    for folder in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
+        out.append(_read_change_folder(folder))
     return out
 
 
@@ -96,7 +117,66 @@ def load_kernel(spec_root: Path) -> Kernel:
         docs=docs,
         by_id=index_by_id(docs),
         changes=load_changes(spec_root),
+        archived=load_archived_changes(spec_root),
     )
+
+
+def resolve_change_state(spec_root: Path, slug: str) -> str:
+    """Filesystem truth: OPEN, PROMOTED, MIXED, or MISSING."""
+    name = (slug or "").strip()
+    if not name or name == "_archive":
+        return CHANGE_MISSING
+    open_dir = spec_root / "changes" / name
+    archive_dir = spec_root / "changes" / "_archive" / name
+    exists_open = open_dir.is_dir()
+    exists_archive = archive_dir.is_dir()
+    if exists_open and exists_archive:
+        return CHANGE_MIXED
+    if exists_open:
+        return CHANGE_OPEN
+    if exists_archive:
+        return CHANGE_PROMOTED
+    return CHANGE_MISSING
+
+
+def resolve_change(kernel: Kernel, slug: str) -> tuple[str, Change | None]:
+    state = resolve_change_state(kernel.spec_root, slug)
+    name = (slug or "").strip()
+    if state == CHANGE_OPEN:
+        for change in kernel.changes:
+            if change.path.name == name:
+                return state, change
+        return state, _read_change_folder(kernel.spec_root / "changes" / name)
+    if state == CHANGE_PROMOTED:
+        for change in kernel.archived:
+            if change.path.name == name:
+                return state, change
+        return state, _read_change_folder(kernel.spec_root / "changes" / "_archive" / name)
+    return state, None
+
+
+def packet_slugs_in_files(files: list[str]) -> list[str]:
+    """Open or archived change slugs named in a path list."""
+    slugs: list[str] = []
+    for raw in files:
+        parts = tuple(part for part in Path(raw).parts if part not in {".", ""})
+        for index, part in enumerate(parts[:-1]):
+            if part != "changes" or index == 0 or parts[index - 1] != "specs":
+                continue
+            nxt = parts[index + 1]
+            if nxt == "_archive":
+                if index + 2 >= len(parts):
+                    break
+                slug = parts[index + 2]
+                if slug.endswith((".yaml", ".yml", ".md")):
+                    break
+                slugs.append(slug)
+                break
+            if nxt.endswith((".yaml", ".yml", ".md")):
+                break
+            slugs.append(nxt)
+            break
+    return sorted(set(slugs))
 
 
 def bit_of(doc: SpecDoc) -> str:
@@ -385,17 +465,25 @@ def change_covers(kernel: Kernel, change: Change, spec_id: str) -> bool:
 
 
 def id_covered(
-    kernel: Kernel, spec_id: str, only: Change | None = None
+    kernel: Kernel,
+    spec_id: str,
+    only: Change | None = None,
+    extra: list[Change] | None = None,
 ) -> bool:
     if only is not None:
         return change_covers(kernel, only, spec_id)
-    return any(change_covers(kernel, change, spec_id) for change in kernel.changes if change.open)
+    if any(change_covers(kernel, change, spec_id) for change in kernel.changes if change.open):
+        return True
+    for change in extra or []:
+        if change_covers(kernel, change, spec_id):
+            return True
+    return False
 
 
 def resolve_open_change(kernel: Kernel, slug: str) -> Change | None:
-    for change in kernel.changes:
-        if change.open and change.path.name == slug:
-            return change
+    state, change = resolve_change(kernel, slug)
+    if state == CHANGE_OPEN:
+        return change
     return None
 
 
@@ -459,15 +547,19 @@ def success_must_lines(change: Change) -> list[str]:
 
 
 def covering_changes(
-    kernel: Kernel, changed_ids: list[str], scoped: Change | None
+    kernel: Kernel,
+    changed_ids: list[str],
+    scoped: Change | None,
+    extra: list[Change] | None = None,
 ) -> list[Change]:
     if scoped is not None:
         return [scoped]
     found: list[Change] = []
     seen: set[str] = set()
+    pool = [change for change in kernel.changes if change.open] + list(extra or [])
     for cid in changed_ids:
-        for change in kernel.changes:
-            if not change.open or change.path.name in seen:
+        for change in pool:
+            if change.path.name in seen:
                 continue
             if change_covers(kernel, change, cid):
                 seen.add(change.path.name)
@@ -749,14 +841,20 @@ def check_sync(
     kernel: Kernel,
     changed_ids: list[str],
     change_slug: str | None = None,
+    changed_files: list[str] | None = None,
 ) -> dict[str, Any]:
     changed_ids = sorted({cid for cid in changed_ids if cid})
     scoped: Change | None = None
     unknown_change = ""
+    extra: list[Change] = []
     if change_slug:
-        scoped = resolve_open_change(kernel, change_slug)
-        if scoped is None:
+        state, scoped = resolve_change(kernel, change_slug)
+        if state in {CHANGE_MISSING, CHANGE_MIXED} or scoped is None:
             unknown_change = change_slug
+            scoped = None
+    elif changed_files:
+        names = set(packet_slugs_in_files(changed_files))
+        extra = [change for change in kernel.archived if change.path.name in names]
 
     phase1_advisory: list[str] = []
     linked: list[str] = []
@@ -783,7 +881,7 @@ def check_sync(
     uncovered: list[str] = []
     empty_blasts: list[str] = []
     if not unknown_change:
-        uncovered = [cid for cid in linked if not id_covered(kernel, cid, only=scoped)]
+        uncovered = [cid for cid in linked if not id_covered(kernel, cid, only=scoped, extra=extra)]
         if scoped is not None:
             for cid in changed_ids:
                 if cid in kernel.by_id or cid not in known:
@@ -809,7 +907,7 @@ def check_sync(
         and not unknown_change
     )
 
-    contributors = covering_changes(kernel, changed_ids, scoped) if not unknown_change else []
+    contributors = covering_changes(kernel, changed_ids, scoped, extra) if not unknown_change else []
     sensor_rows: list[dict[str, str]] = []
     missing_slugs: list[str] = []
     for change in contributors:
@@ -936,8 +1034,8 @@ def _document_without_inferred(data: dict[str, Any], today: str) -> dict[str, An
     data["changelog"] = [
         {
             "date": today,
-            "author": "promote",
-            "summary": "Promoted from inferred to live",
+            "author": "accept",
+            "summary": "Accepted from inferred to live",
             "breaking": False,
         },
         *changelog,
@@ -945,7 +1043,7 @@ def _document_without_inferred(data: dict[str, Any], today: str) -> dict[str, An
     return data
 
 
-def promote_ids(
+def accept_ids(
     kernel: Kernel,
     spec_ids: list[str],
     *,
@@ -963,8 +1061,8 @@ def promote_ids(
     if not named:
         return {
             "ok": False,
-            "promoted": [],
-            "problems": ["promote requires named ids"],
+            "accepted": [],
+            "problems": ["accept requires named ids"],
         }
 
     problems: list[str] = []
@@ -979,7 +1077,7 @@ def promote_ids(
             continue
         docs.append(doc)
     if problems:
-        return {"ok": False, "promoted": [], "problems": problems}
+        return {"ok": False, "accepted": [], "problems": problems}
 
     stamp = today or date.today().isoformat()
     pending: list[tuple[SpecDoc, str]] = []
@@ -988,7 +1086,7 @@ def promote_ids(
         if not isinstance(loaded, dict):
             return {
                 "ok": False,
-                "promoted": [],
+                "accepted": [],
                 "problems": [f"not a mapping: {doc.spec_id}"],
             }
         text = yaml.safe_dump(
@@ -1003,18 +1101,328 @@ def promote_ids(
         doc.path.write_text(text, encoding="utf-8")
     return {
         "ok": True,
-        "promoted": [doc.spec_id for doc, _text in pending],
+        "accepted": [doc.spec_id for doc, _text in pending],
         "problems": [],
     }
 
 
-def format_promote(payload: dict[str, Any]) -> str:
-    lines = ["promote", "promoted:"]
-    promoted = payload.get("promoted") or []
-    if not promoted:
+def format_accept(payload: dict[str, Any]) -> str:
+    lines = ["accept", "accepted:"]
+    accepted = payload.get("accepted") or []
+    if not accepted:
         lines.append("  (none)")
-    for item in promoted:
+    for item in accepted:
         lines.append(f"  - {item}")
+    return "\n".join(lines) + "\n"
+
+
+def _delta_rows(change: Change, key: str) -> list[dict[str, Any]]:
+    rows = change.data.get(key) or []
+    if not isinstance(rows, list):
+        return []
+    return [row for row in rows if isinstance(row, dict)]
+
+
+def _yaml_double(value: str) -> str:
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _meta_scalar(text: str, key: str) -> str | None:
+    """Value of one key inside the top-level meta block. None if that line is absent."""
+    in_meta = False
+    for line in text.splitlines():
+        if line.startswith("meta:"):
+            in_meta = True
+            continue
+        if in_meta and line and not line[0].isspace() and not line.startswith("#"):
+            break
+        if not in_meta:
+            continue
+        match = re.match(
+            rf"^[ \t]+{re.escape(key)}:[ \t]*(['\"]?)([^'\"\n]*?)\1[ \t]*$",
+            line,
+        )
+        if match:
+            return match.group(2)
+    return None
+
+
+def _replace_meta_scalar(text: str, key: str, new_value: str) -> str | None:
+    """Replace one meta scalar, keeping its quotes. None if the line is absent."""
+    lines = text.splitlines(keepends=True)
+    in_meta = False
+    for index, line in enumerate(lines):
+        body = line.rstrip("\r\n")
+        newline = line[len(body) :]
+        if body.startswith("meta:"):
+            in_meta = True
+            continue
+        if in_meta and body and not body[0].isspace() and not body.startswith("#"):
+            break
+        if not in_meta:
+            continue
+        match = re.match(
+            rf"^(?P<indent>[ \t]+){re.escape(key)}:[ \t]*(?P<quote>['\"]?)(?P<val>[^'\"\n]*?)(?P=quote)[ \t]*$",
+            body,
+        )
+        if not match:
+            continue
+        quote = match.group("quote") or '"'
+        lines[index] = f"{match.group('indent')}{key}: {quote}{new_value}{quote}{newline}"
+        return "".join(lines)
+    return None
+
+
+def _changelog_item(today: str, slug: str, summary: str) -> str:
+    return (
+        f"  - date: {_yaml_double(today)}\n"
+        f"    author: {_yaml_double(slug)}\n"
+        f"    summary: {_yaml_double(summary)}\n"
+        "    breaking: false\n"
+    )
+
+
+def _prepend_changelog(text: str, today: str, slug: str, summary: str) -> str:
+    item = _changelog_item(today, slug, summary)
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines):
+        body = line.strip()
+        if body == "changelog: []":
+            newline = "\n" if line.endswith("\n") else ""
+            lines[index] = f"changelog:{newline}{item}"
+            return "".join(lines)
+        if body == "changelog:":
+            lines.insert(index + 1, item)
+            return "".join(lines)
+    suffix = "" if text.endswith("\n") or not text else "\n"
+    return text + suffix + "changelog:\n" + item
+
+
+def _append_responsibility(text: str, summary: str) -> str:
+    item = f"  - {_yaml_double(summary)}\n"
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines):
+        body = line.strip()
+        if body == "responsibilities: []":
+            newline = "\n" if line.endswith("\n") else ""
+            lines[index] = f"responsibilities:{newline}{item}"
+            return "".join(lines)
+        if body != "responsibilities:":
+            continue
+        insert = index + 1
+        while insert < len(lines):
+            raw = lines[insert]
+            stripped = raw.strip()
+            if stripped == "" or raw.startswith((" ", "\t", "#")):
+                insert += 1
+                continue
+            break
+        while insert > index + 1 and lines[insert - 1].strip() == "":
+            insert -= 1
+        lines.insert(insert, item)
+        return "".join(lines)
+    return text
+
+
+def _mark_promoted(text: str) -> str:
+    if re.search(r"(?m)^status:", text):
+        return re.sub(r'(?m)^status:.*$', 'status: "promoted"', text, count=1)
+    lines = text.splitlines(keepends=True)
+    row = 'status: "promoted"\n'
+    for index, line in enumerate(lines):
+        if line.startswith("kind:"):
+            lines.insert(index + 1, row)
+            return "".join(lines)
+    return row + text
+
+
+def _promoted_summary(summary: str) -> str:
+    return summary or "Promoted change"
+
+
+def _rename_target(change: Change, spec_id: str) -> str:
+    """MODIFIED on a RENAMED from-id is applied to the live to-id."""
+    for row in _delta_rows(change, "RENAMED"):
+        src = str(row.get("from") or "").strip()
+        dest = str(row.get("to") or "").strip()
+        if spec_id and spec_id == src and dest:
+            return dest
+    return spec_id
+
+
+def _changelog_has(loaded: dict[str, Any], slug: str, summary: str) -> bool:
+    changelog = loaded.get("changelog")
+    if not isinstance(changelog, list):
+        return False
+    return any(
+        isinstance(item, dict)
+        and str(item.get("author") or "") == slug
+        and str(item.get("summary") or "") == summary
+        for item in changelog
+    )
+
+
+def _plan_modified(
+    kernel: Kernel, change: Change, slug: str, today: str
+) -> tuple[list[str], list[tuple[Path, str]]]:
+    """Planned live-file edits. Does not write. Leaves unrelated lines alone."""
+    problems: list[str] = []
+    pending: list[tuple[Path, str]] = []
+    for row in _delta_rows(change, "MODIFIED"):
+        spec_id = str(row.get("id") or "").strip()
+        summary = str(row.get("summary") or "").strip()
+        if not spec_id:
+            continue
+        target_id = _rename_target(change, spec_id)
+        doc = kernel.by_id.get(target_id)
+        if doc is None:
+            problems.append(f"not found: {target_id}")
+            continue
+        text = doc.path.read_text(encoding="utf-8")
+        loaded = yaml.safe_load(text)
+        if not isinstance(loaded, dict):
+            problems.append(f"not a mapping: {target_id}")
+            continue
+        expected = _promoted_summary(summary)
+        need_changelog = not _changelog_has(loaded, slug, expected)
+        resp = loaded.get("responsibilities")
+        need_resp = bool(summary) and isinstance(resp, list) and summary not in resp
+        if not need_changelog and not need_resp:
+            continue
+        if need_changelog:
+            current = _meta_scalar(text, "version")
+            if current is None:
+                problems.append(f"missing meta.version: {target_id}")
+                continue
+            bumped = _replace_meta_scalar(text, "version", _bump_patch(current))
+            if bumped is None:
+                problems.append(f"missing meta.version: {target_id}")
+                continue
+            text = bumped
+            stamped = _replace_meta_scalar(text, "last_updated", today)
+            if stamped is not None:
+                text = stamped
+            text = _prepend_changelog(text, today, slug, expected)
+        if need_resp:
+            text = _append_responsibility(text, summary)
+        pending.append((doc.path, text))
+    return problems, pending
+
+
+def _promote_preflight(kernel: Kernel, change: Change) -> list[str]:
+    problems: list[str] = []
+    for row in _delta_rows(change, "ADDED"):
+        spec_id = str(row.get("id") or "").strip()
+        if spec_id and spec_id not in kernel.by_id:
+            problems.append(f"missing live file: {spec_id}")
+    for row in _delta_rows(change, "RENAMED"):
+        src = str(row.get("from") or "").strip()
+        dest = str(row.get("to") or "").strip()
+        if src and src in kernel.by_id:
+            problems.append(f"renamed source still live: {src}")
+        if dest and dest not in kernel.by_id:
+            problems.append(f"renamed target missing: {dest}")
+    for row in _delta_rows(change, "REMOVED"):
+        spec_id = str(row.get("id") or row.get("from") or "").strip()
+        if spec_id and spec_id in kernel.by_id:
+            problems.append(f"removed id still live: {spec_id}")
+    return problems
+
+
+def packet_inconsistencies(kernel: Kernel, change: Change, slug: str) -> list[str]:
+    """Archive exists, but the live graph does not match that packet."""
+    problems = _promote_preflight(kernel, change)
+    for row in _delta_rows(change, "MODIFIED"):
+        spec_id = str(row.get("id") or "").strip()
+        summary = str(row.get("summary") or "").strip()
+        if not spec_id:
+            continue
+        target_id = _rename_target(change, spec_id)
+        doc = kernel.by_id.get(target_id)
+        if doc is None:
+            problems.append(f"not found: {target_id}")
+            continue
+        loaded = yaml.safe_load(doc.path.read_text(encoding="utf-8"))
+        if not isinstance(loaded, dict):
+            problems.append(f"not a mapping: {target_id}")
+            continue
+        expected = _promoted_summary(summary)
+        if not _changelog_has(loaded, slug, expected):
+            problems.append(f"live spec missing promoted summary: {target_id}")
+        resp = loaded.get("responsibilities")
+        if summary and isinstance(resp, list) and summary not in resp:
+            problems.append(f"live responsibilities missing summary: {target_id}")
+    return problems
+
+
+def _validate_problems(spec_root: Path) -> list[str]:
+    report = validate(spec_root)
+    return [finding.format() for finding in report.errors]
+
+
+def promote_change(
+    kernel: Kernel,
+    slug: str,
+    *,
+    today: str | None = None,
+) -> dict[str, Any]:
+    """Apply an OPEN change into live YAML, archive it, and validate.
+
+    MIXED, PARTIAL, and MISSING write nothing. PROMOTED is a no-op only when
+    the live specs still match the archived packet and validation passes.
+    """
+    name = (slug or "").strip()
+    state, change = resolve_change(kernel, name)
+    if state == CHANGE_MISSING or not name:
+        return {"ok": False, "state": CHANGE_MISSING, "slug": name, "problems": [f"unknown change: {name}"]}
+    if state == CHANGE_MIXED:
+        return {"ok": False, "state": CHANGE_MIXED, "slug": name, "problems": [f"mixed change: {name}"]}
+    if state == CHANGE_PROMOTED:
+        assert change is not None
+        problems = packet_inconsistencies(kernel, change, name)
+        if problems:
+            return {"ok": False, "state": CHANGE_PARTIAL, "slug": name, "problems": problems}
+        problems = _validate_problems(kernel.spec_root)
+        if problems:
+            return {"ok": False, "state": CHANGE_PROMOTED, "slug": name, "problems": problems}
+        return {"ok": True, "state": CHANGE_PROMOTED, "slug": name, "noop": True, "problems": []}
+    assert change is not None
+    dest = kernel.spec_root / "changes" / "_archive" / name
+    if dest.exists():
+        return {"ok": False, "state": CHANGE_MIXED, "slug": name, "problems": [f"mixed change: {name}"]}
+    problems = _promote_preflight(kernel, change)
+    if problems:
+        return {"ok": False, "state": CHANGE_OPEN, "slug": name, "problems": problems}
+    stamp = today or date.today().isoformat()
+    problems, pending = _plan_modified(kernel, change, name, stamp)
+    if problems:
+        return {"ok": False, "state": CHANGE_OPEN, "slug": name, "problems": problems}
+    proposal = change.path / "proposal.yaml"
+    proposal_text = ""
+    if proposal.is_file():
+        proposal_text = _mark_promoted(proposal.read_text(encoding="utf-8"))
+    for path, text in pending:
+        path.write_text(text, encoding="utf-8")
+    if proposal_text:
+        proposal.write_text(proposal_text, encoding="utf-8")
+    archive_root = dest.parent
+    archive_root.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(change.path), str(dest))
+    problems = _validate_problems(kernel.spec_root)
+    if problems:
+        return {"ok": False, "state": CHANGE_PROMOTED, "slug": name, "noop": False, "problems": problems}
+    return {"ok": True, "state": CHANGE_PROMOTED, "slug": name, "noop": False, "problems": []}
+
+
+def format_promote(payload: dict[str, Any]) -> str:
+    lines = ["promote", f"state: {payload.get('state') or ''}", f"slug: {payload.get('slug') or ''}"]
+    if payload.get("noop"):
+        lines.append("noop: true")
+    problems = payload.get("problems") or []
+    if problems:
+        lines.append("problems:")
+        for item in problems:
+            lines.append(f"  - {item}")
     return "\n".join(lines) + "\n"
 
 
@@ -1135,7 +1543,7 @@ def format_retrieve(payload: dict[str, Any]) -> str:
         if ", " in names:
             follow = (
                 "Those changes are still open. "
-                "Keep working in those folders, or accept them so retrieve shows one live graph."
+                "Keep working in those folders, or promote them so retrieve shows one live graph."
             )
         else:
             follow = (
@@ -1744,11 +2152,11 @@ def run_sensors(
     repo: Path,
     timeout: float = SENSOR_TIMEOUT_S,
 ) -> dict[str, Any]:
-    """Invoke bound checks on one open change. Does not execute ``must:`` text."""
+    """Invoke bound checks on one OPEN or PROMOTED change. Does not execute ``must:`` text."""
     slug = (change_slug or "").strip()
     repo = repo.resolve()
-    change = resolve_open_change(kernel, slug) if slug else None
-    if change is None:
+    state, change = resolve_change(kernel, slug) if slug else (CHANGE_MISSING, None)
+    if change is None or state not in {CHANGE_OPEN, CHANGE_PROMOTED}:
         return {
             "change": slug,
             "unknown_change": slug,
@@ -1850,7 +2258,7 @@ def receipt_run(payload: dict[str, Any]) -> str:
     return (
         "SpecPlane · run — bound checks passed. "
         "This does not certify the implementation satisfies the spec. "
-        "The next human step is to accept the change, or keep editing."
+        "The next human step is to say ship it, or keep editing."
     )
 
 

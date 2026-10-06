@@ -1,0 +1,36 @@
+change_id: "promote_change"
+kind: "evolve"
+
+sensors:
+  - id: "promote_slug_archives"
+    promise: "capability.specplane_change_folders"
+    must: "specplane promote <slug> archives an OPEN change after applying MODIFIED summaries without rewriting unrelated lines, is a no-op when already PROMOTED and consistent, and fails MIXED or PARTIAL without a further write."
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromoteChange"
+  - id: "accept_ids_not_promote_ids"
+    promise: "capability.specplane_promote"
+    must: "accept --ids drops inferred. promote --ids exits non-zero and names accept. MCP catalog still has neither promote nor accept."
+    run:
+      unittest: "tools.specplane.test_kernel.TestPromote.test_accept_named_ids_become_live"
+  - id: "run_on_promoted"
+    promise: "capability.specplane_run"
+    must: "run --change on a PROMOTED slug invokes binds from the archive and does not treat it as unknown."
+    run:
+      unittest: "tools.specplane.test_kernel.TestRun.test_promoted_change_runs_binds"
+  - id: "gate_promoted_head"
+    promise: "capability.specplane_check_sync"
+    must: "A promoted HEAD whose live ids match the archived packet is covered. MIXED fails. Old archives not in the diff do not cover."
+    run:
+      unittest: "tools.specplane.test_ci_gate.CiGateTests.test_promoted_head_is_covered"
+  - id: "gate_partial_is_red"
+    promise: "capability.specplane_check_sync"
+    must: "PARTIAL (an archive whose live specs do not match that packet) fails the gate and does not run as a healthy promoted change."
+    run:
+      unittest: "tools.specplane.test_ci_gate.CiGateTests.test_partial_promoted_head_fails"
+  - id: "dialect_verbs"
+    promise: "capability.specplane_init"
+    must: "The dialect card says promote is the change and accept --ids makes inferred live. Consuming AGENTS.md matches. .cursor and .agents infer skills match."
+    run:
+      unittest: "tools.specplane.test_init.InitJourneyTests.test_promote_is_the_change"
+
+looks_fine_is_not_a_sensor: true

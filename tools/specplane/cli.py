@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, init, context.
+"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, accept, init, context.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -22,6 +22,7 @@ from kernel import (  # noqa: E402
     build_context,
     check_sync,
     default_changed_ids,
+    format_accept,
     format_blast,
     format_check_sync,
     format_context,
@@ -33,7 +34,8 @@ from kernel import (  # noqa: E402
     list_gaps,
     receipt_validate,
     load_kernel,
-    promote_ids,
+    accept_ids,
+    promote_change,
     reconcile,
     run_sensors,
     retrieve,
@@ -183,11 +185,17 @@ def cmd_check_sync(args: argparse.Namespace) -> int:
     kernel = load_kernel(spec_root)
     changed_ids = [part.strip() for part in (args.changed_ids or "").split(",") if part.strip()]
     unmapped: list[str] = []
+    files: list[str] | None = None
     if not changed_ids:
         repo = (args.repo or Path.cwd()).resolve()
         files = paths_for_config_dir(repo, args.config_dir.resolve(), git_changed_files(repo))
         changed_ids, unmapped = default_changed_ids(kernel, files, repo)
-    payload = check_sync(kernel, changed_ids, change_slug=args.change or None)
+    payload = check_sync(
+        kernel,
+        changed_ids,
+        change_slug=args.change or None,
+        changed_files=files,
+    )
     if unmapped:
         payload["unmapped_changed"] = unmapped
     print(format_check_sync(payload), end="")
@@ -242,14 +250,37 @@ def cmd_promote(args: argparse.Namespace) -> int:
     if not spec_root.is_dir():
         sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
         return 1
+    if getattr(args, "ids", ""):
+        sys.stderr.write("promote --ids is now accept --ids\n")
+        return 1
+    slug = str(getattr(args, "slug", "") or "").strip()
+    if not slug:
+        sys.stderr.write("promote requires a change slug\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    payload = promote_change(kernel, slug)
+    if not payload["ok"]:
+        for problem in payload["problems"]:
+            sys.stderr.write(problem + "\n")
+        print(format_promote(payload), end="")
+        return 1
+    print(format_promote(payload), end="")
+    return 0
+
+
+def cmd_accept(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
     kernel = load_kernel(spec_root)
     spec_ids = [part.strip() for part in (args.ids or "").split(",")]
-    payload = promote_ids(kernel, spec_ids)
+    payload = accept_ids(kernel, spec_ids)
     if not payload["ok"]:
         for problem in payload["problems"]:
             sys.stderr.write(problem + "\n")
         return 1
-    print(format_promote(payload), end="")
+    print(format_accept(payload), end="")
     return 0
 
 
@@ -336,7 +367,7 @@ def cmd_uninstall(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / init / uninstall / view / usage)"
+        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / accept / init / uninstall / view / usage)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -389,7 +420,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync.add_argument(
         "--change",
         default="",
-        help="Scope coverage to this specs/changes/<slug> folder (not _archive)",
+        help="Scope coverage to this change slug (OPEN or PROMOTED)",
     )
     p_sync.add_argument("--repo", type=Path, default=None, help="Git repo for default changed set")
     p_sync.set_defaults(func=cmd_check_sync)
@@ -422,7 +453,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument(
         "--change",
         required=True,
-        help="Open specs/changes/<slug> whose success.yaml binds the checks (not _archive)",
+        help="Change slug whose success.yaml binds the checks (OPEN or PROMOTED)",
     )
     p_run.add_argument(
         "--repo",
@@ -434,15 +465,28 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_promote = sub.add_parser(
         "promote",
-        help="Drop inferred on named ids and append a changelog row. CLI only.",
+        help="Apply an open change into live YAML and archive it. CLI only.",
     )
     add_root_args(p_promote)
+    p_promote.add_argument("slug", nargs="?", default="", help="Open specs/changes/<slug> to promote")
     p_promote.add_argument(
         "--ids",
         default="",
-        help="Comma-separated inferred ids to promote. Required. Never promotes the whole inventory.",
+        help=argparse.SUPPRESS,
     )
     p_promote.set_defaults(func=cmd_promote)
+
+    p_accept = sub.add_parser(
+        "accept",
+        help="Drop inferred on named ids and append a changelog row. CLI only.",
+    )
+    add_root_args(p_accept)
+    p_accept.add_argument(
+        "--ids",
+        default="",
+        help="Comma-separated inferred ids to accept. Required. Never accepts the whole inventory.",
+    )
+    p_accept.set_defaults(func=cmd_accept)
 
     p_init = sub.add_parser(
         "init",

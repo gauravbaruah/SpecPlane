@@ -13,33 +13,55 @@ import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from kernel import (  # noqa: E402
+    CHANGE_MIXED,
+    CHANGE_PROMOTED,
+    load_kernel,
+    packet_inconsistencies,
+    packet_slugs_in_files,
+    resolve_change,
+    resolve_change_state,
+)
+
 CLI = Path(__file__).resolve().parent / "cli.py"
 
 
 def change_slugs(files: list[str]) -> list[str]:
-    """specs/changes/<slug>/ in the diff. _archive is not an open change."""
-    slugs: list[str] = []
-    for raw in files:
-        parts = tuple(part for part in Path(raw).parts if part not in {".", ""})
-        for index, part in enumerate(parts[:-1]):
-            if part != "changes" or index == 0 or parts[index - 1] != "specs":
-                continue
-            slug = parts[index + 1]
-            if slug == "_archive" or slug.endswith((".yaml", ".yml", ".md")):
-                break
-            slugs.append(slug)
-            break
-    return sorted(set(slugs))
+    """Open or archived change slugs in the diff."""
+    return packet_slugs_in_files(files)
 
 
 def open_change_slugs(repo: Path, files: list[str], spec_root: Path | None = None) -> list[str]:
-    """Slugs whose open folder still exists. An archive move is not a folder to run."""
-    roots = [repo / "specs" / "changes"]
-    if spec_root is not None:
-        roots.append(spec_root / "changes")
+    """Slugs to check_sync/run: OPEN or PROMOTED. MIXED is reported by the gate."""
+    roots = [spec_root] if spec_root is not None else [repo / "specs"]
     found: list[str] = []
     for slug in change_slugs(files):
-        if any((root / slug).is_dir() for root in roots):
+        for root in roots:
+            state = resolve_change_state(root, slug)
+            if state == CHANGE_MIXED:
+                found.append(slug)
+                break
+            if state in {"OPEN", "PROMOTED"}:
+                found.append(slug)
+                break
+    return found
+
+
+def partial_slugs(spec_root: Path, slugs: list[str]) -> list[str]:
+    """PROMOTED packets in this diff whose live specs do not match the archive."""
+    if not slugs:
+        return []
+    kernel = load_kernel(spec_root)
+    found: list[str] = []
+    for slug in slugs:
+        state, change = resolve_change(kernel, slug)
+        if state != CHANGE_PROMOTED or change is None:
+            continue
+        if packet_inconsistencies(kernel, change, slug):
             found.append(slug)
     return found
 
@@ -87,6 +109,14 @@ def gate(repo: Path, spec_root: Path, base: str, *, apply_diff: bool) -> int:
         sys.stderr.write(f"ci_gate: {exc}\n")
         return 2
     slugs = open_change_slugs(repo, files, spec_root)
+    mixed = [
+        slug for slug in slugs if resolve_change_state(spec_root, slug) == CHANGE_MIXED
+    ]
+    partial = [slug for slug in partial_slugs(spec_root, slugs) if slug not in mixed]
+    if mixed:
+        print("ci_gate mixed: " + ", ".join(mixed), flush=True)
+    if partial:
+        print("ci_gate partial: " + ", ".join(partial), flush=True)
     print(
         "ci_gate slugs: " + (", ".join(slugs) if slugs else "(none)"),
         flush=True,
@@ -95,12 +125,14 @@ def gate(repo: Path, spec_root: Path, base: str, *, apply_diff: bool) -> int:
     config_dir = product_root(spec_root)
     root = ["--spec-root", str(spec_root), "--config-dir", str(config_dir)]
     repo_args = ["--repo", str(repo)]
-    failed = False
+    failed = bool(mixed) or bool(partial)
     if _invoke(repo, ["validate", *root]) != 0:
         failed = True
     if _invoke(repo, ["check_sync", *root, *repo_args]) != 0:
         failed = True
     for slug in slugs:
+        if slug in mixed or slug in partial:
+            continue
         if _invoke(repo, ["check_sync", *root, *repo_args, "--change", slug]) != 0:
             failed = True
         if _invoke(repo, ["run", *root, *repo_args, "--change", slug]) != 0:

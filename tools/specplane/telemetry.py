@@ -41,6 +41,7 @@ _COMMANDS = frozenset(
         "list_gaps",
         "run",
         "promote",
+        "accept",
         "init",
         "uninstall",
         "view",
