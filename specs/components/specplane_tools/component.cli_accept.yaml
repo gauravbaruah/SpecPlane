@@ -1,0 +1,53 @@
+meta:
+  id: "component.cli_accept"
+  purpose: "Local accept command: named inferred ids become live"
+  level: "component"
+  type: "service"
+  domain: "infrastructure"
+  owner: "SpecPlane"
+  tags: ["kernel", "cli", "accept"]
+  last_updated: "2026-10-06"
+  status: "draft"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-10-06"
+    author: "promote_change"
+    summary: "accept --ids drops inferred on named ids, bumps the changelog, and retrieve then shows live. CLI only. Not MCP. Does not parse application source."
+    breaking: false
+
+implements:
+  - "capability.specplane_accept"
+
+uses:
+  - "foundation.epistemic_status"
+
+planning:
+  user_flows:
+    actions:
+      - "accept --ids a,b --spec-root specs"
+    success:
+      - "Each named inferred id loses the inferred tag and gains a changelog row"
+      - "retrieve of that id then prints bit live"
+    errors:
+      - "Missing --ids exits 1 and writes nothing"
+      - "Unknown id or an id that is not inferred exits 1 and writes nothing"
+      - "Must not read .py, .go, .ts, or other application source to invent ids"
+
+implementation:
+  dependencies:
+    internal: []
+    external: []
+  depended_on_by:
+    components: []
+    containers: []
+  validation:
+    acceptance_criteria:
+      - "accept --ids rewrites only those spec files"
+      - "A second accept of the same id is not inferred and does not bump the version again"
+      - "Stdout lists accepted ids. There is no infer subcommand."
+      - "MCP catalog does not include accept, promote, or infer"
+    open_questions: []
+    readiness: "ready"

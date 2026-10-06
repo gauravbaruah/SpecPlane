@@ -8,7 +8,7 @@ sensors:
     run:
       unittest: "tools.specplane.test_kernel.TestPromoteChange"
   - id: "accept_ids_not_promote_ids"
-    promise: "capability.specplane_promote"
+    promise: "capability.specplane_accept"
     must: "accept --ids drops inferred. promote --ids exits non-zero and names accept. MCP catalog still has neither promote nor accept."
     run:
       unittest: "tools.specplane.test_kernel.TestPromote.test_accept_named_ids_become_live"

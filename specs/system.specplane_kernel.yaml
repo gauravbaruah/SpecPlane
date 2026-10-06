@@ -5,13 +5,17 @@ meta:
   type: "system"
   owner: "SpecPlane"
   tags: ["kernel", "first-slice"]
-  last_updated: "2026-10-02"
+  last_updated: "2026-10-06"
   status: "draft"
-  version: "1.5.0"
+  version: "1.5.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-10-06"
+    author: "promote_change"
+    summary: "accept --ids is a CLI command. promote <slug> is a CLI command. MCP does not infer, promote, or accept."
+    breaking: false
   - date: "2026-10-02"
     author: "specplane_package"
     summary: "The kernel lists capability.specplane_package beside capability.specplane_init."
@@ -55,7 +59,7 @@ system_context:
     - "Human / checker (promotes live, decides DECISION REQUIRED, merges change folders)"
   external_systems: []
   system_boundaries:
-    - "This repo: YAML in specs/, CLI in tools/specplane/, stdio MCP (retrieve / blast / check_sync / list_gaps / run). validate, promote, reconcile, and view are CLI only. Brownfield infer is a skill, not a scan. Declared realization paths do not require infer."
+    - "This repo: YAML in specs/, CLI in tools/specplane/, stdio MCP (retrieve / blast / check_sync / list_gaps / run). validate, promote, accept, reconcile, and view are CLI only. Brownfield infer is a skill, not a scan. Declared realization paths do not require infer."
     - "specplane view generates a local readout and serves 127.0.0.1. It is not a second product and not an MCP tool."
   capabilities:
     - "capability.specplane_validate"
@@ -67,7 +71,7 @@ system_context:
     - "capability.specplane_init"
     - "capability.specplane_package"
     - "capability.specplane_run"
-    - "capability.specplane_promote"
+    - "capability.specplane_accept"
     - "capability.specplane_reconcile"
     - "capability.specplane_viewer"
 

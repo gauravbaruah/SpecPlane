@@ -72,7 +72,7 @@ These YAML files still use **v9.1.0** `meta.status` / `review_state` (`planned`,
 | CLI `list_gaps` + MCP stdio | `capability.specplane_list_gaps` + `component.cli_list_gaps` + `component.mcp_stdio` | same kernel; catalog retrieve/blast/check_sync/list_gaps/run; validate CLI-only |
 | CLI `run` | `capability.specplane_run` + `component.cli_run` + `component.mcp_stdio` | join + invoke of a bound check; not a test runner |
 | CLI `promote <slug>` | `capability.specplane_change_folders` + `component.cli_promote` | apply the open change into live YAML and archive it |
-| CLI `accept --ids` | `capability.specplane_promote` + `component.cli_accept` | named inferred ids become live; the agent walks via `specplane-infer` |
+| CLI `accept --ids` | `capability.specplane_accept` + `component.cli_accept` | named inferred ids become live; the agent walks via `specplane-infer` |
 | CLI `reconcile` | `capability.specplane_reconcile` + `component.cli_reconcile` | optional declared `realization.paths`; missing and unmapped app files are advisory; CLI-only. Greenfield does not need infer. |
 | Change folders | `capability.specplane_change_folders` + `specs/changes/` | loaded by retrieve/check_sync; skipped by structural validate |
 
