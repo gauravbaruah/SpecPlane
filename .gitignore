@@ -26,3 +26,6 @@ dist/
 # Generated local viewer (`specplane view`). Regenerable. Not tooling source.
 **/.specplane/view/
 **/.specplane/project_id
+
+specplane-publish.env
+
