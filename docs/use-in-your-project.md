@@ -19,7 +19,7 @@ specplane init
 #           --dest PATH  if you are not already in the product repo
 ```
 
-The current release is the pre-release `0.1.0a1`. Python 3.10 or newer. There is no `npx` package. To pin a commit: `uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init`.
+The current release is the pre-release `0.1.0a2`. Python 3.10 or newer. There is no `npx` package. To pin a commit: `uvx --from git+https://github.com/gauravbaruah/SpecPlane.git@main specplane init`.
 
 Fallback from a checkout (Python 3.10+):
 
