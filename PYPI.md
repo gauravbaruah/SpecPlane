@@ -2,7 +2,7 @@
 
 SpecPlane keeps a specification of what a system should do, and gives coding agents that specification when they change the code.
 
-This release is the pre-release **0.1.0a1**. It needs Python 3.10 or newer.
+This release is the pre-release **0.1.0a2**. It needs Python 3.10 or newer.
 
 ```bash
 pip install specplane

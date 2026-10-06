@@ -42,7 +42,7 @@ Command events stay on this machine. `specplane usage report` prints the counts.
 
 ## Use it in your project
 
-Python 3.10 or newer. The current release is the pre-release `0.1.0a1`. There is no `npx` package.
+Python 3.10 or newer. The current release is the pre-release `0.1.0a2`. There is no `npx` package.
 
 ```bash
 pip install specplane

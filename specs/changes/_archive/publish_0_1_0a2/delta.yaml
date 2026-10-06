@@ -1,0 +1,12 @@
+change_id: "publish_0_1_0a2"
+kind: "evolve"
+
+ADDED: []
+
+MODIFIED:
+  - id: "capability.specplane_package"
+    summary: "The current published pre-release is 0.1.0a2. The first publish remains 0.1.0a1."
+
+REMOVED: []
+
+RENAMED: []

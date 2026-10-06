@@ -1,0 +1,15 @@
+id: "publish_0_1_0a2"
+kind: "evolve"
+status: "promoted"
+opened: "2026-10-06"
+promise_ids:
+  - "capability.specplane_package"
+why: >-
+  PyPI still serves 0.1.0a1. The current published pre-release becomes 0.1.0a2
+  after a wheel that holds the kit, and not this repo's specs/, passes a clean
+  install that can run init. The first publish remains 0.1.0a1.
+non_goals:
+  - "a GitHub workflow that uploads to PyPI"
+  - "a stable 0.1.0"
+  - "moving the PyPI project off the personal account"
+  - "an npx package"

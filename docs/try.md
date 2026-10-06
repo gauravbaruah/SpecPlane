@@ -93,4 +93,4 @@ Copy-paste Cursor / Claude Desktop / Claude Code snippets: [README — Optional:
 
 ## Advanced
 
-`python3 tools/specplane/cli.py` is the same CLI when `specplane` is not on PATH. From a SpecPlane checkout, `uvx --from ../.. specplane …` also works inside `examples/tiny-saas` after `pip install -e ../..`. A hand copy of the toolkit is in [`use-in-your-project.md`](./use-in-your-project.md). `pip install specplane` and `uv tool install specplane` install the pre-release `0.1.0a1`.
+`python3 tools/specplane/cli.py` is the same CLI when `specplane` is not on PATH. From a SpecPlane checkout, `uvx --from ../.. specplane …` also works inside `examples/tiny-saas` after `pip install -e ../..`. A hand copy of the toolkit is in [`use-in-your-project.md`](./use-in-your-project.md). `pip install specplane` and `uv tool install specplane` install the pre-release `0.1.0a2`.
