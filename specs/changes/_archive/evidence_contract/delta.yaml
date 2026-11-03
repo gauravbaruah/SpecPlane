@@ -1,0 +1,28 @@
+change_id: "evidence_contract"
+kind: "evolve"
+
+ADDED:
+  - id: "capability.specplane_change_ledger"
+    summary: "Generate a queryable change ledger from existing packets, decisions, and success records so agents can ask which changes affected a spec, when it was introduced, and where reasoning and evidence live."
+
+MODIFIED:
+  - id: "capability.specplane_change_folders"
+    summary: "Behavior-changing work declares observable acceptance criteria before implementation and links criteria to verification intent. Trivial/non-behavior edits may declare an explicit exemption reason instead of criteria."
+  - id: "capability.specplane_check_sync"
+    summary: "check_sync --change enforces criteria-to-check linkage and visibility of missing bindings or missing evidence records. Empty runnable checks cannot be reported as behavioral verification."
+  - id: "capability.specplane_run"
+    summary: "run records per-check evidence rows with criterion links, method, expected/actual outcomes, environment context, revision association, and limitations. A successful process run is not quality proof when criteria fail thresholds."
+  - id: "capability.specplane_retrieve"
+    summary: "retrieve/context include relevant historical decisions and change summaries for the selected ids while keeping archived changes historical, not active."
+  - id: "component.cli_check_sync"
+    summary: "Emit explicit evidence_contract findings: missing criteria, missing links, missing or unexecuted checks, pending manual verification, and declared exemptions."
+  - id: "component.cli_run"
+    summary: "Emit evidence rows with pass/fail/unverified states and preserve distinctions among automated execution, manual procedure records, and AI evaluation outcomes."
+  - id: "component.cli_retrieve"
+    summary: "Render a concise per-spec history slice from the generated ledger, including lifecycle state and decision references."
+  - id: "component.mcp_stdio"
+    summary: "Expose the same retrieve/check_sync/run semantics and add a read-only ledger query surface."
+
+REMOVED: []
+
+RENAMED: []

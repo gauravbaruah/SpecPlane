@@ -1,0 +1,60 @@
+meta:
+  id: "capability.specplane_change_ledger"
+  purpose: "Generate a queryable history of changes that affected each spec id"
+  level: "capability"
+  owner: "SpecPlane"
+  tags: ["kernel", "history", "retrieve", "ledger"]
+  last_updated: "2026-11-02"
+  status: "planned"
+  version: "1.0.0"
+  review_state: "unreviewed"
+  introduced_in: "1.0.0"
+
+changelog:
+  - date: "2026-11-02"
+    author: "kernel-slice"
+    summary: "Initial capability for generated change ledger and history query."
+    breaking: false
+
+responsibilities:
+  - "Generate a change ledger from open and archived change packets."
+  - "List which spec ids each change touched, including added, modified, and removed ids."
+  - "Expose lifecycle state and references to proposal, delta, decision, and evidence files."
+  - "Surface incomplete historical metadata as unknown or warnings instead of inventing details."
+  - "Support queries by spec id so agents can recover relevant historical context quickly."
+
+flows:
+  - "specplane history --spec-id <id> --spec-root specs"
+  - "retrieve and context include a concise history slice for the selected id"
+  - "MCP history tool returns the same ledger rows for agent workflows"
+
+business_value:
+  user_outcome: "Fresh agents can resume from durable history without replaying every archive folder."
+  objective: "Reduce reconstruction effort and keep decision provenance visible."
+  revenue_dependency: "low"
+  strategic_priority: "foundation"
+
+constraints:
+  legal: []
+  security:
+    - "Read local specs/changes only; no network history service."
+  ux:
+    - "Generated from declared records; never invent missing rationale or evidence."
+    - "Keep archived history distinct from active work."
+    - "Show unknown metadata as unknown with references."
+  data_classification: "internal"
+
+success_metrics:
+  primary: "history_query_is_actionable"
+  targets:
+    history_query_is_actionable: "Agents can answer what changed, when, and where to inspect rationale for a spec id."
+  derived_from: {}
+
+roadmap:
+  phase: "slice-1 generated ledger and retrieval integration"
+  priority: "P0"
+  depends_on:
+    - "capability.specplane_retrieve"
+    - "capability.specplane_change_folders"
+  enables:
+    - "capability.specplane_check_sync"

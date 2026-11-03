@@ -338,7 +338,215 @@ def retrieve(kernel: Kernel, spec_id: str) -> dict[str, Any] | None:
         payload["readiness"] = (
             "Implementation is underway and no implementation relationships are declared."
         )
+    payload["history"] = history_for_spec(kernel, spec_id)
     return payload
+
+
+def _change_touched_ids(change: Change) -> list[str]:
+    touched = {item for item in change.promise_ids if looks_like_spec_id(item)}
+    for key in ("ADDED", "MODIFIED", "REMOVED"):
+        rows = change.data.get(key) or []
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            value = ""
+            if isinstance(row, dict):
+                value = str(row.get("id") or "").strip()
+            elif isinstance(row, str):
+                value = row.strip()
+            if looks_like_spec_id(value):
+                touched.add(value)
+    return sorted(touched)
+
+
+def _change_lifecycle(change: Change) -> str:
+    spec_root = next(
+        (parent for parent in [change.path, *change.path.parents] if parent.name == "specs"),
+        None,
+    )
+    if spec_root is None:
+        return "unknown"
+    state = resolve_change_state(spec_root, change.path.name)
+    if state == CHANGE_OPEN:
+        return "proposed"
+    if state == CHANGE_PROMOTED:
+        status = str(change.status or "").strip().lower()
+        if status in {"superseded", "reverted"}:
+            return status
+        return "applied"
+    return "unknown"
+
+
+def _change_opened(change: Change) -> str:
+    value = str(change.data.get("opened") or "").strip()
+    if value:
+        return value
+    try:
+        return date.fromtimestamp(change.path.stat().st_mtime).isoformat()
+    except OSError:
+        return ""
+
+
+def _change_ref(change: Change, name: str) -> str:
+    target = change.path / name
+    if not target.is_file():
+        return ""
+    spec_root = next(
+        (parent for parent in [change.path, *change.path.parents] if parent.name == "specs"),
+        None,
+    )
+    if spec_root is None:
+        return target.as_posix()
+    return _relative_spec_path(spec_root, target)
+
+
+def _read_decision_meta(change: Change) -> dict[str, Any]:
+    path = change.path / "decision.md"
+    if not path.is_file():
+        return {
+            "exists": False,
+            "status": "",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": [],
+        }
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision metadata missing front matter"],
+        }
+    end = -1
+    for idx in range(1, len(lines)):
+        if lines[idx].strip() == "---":
+            end = idx
+            break
+    if end < 0:
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision front matter is not closed"],
+        }
+    raw = "\n".join(lines[1:end]).strip()
+    if not raw:
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision front matter is empty"],
+        }
+    try:
+        loaded = yaml.safe_load(raw)
+    except yaml.YAMLError as exc:
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": [f"decision front matter parse error: {exc}"],
+        }
+    if not isinstance(loaded, dict):
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision front matter must be a mapping"],
+        }
+    status = str(loaded.get("status") or "").strip().lower() or "unknown"
+    return {
+        "exists": True,
+        "status": status,
+        "change_id": str(loaded.get("change_id") or "").strip(),
+        "affected_spec_ids": _as_clean_list(loaded.get("affected_spec_ids")),
+        "supersedes": _as_clean_list(loaded.get("supersedes")),
+        "superseded_by": str(loaded.get("superseded_by") or "").strip(),
+        "warnings": [],
+    }
+
+
+def change_ledger(kernel: Kernel, spec_id: str | None = None) -> dict[str, Any]:
+    wanted = (spec_id or "").strip()
+    rows: list[dict[str, Any]] = []
+    for change in [*kernel.changes, *kernel.archived]:
+        touched = _change_touched_ids(change)
+        if wanted and wanted not in touched:
+            continue
+        summary = " ".join(str(change.data.get("why") or "").split())
+        decision_meta = _read_decision_meta(change)
+        rows.append(
+            {
+                "change_id": change.change_id,
+                "kind": change.kind,
+                "lifecycle": _change_lifecycle(change),
+                "opened": _change_opened(change),
+                "promise_ids": sorted(set(change.promise_ids)),
+                "touched_ids": touched,
+                "added_ids": sorted(
+                    {
+                        str(item.get("id") or "").strip()
+                        for item in (change.data.get("ADDED") or [])
+                        if isinstance(item, dict) and looks_like_spec_id(str(item.get("id") or "").strip())
+                    }
+                ),
+                "modified_ids": sorted(
+                    {
+                        str(item.get("id") or "").strip()
+                        for item in (change.data.get("MODIFIED") or [])
+                        if isinstance(item, dict) and looks_like_spec_id(str(item.get("id") or "").strip())
+                    }
+                ),
+                "removed_ids": sorted(
+                    {
+                        str(item.get("id") or "").strip()
+                        for item in (change.data.get("REMOVED") or [])
+                        if isinstance(item, dict) and looks_like_spec_id(str(item.get("id") or "").strip())
+                    }
+                ),
+                "summary": summary,
+                "decision_ref": _change_ref(change, "decision.md"),
+                "decision_status": decision_meta.get("status") or "",
+                "decision_change_id": decision_meta.get("change_id") or "",
+                "decision_affected_ids": decision_meta.get("affected_spec_ids") or [],
+                "decision_supersedes": decision_meta.get("supersedes") or [],
+                "decision_superseded_by": decision_meta.get("superseded_by") or "",
+                "decision_warnings": decision_meta.get("warnings") or [],
+                "evidence_ref": _change_ref(change, "success.yaml"),
+                "proposal_ref": _change_ref(change, "proposal.yaml"),
+                "delta_ref": _change_ref(change, "delta.yaml"),
+            }
+        )
+    rows.sort(
+        key=lambda row: (
+            str(row.get("opened") or ""),
+            str(row.get("change_id") or ""),
+        ),
+        reverse=True,
+    )
+    return {"spec_id": wanted, "rows": rows}
+
+
+def history_for_spec(kernel: Kernel, spec_id: str) -> list[dict[str, Any]]:
+    return list(change_ledger(kernel, spec_id).get("rows") or [])
 
 
 def _component_edges(doc: SpecDoc) -> tuple[list[str], list[str], list[str]]:
@@ -487,31 +695,103 @@ def resolve_open_change(kernel: Kernel, slug: str) -> Change | None:
     return None
 
 
-def success_sensors(change: Change) -> list[dict[str, str]]:
+def _read_success_doc(change: Change) -> tuple[dict[str, Any], str]:
     path = change.path / "success.yaml"
     if not path.is_file():
-        return []
-    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+        return {}, ""
+    try:
+        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        return {}, f"success.yaml: {exc}"
+    if loaded is None:
+        return {}, ""
     if not isinstance(loaded, dict):
+        return {}, "success.yaml: document must be a mapping"
+    return loaded, ""
+
+
+def _as_clean_list(value: Any) -> list[str]:
+    out: list[str] = []
+    if isinstance(value, str):
+        text = value.strip()
+        if text:
+            out.append(text)
+        return out
+    if not isinstance(value, list):
+        return out
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        text = item.strip()
+        if text:
+            out.append(text)
+    return out
+
+
+def success_criteria(change: Change) -> list[dict[str, Any]]:
+    loaded, _error = _read_success_doc(change)
+    criteria = loaded.get("criteria") or []
+    if not isinstance(criteria, list):
         return []
+    out: list[dict[str, Any]] = []
+    for row in criteria:
+        if not isinstance(row, dict):
+            continue
+        criterion_id = str(row.get("id") or "").strip()
+        outcome = str(row.get("outcome") or "").strip()
+        if not criterion_id:
+            continue
+        checks = _as_clean_list(row.get("checks"))
+        item: dict[str, Any] = {
+            "id": criterion_id,
+            "promise": str(row.get("promise") or "").strip(),
+            "outcome": outcome,
+            "checks": checks,
+            "methods": _as_clean_list(row.get("methods")),
+            "expected": str(row.get("expected") or "").strip(),
+            "exemption": str(row.get("exemption") or "").strip(),
+        }
+        out.append(item)
+    return out
+
+
+def success_sensors(change: Change) -> list[dict[str, Any]]:
+    loaded, _error = _read_success_doc(change)
     sensors = loaded.get("sensors") or []
     if not isinstance(sensors, list):
         return []
-    out: list[dict[str, str]] = []
+    out: list[dict[str, Any]] = []
     for row in sensors:
         if not isinstance(row, dict):
             continue
         must = str(row.get("must") or "").strip()
         if not must:
             continue
-        item = {
+        item: dict[str, Any] = {
             "must": must,
             "promise": str(row.get("promise") or "").strip(),
             "evidence": evidence_label(row),
+            "criteria": _as_clean_list(row.get("criteria")),
+            "method": str(row.get("method") or "").strip(),
+            "expected": str(row.get("expected") or "").strip(),
+            "actual": str(row.get("actual") or "").strip(),
+            "evidence_ref": str(row.get("evidence_ref") or "").strip(),
+            "revision": str(row.get("revision") or "").strip(),
+            "performed_by": str(row.get("performed_by") or "").strip(),
+            "limitations": _as_clean_list(row.get("limitations")),
         }
         sensor_id = str(row.get("id") or "").strip()
         if sensor_id:
             item["id"] = sensor_id
+        environment = row.get("environment")
+        if isinstance(environment, dict):
+            item["environment"] = environment
+        manual = row.get("manual")
+        if isinstance(manual, dict):
+            item["manual"] = manual
+        evaluation = row.get("evaluation")
+        if isinstance(evaluation, dict):
+            item["evaluation"] = evaluation
         out.append(item)
     return out
 
@@ -602,7 +882,210 @@ def _unreached_named_ids(kernel: Kernel, spec_id: str) -> list[str]:
 
 def _unbound_sensors(change: Change) -> list[dict[str, str]]:
     """Declared sensors with no run.unittest, run.argv, or test:. Does not execute them."""
-    return [row for row in success_sensors(change) if str(row.get("evidence") or "none") == "none"]
+    out: list[dict[str, str]] = []
+    for row in success_sensors(change):
+        if str(row.get("evidence") or "none") != "none":
+            continue
+        method = str(row.get("method") or "").strip().lower()
+        if method.startswith("manual"):
+            # Manual procedures are intentionally unbound to run argv/unittest.
+            continue
+        out.append(row)
+    return out
+
+
+def _evidence_contract_mode(change: Change) -> tuple[str, str]:
+    """required | exempt | legacy, plus optional reason."""
+    raw = change.data.get("evidence_contract")
+    if isinstance(raw, str):
+        mode = raw.strip().lower()
+        if mode in {"required", "exempt"}:
+            return mode, ""
+    if isinstance(raw, bool):
+        return ("required", "") if raw else ("legacy", "")
+    if isinstance(raw, dict):
+        mode = str(raw.get("mode") or "").strip().lower()
+        reason = str(raw.get("reason") or "").strip()
+        if mode in {"required", "exempt"}:
+            return mode, reason
+    fallback = str(change.data.get("evidence_exemption") or "").strip()
+    if fallback:
+        return "exempt", fallback
+    return "legacy", ""
+
+
+def _is_manual_method(method: str) -> bool:
+    return method.strip().lower().startswith("manual")
+
+
+def _is_ai_method(method: str) -> bool:
+    text = method.strip().lower()
+    return text in {"ai_evaluation", "llm_eval", "agent_eval", "evaluation"}
+
+
+def _pending_manual_checks(change: Change) -> list[dict[str, str]]:
+    pending: list[dict[str, str]] = []
+    for row in success_sensors(change):
+        method = str(row.get("method") or "").strip()
+        if not _is_manual_method(method):
+            continue
+        manual = row.get("manual")
+        state = ""
+        if isinstance(manual, dict):
+            state = str(manual.get("state") or "").strip().lower()
+        if state in {"passed", "failed"}:
+            continue
+        pending.append(
+            {
+                "id": str(row.get("id") or "").strip(),
+                "must": str(row.get("must") or "").strip(),
+                "method": method or "manual",
+                "state": state or "pending",
+            }
+        )
+    return pending
+
+
+def _as_number(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            return float(text)
+        except ValueError:
+            return None
+    return None
+
+
+def _evidence_contract_findings(change: Change) -> list[str]:
+    mode, _reason = _evidence_contract_mode(change)
+    if mode == "exempt" and not _reason:
+        return ["missing exemption reason: proposal evidence_contract is exempt but no reason was provided"]
+    if mode != "required":
+        return []
+    criteria = success_criteria(change)
+    sensors = success_sensors(change)
+    findings: list[str] = []
+    if not criteria:
+        return ["missing criteria: success.yaml criteria is required for this change"]
+
+    criteria_by_id: dict[str, dict[str, Any]] = {}
+    for row in criteria:
+        criterion_id = str(row.get("id") or "").strip()
+        if criterion_id in criteria_by_id:
+            findings.append(f"duplicate criterion id: {criterion_id}")
+            continue
+        criteria_by_id[criterion_id] = row
+        if not str(row.get("outcome") or "").strip():
+            findings.append(f"criterion {criterion_id} is missing outcome")
+
+    sensors_by_id: dict[str, dict[str, Any]] = {}
+    criterion_to_sensors: dict[str, set[str]] = {}
+    for sensor in sensors:
+        sensor_id = str(sensor.get("id") or "").strip()
+        if sensor_id:
+            sensors_by_id[sensor_id] = sensor
+        method = str(sensor.get("method") or "").strip()
+        if not method:
+            findings.append(f"sensor {sensor_id or '(unnamed)'} is missing method")
+        if not str(sensor.get("expected") or "").strip():
+            findings.append(f"sensor {sensor_id or '(unnamed)'} is missing expected")
+        if not _as_clean_list(sensor.get("criteria")):
+            findings.append(f"sensor {sensor_id or '(unnamed)'} has no linked criteria")
+        if _is_manual_method(method):
+            manual = sensor.get("manual")
+            if not isinstance(manual, dict):
+                findings.append(f"sensor {sensor_id or '(unnamed)'} manual method is missing manual details")
+            else:
+                for field in ("preconditions", "steps", "expected", "observed"):
+                    value = manual.get(field)
+                    if isinstance(value, list):
+                        ok = any(str(item).strip() for item in value)
+                    else:
+                        ok = bool(str(value or "").strip())
+                    if not ok:
+                        findings.append(
+                            f"sensor {sensor_id or '(unnamed)'} manual field missing: {field}"
+                        )
+                performed = str(manual.get("performed_by") or sensor.get("performed_by") or "").strip()
+                if not performed:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} manual field missing: performed_by"
+                    )
+        if _is_ai_method(method) or isinstance(sensor.get("evaluation"), dict):
+            evaluation = sensor.get("evaluation")
+            if not isinstance(evaluation, dict):
+                findings.append(f"sensor {sensor_id or '(unnamed)'} is missing evaluation details")
+            else:
+                has_cases = bool(_as_clean_list(evaluation.get("cases"))) or bool(
+                    str(evaluation.get("dataset") or "").strip()
+                )
+                if not has_cases:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} evaluation missing cases or dataset"
+                    )
+                has_scoring = bool(str(evaluation.get("scoring") or "").strip()) or bool(
+                    str(evaluation.get("rubric") or "").strip()
+                )
+                if not has_scoring:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} evaluation missing scoring or rubric"
+                    )
+                if _as_number(evaluation.get("threshold")) is None:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} evaluation missing numeric threshold"
+                    )
+        for criterion_id in _as_clean_list(sensor.get("criteria")):
+            criterion_to_sensors.setdefault(criterion_id, set()).add(sensor_id or "(unnamed)")
+            if criterion_id not in criteria_by_id:
+                findings.append(f"sensor {sensor_id or '(unnamed)'} links unknown criterion {criterion_id}")
+
+    for criterion_id, row in criteria_by_id.items():
+        linked = set(_as_clean_list(row.get("checks")))
+        linked |= criterion_to_sensors.get(criterion_id, set())
+        linked.discard("(unnamed)")
+        if not linked:
+            findings.append(f"criterion {criterion_id} has no linked checks")
+            continue
+        for sensor_id in sorted(linked):
+            if sensor_id and sensor_id not in sensors_by_id:
+                findings.append(f"criterion {criterion_id} links unknown check {sensor_id}")
+
+    if not sensors:
+        findings.append("missing checks: success.yaml sensors is empty")
+
+    decision = _read_decision_meta(change)
+    if decision.get("exists"):
+        if decision.get("warnings"):
+            findings.extend([str(item) for item in decision.get("warnings") if item])
+        if not str(decision.get("change_id") or "").strip():
+            findings.append("decision metadata missing change_id")
+        if str(decision.get("change_id") or "").strip() not in {"", change.change_id}:
+            findings.append(
+                f"decision metadata change_id mismatch: {decision.get('change_id')} (expected {change.change_id})"
+            )
+        affected = set(_as_clean_list(decision.get("affected_spec_ids")))
+        touched = set(_change_touched_ids(change))
+        if not affected:
+            findings.append("decision metadata missing affected_spec_ids")
+        elif touched and not (affected & touched):
+            findings.append("decision metadata affected_spec_ids does not match touched ids")
+
+    for sensor in sensors:
+        sensor_id = str(sensor.get("id") or "").strip() or "(unnamed)"
+        evaluation = sensor.get("evaluation")
+        if not isinstance(evaluation, dict):
+            continue
+        threshold = _as_number(evaluation.get("threshold"))
+        observed = _as_number(evaluation.get("observed_score"))
+        if threshold is not None and observed is not None and observed < threshold:
+            findings.append(
+                f"sensor {sensor_id} evaluation below threshold ({observed:g} < {threshold:g})"
+            )
+    return sorted(set(findings))
 
 
 def is_phase1_shaped(doc: SpecDoc) -> bool:
@@ -897,23 +1380,40 @@ def check_sync(
     fail_empty = bool(empty_blasts)
     fail_unreached = bool(unreached)
     unbound = _unbound_sensors(scoped) if scoped is not None else []
-    decision = fail_uncovered or fail_empty
+    pending_manual = _pending_manual_checks(scoped) if scoped is not None else []
+    contract_mode, contract_reason = _evidence_contract_mode(scoped) if scoped is not None else ("legacy", "")
+    contract_findings = _evidence_contract_findings(scoped) if scoped is not None else []
+    fail_contract = bool(contract_findings)
+    decision = fail_uncovered or fail_empty or fail_contract
     ok = (
         not fail_uncovered
         and not fail_empty
         and not fail_unreached
         and not unbound
+        and not fail_contract
         and not unknown
         and not unknown_change
     )
 
     contributors = covering_changes(kernel, changed_ids, scoped, extra) if not unknown_change else []
-    sensor_rows: list[dict[str, str]] = []
+    sensor_rows: list[dict[str, Any]] = []
+    criteria_rows: list[dict[str, Any]] = []
     missing_slugs: list[str] = []
     for change in contributors:
         musts = success_must_lines(change)
         if not musts:
             missing_slugs.append(change.path.name)
+        for row in success_criteria(change):
+            criteria_rows.append(
+                {
+                    "change": change.path.name,
+                    "id": row.get("id") or "",
+                    "promise": row.get("promise") or "",
+                    "outcome": row.get("outcome") or "",
+                    "checks": list(row.get("checks") or []),
+                    "exemption": row.get("exemption") or "",
+                }
+            )
         for row in success_sensors(change):
             sensor_rows.append(
                 {
@@ -922,6 +1422,9 @@ def check_sync(
                     "id": row.get("id") or "",
                     "evidence": row.get("evidence") or "none",
                     "status": "UNVERIFIED",
+                    "criteria": list(row.get("criteria") or []),
+                    "method": row.get("method") or "",
+                    "expected": row.get("expected") or "",
                 }
             )
     if unknown_change or not contributors or missing_slugs:
@@ -938,9 +1441,14 @@ def check_sync(
         "empty_blast": empty_blasts,
         "unreached": unreached,
         "unbound": unbound,
+        "pending_manual": pending_manual,
         "phase1_advisory": phase1_advisory,
         "ok": ok,
         "coverage": "pass" if ok else "fail",
+        "contract_mode": contract_mode,
+        "contract_reason": contract_reason,
+        "contract_findings": contract_findings,
+        "criteria_rows": criteria_rows,
         "sensors": sensors,
         "sensor_rows": sensor_rows,
         "missing_sensor_changes": missing_slugs,
@@ -1005,6 +1513,62 @@ def format_list_gaps(payload: dict[str, Any]) -> str:
         for item in values:
             lines.append(f"  - {item}")
     lines.append("advisory: true")
+    return "\n".join(lines) + "\n"
+
+
+def format_history(payload: dict[str, Any]) -> str:
+    lines = ["history"]
+    if payload.get("spec_id"):
+        lines.append(f"spec_id: {payload['spec_id']}")
+    lines.append("changes:")
+    rows = payload.get("rows") or []
+    if not rows:
+        lines.append("  (none)")
+        return "\n".join(lines) + "\n"
+    for row in rows:
+        lines.append(f"  - change: {row.get('change_id') or ''}")
+        lines.append(f"    lifecycle: {row.get('lifecycle') or ''}")
+        if row.get("kind"):
+            lines.append(f"    kind: {row.get('kind')}")
+        if row.get("opened"):
+            lines.append(f"    opened: {row.get('opened')}")
+        summary = str(row.get("summary") or "").strip()
+        if summary:
+            lines.append(f"    summary: {summary}")
+        for key in ("touched_ids", "added_ids", "modified_ids", "removed_ids"):
+            values = row.get(key) or []
+            if not values:
+                continue
+            lines.append(f"    {key}:")
+            for item in values:
+                lines.append(f"      - {item}")
+        for key in ("proposal_ref", "delta_ref", "decision_ref", "evidence_ref"):
+            value = str(row.get(key) or "").strip()
+            if value:
+                lines.append(f"    {key}: {value}")
+        decision_status = str(row.get("decision_status") or "").strip()
+        if decision_status:
+            lines.append(f"    decision_status: {decision_status}")
+        decision_change_id = str(row.get("decision_change_id") or "").strip()
+        if decision_change_id:
+            lines.append(f"    decision_change_id: {decision_change_id}")
+        decision_affected = row.get("decision_affected_ids") or []
+        if decision_affected:
+            lines.append("    decision_affected_ids:")
+            for item in decision_affected:
+                lines.append(f"      - {item}")
+        decision_supersedes = row.get("decision_supersedes") or []
+        if decision_supersedes:
+            lines.append("    decision_supersedes:")
+            for item in decision_supersedes:
+                lines.append(f"      - {item}")
+        if row.get("decision_superseded_by"):
+            lines.append(f"    decision_superseded_by: {row.get('decision_superseded_by')}")
+        decision_warnings = row.get("decision_warnings") or []
+        if decision_warnings:
+            lines.append("    decision_warnings:")
+            for item in decision_warnings:
+                lines.append(f"      - {item}")
     return "\n".join(lines) + "\n"
 
 
@@ -1555,6 +2119,34 @@ def format_retrieve(payload: dict[str, Any]) -> str:
         lines.append(receipt)
     else:
         lines.append("in-flight: (none)")
+    history = payload.get("history") or []
+    lines.append("history:")
+    if not history:
+        lines.append("  (none)")
+    for row in history:
+        lines.append(f"  - change: {row.get('change_id') or ''}")
+        lines.append(f"    lifecycle: {row.get('lifecycle') or ''}")
+        if row.get("opened"):
+            lines.append(f"    opened: {row.get('opened')}")
+        if row.get("decision_status"):
+            lines.append(f"    decision_status: {row.get('decision_status')}")
+        summary = str(row.get("summary") or "").strip()
+        if summary:
+            lines.append(f"    summary: {summary}")
+        touched = row.get("touched_ids") or []
+        if touched:
+            lines.append("    touched_ids:")
+            for item in touched:
+                lines.append(f"      - {item}")
+        if row.get("decision_ref"):
+            lines.append(f"    decision: {row.get('decision_ref')}")
+        if row.get("evidence_ref"):
+            lines.append(f"    evidence: {row.get('evidence_ref')}")
+        warnings = row.get("decision_warnings") or []
+        if warnings:
+            lines.append("    decision_warnings:")
+            for item in warnings:
+                lines.append(f"      - {item}")
     return "\n".join(lines) + "\n"
 
 
@@ -1568,7 +2160,7 @@ def looks_like_spec_id(text: str) -> bool:
 
 
 def _context_sensors(spec_id: str, changes: list[Change]) -> list[dict[str, str]]:
-    rows: list[dict[str, str]] = []
+    rows: list[dict[str, Any]] = []
     for change in changes:
         for sensor in success_sensors(change):
             promise = str(sensor.get("promise") or "").strip()
@@ -1581,6 +2173,7 @@ def _context_sensors(spec_id: str, changes: list[Change]) -> list[dict[str, str]
                     "must": str(sensor.get("must") or ""),
                     "evidence": str(sensor.get("evidence") or "none"),
                     "status": "UNVERIFIED",
+                    "criteria": list(sensor.get("criteria") or []),
                 }
             )
     return rows
@@ -1620,6 +2213,7 @@ def _context_body(kernel: Kernel, spec_id: str, change_slug: str | None) -> dict
         "in_flight": in_flight,
         "readiness": readiness,
         "sensors": _context_sensors(spec_id, covering),
+        "history": payload.get("history") or [],
         "named_change_missing": missing,
     }
 
@@ -1707,6 +2301,29 @@ def _format_context_body(lines: list[str], kernel: Kernel, body: dict[str, Any])
     if readiness:
         lines.append("  readiness: warning")
         lines.append(f"    {readiness}")
+    lines.append("history:")
+    history = body.get("history") or []
+    if not history:
+        lines.append("  (none)")
+    for row in history:
+        lines.append(f"  - change: {row.get('change_id') or ''}")
+        lines.append(f"    lifecycle: {row.get('lifecycle') or ''}")
+        if row.get("opened"):
+            lines.append(f"    opened: {row.get('opened')}")
+        if row.get("decision_status"):
+            lines.append(f"    decision_status: {row.get('decision_status')}")
+        summary = str(row.get("summary") or "").strip()
+        if summary:
+            lines.append(f"    summary: {summary}")
+        if row.get("decision_ref"):
+            lines.append(f"    decision: {row.get('decision_ref')}")
+        if row.get("evidence_ref"):
+            lines.append(f"    evidence: {row.get('evidence_ref')}")
+        warnings = row.get("decision_warnings") or []
+        if warnings:
+            lines.append("    decision_warnings:")
+            for item in warnings:
+                lines.append(f"      - {item}")
     lines.append("implementation:")
     paths = _implementation_lines(kernel, body)
     if paths:
@@ -1725,6 +2342,11 @@ def _format_context_body(lines: list[str], kernel: Kernel, body: dict[str, Any])
             lines.append(f"    must: {sensor.get('must')}")
         lines.append(f"    evidence: {sensor.get('evidence') or 'none'}")
         lines.append(f"    status: {sensor.get('status') or 'UNVERIFIED'}")
+        criteria = sensor.get("criteria") or []
+        if criteria:
+            lines.append("    criteria:")
+            for criterion_id in criteria:
+                lines.append(f"      - {criterion_id}")
 
 
 def format_context(kernel: Kernel, payload: dict[str, Any]) -> str:
@@ -1874,12 +2496,47 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         for row in payload["unbound"]:
             lines.append(f"  - {row.get('id') or row.get('must') or 'sensor'}")
         lines.append("  Add run.unittest or run.argv. The English line was not executed.")
+    if payload.get("pending_manual"):
+        lines.append("pending_manual:")
+        for row in payload["pending_manual"]:
+            name = row.get("id") or row.get("must") or "manual-check"
+            lines.append(f"  - {name}")
+            lines.append(f"    method: {row.get('method') or 'manual'}")
+            lines.append(f"    state: {row.get('state') or 'pending'}")
+        lines.append("  advisory: manual verification remains unresolved")
     if payload.get("phase1_advisory"):
         lines.append("phase1_advisory:")
         for item in payload["phase1_advisory"]:
             lines.append(f"  - {item}")
         if not payload.get("unreached"):
             lines.append("  Phase 1 ids have no join edges; uncovered / empty blast do not fail.")
+    mode = str(payload.get("contract_mode") or "legacy")
+    lines.append(f"evidence_contract: {mode}")
+    if mode == "exempt":
+        reason = str(payload.get("contract_reason") or "").strip() or "no reason provided"
+        lines.append(f"  reason: {reason}")
+    if payload.get("contract_findings"):
+        lines.append("evidence_findings:")
+        for item in payload["contract_findings"]:
+            lines.append(f"  - {item}")
+    criteria_rows = payload.get("criteria_rows") or []
+    lines.append("criteria:")
+    if not criteria_rows:
+        lines.append("  (none)")
+    for row in criteria_rows:
+        lines.append(f"  - change: {row.get('change')}")
+        lines.append(f"    id: {row.get('id') or ''}")
+        if row.get("promise"):
+            lines.append(f"    promise: {row.get('promise')}")
+        if row.get("outcome"):
+            lines.append(f"    outcome: {row.get('outcome')}")
+        checks = row.get("checks") or []
+        if checks:
+            lines.append("    checks:")
+            for check in checks:
+                lines.append(f"      - {check}")
+        if row.get("exemption"):
+            lines.append(f"    exemption: {row.get('exemption')}")
     if payload.get("unknown"):
         lines.append("unknown_ids:")
         for item in payload["unknown"]:
@@ -1897,15 +2554,28 @@ def format_check_sync(payload: dict[str, Any]) -> str:
             lines.append(f"    must: {must}")
             lines.append(f"    evidence: {row.get('evidence') or 'none'}")
             lines.append(f"    status: {row.get('status') or 'UNVERIFIED'}")
+            criteria = row.get("criteria") or []
+            if criteria:
+                lines.append("    criteria:")
+                for criterion_id in criteria:
+                    lines.append(f"      - {criterion_id}")
+            if row.get("method"):
+                lines.append(f"    method: {row.get('method')}")
+            if row.get("expected"):
+                lines.append(f"    expected: {row.get('expected')}")
     elif payload.get("missing_sensor_changes"):
         for slug in payload["missing_sensor_changes"]:
             lines.append(f"  - change: {slug}")
     lines.append("behavior: unverified")
     if payload.get("decision_required"):
         lines.append("DECISION REQUIRED")
-        lines.append("  Named behavior moved and live spec / open change did not cover it.")
-        lines.append("  SpecPlane does not stamp live.")
-        lines.extend(_uncovered_recipe(payload))
+        if payload.get("contract_findings"):
+            lines.append("  Evidence contract requirements are unresolved for this change.")
+            lines.append("  SpecPlane does not stamp live.")
+        else:
+            lines.append("  Named behavior moved and live spec / open change did not cover it.")
+            lines.append("  SpecPlane does not stamp live.")
+            lines.extend(_uncovered_recipe(payload))
     unmapped = payload.get("unmapped_changed") or []
     if unmapped:
         lines.append("unmapped_changed:")
@@ -1935,6 +2605,13 @@ def _run_commands(payload: dict[str, Any]) -> str:
 
 def receipt_check_sync(payload: dict[str, Any]) -> str:
     if not payload.get("ok"):
+        findings = [str(item) for item in (payload.get("contract_findings") or []) if item]
+        if findings:
+            return (
+                "SpecPlane · sync check — evidence contract failed. "
+                + "; ".join(findings[:3])
+                + ("." if len(findings) <= 3 else "; …")
+            )
         uncovered_ids = [str(item) for item in (payload.get("uncovered") or []) if item]
         recipe = bool(uncovered_ids) and not payload.get("unknown_change") and not payload.get("unknown")
         if recipe:
@@ -1974,6 +2651,7 @@ def receipt_check_sync(payload: dict[str, Any]) -> str:
         detail = ", ".join(parts) if parts else "coverage failed"
         return f"SpecPlane · sync check — {detail}. Behavior was not verified."
     advisory = payload.get("phase1_advisory") or []
+    pending_manual = payload.get("pending_manual") or []
     if advisory:
         line = (
             "SpecPlane · sync check — passed as Phase 1 advisory "
@@ -1986,6 +2664,19 @@ def receipt_check_sync(payload: dict[str, Any]) -> str:
                 f"Run them with: {_run_commands(payload)}."
             )
         return line
+    if pending_manual:
+        names = ", ".join(
+            str(row.get("id") or row.get("must") or "manual-check")
+            for row in pending_manual
+        )
+        base = (
+            "SpecPlane · sync check — coverage passed with pending manual verification: "
+            + names
+            + "."
+        )
+        if payload.get("sensors") == "declared":
+            base += f" Declared sensors were not executed. Run them with: {_run_commands(payload)}."
+        return base
     if payload.get("sensors") == "declared":
         return (
             "SpecPlane · sync check — coverage passed. "
@@ -2012,17 +2703,9 @@ _RESULT_RANK = {"pass": 0, "not_run": 0, "fail": 1, "error": 2}
 
 
 def _read_success_sensors(change: Change) -> tuple[list[dict[str, Any]], str]:
-    path = change.path / "success.yaml"
-    if not path.is_file():
-        return [], ""
-    try:
-        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except yaml.YAMLError as exc:
-        return [], f"success.yaml: {exc}"
-    if loaded is None:
-        return [], ""
-    if not isinstance(loaded, dict):
-        return [], "success.yaml: document must be a mapping"
+    loaded, error = _read_success_doc(change)
+    if error:
+        return [], error
     sensors = loaded.get("sensors") or []
     if not isinstance(sensors, list):
         return [], "success.yaml: sensors must be a list"
@@ -2032,6 +2715,87 @@ def _read_success_sensors(change: Change) -> tuple[list[dict[str, Any]], str]:
             return [], "success.yaml: each sensor must be a mapping"
         rows.append(row)
     return rows, ""
+
+
+def _git_revision(repo: Path) -> str:
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return ""
+    return out
+
+
+def _sensor_evidence_row(
+    row: dict[str, Any],
+    result: str,
+    detail: str,
+    *,
+    repo: Path,
+    revision: str,
+) -> dict[str, Any]:
+    criteria = _as_clean_list(row.get("criteria"))
+    actual = str(row.get("actual") or "").strip()
+    if not actual:
+        if result == "pass":
+            actual = "bound checks passed"
+        elif result == "not_run":
+            actual = "check not executed"
+        elif detail:
+            actual = detail
+        else:
+            actual = result
+    expected = str(row.get("expected") or "").strip()
+    evidence_ref = str(row.get("evidence_ref") or "").strip() or evidence_label(row)
+    method = str(row.get("method") or "").strip() or "bound_check"
+    environment = row.get("environment") if isinstance(row.get("environment"), dict) else {}
+    merged_environment = {
+        "runner": "specplane.run",
+        "repo": repo.as_posix(),
+        **environment,
+    }
+    limitations = _as_clean_list(row.get("limitations"))
+    if result == "not_run" and not limitations:
+        limitations.append("No bound check executed.")
+    performed_by = str(row.get("performed_by") or "").strip() or "agent"
+    out: dict[str, Any] = {
+        "criteria": criteria,
+        "method": method,
+        "expected": expected,
+        "actual": actual,
+        "evidence_ref": evidence_ref,
+        "environment": merged_environment,
+        "revision": str(row.get("revision") or "").strip() or revision,
+        "limitations": limitations,
+        "performed_by": performed_by,
+    }
+    manual = row.get("manual")
+    if isinstance(manual, dict):
+        out["manual"] = manual
+    evaluation = row.get("evaluation")
+    if isinstance(evaluation, dict):
+        out["evaluation"] = evaluation
+    return out
+
+
+def _apply_evaluation_threshold(row: dict[str, Any], result: str, detail: str) -> tuple[str, str]:
+    if result in {"fail", "error"}:
+        return result, detail
+    evaluation = row.get("evaluation")
+    if not isinstance(evaluation, dict):
+        return result, detail
+    threshold = _as_number(evaluation.get("threshold"))
+    observed = _as_number(evaluation.get("observed_score"))
+    if threshold is None or observed is None:
+        return result, detail
+    if observed >= threshold:
+        return result, detail
+    note = f"observed_score {observed:g} below threshold {threshold:g}"
+    return "fail", note if not detail else f"{detail}; {note}"
 
 
 def _unittest_id(value: Any) -> tuple[str | None, str | None]:
@@ -2168,8 +2932,10 @@ def run_sensors(
 
     rows, parse_error = _read_success_sensors(change)
     sensor_rows: list[dict[str, str]] = []
+    evidence_rows: list[dict[str, Any]] = []
     invoked = False
     worst = "pass"
+    revision = _git_revision(repo)
     if parse_error:
         sensor_rows.append({"id": "", "must": "", "result": "error", "detail": parse_error})
         worst = "error"
@@ -2181,6 +2947,7 @@ def run_sensors(
             else:
                 result, detail = _execute_binds(argvs, repo, timeout)
                 invoked = True
+            result, detail = _apply_evaluation_threshold(row, result, detail)
             if _RESULT_RANK[result] > _RESULT_RANK[worst]:
                 worst = result
             sensor_rows.append(
@@ -2191,13 +2958,20 @@ def run_sensors(
                     "detail": detail,
                     "evidence": evidence_label(row),
                     "status": status_for_result(result),
+                    "criteria": _as_clean_list(row.get("criteria")),
+                    "method": str(row.get("method") or "").strip(),
+                    "expected": str(row.get("expected") or "").strip(),
                 }
+            )
+            evidence_rows.append(
+                _sensor_evidence_row(row, result, detail, repo=repo, revision=revision)
             )
 
     return {
         "change": slug,
         "unknown_change": "",
         "sensors": sensor_rows,
+        "evidence_rows": evidence_rows,
         "invoked": invoked,
         "ok": _RESULT_RANK[worst] < _RESULT_RANK["fail"],
         "behavior": "evidence",
@@ -2219,10 +2993,68 @@ def format_run(payload: dict[str, Any]) -> str:
             lines.append(f"    must: {must}")
         lines.append(f"    evidence: {row.get('evidence') or 'none'}")
         lines.append(f"    status: {row.get('status') or status_for_result(str(row.get('result') or ''))}")
+        criteria = row.get("criteria") or []
+        if criteria:
+            lines.append("    criteria:")
+            for criterion_id in criteria:
+                lines.append(f"      - {criterion_id}")
+        method = str(row.get("method") or "").strip()
+        if method:
+            lines.append(f"    method: {method}")
+        expected = str(row.get("expected") or "").strip()
+        if expected:
+            lines.append(f"    expected: {expected}")
         lines.append(f"    result: {row.get('result') or ''}")
         detail = str(row.get("detail") or "")
         if detail and row.get("result") in {"fail", "error"}:
             lines.append(f"    detail: {detail}")
+    evidence_rows = payload.get("evidence_rows") or []
+    lines.append("evidence_rows:")
+    if not evidence_rows:
+        lines.append("  (none)")
+    for row in evidence_rows:
+        lines.append("  -")
+        criteria = row.get("criteria") or []
+        if criteria:
+            lines.append("    criteria:")
+            for criterion_id in criteria:
+                lines.append(f"      - {criterion_id}")
+        lines.append(f"    method: {row.get('method') or ''}")
+        if row.get("expected"):
+            lines.append(f"    expected: {row.get('expected')}")
+        if row.get("actual"):
+            lines.append(f"    actual: {row.get('actual')}")
+        lines.append(f"    evidence_ref: {row.get('evidence_ref') or 'none'}")
+        lines.append(f"    performed_by: {row.get('performed_by') or ''}")
+        lines.append(f"    revision: {row.get('revision') or ''}")
+        environment = row.get("environment") or {}
+        if isinstance(environment, dict):
+            lines.append("    environment:")
+            for key in sorted(environment):
+                lines.append(f"      {key}: {environment[key]}")
+        limitations = row.get("limitations") or []
+        if limitations:
+            lines.append("    limitations:")
+            for item in limitations:
+                lines.append(f"      - {item}")
+        manual = row.get("manual")
+        if isinstance(manual, dict) and manual:
+            lines.append("    manual:")
+            for key in ("preconditions", "steps", "expected", "observed", "performed_by"):
+                value = manual.get(key)
+                if not value:
+                    continue
+                if isinstance(value, list):
+                    lines.append(f"      {key}:")
+                    for part in value:
+                        lines.append(f"        - {part}")
+                else:
+                    lines.append(f"      {key}: {value}")
+        evaluation = row.get("evaluation")
+        if isinstance(evaluation, dict) and evaluation:
+            lines.append("    evaluation:")
+            for key in sorted(evaluation):
+                lines.append(f"      {key}: {evaluation[key]}")
     lines.append("behavior: evidence")
     note = RUN_INVOKED_NOTE if payload.get("invoked") else RUN_IDLE_NOTE
     lines.append(f"note: {note}")

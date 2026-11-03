@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "cli", "retrieve"]
-  last_updated: "2026-10-02"
+  last_updated: "2026-11-02"
   status: "planned"
-  version: "1.5.0"
+  version: "1.5.1"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-11-02"
+    author: "evidence_contract"
+    summary: "retrieve/context include relevant historical decisions and change summaries for the selected ids while keeping archived changes historical, not active."
+    breaking: false
   - date: "2026-10-02"
     author: "practitioner_brief"
     summary: "When one open change names the id, the first slice is the live text with that change applied, labeled in-flight. The untouched live text follows it. The file on disk is not rewritten. Two open changes are not blended."
@@ -52,6 +56,7 @@ responsibilities:
   - "Never present inferred as live"
   - "Join on capability.* / component.* / foundation.*"
   - "bit live is graph membership, not approval; print review_state and status next to bit"
+  - "retrieve/context include relevant historical decisions and change summaries for the selected ids while keeping archived changes historical, not active."
 
 flows:
   - "retrieve <id> for a messy capability"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, run, promote, accept, init, context.
+"""SpecPlane kernel CLI: validate, retrieve, blast, impact, check_sync, reconcile, list_gaps, history, run, promote, accept, init, context.
 
 Simple commands. Agents call them. No LLM in the loop.
 """
@@ -20,12 +20,14 @@ from impact import format_impact, impact  # noqa: E402
 from kernel import (  # noqa: E402
     blast,
     build_context,
+    change_ledger,
     check_sync,
     default_changed_ids,
     format_accept,
     format_blast,
     format_check_sync,
     format_context,
+    format_history,
     format_list_gaps,
     format_promote,
     format_reconcile,
@@ -229,6 +231,17 @@ def cmd_list_gaps(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_history(args: argparse.Namespace) -> int:
+    spec_root = resolve_spec_root(args.spec_root, args.config_dir)
+    if not spec_root.is_dir():
+        sys.stderr.write(f"spec root does not exist: {spec_root} (pass --spec-root)\n")
+        return 1
+    kernel = load_kernel(spec_root)
+    payload = change_ledger(kernel, args.spec_id or None)
+    print(format_history(payload), end="")
+    return 0
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     spec_root = resolve_spec_root(args.spec_root, args.config_dir)
     if not spec_root.is_dir():
@@ -367,7 +380,7 @@ def cmd_uninstall(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / run / promote / accept / init / uninstall / view / usage)"
+        description="SpecPlane kernel CLI (validate / retrieve / context / blast / impact / check_sync / reconcile / list_gaps / history / run / promote / accept / init / uninstall / view / usage)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -444,6 +457,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_root_args(p_gaps)
     p_gaps.set_defaults(func=cmd_list_gaps)
+
+    p_history = sub.add_parser(
+        "history",
+        help="Generated change ledger from open and archived packets",
+    )
+    add_root_args(p_history)
+    p_history.add_argument(
+        "--spec-id",
+        default="",
+        help="Filter rows to changes that touched this spec id",
+    )
+    p_history.set_defaults(func=cmd_history)
 
     p_run = sub.add_parser(
         "run",
