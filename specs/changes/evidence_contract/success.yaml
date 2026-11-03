@@ -1,0 +1,61 @@
+criteria:
+  - id: "criterion.acceptance_chain_enforced"
+    promise: "capability.specplane_check_sync"
+    outcome: "Scoped sync fails when a behavior-changing change has no criteria or missing criterion-to-check links."
+    checks:
+      - "sync_requires_criteria"
+  - id: "criterion.evidence_rows_distinguish_unverified"
+    promise: "capability.specplane_run"
+    outcome: "Run output distinguishes passed, failed, and unverified outcomes with explicit evidence details."
+    checks:
+      - "run_records_evidence_rows"
+  - id: "criterion.history_context_retrievable"
+    promise: "capability.specplane_retrieve"
+    outcome: "Retrieve/context expose relevant historical changes and decision references for the selected spec id."
+    checks:
+      - "retrieve_includes_history"
+  - id: "criterion.generated_ledger_queryable"
+    promise: "capability.specplane_change_ledger"
+    outcome: "A ledger command can query changes affecting a spec and identify lifecycle, touched ids, and references."
+    checks:
+      - "ledger_query_for_spec"
+
+sensors:
+  - id: "sync_requires_criteria"
+    promise: "capability.specplane_check_sync"
+    criteria:
+      - "criterion.acceptance_chain_enforced"
+    must: "check_sync --change flags missing criteria, missing links, and visible exemptions."
+    method: "automated"
+    expected: "A behavior-changing packet without criteria is a scoped failure with contract findings."
+    run:
+      unittest: "tools.specplane.test_kernel.TestEvidenceContract.test_check_sync_scoped_requires_criteria"
+  - id: "run_records_evidence_rows"
+    promise: "capability.specplane_run"
+    criteria:
+      - "criterion.evidence_rows_distinguish_unverified"
+    must: "run output includes criterion links, expected vs actual, evidence refs, environment, and status."
+    method: "automated"
+    expected: "Bound checks produce evidence rows and retain not_run rows as unverified."
+    run:
+      unittest: "tools.specplane.test_kernel.TestEvidenceContract.test_run_formats_evidence_rows"
+  - id: "retrieve_includes_history"
+    promise: "capability.specplane_retrieve"
+    criteria:
+      - "criterion.history_context_retrievable"
+    must: "retrieve/context include historical change and decision references for a selected id."
+    method: "automated"
+    expected: "History section lists archived/open changes and keeps archived status explicit."
+    run:
+      unittest: "tools.specplane.test_kernel.TestEvidenceContract.test_retrieve_includes_history"
+  - id: "ledger_query_for_spec"
+    promise: "capability.specplane_change_ledger"
+    criteria:
+      - "criterion.generated_ledger_queryable"
+    must: "history command returns ledger rows for a selected spec id."
+    method: "automated"
+    expected: "Rows include lifecycle, change id, touched ids, and references."
+    run:
+      unittest: "tools.specplane.test_kernel.TestEvidenceContract.test_history_query_for_spec"
+
+looks_fine_is_not_a_sensor: true

@@ -24,6 +24,7 @@ from kernel import (  # noqa: E402
     RECONCILE_NOTE,
     accept_ids,
     blast,
+    change_ledger,
     check_sync,
     default_changed_ids,
     format_accept,
@@ -807,6 +808,153 @@ class TestRun(unittest.TestCase):
         self.assertIn("timed out", payload["sensors"][0]["detail"])
         self.assertIn("result: error", text)
         self.assertNotIn("verified satisfies the spec", text)
+
+
+class TestEvidenceContract(unittest.TestCase):
+    def test_check_sync_scoped_requires_criteria(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(GOLDEN, root)
+            change = root / "changes" / "required_contract"
+            change.mkdir()
+            (change / "proposal.yaml").write_text(
+                "\n".join(
+                    [
+                        'id: "required_contract"',
+                        'kind: "evolve"',
+                        'status: "in-flight"',
+                        "promise_ids:",
+                        "  - capability.authentication",
+                        "evidence_contract: required",
+                        "why: exercise criteria enforcement",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (change / "success.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "sensors": [
+                            {
+                                "id": "bound",
+                                "must": "bound command exits zero",
+                                "run": {"argv": [sys.executable, "-c", "raise SystemExit(0)"]},
+                            }
+                        ]
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            payload = check_sync(
+                load_kernel(root),
+                ["capability.authentication"],
+                change_slug="required_contract",
+            )
+            text = format_check_sync(payload)
+        self.assertFalse(payload["ok"], payload)
+        self.assertEqual(payload["contract_mode"], "required")
+        self.assertIn("missing criteria", " ".join(payload["contract_findings"]))
+        self.assertIn("evidence_findings:", text)
+        self.assertIn("missing criteria", text)
+
+    def test_run_formats_evidence_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            root = tmp_path / "specs"
+            folder = root / "changes" / "evidence_rows"
+            folder.mkdir(parents=True)
+            (folder / "proposal.yaml").write_text(
+                "\n".join(
+                    [
+                        'id: "evidence_rows"',
+                        'kind: "evolve"',
+                        'status: "in-flight"',
+                        "evidence_contract: required",
+                        "promise_ids: []",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (folder / "success.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "criteria": [
+                            {
+                                "id": "criterion.one",
+                                "outcome": "Outcome is observable",
+                                "checks": ["row-pass", "row-pending"],
+                            }
+                        ],
+                        "sensors": [
+                            {
+                                "id": "row-pass",
+                                "must": "bound command exits 0",
+                                "criteria": ["criterion.one"],
+                                "method": "automated",
+                                "expected": "exit code is zero",
+                                "run": {"argv": [sys.executable, "-c", "raise SystemExit(0)"]},
+                                "environment": {"device": "simulator"},
+                            },
+                            {
+                                "id": "row-pending",
+                                "must": "manual acceptance remains pending",
+                                "criteria": ["criterion.one"],
+                                "method": "manual_human_review",
+                                "manual": {
+                                    "preconditions": ["Open settings"],
+                                    "steps": ["Tap Save"],
+                                    "expected": "Saved banner appears",
+                                    "observed": "Pending human review",
+                                },
+                            },
+                        ],
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            code, text, err = _cli_run(root, "evidence_rows", tmp_path)
+        self.assertEqual(code, 0, text + err)
+        self.assertIn("evidence_rows:", text)
+        self.assertIn("criteria:", text)
+        self.assertIn("method: manual_human_review", text)
+        self.assertIn("environment:", text)
+        self.assertIn("result: not_run", text)
+
+    def test_retrieve_includes_history(self) -> None:
+        payload = retrieve(load_kernel(GOLDEN), "capability.authentication")
+        assert payload is not None
+        history = payload["history"]
+        self.assertTrue(history)
+        text = format_retrieve(payload)
+        self.assertIn("history:", text)
+        self.assertIn("change: add_passkeys", text)
+
+    def test_history_query_for_spec(self) -> None:
+        payload = change_ledger(load_kernel(GOLDEN), "capability.authentication")
+        rows = payload["rows"]
+        self.assertTrue(rows)
+        self.assertIn("capability.authentication", rows[0]["touched_ids"])
+        from io import StringIO
+        from unittest.mock import patch
+
+        out = StringIO()
+        with patch("sys.stdout", out):
+            code = cli_main(
+                [
+                    "history",
+                    "--spec-root",
+                    str(GOLDEN),
+                    "--spec-id",
+                    "capability.authentication",
+                ]
+            )
+        self.assertEqual(code, 0)
+        self.assertIn("history", out.getvalue())
+        self.assertIn("spec_id: capability.authentication", out.getvalue())
 
 
 INFERRED = ROOT / "testdata" / "inferred"

@@ -1,0 +1,26 @@
+id: "evidence_contract"
+kind: "evolve"
+status: "in-flight"
+opened: "2026-11-02"
+evidence_contract: "required"
+promise_ids:
+  - "capability.specplane_change_folders"
+  - "capability.specplane_check_sync"
+  - "capability.specplane_run"
+  - "capability.specplane_retrieve"
+  - "capability.specplane_blast"
+  - "component.cli_check_sync"
+  - "component.cli_run"
+  - "component.cli_retrieve"
+  - "component.mcp_stdio"
+  - "capability.specplane_change_ledger"
+why: >-
+  Require a durable acceptance-to-evidence contract so behavior changes can be
+  traced from product promises to checks and outcomes across stacks. Add a
+  generated historical ledger so agents can recover decision and change context
+  without replaying the full archive.
+non_goals:
+  - "force one test framework"
+  - "treat declared coverage as behavioral verification"
+  - "reopen archived packets as active work"
+  - "claim full verification when criteria are unverified"

@@ -1,6 +1,6 @@
 """Thin stdio MCP wrapping the same kernel as the CLI.
 
-Catalog: retrieve, blast, impact, check_sync, list_gaps, run.
+Catalog: retrieve, blast, impact, check_sync, list_gaps, history, run.
 Validate, promote, accept, and reconcile are CLI-only.
 No infer, specify, or implement tools.
 """
@@ -19,9 +19,11 @@ if str(ROOT) not in sys.path:
 from impact import format_impact, impact  # noqa: E402
 from kernel import (  # noqa: E402
     blast,
+    change_ledger,
     check_sync,
     format_blast,
     format_check_sync,
+    format_history,
     format_list_gaps,
     format_retrieve,
     format_run,
@@ -32,7 +34,7 @@ from kernel import (  # noqa: E402
 )
 from validate import resolve_spec_root  # noqa: E402
 
-MCP_TOOLS = ("retrieve", "blast", "impact", "check_sync", "list_gaps", "run")
+MCP_TOOLS = ("retrieve", "blast", "impact", "check_sync", "list_gaps", "history", "run")
 
 _SCHEMAS: dict[str, dict[str, Any]] = {
     "retrieve": {
@@ -80,6 +82,14 @@ _SCHEMAS: dict[str, dict[str, Any]] = {
     "list_gaps": {
         "type": "object",
         "properties": {"spec_root": {"type": "string"}},
+        "required": [],
+    },
+    "history": {
+        "type": "object",
+        "properties": {
+            "spec_root": {"type": "string"},
+            "spec_id": {"type": "string"},
+        },
         "required": [],
     },
     "run": {
@@ -168,6 +178,9 @@ def dispatch(name: str, arguments: dict[str, Any] | None) -> str:
         raw_repo = str(arguments.get("repo") or "").strip()
         repo = Path(raw_repo).resolve() if raw_repo else Path.cwd().resolve()
         return format_run(run_sensors(kernel, change, repo=repo))
+    if name == "history":
+        spec_id = str(arguments.get("spec_id") or "").strip() or None
+        return format_history(change_ledger(kernel, spec_id))
     return format_list_gaps(list_gaps(kernel))
 
 
