@@ -14,7 +14,7 @@ import time
 import uuid
 from pathlib import Path
 
-VERSION = "0.1.0a2"
+VERSION = "0.1.0a3"
 
 _CALLERS = frozenset(
     {

@@ -285,8 +285,8 @@ class InitJourneyTests(unittest.TestCase):
 
     def test_current_release_is_a_prerelease(self) -> None:
         text = (KIT / "pyproject.toml").read_text(encoding="utf-8")
-        self.assertIn('version = "0.1.0a2"', text)
-        self.assertEqual(VERSION, "0.1.0a2")
+        self.assertIn('version = "0.1.0a3"', text)
+        self.assertEqual(VERSION, "0.1.0a3")
         for rel in (
             "PYPI.md",
             "README.md",
@@ -294,13 +294,13 @@ class InitJourneyTests(unittest.TestCase):
             "docs/try.md",
         ):
             doc = (KIT / rel).read_text(encoding="utf-8")
-            self.assertIn("0.1.0a2", doc, rel)
+            self.assertIn("0.1.0a3", doc, rel)
             self.assertNotIn("0.1.0a1", doc, rel)
         package = (KIT / "specs" / "capabilities" / "capability.specplane_package.yaml").read_text(
             encoding="utf-8"
         )
         self.assertIn("The first publish is the pre-release 0.1.0a1", package)
-        self.assertIn("The current published pre-release is 0.1.0a2.", package)
+        self.assertIn("The current published pre-release is 0.1.0a3.", package)
 
     def test_package_has_four_flows_and_diagrams(self) -> None:
         loaded = yaml_load(KIT / "specs" / "capabilities" / "capability.specplane_package.yaml")
