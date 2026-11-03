@@ -1,6 +1,6 @@
 id: "evidence_contract"
 kind: "evolve"
-status: "in-flight"
+status: "promoted"
 opened: "2026-11-02"
 evidence_contract: "required"
 promise_ids:

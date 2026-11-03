@@ -4,13 +4,17 @@ meta:
   level: "capability"
   owner: "SpecPlane"
   tags: ["kernel", "changes", "in-flight"]
-  last_updated: "2026-10-06"
+  last_updated: "2026-11-02"
   status: "planned"
-  version: "1.3.1"
+  version: "1.3.2"
   review_state: "unreviewed"
   introduced_in: "1.0.0"
 
 changelog:
+  - date: "2026-11-02"
+    author: "evidence_contract"
+    summary: "Behavior-changing work declares observable acceptance criteria before implementation and links criteria to verification intent. Trivial/non-behavior edits may declare an explicit exemption reason instead of criteria."
+    breaking: false
   - date: "2026-10-06"
     author: "promote_change"
     summary: "A change is complete when live specs are updated, the packet is archived, and HEAD validates. Completion is before merge. specplane promote <slug> applies MODIFIED without rewriting unrelated lines, archives, and is idempotent only when already promoted and consistent. MIXED and PARTIAL fail and write nothing. retrieve and list_gaps still skip _archive as open work."
@@ -51,6 +55,7 @@ responsibilities:
   - "retrieve and list_gaps skip specs/changes/_archive/"
   - "success.yaml sensors may bind run.argv (a list, no shell), run.unittest or test:, and an optional evaluator id. must: stays the claim and is never the command."
   - "A change is complete when live specs are updated, the packet is archived, and HEAD validates. Completion is before merge. specplane promote <slug> applies MODIFIED without rewriting unrelated lines, archives, and is idempotent only when already promoted and consistent. MIXED and PARTIAL fail and write nothing. retrieve and list_gaps still skip _archive as open work."
+  - "Behavior-changing work declares observable acceptance criteria before implementation and links criteria to verification intent. Trivial/non-behavior edits may declare an explicit exemption reason instead of criteria."
 
 flows:
   - "Open specs/changes/<id>/ for a signal (bug, eval fail, this kernel slice)"

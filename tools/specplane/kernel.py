@@ -400,6 +400,90 @@ def _change_ref(change: Change, name: str) -> str:
     return _relative_spec_path(spec_root, target)
 
 
+def _read_decision_meta(change: Change) -> dict[str, Any]:
+    path = change.path / "decision.md"
+    if not path.is_file():
+        return {
+            "exists": False,
+            "status": "",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": [],
+        }
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision metadata missing front matter"],
+        }
+    end = -1
+    for idx in range(1, len(lines)):
+        if lines[idx].strip() == "---":
+            end = idx
+            break
+    if end < 0:
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision front matter is not closed"],
+        }
+    raw = "\n".join(lines[1:end]).strip()
+    if not raw:
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision front matter is empty"],
+        }
+    try:
+        loaded = yaml.safe_load(raw)
+    except yaml.YAMLError as exc:
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": [f"decision front matter parse error: {exc}"],
+        }
+    if not isinstance(loaded, dict):
+        return {
+            "exists": True,
+            "status": "unknown",
+            "change_id": "",
+            "affected_spec_ids": [],
+            "supersedes": [],
+            "superseded_by": "",
+            "warnings": ["decision front matter must be a mapping"],
+        }
+    status = str(loaded.get("status") or "").strip().lower() or "unknown"
+    return {
+        "exists": True,
+        "status": status,
+        "change_id": str(loaded.get("change_id") or "").strip(),
+        "affected_spec_ids": _as_clean_list(loaded.get("affected_spec_ids")),
+        "supersedes": _as_clean_list(loaded.get("supersedes")),
+        "superseded_by": str(loaded.get("superseded_by") or "").strip(),
+        "warnings": [],
+    }
+
+
 def change_ledger(kernel: Kernel, spec_id: str | None = None) -> dict[str, Any]:
     wanted = (spec_id or "").strip()
     rows: list[dict[str, Any]] = []
@@ -408,6 +492,7 @@ def change_ledger(kernel: Kernel, spec_id: str | None = None) -> dict[str, Any]:
         if wanted and wanted not in touched:
             continue
         summary = " ".join(str(change.data.get("why") or "").split())
+        decision_meta = _read_decision_meta(change)
         rows.append(
             {
                 "change_id": change.change_id,
@@ -439,6 +524,12 @@ def change_ledger(kernel: Kernel, spec_id: str | None = None) -> dict[str, Any]:
                 ),
                 "summary": summary,
                 "decision_ref": _change_ref(change, "decision.md"),
+                "decision_status": decision_meta.get("status") or "",
+                "decision_change_id": decision_meta.get("change_id") or "",
+                "decision_affected_ids": decision_meta.get("affected_spec_ids") or [],
+                "decision_supersedes": decision_meta.get("supersedes") or [],
+                "decision_superseded_by": decision_meta.get("superseded_by") or "",
+                "decision_warnings": decision_meta.get("warnings") or [],
                 "evidence_ref": _change_ref(change, "success.yaml"),
                 "proposal_ref": _change_ref(change, "proposal.yaml"),
                 "delta_ref": _change_ref(change, "delta.yaml"),
@@ -791,7 +882,16 @@ def _unreached_named_ids(kernel: Kernel, spec_id: str) -> list[str]:
 
 def _unbound_sensors(change: Change) -> list[dict[str, str]]:
     """Declared sensors with no run.unittest, run.argv, or test:. Does not execute them."""
-    return [row for row in success_sensors(change) if str(row.get("evidence") or "none") == "none"]
+    out: list[dict[str, str]] = []
+    for row in success_sensors(change):
+        if str(row.get("evidence") or "none") != "none":
+            continue
+        method = str(row.get("method") or "").strip().lower()
+        if method.startswith("manual"):
+            # Manual procedures are intentionally unbound to run argv/unittest.
+            continue
+        out.append(row)
+    return out
 
 
 def _evidence_contract_mode(change: Change) -> tuple[str, str]:
@@ -814,6 +914,38 @@ def _evidence_contract_mode(change: Change) -> tuple[str, str]:
     return "legacy", ""
 
 
+def _is_manual_method(method: str) -> bool:
+    return method.strip().lower().startswith("manual")
+
+
+def _is_ai_method(method: str) -> bool:
+    text = method.strip().lower()
+    return text in {"ai_evaluation", "llm_eval", "agent_eval", "evaluation"}
+
+
+def _pending_manual_checks(change: Change) -> list[dict[str, str]]:
+    pending: list[dict[str, str]] = []
+    for row in success_sensors(change):
+        method = str(row.get("method") or "").strip()
+        if not _is_manual_method(method):
+            continue
+        manual = row.get("manual")
+        state = ""
+        if isinstance(manual, dict):
+            state = str(manual.get("state") or "").strip().lower()
+        if state in {"passed", "failed"}:
+            continue
+        pending.append(
+            {
+                "id": str(row.get("id") or "").strip(),
+                "must": str(row.get("must") or "").strip(),
+                "method": method or "manual",
+                "state": state or "pending",
+            }
+        )
+    return pending
+
+
 def _as_number(value: Any) -> float | None:
     if isinstance(value, (int, float)):
         return float(value)
@@ -830,6 +962,8 @@ def _as_number(value: Any) -> float | None:
 
 def _evidence_contract_findings(change: Change) -> list[str]:
     mode, _reason = _evidence_contract_mode(change)
+    if mode == "exempt" and not _reason:
+        return ["missing exemption reason: proposal evidence_contract is exempt but no reason was provided"]
     if mode != "required":
         return []
     criteria = success_criteria(change)
@@ -854,6 +988,56 @@ def _evidence_contract_findings(change: Change) -> list[str]:
         sensor_id = str(sensor.get("id") or "").strip()
         if sensor_id:
             sensors_by_id[sensor_id] = sensor
+        method = str(sensor.get("method") or "").strip()
+        if not method:
+            findings.append(f"sensor {sensor_id or '(unnamed)'} is missing method")
+        if not str(sensor.get("expected") or "").strip():
+            findings.append(f"sensor {sensor_id or '(unnamed)'} is missing expected")
+        if not _as_clean_list(sensor.get("criteria")):
+            findings.append(f"sensor {sensor_id or '(unnamed)'} has no linked criteria")
+        if _is_manual_method(method):
+            manual = sensor.get("manual")
+            if not isinstance(manual, dict):
+                findings.append(f"sensor {sensor_id or '(unnamed)'} manual method is missing manual details")
+            else:
+                for field in ("preconditions", "steps", "expected", "observed"):
+                    value = manual.get(field)
+                    if isinstance(value, list):
+                        ok = any(str(item).strip() for item in value)
+                    else:
+                        ok = bool(str(value or "").strip())
+                    if not ok:
+                        findings.append(
+                            f"sensor {sensor_id or '(unnamed)'} manual field missing: {field}"
+                        )
+                performed = str(manual.get("performed_by") or sensor.get("performed_by") or "").strip()
+                if not performed:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} manual field missing: performed_by"
+                    )
+        if _is_ai_method(method) or isinstance(sensor.get("evaluation"), dict):
+            evaluation = sensor.get("evaluation")
+            if not isinstance(evaluation, dict):
+                findings.append(f"sensor {sensor_id or '(unnamed)'} is missing evaluation details")
+            else:
+                has_cases = bool(_as_clean_list(evaluation.get("cases"))) or bool(
+                    str(evaluation.get("dataset") or "").strip()
+                )
+                if not has_cases:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} evaluation missing cases or dataset"
+                    )
+                has_scoring = bool(str(evaluation.get("scoring") or "").strip()) or bool(
+                    str(evaluation.get("rubric") or "").strip()
+                )
+                if not has_scoring:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} evaluation missing scoring or rubric"
+                    )
+                if _as_number(evaluation.get("threshold")) is None:
+                    findings.append(
+                        f"sensor {sensor_id or '(unnamed)'} evaluation missing numeric threshold"
+                    )
         for criterion_id in _as_clean_list(sensor.get("criteria")):
             criterion_to_sensors.setdefault(criterion_id, set()).add(sensor_id or "(unnamed)")
             if criterion_id not in criteria_by_id:
@@ -872,6 +1056,23 @@ def _evidence_contract_findings(change: Change) -> list[str]:
 
     if not sensors:
         findings.append("missing checks: success.yaml sensors is empty")
+
+    decision = _read_decision_meta(change)
+    if decision.get("exists"):
+        if decision.get("warnings"):
+            findings.extend([str(item) for item in decision.get("warnings") if item])
+        if not str(decision.get("change_id") or "").strip():
+            findings.append("decision metadata missing change_id")
+        if str(decision.get("change_id") or "").strip() not in {"", change.change_id}:
+            findings.append(
+                f"decision metadata change_id mismatch: {decision.get('change_id')} (expected {change.change_id})"
+            )
+        affected = set(_as_clean_list(decision.get("affected_spec_ids")))
+        touched = set(_change_touched_ids(change))
+        if not affected:
+            findings.append("decision metadata missing affected_spec_ids")
+        elif touched and not (affected & touched):
+            findings.append("decision metadata affected_spec_ids does not match touched ids")
 
     for sensor in sensors:
         sensor_id = str(sensor.get("id") or "").strip() or "(unnamed)"
@@ -1179,6 +1380,7 @@ def check_sync(
     fail_empty = bool(empty_blasts)
     fail_unreached = bool(unreached)
     unbound = _unbound_sensors(scoped) if scoped is not None else []
+    pending_manual = _pending_manual_checks(scoped) if scoped is not None else []
     contract_mode, contract_reason = _evidence_contract_mode(scoped) if scoped is not None else ("legacy", "")
     contract_findings = _evidence_contract_findings(scoped) if scoped is not None else []
     fail_contract = bool(contract_findings)
@@ -1239,6 +1441,7 @@ def check_sync(
         "empty_blast": empty_blasts,
         "unreached": unreached,
         "unbound": unbound,
+        "pending_manual": pending_manual,
         "phase1_advisory": phase1_advisory,
         "ok": ok,
         "coverage": "pass" if ok else "fail",
@@ -1343,6 +1546,29 @@ def format_history(payload: dict[str, Any]) -> str:
             value = str(row.get(key) or "").strip()
             if value:
                 lines.append(f"    {key}: {value}")
+        decision_status = str(row.get("decision_status") or "").strip()
+        if decision_status:
+            lines.append(f"    decision_status: {decision_status}")
+        decision_change_id = str(row.get("decision_change_id") or "").strip()
+        if decision_change_id:
+            lines.append(f"    decision_change_id: {decision_change_id}")
+        decision_affected = row.get("decision_affected_ids") or []
+        if decision_affected:
+            lines.append("    decision_affected_ids:")
+            for item in decision_affected:
+                lines.append(f"      - {item}")
+        decision_supersedes = row.get("decision_supersedes") or []
+        if decision_supersedes:
+            lines.append("    decision_supersedes:")
+            for item in decision_supersedes:
+                lines.append(f"      - {item}")
+        if row.get("decision_superseded_by"):
+            lines.append(f"    decision_superseded_by: {row.get('decision_superseded_by')}")
+        decision_warnings = row.get("decision_warnings") or []
+        if decision_warnings:
+            lines.append("    decision_warnings:")
+            for item in decision_warnings:
+                lines.append(f"      - {item}")
     return "\n".join(lines) + "\n"
 
 
@@ -1902,6 +2128,8 @@ def format_retrieve(payload: dict[str, Any]) -> str:
         lines.append(f"    lifecycle: {row.get('lifecycle') or ''}")
         if row.get("opened"):
             lines.append(f"    opened: {row.get('opened')}")
+        if row.get("decision_status"):
+            lines.append(f"    decision_status: {row.get('decision_status')}")
         summary = str(row.get("summary") or "").strip()
         if summary:
             lines.append(f"    summary: {summary}")
@@ -1914,6 +2142,11 @@ def format_retrieve(payload: dict[str, Any]) -> str:
             lines.append(f"    decision: {row.get('decision_ref')}")
         if row.get("evidence_ref"):
             lines.append(f"    evidence: {row.get('evidence_ref')}")
+        warnings = row.get("decision_warnings") or []
+        if warnings:
+            lines.append("    decision_warnings:")
+            for item in warnings:
+                lines.append(f"      - {item}")
     return "\n".join(lines) + "\n"
 
 
@@ -2077,6 +2310,8 @@ def _format_context_body(lines: list[str], kernel: Kernel, body: dict[str, Any])
         lines.append(f"    lifecycle: {row.get('lifecycle') or ''}")
         if row.get("opened"):
             lines.append(f"    opened: {row.get('opened')}")
+        if row.get("decision_status"):
+            lines.append(f"    decision_status: {row.get('decision_status')}")
         summary = str(row.get("summary") or "").strip()
         if summary:
             lines.append(f"    summary: {summary}")
@@ -2084,6 +2319,11 @@ def _format_context_body(lines: list[str], kernel: Kernel, body: dict[str, Any])
             lines.append(f"    decision: {row.get('decision_ref')}")
         if row.get("evidence_ref"):
             lines.append(f"    evidence: {row.get('evidence_ref')}")
+        warnings = row.get("decision_warnings") or []
+        if warnings:
+            lines.append("    decision_warnings:")
+            for item in warnings:
+                lines.append(f"      - {item}")
     lines.append("implementation:")
     paths = _implementation_lines(kernel, body)
     if paths:
@@ -2256,6 +2496,14 @@ def format_check_sync(payload: dict[str, Any]) -> str:
         for row in payload["unbound"]:
             lines.append(f"  - {row.get('id') or row.get('must') or 'sensor'}")
         lines.append("  Add run.unittest or run.argv. The English line was not executed.")
+    if payload.get("pending_manual"):
+        lines.append("pending_manual:")
+        for row in payload["pending_manual"]:
+            name = row.get("id") or row.get("must") or "manual-check"
+            lines.append(f"  - {name}")
+            lines.append(f"    method: {row.get('method') or 'manual'}")
+            lines.append(f"    state: {row.get('state') or 'pending'}")
+        lines.append("  advisory: manual verification remains unresolved")
     if payload.get("phase1_advisory"):
         lines.append("phase1_advisory:")
         for item in payload["phase1_advisory"]:
@@ -2403,6 +2651,7 @@ def receipt_check_sync(payload: dict[str, Any]) -> str:
         detail = ", ".join(parts) if parts else "coverage failed"
         return f"SpecPlane · sync check — {detail}. Behavior was not verified."
     advisory = payload.get("phase1_advisory") or []
+    pending_manual = payload.get("pending_manual") or []
     if advisory:
         line = (
             "SpecPlane · sync check — passed as Phase 1 advisory "
@@ -2415,6 +2664,19 @@ def receipt_check_sync(payload: dict[str, Any]) -> str:
                 f"Run them with: {_run_commands(payload)}."
             )
         return line
+    if pending_manual:
+        names = ", ".join(
+            str(row.get("id") or row.get("must") or "manual-check")
+            for row in pending_manual
+        )
+        base = (
+            "SpecPlane · sync check — coverage passed with pending manual verification: "
+            + names
+            + "."
+        )
+        if payload.get("sensors") == "declared":
+            base += f" Declared sensors were not executed. Run them with: {_run_commands(payload)}."
+        return base
     if payload.get("sensors") == "declared":
         return (
             "SpecPlane · sync check — coverage passed. "

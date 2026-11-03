@@ -956,6 +956,179 @@ class TestEvidenceContract(unittest.TestCase):
         self.assertIn("history", out.getvalue())
         self.assertIn("spec_id: capability.authentication", out.getvalue())
 
+    def test_manual_pending_is_visible_and_not_unbound_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(GOLDEN, root)
+            change = root / "changes" / "manual_review"
+            change.mkdir()
+            (change / "proposal.yaml").write_text(
+                "\n".join(
+                    [
+                        'id: "manual_review"',
+                        'kind: "evolve"',
+                        'status: "in-flight"',
+                        "evidence_contract: required",
+                        "promise_ids:",
+                        "  - capability.authentication",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (change / "success.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "criteria": [
+                            {
+                                "id": "criterion.manual",
+                                "outcome": "Human usability pass is tracked",
+                                "checks": ["manual-check"],
+                            }
+                        ],
+                        "sensors": [
+                            {
+                                "id": "manual-check",
+                                "must": "Human tester can complete passkey recovery",
+                                "criteria": ["criterion.manual"],
+                                "method": "manual_human_usability",
+                                "expected": "Recovery succeeds without confusion",
+                                "manual": {
+                                    "state": "pending",
+                                    "preconditions": ["User is logged out"],
+                                    "steps": ["Trigger recovery", "Complete flow"],
+                                    "expected": "Passkey recovery completes",
+                                    "observed": "Pending scheduled human test",
+                                    "performed_by": "qa-human",
+                                },
+                            }
+                        ],
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            payload = check_sync(
+                load_kernel(root),
+                ["capability.authentication"],
+                change_slug="manual_review",
+            )
+            text = format_check_sync(payload)
+        self.assertTrue(payload["ok"], payload)
+        self.assertIn("pending_manual:", text)
+        self.assertIn("manual-check", text)
+        self.assertNotIn("unbound:", text)
+
+    def test_ai_evaluation_missing_threshold_fails_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(GOLDEN, root)
+            change = root / "changes" / "ai_eval_contract"
+            change.mkdir()
+            (change / "proposal.yaml").write_text(
+                "\n".join(
+                    [
+                        'id: "ai_eval_contract"',
+                        'kind: "evolve"',
+                        'status: "in-flight"',
+                        "evidence_contract: required",
+                        "promise_ids:",
+                        "  - capability.authentication",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (change / "success.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "criteria": [
+                            {
+                                "id": "criterion.ai",
+                                "outcome": "AI output quality is measured",
+                                "checks": ["ai-quality"],
+                            }
+                        ],
+                        "sensors": [
+                            {
+                                "id": "ai-quality",
+                                "must": "AI summary meets quality target",
+                                "criteria": ["criterion.ai"],
+                                "method": "ai_evaluation",
+                                "expected": "Average score meets threshold",
+                                "evaluation": {
+                                    "dataset": "fixtures/ai-cases.yaml",
+                                    "scoring": "0-1 exactness rubric",
+                                },
+                                "run": {"argv": [sys.executable, "-c", "raise SystemExit(0)"]},
+                            }
+                        ],
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            payload = check_sync(
+                load_kernel(root),
+                ["capability.authentication"],
+                change_slug="ai_eval_contract",
+            )
+        self.assertFalse(payload["ok"], payload)
+        self.assertIn(
+            "sensor ai-quality evaluation missing numeric threshold",
+            payload["contract_findings"],
+        )
+
+    def test_history_includes_decision_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "specs"
+            shutil.copytree(GOLDEN, root)
+            change = root / "changes" / "_archive" / "decision_meta"
+            change.mkdir(parents=True)
+            (change / "proposal.yaml").write_text(
+                "\n".join(
+                    [
+                        'id: "decision_meta"',
+                        'kind: "evolve"',
+                        'status: "promoted"',
+                        "promise_ids:",
+                        "  - capability.authentication",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (change / "delta.yaml").write_text(
+                "MODIFIED:\n  - id: capability.authentication\n    summary: metadata check\n",
+                encoding="utf-8",
+            )
+            (change / "decision.md").write_text(
+                "\n".join(
+                    [
+                        "---",
+                        "change_id: decision_meta",
+                        "status: superseded",
+                        "affected_spec_ids:",
+                        "  - capability.authentication",
+                        "supersedes:",
+                        "  - older_auth_policy",
+                        "superseded_by: auth_policy_v2",
+                        "---",
+                        "",
+                        "Decision details.",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            payload = change_ledger(load_kernel(root), "capability.authentication")
+        rows = payload["rows"]
+        picked = next(row for row in rows if row["change_id"] == "decision_meta")
+        self.assertEqual(picked["decision_status"], "superseded")
+        self.assertEqual(picked["decision_change_id"], "decision_meta")
+        self.assertEqual(picked["decision_superseded_by"], "auth_policy_v2")
+        self.assertIn("capability.authentication", picked["decision_affected_ids"])
+
 
 INFERRED = ROOT / "testdata" / "inferred"
 
