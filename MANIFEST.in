@@ -1,0 +1,5 @@
+include packaging/*.py
+graft specplane
+graft .agents
+graft .cursor
+graft tools/specplane
